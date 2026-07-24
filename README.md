@@ -1,7 +1,11 @@
-# Brain - a compounding learning kit (agent-driven)
+# MinCha Brain - a compounding learning kit (agent-driven)
 
-> **Brain** turns the things you learn from - **YouTube videos, blog posts, research papers, and
-> code repositories** - into durable, cited, *compounding* knowledge. Paste a URL; the agent
+> *A persistent, compounding brain - the human curates and asks, the agent synthesizes and cites,
+> and every source becomes context for the next.*
+
+> **MinCha Brain** (**Brain** for short) turns the things you learn from - **YouTube videos, blog
+> posts, research papers, and code repositories** - into durable, cited, *compounding* knowledge.
+> Paste a URL; the agent
 > ingests it, understands it (the meaningful **visuals** for media - slides, diagrams, figures; or
 > **traces the code** for a repo), keeps only what the other leg corroborates, distills a learning
 > document, and files durable claims into a growing brain. Code sources are for **learning from** a
@@ -50,6 +54,7 @@ brain/
 ├── INDEX.md            # ⭐ ASK HERE: annotated catalog of every source + topic ("when to read")
 ├── prd.md              # the design + rationale (read first)
 ├── README.md           # this file
+├── LICENSE             # MIT
 ├── AGENTS.md           # behavioral contract + the paste-a-URL ingest rule (single source of truth)
 ├── link-agents.sh      # macOS/Linux: symlink CLAUDE.md + copilot-instructions.md -> AGENTS.md
 ├── link-agents.ps1     # Windows: same, once per clone (git-ignored links)
@@ -196,3 +201,32 @@ brains, but "Use this template" already covers that. See [`prd.md` §10](prd.md)
 4. Paste a YouTube / blog / paper / GitHub-repo URL and let the agent ingest it.
 5. After a few sources, watch `brain/topics/` and the root `INDEX.md` get richer - that is the
    compounding.
+
+---
+
+## Acknowledgements
+
+MinCha Brain stands on the shoulders of two pieces of work whose ideas it directly builds on:
+
+- **Andrej Karpathy - [*LLM Wiki: A Pattern for Personal Knowledge Bases*](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f).**
+  The idea of a **persistent, compounding wiki** that sits between you and your raw sources - the
+  LLM *ingests* a source and synthesizes it into interlinked notes (rather than re-retrieving raw
+  docs each query), while the human curates and asks. Brain's `brain/` vault, the ingest ->
+  compound flow, and the `INDEX.md` integrity checks are this pattern applied to multimodal sources.
+- **Eugene Yan - [*How to Work and Compound with AI*](https://eugeneyan.com/writing/working-with-ai/).**
+  The principle that **every finished artifact becomes context for the next session** - via layered
+  lazy context, **annotated indexes**, taste encoded as configuration, and a verification-first
+  loop. Brain's annotated root `INDEX.md`, `AGENTS.md` + `personas/` as taste-config, and the
+  corroboration gate come straight from this thinking.
+
+Any mistakes or over-reaches in adapting these ideas are mine, not theirs.
+
+---
+
+## License
+
+Released under the **MIT License** - see [`LICENSE`](LICENSE). In short: use, modify, and
+redistribute freely, with attribution and no warranty. Your ingested `sources/` and compounded
+`brain/` are *your* content; the MIT license covers the kit (the convention, `AGENTS.md`,
+`personas/`, templates), not the third-party material you learn from - respect each source's own
+license and terms.
