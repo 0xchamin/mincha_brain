@@ -37,7 +37,8 @@
 - Capture method: `yt-dlp` English auto-captions (`en.vtt`) + low-res (`<=480p`) video for frames.
   Whisper not needed (captions present).
 - Visual pre-filter: `ffmpeg` scene-detect (threshold 0.12) -> 14 candidates -> `imagehash` phash
-  dedup -> 13 distinct; 2 non-content frames (title card, podium) dropped -> **11 curated slides**.
+  dedup -> 13 distinct; dropped 2 non-content (title/podium) + 4 uncited setup slides after distill
+  -> **7 kept frames** (only those cited by a node or the report; signal, not archive).
 - Transcript caveat: auto-captions mangle proper nouns - "Uber" -> "Aruba/Rue Ba", "Soumya" ->
   "Sonya/Somya". Corrected from the title/slides; slides read "Uber Eats" and carry the real terms.
 - Speakers: Jai Chopra (routing/orchestration/generation evals) + Soumya Gupta (golden dataset,
