@@ -8,10 +8,9 @@
 > repo, not building on it.
 
 This is a **convention, not an application**. There is nothing to build or run as a service. The
-GitHub Copilot CLI agent *is* the engine - driven by `AGENTS.md` + `personas/`. **Inspired by
-`starter-kit`** (the starter kit agent starter kit): same three ideas (layered lazy context,
-close-the-loop compounding, ground-every-claim), re-pointed from "ship code" to "learn deeply and
-remember forever."
+GitHub Copilot CLI agent *is* the engine - driven by `AGENTS.md` + `personas/`. It rests on three
+ideas - layered lazy context, close-the-loop compounding, and ground-every-claim - re-pointed from
+"ship code" to "learn deeply and remember forever."
 
 > **No agent Skills to install (by design).** The ingest flow lives in `AGENTS.md` + personas, the
 > one contract every harness reads - so there are no per-harness Skill files to maintain. Packaging

@@ -16,7 +16,7 @@ repositories** - into durable, cited, *compounding* knowledge.
 
 - **NOT** a software product you build and maintain. There is no app, server, or vector database
   to ship. For code sources, it is for **learning from** a repo, **not** building on it.
-- **IS** an starter-kit-style kit: you paste a **URL** (a video, article, paper, or GitHub repo),
+- **IS** an agent-driven convention kit: you paste a **URL** (a video, article, paper, or GitHub repo),
   and because you have set up a persona + goals + an ingest flow in `AGENTS.md`, **the agent
   itself does the pipeline** - capture, read/trace, corroborate, distill, and file the knowledge -
   and it gets smarter every time.
@@ -26,10 +26,9 @@ repositories** - into durable, cited, *compounding* knowledge.
 > grep / code-intelligence tools trace a codebase (**the agent is the code reader** for repos).
 > That is why no separate VLM or code-analysis service needs building.
 
-**Inspired by** [`starter-kit`](#appendix-a---relationship-to-starter-kit): same three ideas
-(layered lazy context, close-the-loop compounding, ground-every-claim), re-pointed from "ship
-code" to "learn deeply and remember forever." Brain is a **separate, self-contained** kit;
-starter-kit is a design reference only, not a dependency.
+**Built on three ideas** (see [Appendix A](#appendix-a---design-lineage)): layered lazy context,
+close-the-loop compounding, and ground-every-claim - re-pointed from "ship code" to "learn deeply
+and remember forever." Brain is a **separate, self-contained** kit.
 
 ---
 
@@ -92,7 +91,7 @@ accumulates and connects instead of evaporating.
   index** + `grep` over notes - fine for a personal brain at dozens-to-hundreds of sources.
   (A real index is [future work](#10-future-work-only-if-you-outgrow-the-convention).)
 - **NG3 - A background daemon / silent automation.** It is **agent-in-the-loop**: the agent runs
-  the steps and you watch and steer, exactly as starter-kit works.
+  the steps and you watch and steer.
 - **NG4 - Faithful diagram reconstruction.** Describes/indexes figures well enough to retrieve
   and summarize; does not perfectly redraw complex diagrams.
 - **NG5 - Building on cloned repos.** Code sources are for **learning**, not modification - no
@@ -159,7 +158,7 @@ brain/
 │   ├── fact-checker.md        #   run the corroboration gate; enforce citations
 │   ├── mentor.md              #   teach the learner from fundamentals
 │   └── architect.md           #   shape the brain: topic taxonomy, structure decisions
-├── sources/                   # ONE folder per ingested source (analog of starter-kit tasks/)
+├── sources/                   # ONE folder per ingested source
 │   └── 260724_mcp-security-talk/
 │       ├── SOURCE.md          #   url, type (video/blog/paper/code), title, author, ingest facts
 │       ├── MAP.md             #   CODE only: repo orientation (what it demonstrates, module map)
@@ -178,8 +177,7 @@ brain/
 └── reports/                   # generated Markdown/HTML study material
 ```
 
-> **Naming:** source folders use `YYMMDD_slug` (big-endian date sorts chronologically) - the
-> same convention starter-kit uses.
+> **Naming:** source folders use `YYMMDD_slug` (big-endian date sorts chronologically).
 >
 > **Setup (one time, done by you):** create a local virtual env in this folder and install the
 > helpers. `ffmpeg` is a system binary (not pip). The kit is cross-platform - use whichever OS
@@ -307,7 +305,7 @@ flowchart LR
 The text is ground truth for *what the source is about* there; the visual is ground truth for the
 *exact detail* (wording, diagram, code, numbers). Each alone is unreliable (the agent can
 misread a figure; text misses on-screen detail). **Together they catch each other's errors** - this
-is starter-kit's "ground every claim with a source," applied across *two modalities*. It hardens
+is the "ground every claim with a source" principle, applied across *two modalities*. It hardens
 *extraction*, not *truth* (see the note above).
 
 ### 6.2 Gate outputs
@@ -332,8 +330,8 @@ rule. (This is [NG1](#non-goals-v1).)
 
 ## 7. Personas
 
-Role overlays (prompt overlays, not separate models), auto-selected by lifecycle stage, exactly
-as in starter-kit. They **compose** (e.g. `curator + mentor` while distilling *and* teaching).
+Role overlays (prompt overlays, not separate models), auto-selected by lifecycle stage. They
+**compose** (e.g. `curator + mentor` while distilling *and* teaching).
 
 | Persona | Adopt when | Owns |
 |---|---|---|
@@ -368,7 +366,7 @@ flowchart TD
   §/figure` for blog/paper, **GitHub blob permalink with SHA** for code.
 - **Retrieval without a vector DB:** the agent reads the **annotated root `INDEX.md`**
   ("when to read" per entry) to pick relevant sources, then `grep`s their notes. This is
-  the starter-kit annotated-index technique - it scales fine for a personal brain.
+  the annotated-index technique - it scales fine for a personal brain.
 - **Reports** default to Markdown; `--html`/"as HTML" produces a self-contained page with visuals
   inline. Confidence flags (OK / needs-check / open-question) on any `single-leg` item.
 
@@ -402,7 +400,7 @@ flowchart TD
   should split.)
 - The **root `INDEX.md`** is **annotated** ("when to read") so a future query - asked from the repo
   root - knows which source matters without opening each. It is auto-maintained as a hard output of
-  ingest/compound (starter-kit's core principle, relocated to the root so the brain is asked at the top).
+  ingest/compound (the close-the-loop principle, relocated to the root so the brain is asked at the top).
 - Payoff: source #30 is answered against an already-rich brain; a topic report assembles material
   **no single source contained**.
 
@@ -517,13 +515,12 @@ sees the *why* without re-deriving it. Full history is in Appendix B.
 
 ---
 
-## Appendix A - Relationship to starter-kit
+## Appendix A - Design lineage
 
-Brain is **inspired by** `starter-kit` (an agent starter kit: a pure-Markdown convention that drives
-one unit of work through a lifecycle while compounding knowledge). Brain **reuses the philosophy,
-not the code**, and is a fully separate, self-contained kit.
+Brain is a self-contained, pure-Markdown convention that drives one unit of work (a source) through
+a lifecycle while compounding knowledge. It rests on **three ideas**, re-pointed from "ship code"
+to "learn deeply and remember forever":
 
-**Three ideas carried over:**
 1. **Layered, lazy context** - each source carries its own living docs (`sources/<id>/`); load
    only what a step needs.
 2. **Close the loop / compounding** - each source promotes durable, cited items up to a root vault
@@ -531,23 +528,15 @@ not the code**, and is a fully separate, self-contained kit.
 3. **Ground every claim** - nothing asserted without a citation; here strengthened into the
    two-modality **corroboration gate**.
 
-**Concept mapping:**
+**Structure at a glance:** `sources/<id>/` is the unit (a video/blog/paper/repo); the flow is
+capture → understand → distill → compound → ask; code sources add a git-ignored `repo/` clone; the
+compounding vault is `brain/` (topics/claims/glossary/log/decisions) fronted by an annotated root
+`INDEX.md` ("when to read" per entry); role overlays live in `personas/`; the behavioral contract
+is `AGENTS.md`; source folders are named `YYMMDD_slug`.
 
-| starter-kit | Brain | Note |
-|---|---|---|
-| `tasks/<task>/` (unit = a work item) | `sources/<source>/` (unit = a video/blog/paper/**repo**) | Same layered-lazy-context pattern. |
-| lifecycle: understand → plan → implement → verify → PR → close | flow: capture → understand → distill → compound → ask | Re-pointed from "ship code" to "learn deeply." |
-| `work/` clone-per-task | `sources/<id>/repo/` clone-per-**code**-source (git-ignored) | Same clone-per-unit pattern, re-pointed to learning (no edits/PRs). |
-| `knowledge/` (compounding vault) | `brain/` (compounding vault) | topics/claims/glossary/index/log. |
-| `knowledge/index.md` (annotated) | **root `INDEX.md`** (annotated) | "when to read" annotations reused; relocated to the repo root so the brain is asked from the top. |
-| `personas/` (architect, mentor, explore, ...) | `personas/` (curator, **code-explorer**, synthesizer, fact-checker, **mentor**, **architect**) | mentor + architect kept; `explore`+`architect` fused into **code-explorer**; ingest/synthesis roles added. |
-| `AGENTS.md` global rules | `AGENTS.md` (adapted) | Behavioral contract + the paste-a-URL ingest rule + cite-everything. |
-| `LEARNING.md` (teaching capture) | per-source `LEARNING.md` (+ `MAP.md` for code) + `brain/glossary.md` | Same teaching-capture idea. |
-| naming `YYMMDD_slug` | naming `YYMMDD_slug` | Reused as-is. |
-
-**What Brain adds:** multimodal ingest (transcript/text **+** the agent `view`ing frames/figures,
-**+** the agent tracing code) and the **corroboration gate** (visual↔text / code↔docs) as the
-promotion filter - all done *by the agent*, no app built.
+**What Brain adds beyond a code-shipping kit:** multimodal ingest (transcript/text **+** the agent
+`view`ing frames/figures, **+** the agent tracing code) and the **corroboration gate** (visual↔text
+/ code↔docs) as the promotion filter - all done *by the agent*, no app built.
 
 ---
 
@@ -559,8 +548,8 @@ promotion filter - all done *by the agent*, no app built.
 | 2026-07-24 | v0.2 | Reframed as an **agent-driven convention kit** (agent is the engine, `view` = the VLM); generalized to YouTube + blog + paper; added mentor + architect personas; added `.venv` setup. | agent (seed) - owner to curate |
 | 2026-07-24 | v0.3 | Added **code repositories** as a fourth source type (clone-and-learn, not build): `code-explorer` persona, `MAP.md` + git-ignored `repo/`, generalized the gate to **evidence leg ↔ claim leg** (visual↔text / code↔docs) with docs↔code **divergence** as a finding, `path:line @sha` citations, and an `inferencing` seed topic. | agent (seed) - owner to curate |
 | 2026-07-24 | v0.4 | Made the kit **multi-harness**: `AGENTS.md` is the single canonical contract; added a "leverage your harness's built-in commands (then capture into the kit)" section + capability table, a **bash-first** principle, a per-harness Appendix (Copilot CLI/IDE, Codex, Claude Code, Cursor), and `link-agents.sh`/`.ps1` that symlink `CLAUDE.md` + `.github/copilot-instructions.md` -> `AGENTS.md` (git-ignored, one contract, zero duplicate maintenance). | agent (seed) - owner to curate |
-| 2026-07-24 | v0.5 | **Fully baked auto-persona adoption** (starter-kit-style): added a "Persona routing (auto)" stage->persona table to `AGENTS.md`, the "user override; otherwise never ask unless genuinely ambiguous" clause (`AGENTS.md` + `personas/README.md`), and a per-document `> Persona:` cue on each `_TEMPLATE` doc so re-entry re-derives the overlay. | agent (seed) - owner to curate |
+| 2026-07-24 | v0.5 | **Fully baked auto-persona adoption:** added a "Persona routing (auto)" stage->persona table to `AGENTS.md`, the "user override; otherwise never ask unless genuinely ambiguous" clause (`AGENTS.md` + `personas/README.md`), and a per-document `> Persona:` cue on each `_TEMPLATE` doc so re-entry re-derives the overlay. | agent (seed) - owner to curate |
 | 2026-07-24 | v0.6 | **Made the topic set open/extensible.** Added a "Scope: topics are open" note + domain guardrail to `AGENTS.md`; a new-topic branch in the compound step (create/register/log, `emerging` until a 2nd source corroborates, don't spawn per source); reconciled `architect.md` (create genuinely-new, resist redundant); and an open-topics + `emerging` note in `brain/index.md`. | agent (seed) - owner to curate |
 | 2026-07-24 | v0.7 | **Recorded the distribution decision:** ship as a GitHub *template repo* (clone + edit in place), **not** a `pip`/`npx` package - agents read `AGENTS.md` at the repo root, it's a personal git-tracked vault, and editing-in-place is the feature. Added §10 rationale + README "Get the kit" and "Why not a package" sections. | agent (seed) - owner to curate |
 | 2026-07-24 | v0.9 | **Relocated the whole-brain index to the repo root as `INDEX.md`** so the brain is asked from the top. It is the annotated entry point (Sources + Topics rosters + pointers into `brain/`), **auto-maintained as a hard, non-skippable output** of ingest/compound/close-loop, with an **integrity rule** (every `sources/<x>/` ⇔ one row; every `brain/topics/*.md` ⇔ one row). `brain/index.md` is now a redirect stub - `brain/` keeps the *content* (topics/claims/glossary/log/decisions), avoiding a second whole-brain roster (no drift). Multi-level indexing preserved: root (brain-wide), per-source `SOURCE.md` reading-order, per-topic note - each owns a distinct scope. Repointed all references across `AGENTS.md`, personas, README, how_to_use, and this doc; aligned the flow text to auto-promote + gate vocabulary. Added a consolidated §10 "Design decisions recorded" table (one-way-door calls + rationale). Initialized the repo and pushed to a private GitHub remote. | agent (seed) - owner to curate |
-| 2026-07-24 | v0.8 | **Applied rubber-duck review fixes.** Compounding is now **automatic by default** (auto-promote eligible nodes + summary + `git diff` as undo). Reworked the gate vocabulary to `corroborated` / `single-leg` / `divergence` / `dropped` and **separated internal consistency (extraction confidence) from external corroboration (second source) from fact-checked truth** across `AGENTS.md`, `prd.md` §6, and the fact-checker/synthesizer personas - no more "high-confidence/proven" over-claims. Added **stable node IDs** (`n1..`), **both-legs-cited** nodes, and **immutable GitHub blob permalinks** for code citations. Added a **degrade & failure-handling** table, a local **ADR template** (`brain/decisions/0000-template.md`, replacing the `starter-kit` reference), a **Status column** on the Topics index + per-topic `Status:` lines, expanded source Status values, **synthesized-diagram provenance**, a whole-`raw/` git-ignore (except README), a PowerShell verify variant, and a clobber-guard in `link-agents.ps1`. **By-design pushbacks:** no full pipeline script (doc-only kit), light node IDs (not a full backlinked registry). | agent (seed) - owner to curate |
+| 2026-07-24 | v0.8 | **Applied rubber-duck review fixes.** Compounding is now **automatic by default** (auto-promote eligible nodes + summary + `git diff` as undo). Reworked the gate vocabulary to `corroborated` / `single-leg` / `divergence` / `dropped` and **separated internal consistency (extraction confidence) from external corroboration (second source) from fact-checked truth** across `AGENTS.md`, `prd.md` §6, and the fact-checker/synthesizer personas - no more "high-confidence/proven" over-claims. Added **stable node IDs** (`n1..`), **both-legs-cited** nodes, and **immutable GitHub blob permalinks** for code citations. Added a **degrade & failure-handling** table, a local **ADR template** (`brain/decisions/0000-template.md`), a **Status column** on the Topics index + per-topic `Status:` lines, expanded source Status values, **synthesized-diagram provenance**, a whole-`raw/` git-ignore (except README), a PowerShell verify variant, and a clobber-guard in `link-agents.ps1`. **By-design pushbacks:** no full pipeline script (doc-only kit), light node IDs (not a full backlinked registry). | agent (seed) - owner to curate |

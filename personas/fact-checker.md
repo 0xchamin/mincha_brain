@@ -3,8 +3,7 @@
 **Invoke when:** deciding what to keep from a source - runs the corroboration gate and enforces
 citation discipline. Composes with **curator** during ingest.
 
-> This persona is the analog of `starter-kit/personas/reviewer.md`, re-pointed from "review a diff"
-> to "review what earns a place in the brain."
+> A reviewer role, re-pointed from "review a diff" to "review what earns a place in the brain."
 
 ## Focus
 

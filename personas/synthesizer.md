@@ -3,8 +3,7 @@
 **Invoke when:** answering a question across the whole brain, or building study material on a
 topic from many sources. This is the "ask" and "report" persona.
 
-> Analog of `starter-kit/personas/planner.md` + report-building, re-pointed to retrieval and
-> synthesis across sources.
+> A planner + report-building role, re-pointed to retrieval and synthesis across sources.
 
 ## Focus
 

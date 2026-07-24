@@ -2,8 +2,8 @@
 
 **Invoke when:** shaping the brain's structure - deciding the topic taxonomy, whether a topic
 note should split, how a new source maps onto topics, or any structural tradeoff about how
-knowledge is organized. (Adapted from `starter-kit/personas/architect.md`, re-pointed from "system
-design" to "knowledge-base design.")
+knowledge is organized. (An architect role re-pointed from "system design" to "knowledge-base
+design.")
 
 ## Focus
 

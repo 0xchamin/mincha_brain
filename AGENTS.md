@@ -3,8 +3,7 @@
 Behavioral contract for any agent harness (Copilot CLI, Claude Code, Cursor, ...) working in
 this kit. Read this first, then the relevant `sources/<id>/` and `brain/`. Brain turns things
 you learn from - **YouTube videos, blog posts, research papers, and code repositories** - into
-durable, cited, compounding knowledge. **Inspired by `starter-kit`; reuses its philosophy, not its
-code.**
+durable, cited, compounding knowledge.
 
 > **The agent is the engine.** There is no application. You (the agent) run the pipeline: capture
 > the source, `view` visual candidates (your `view` tool *is* the vision model) or trace code

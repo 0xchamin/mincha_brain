@@ -17,7 +17,7 @@
 >
 > **Annotate every entry** with a one-line summary + "when to read" - a bare list forces a reader to
 > open each link to judge relevance; annotating once does that upfront.
-> (Principle from eugeneyan.com/writing/working-with-ai - the annotated INDEX, via `starter-kit`.)
+> (Principle from eugeneyan.com/writing/working-with-ai - the annotated INDEX.)
 > (No owner column - this is a single-person brain; everything here is yours.)
 
 ## Sources
