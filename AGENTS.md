@@ -83,6 +83,12 @@ being asked**:
 > token-heavy). For code, **orient then trace** - use the module map + code-intel tools to reach
 > the relevant lines; never attempt to read a whole large repo.
 
+> **Prune uncited frames after distilling (signal, not archive).** `visuals/` keeps **only frames a
+> knowledge node or the report actually cites** - not every extracted/deduped candidate. As the last
+> step of the distill/compound pass, grep each `visuals/*.jpg` name across `nodes.md`, `LEARNING.md`,
+> and `brain/topics/*.md`; **delete the zero-hit frames** and update the `SOURCE.md` frame count. Raw
+> video/captions stay git-ignored in `raw/` and are discardable.
+
 > **The shell steps are reference, not a fixed script.** This kit is a convention: the `yt-dlp` /
 > `ffmpeg` / `imagehash` / `pdftotext` commands named here and in `prd.md` §5 are the *approach* you
 > assemble for the source at hand and your OS - not a checked-in pipeline. Keep frame filenames
