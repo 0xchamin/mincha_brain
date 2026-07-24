@@ -24,7 +24,7 @@
 
 | Source | Type | Summary | Topics | When to read | Folder |
 |---|---|---|---|---|---|
-| _(none yet)_ | - | Paste a URL (video / blog / paper / **GitHub repo**) to ingest your first source. | - | - | - |
+| Building Closed-Loop Evals for a Multimodal Agent at Scale (Uber, AI Engineer WF 2026) | video | Blueprint for evaluating an agent pipeline in production: log-first, per-stage metrics (routers as classifiers, generation pass@k, pairwise comparison), Swiss-cheese QA gates, and a closed self-tuning loop on drift. | evals, agents | Designing evals for an agent/LLM pipeline; router precision-recall; pass@k; auto-tuning on drift. | [`sources/260725_closed-loop-evals-multimodal-agent/`](sources/260725_closed-loop-evals-multimodal-agent/LEARNING.md) |
 
 ## Topics (living notes)
 
@@ -37,7 +37,8 @@ The compounding synthesis layer - many sources feed each note. See [`brain/topic
 
 | Topic | Status | What it covers | Sources feeding it | Note |
 |---|---|---|---|---|
-| Agents | seed | Autonomous LLM agents: planning, tools, memory, loops | 0 | [`brain/topics/agents.md`](brain/topics/agents.md) |
+| Evals | emerging | Evaluating agent/LLM pipelines: per-stage metrics, pass@k, pairwise comparison, QA gates, closed-loop self-tuning | 1 | [`brain/topics/evals.md`](brain/topics/evals.md) |
+| Agents | emerging | Autonomous LLM agents: planning, tools, memory, loops; routed multi-agent pipelines, self-tuning | 1 | [`brain/topics/agents.md`](brain/topics/agents.md) |
 | MCP | seed | Model Context Protocol: servers, tools, resources, transport | 0 | [`brain/topics/mcp.md`](brain/topics/mcp.md) |
 | Skills | seed | Agent skills: definition, invocation, packaging | 0 | [`brain/topics/skills.md`](brain/topics/skills.md) |
 | RAG | seed | Retrieval-augmented generation: chunking, embeddings, retrieval | 0 | [`brain/topics/rag.md`](brain/topics/rag.md) |
