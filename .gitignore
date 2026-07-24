@@ -1,0 +1,23 @@
+# Local virtual environment
+.venv/
+__pycache__/
+*.pyc
+
+# Raw source material - transient local scratch; processed then discarded.
+# Ignore everything under any raw/ folder except its README (which explains the folder).
+sources/**/raw/*
+!sources/**/raw/README.md
+
+# Cloned code repos - snapshots for learning, never committed
+sources/**/repo/
+
+# Harness pointer symlinks - generated per clone by link-agents.sh / link-agents.ps1
+# (AGENTS.md is the single canonical contract; these just point to it. Codex, Cursor and
+#  Copilot CLI read AGENTS.md natively and need no link.)
+/CLAUDE.md
+/.github/copilot-instructions.md
+
+# OS noise
+Thumbs.db
+.DS_Store
+

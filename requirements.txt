@@ -1,0 +1,12 @@
+# Brain helper packages - install into the local .venv
+# macOS:   python3 -m venv .venv ; source .venv/bin/activate ; pip install -r requirements.txt
+# Windows: python -m venv .venv  ; .\.venv\Scripts\Activate.ps1 ; pip install -r requirements.txt
+# NOTE: ffmpeg is a SYSTEM binary, not a pip package:
+#   macOS -> brew install ffmpeg
+#   Windows -> winget install Gyan.FFmpeg  (or scoop/choco)
+
+yt-dlp            # fetch YouTube transcripts (auto-captions) and audio
+faster-whisper    # ASR fallback when a video has no captions
+imagehash         # perceptual-hash dedup of sampled frames
+pillow            # image handling for frame/figure processing
+requests          # fetch article/paper assets (figures, PDFs)
