@@ -31,11 +31,13 @@ are promoted up to `brain/`, so your *next* source starts richer than this one.
 
 ## 1. Prerequisites (one time)
 
-- **GitHub Copilot CLI** installed and signed in (or another agent harness that reads
-  `AGENTS.md`).
+- **An agent harness** installed and signed in - Claude Code, GitHub Copilot CLI, Codex, or Cursor.
+  They all read the same `AGENTS.md`.
 - **Python 3** and **git**.
 - **System `ffmpeg`** (for video frames) - installed in step 3.
-- Nothing else. The kit itself is just Markdown.
+- *Optional:* the **GitHub CLI** (`gh`), which makes code sources nicer (license, pinned commit SHA,
+  README-before-clone). Never a blocker - the agent falls back to plain `git clone`.
+- Nothing else. The kit itself is Markdown plus two small scripts.
 
 ---
 
@@ -95,6 +97,17 @@ yt-dlp --version; ffmpeg -version     # Windows PowerShell (; not && before the 
 > `source .venv/bin/activate` (macOS) / `.\.venv\Scripts\Activate.ps1` (Windows). This puts
 > `yt-dlp` on PATH so the agent can call it.
 
+One more check, and this one needs **no venv at all**:
+
+```bash
+python3 validate.py     # stdlib only - should print "OK - N sources, N topics, ... nothing to report"
+```
+
+That is the kit's **type checker**. The rules in `AGENTS.md` are prose, and prose has no compiler, so
+`validate.py` is what stops a stale index row or an uncited claim from quietly accumulating. The
+agent runs it before showing you a `git diff`; you can run it any time. **Exit code 1 means a pass
+was left unfinished.** It checks *form*, never judgement - it cannot tell you a claim is true.
+
 **If you use Claude Code or GitHub Copilot in an IDE**, also run the linker once so they load the
 same rules (`AGENTS.md` is the single contract; Copilot CLI / Codex / Cursor already read it
 natively):
@@ -118,7 +131,7 @@ from the template. You can create it yourself, or just let the agent do it when 
 ```bash
 cd ~/projects/brain          # or C:\DEVBOX\projects\brain on Windows
 source .venv/bin/activate    # (Windows: .\.venv\Scripts\Activate.ps1)
-copilot                      # start GitHub Copilot CLI here
+claude                       # or: copilot / codex - whichever harness you use
 ```
 
 Now you are in a conversation with the agent, standing inside `brain/`. It has already read
@@ -145,28 +158,37 @@ what it does, so nothing is a black box:
 ```mermaid
 flowchart TD
     U["You paste a YouTube URL"] --> C["1. Create sources/&lt;YYMMDD_slug&gt;/<br/>fill SOURCE.md"]
-    C --> T["2. Get transcript<br/>yt-dlp captions (Whisper fallback) -> raw/"]
-    C --> F["3. Extract candidate frames<br/>ffmpeg scene-change + imagehash dedup<br/>~5-10, NOT hundreds"]
-    T --> V["4. Agent VIEWs each candidate frame<br/>(its view tool IS the vision model)<br/>reads the crux of each slide/diagram/code"]
-    F --> V
-    V --> G["5. Corroboration gate (fact-checker)<br/>keep a frame only if the transcript<br/>at that timestamp agrees"]
-    G --> N["6. Write nodes.md<br/>claim + frame + quote + citation + confidence"]
-    N --> L["7. Write LEARNING.md<br/>distilled text + 3-8 curated frames, all cited"]
-    L --> P["8. Promote durable claims (automatic)<br/>-> brain/topics/*.md, root INDEX.md, brain/log.md<br/>+ summary + git diff as undo"]
+    C --> T["2. Get transcript<br/>yt-dlp captions (Whisper fallback)<br/>ingest.py transcript -> raw/"]
+    C --> PR{"3. ingest.py probe<br/>how many DISTINCT frames?"}
+    PR -->|"STATIC: &lt;= 3 distinct<br/>or you said transcript-only"| SK["Skip the visual leg<br/>record it in SOURCE.md<br/>every node becomes single-leg"]
+    PR -->|RICH| F["4. ingest.py frames + sheet<br/>~5-10 candidates, NOT hundreds"]
+    F --> V["5. Agent VIEWs the contact sheet<br/>(its view tool IS the vision model)<br/>reads the crux of each slide"]
+    V --> G["6. Corroboration gate (fact-checker)<br/>keep a frame only if the transcript<br/>at that timestamp agrees"]
+    T --> G
+    SK --> G
+    G --> N["7. Write nodes.md<br/>claim + frame + quote + citation + confidence"]
+    N --> L["8. Write LEARNING.md<br/>distilled text + 3-8 curated frames, all cited"]
+    L --> P["9. Promote durable claims (automatic)<br/>-> brain/topics/*.md, root INDEX.md, brain/log.md<br/>then validate.py + git diff as undo"]
 ```
 
 **Step by step, in plain words:**
 
 1. **Folder + metadata.** The agent creates `sources/260724_<slug>/`, fills `SOURCE.md` (URL,
    title, channel, duration), Owner defaults to you.
-2. **Transcript.** It runs `yt-dlp` to pull the video's captions into `raw/transcript.vtt`. If the
-   video has none, it transcribes the audio with `faster-whisper`.
-3. **Frames.** It runs `ffmpeg` to grab frames on **scene changes** (so it catches slide flips),
-   then de-dups near-identical ones - leaving a *handful* of candidates, not hundreds. (This
-   pre-filter is a shell command, not the agent eyeballing - that keeps it fast and cheap.)
-4. **The agent reads the frames.** For each candidate, it opens the image with its `view` tool and
-   extracts the crux ("this slide lists 3 tool-poisoning mitigations", "this is an MCP sequence
-   diagram"). **This is the key move: the agent itself is the vision model - no VLM to install.**
+2. **Transcript.** It runs `yt-dlp` to pull the video's captions into `raw/transcript.vtt`, then
+   `python3 tools/ingest.py transcript` to collapse YouTube's rolling captions into clean
+   timestamped blocks (so a `&t=494s` citation lands on the right second). If the video has no
+   captions, it transcribes the audio with `faster-whisper`.
+3. **Probe, then frames.** First `python3 tools/ingest.py probe` - scene-detect + perceptual-hash
+   dedup - which prints `STATIC` or `RICH`. **A webcam interview or podcast yields `<= 3` distinct
+   frames, and the agent skips the visual leg entirely** rather than burning tokens looking at the
+   same head from the same angle. For a slide talk it yields dozens, and `ingest.py frames` +
+   `sheet` reduce them to a handful tiled into a contact sheet. (All of this is shell, not the agent
+   eyeballing - that is what keeps it fast and cheap.)
+4. **The agent reads the frames.** It opens the contact sheet with its `view` tool - triaging 17
+   candidates in one or two calls instead of 17 - and extracts each slide's crux ("this lists 3
+   tool-poisoning mitigations", "this is an MCP sequence diagram"). **This is the key move: the
+   agent itself is the vision model - no VLM to install.**
 5. **Corroboration gate.** It compares each frame's meaning against what the speaker says at that
    timestamp. Frame and transcript **agree** -> keep it (`corroborated`, cite both). Silent -> keep
    from the one leg (`single-leg`, needs-check). Conflicting -> drop it. This two-modality agreement
@@ -178,18 +200,31 @@ flowchart TD
    diagram, and a 💡 glossary. Every claim is cited.
 8. **Compound (automatic).** It promotes the durable claims into the living topic notes
    (`brain/topics/agents.md`, `mcp.md`, ...), adds an annotated row to the **root `INDEX.md`**, and
-   logs a line in `brain/log.md` - then shows a summary + `git diff` so you can undo. That is what
-   makes the brain *compound*.
+   logs a line in `brain/log.md` - then runs `python3 validate.py` and shows a summary + `git diff`
+   so you can undo. That is what makes the brain *compound*.
 
 You end up with, for that one video:
 ```
 sources/260724_mcp-security-talk/
-├── SOURCE.md        # what it is
-├── raw/             # transcript
-├── visuals/         # the 3-8 curated frames that survived the gate
+├── SOURCE.md        # what it is (incl. Visual leg: analysed / skipped, and why)
+├── raw/             # transcript (git-ignored - discardable)
+├── visuals/         # the 3-8 curated frames that survived the gate AND are cited
+├── context/         # deep-research notes - only if you asked for them (§7)
 ├── nodes.md         # every kept claim, cited
 └── LEARNING.md      # the thing you actually read to learn
 ```
+
+> **Why `visuals/` is usually smaller than you expect.** After distilling, the agent greps every
+> extracted frame against `nodes.md`, `LEARNING.md` and the topic notes and **deletes the ones
+> nothing cites**. The folder is signal, not an archive.
+
+### If the video is a talking head
+
+Say *"transcript only"* (or *"don't analyze video"*) with the URL and the agent skips the frames -
+or it discovers this itself via the probe. Either way it tells you in one line, and there is a real
+consequence it will not hide: **with only one leg, every node from that source is `single-leg`
+(needs-check), never `corroborated`.** A transcript agreeing with itself is not two legs. The way
+back to a second leg is not staring harder at the video - it is **deep research** (§7).
 
 ---
 
@@ -250,7 +285,52 @@ flowchart TD
 
 ---
 
+## 7. Deep research - the opt-in second leg
 
+Everything above buys **internal** consistency: the slide agrees with the narration, the code agrees
+with its README. That is not truth. It proves the agent *read* the source correctly, nothing more.
+Confidence only really rises when a **different, independent source** agrees.
+
+That is what deep research is for, and it is **never automatic** - it is slow and token-heavy, and
+most sources do not earn it. Ask for it explicitly:
+
+> *"ingest this: <url> - and deep research it"*, or later: *"deep research the open questions in
+> the 12-factor source"*
+
+What the agent does differently:
+
+- **It researches your gated claims by node ID, not the topic.** Open-ended "research agents" comes
+  back with adjacent reading; targeting `n7` and `n12` comes back with a verdict. It prioritises
+  `single-leg` nodes, anything `needs-check`, recorded divergences, and the open questions.
+- **Every finding lands as one of four verdicts:** `supports`, `contradicts`, `refines`, or
+  `no-evidence`. **A contradiction is a finding, not a failure** - both get recorded and the conflict
+  is flagged. So is `no-evidence`: learning that a claim rests on one practitioner's experience *is*
+  learning something.
+- **It weighs sources by tier** - T1 peer-reviewed papers and official specs, down to T5
+  aggregators (use for discovery, cite what they point to).
+- **The independence rule is hard.** A talk's own companion repo, or a vendor blog restating that
+  vendor's conference talk, is **the same leg wearing a different hat**. It gets cited but it never
+  raises confidence.
+- **The output is a permanent kit file**, `sources/<id>/context/01_<slug>.md`, not chat you lose.
+  It also feeds back: node confidence updated, external citations added to `brain/claims.md`, new
+  terms to the glossary.
+
+> 💡 **Why `LEARNING.md` stays clean.** Research findings do **not** get folded into it.
+> `LEARNING.md` answers exactly one question - *what did this source teach?* Blending in outside
+> evidence would destroy the line between "the author claims this" and "the field thinks this",
+> which is the entire point of citing. External evidence lives in `context/`; cross-source synthesis
+> lives in `brain/topics/`.
+
+**Real example.** The first research pass in this kit ran against the 12-Factor Agents talk. It
+closed both open questions (context degradation went from a practitioner's assertion to a *measured*
+effect across three independent sources), quantified a claim the talk left vague (+13 to +41 points
+of reliability from decomposition), and turned up something the talk never mentions: three of its
+factors are **Event Sourcing**, a pattern named in 2005, with known failure modes. That last one is
+the payoff - the cross-domain hop you only get by looking outside the source.
+
+---
+
+## 7.5. Learn one source
 
 Once ingested, just talk to the agent:
 
@@ -293,7 +373,19 @@ promote after a study session, just say:
 The agent merges the source's claims into `brain/topics/*.md` (de-duplicating, not stacking),
 updates `brain/claims.md` and `brain/glossary.md`, adds an annotated row to the **root `INDEX.md`**,
 and appends a dated line to `brain/log.md`. Over a dozen sources, those topic notes become your
-personal, cited textbook on Agents / MCP / Skills / RAG / agent-security / inferencing.
+personal, cited textbook on Agents / MCP / Skills / RAG / agent-security / inferencing - and on
+whatever new areas your sources turn out to teach, since **the topic set is open, not a fixed list**.
+
+Every such pass ends the same way:
+
+```bash
+python3 validate.py     # then: git diff
+```
+
+If the validator is red, **the pass is not finished** - a source with no `INDEX.md` row is
+unfindable, a promoted claim with no citation breaks the one hard rule in the kit. Then read the
+`git diff`: that is your review step, and `git checkout` / `git revert` is the undo, which is
+exactly why the agent is allowed to promote without asking first.
 
 ---
 
@@ -320,15 +412,26 @@ the agent will call that instead - handy if you want richer metadata or to avoid
 | I want to... | Do this |
 |---|---|
 | Set up (first time) | §3 - create `.venv`, `pip install -r requirements.txt`, install `ffmpeg` |
-| Start a session | `cd brain` -> activate venv -> `copilot` |
+| Start a session | `cd brain` -> activate venv -> `claude` (or `copilot` / `codex`) |
 | Ingest a video/blog/paper | Paste the URL (agent auto-runs the flow) |
 | Learn from a code repo | Paste a GitHub URL, or *"learn this repo: <url>"* (§6.5) |
+| Skip the frames (podcast) | Add *"transcript only"* - nodes become `single-leg` (§5) |
+| Get outside evidence | Add *"deep research"* - lands in `sources/<id>/context/` (§7) |
 | Learn one source | *"Walk me through it, mentor-style"* |
 | Ask about a known source | *"In <source>, what was ...?"* |
 | Ask across everything | *"What do I know about <topic>?"* |
 | Build study material | *"Make an HTML primer on <topic> from my brain"* |
 | Compound | *"Promote durable claims to the topic notes and log it"* |
+| Check the vault is sound | `python3 validate.py` (no venv needed; exit 1 = unfinished pass) |
 | See what I've ingested | Open the root `INDEX.md` |
+
+**The three commands worth memorising:**
+
+```bash
+python3 validate.py                          # is the brain internally sound?
+python3 tools/ingest.py probe <video.mp4>    # is there anything to SEE in this video?
+git diff                                     # what did the agent just change?
+```
 
 **In one line:**
 `clone -> setup -> cd brain + launch agent -> paste URL -> LEARNING.md -> promote to brain/ -> ask across everything`

@@ -11,15 +11,21 @@
 > document, and files durable claims into a growing brain. Code sources are for **learning from** a
 > repo, not building on it.
 
-This is a **convention, not an application**. There is nothing to build or run as a service. The
-GitHub Copilot CLI agent *is* the engine - driven by `AGENTS.md` + `personas/`. It rests on three
-ideas - layered lazy context, close-the-loop compounding, and ground-every-claim - re-pointed from
-"ship code" to "learn deeply and remember forever."
+This is a **convention, not an application**. There is nothing to build or run as a service. Your
+coding agent *is* the engine - Claude Code, Copilot CLI, Codex, Cursor, whichever you already use -
+driven by `AGENTS.md` + `personas/`, the one contract they all read. It rests on three ideas -
+layered lazy context, close-the-loop compounding, and ground-every-claim - re-pointed from "ship
+code" to "learn deeply and remember forever."
 
 > **No agent Skills to install (by design).** The ingest flow lives in `AGENTS.md` + personas, the
-> one contract every harness reads - so there are no per-harness Skill files to maintain. Packaging
-> the mechanical pre-filter pipeline as a Skill is deliberate **future work**, revisited only after
-> the flow is battle-tested. See [`prd.md` §10](prd.md).
+> one contract every harness reads - so there are no per-harness Skill files to maintain. See
+> [`prd.md` §10](prd.md).
+>
+> **Two scripts, though - and only two.** "Convention, not application" means no *app*, not no code.
+> [`tools/ingest.py`](tools/ingest.py) freezes the mechanical steps (transcript de-duplication, the
+> static-video probe, frame extraction, contact sheets) and [`validate.py`](validate.py) type-checks
+> the contract itself. Both draw the same line: **form is code, judgement is prose.** See
+> [`prd.md` §4.1](prd.md).
 
 > **Full design + rationale:** [`prd.md`](prd.md). **Read that first** if you want the *why*.
 > **New here?** [`how_to_use_this.md`](how_to_use_this.md) is the complete end-to-end walkthrough
@@ -34,10 +40,11 @@ same flow. Durable, corroborated claims are **promoted up** to `brain/`, so your
 starts richer than this one.
 
 ```
-paste URL -> capture -> understand -> distill -> compound -> ask
-(video/       (transcript/  (agent VIEWs  (LEARNING.md  (brain/topics/  (known: from source
- blog/paper)   text +        visuals +     text + few    merge & cite)    unknown: synth report)
-               figures)      corroborate)  visuals)
+paste URL -> capture -> understand -> [deep research] -> distill -> compound -> ask
+(video/       (transcript/  (agent VIEWs   (OPT-IN only:   (LEARNING.md  (brain/topics/  (known: from source
+ blog/paper/   text +        visuals +      external        text + few    merge & cite     unknown: synth
+ code repo)    figures /     corroborate    evidence ->     visuals)      + validate.py)   report)
+               git clone)    / trace code)  context/)
 ```
 
 Two kinds of files:
@@ -53,15 +60,20 @@ Two kinds of files:
 brain/
 ├── INDEX.md            # ⭐ ASK HERE: annotated catalog of every source + topic ("when to read")
 ├── prd.md              # the design + rationale (read first)
+├── how_to_use_this.md  # the end-to-end walkthrough (clone -> setup -> paste a URL -> ask)
 ├── README.md           # this file
 ├── LICENSE             # MIT
 ├── AGENTS.md           # behavioral contract + the paste-a-URL ingest rule (single source of truth)
+├── validate.py         # type checker for the contract - run before every git diff (stdlib only)
+├── tools/ingest.py     # frozen mechanical steps: transcript / probe / frames / sheet
+├── .github/workflows/  # CI: runs validate.py on every push and PR
 ├── link-agents.sh      # macOS/Linux: symlink CLAUDE.md + copilot-instructions.md -> AGENTS.md
 ├── link-agents.ps1     # Windows: same, once per clone (git-ignored links)
 ├── requirements.txt    # pip packages for the .venv (yt-dlp, faster-whisper, imagehash, pillow)
 ├── personas/           # role overlays: curator, code-explorer, synthesizer, fact-checker, mentor, architect
 ├── sources/            # ONE folder per ingested source
 │   └── _TEMPLATE/      #   copy this to start a new source (media: raw/; code: MAP.md + repo/)
+│                       #   also: visuals/ (curated frames), context/ (deep-research notes)
 ├── brain/              # THE COMPOUNDING VAULT (content; the whole-brain index is root INDEX.md)
 │   ├── topics/         #   living topic notes: agents, mcp, skills, rag, agent-security, inferencing
 │   ├── glossary.md     #   💡 terms defined once, reused
@@ -123,6 +135,13 @@ The agent calls `yt-dlp` / `ffmpeg` from the activated env when it ingests a vid
 the venv each new shell (`source .venv/bin/activate` on macOS, `.\.venv\Scripts\Activate.ps1` on
 Windows).
 
+> **Optional but recommended: the [GitHub CLI](https://cli.github.com) (`gh`).** For code sources it
+> records the license, pins the commit SHA, and fetches the README so the agent can *orient before
+> cloning*. Absent, the agent falls back to plain `git clone` + `web_fetch`. Never a blocker.
+>
+> **`validate.py` needs none of this** - stdlib only, no venv, no `ffmpeg`. `python3 validate.py`
+> works in a fresh clone.
+
 ### Optional: point other agents at the same rules
 
 `AGENTS.md` is the **single contract** for every harness. Copilot CLI, Codex, and Cursor read it
@@ -144,7 +163,7 @@ You never maintain a second copy - the links just point at `AGENTS.md`. See the 
 
 ## How to drive it
 
-Launch Copilot CLI inside this folder and use prompts like:
+Launch your agent inside this folder (`claude`, `copilot`, `codex`, ...) and use prompts like:
 
 - **Ingest media:** paste a video / blog / paper URL, or *"ingest this: <url>"* -> the agent runs
   the full flow (`AGENTS.md` "paste-a-URL trigger").
@@ -157,6 +176,26 @@ Launch Copilot CLI inside this folder and use prompts like:
   cited report with the best visuals across sources.
 - **Build material:** *"make me an HTML primer on Agents + MCP from everything I've ingested."*
 - **Compound:** *"promote durable claims from this source into the topic notes."*
+
+Two switches worth knowing, because both change what the brain is allowed to claim:
+
+- **Deep research (opt-in, never automatic):** say *"deep research"* with the URL, or on an
+  already-ingested source. The agent tests **specific gated claims** against outside sources,
+  weighs them by tier (T1 spec/paper ... T5 aggregator) under an **independence rule**, and files a
+  permanent note in `sources/<id>/context/`. This is the only way a claim earns real confidence -
+  the corroboration gate alone buys internal consistency, not truth.
+- **Skip the visuals:** say *"transcript only"* / *"don't analyze video"* for a podcast or webcam
+  interview where the picture never changes. Otherwise the agent runs a **free static probe** and
+  auto-degrades if the video yields `<= 3` distinct frames. Either way the cost is recorded, not
+  hidden: with one leg, **every node from that source is `single-leg` (needs-check) by
+  construction** - a transcript agreeing with itself is not two legs.
+
+```bash
+python3 validate.py     # type-checks the whole brain; no venv needed. Exit 1 = the pass isn't done.
+```
+
+The agent runs this itself before showing you a `git diff`, and CI runs it on every push. You can
+run it any time to check the vault has not drifted.
 
 ---
 
@@ -186,10 +225,12 @@ in place**, because:
 - **Editing-in-place + git is the feature.** Your compounding `brain/` *is* the git history. A
   package makes the canonical files read-only and upgrades would overwrite your edits.
 
-**Where packaging does belong (later):** only the mechanical ingest **pipeline** (`yt-dlp → ffmpeg
-→ imagehash`) could ship as a small `pip` package the agent calls from `.venv` - separate from the
-convention. A zero-install `npx create-brain` scaffolder is possible if you ever want *multiple*
-brains, but "Use this template" already covers that. See [`prd.md` §10](prd.md).
+**Where packaging does belong (later):** only the mechanical ingest steps (`yt-dlp → ffmpeg →
+imagehash`), which now live in-tree as [`tools/ingest.py`](tools/ingest.py) - and being *in the
+working tree* is the point, since that is what lets the agent read and adapt them. Package it only
+if it ever grows a release cadence of its own. A zero-install `npx create-brain` scaffolder is
+possible if you ever want *multiple* brains, but "Use this template" already covers that. See
+[`prd.md` §10](prd.md).
 
 ---
 

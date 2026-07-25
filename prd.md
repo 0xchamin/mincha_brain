@@ -146,8 +146,15 @@ flowchart LR
 brain/
 ├── INDEX.md                   # ⭐ ASK HERE: annotated catalog of every source + topic ("when to read")
 ├── prd.md                     # this document (human-owned ask)
-├── README.md                  # 60-second how-to (to be written)
+├── README.md                  # 60-second how-to
+├── how_to_use_this.md         # the end-to-end walkthrough (clone -> setup -> paste a URL -> ask)
 ├── AGENTS.md                  # behavioral contract + the paste-a-URL ingest rules
+├── validate.py                # the contract's type checker (stdlib only; §4.1)
+├── tools/
+│   └── ingest.py              # frozen mechanical steps: transcript / probe / frames / sheet (§4.1)
+├── .github/workflows/
+│   └── validate.yml           # CI: runs validate.py on every push and PR
+├── link-agents.sh / .ps1      # per-clone symlinks: CLAUDE.md + copilot-instructions.md -> AGENTS.md
 ├── requirements.txt           # yt-dlp, faster-whisper, imagehash, pillow (pip, in .venv)
 ├── .venv/                     # local virtual env for the helper packages (you create this)
 ├── personas/                  # role overlays (see §7)
@@ -165,6 +172,7 @@ brain/
 │       ├── raw/               #   MEDIA: transcript.vtt / article.md / paper.pdf + extracted text
 │       ├── repo/              #   CODE: the git-ignored clone (snapshot pinned by commit SHA)
 │       ├── visuals/           #   CURATED frames/figures OR diagrams generated from code
+│       ├── context/           #   deep-research notes, one per pass (§5.5) - only if you asked
 │       ├── nodes.md           #   knowledge nodes: claim + evidence + quote + citation + confidence
 │       └── LEARNING.md        #   the per-source learning document (text + few visuals/diagrams)
 ├── brain/                     # THE COMPOUNDING VAULT content (the whole-brain index is root INDEX.md)
@@ -200,6 +208,31 @@ brain/
 > winget install Gyan.FFmpeg               # or scoop/choco - system ffmpeg
 > ```
 > The agent then calls `yt-dlp` / `ffmpeg` from the activated env when it ingests a video.
+
+### 4.1 The two frozen scripts (and why there are exactly two)
+
+"Convention, not application" does **not** mean "no code" - it means no *app*. Two scripts are
+checked in, and the line between them and the prose is the same line in both cases: **form is code,
+judgement is prose.**
+
+| Script | Is | Why it is frozen rather than generated per source |
+|---|---|---|
+| [`tools/ingest.py`](tools/ingest.py) | A **toolbox** of independent mechanical subcommands - `transcript`, `probe`, `frames`, `sheet` - composed per source. Deliberately **no** do-everything entrypoint. | [ADR-0005](brain/decisions/0005-mechanical-toolbox.md). §5.1's static-video threshold (`<= 3 distinct frames`) is meaningless if every agent computes "distinct" with a different scene threshold and hash distance. A rule with no canonical implementation is not a rule. |
+| [`validate.py`](validate.py) | The **type checker for this prose contract**: INDEX integrity both ways, legal statuses, every kept frame cited, every claim cited, log chronology, unique ADRs, resolving links, balanced mermaid fences, every diagram carrying a walkthrough. Stdlib only, no venv. | [ADR-0004](brain/decisions/0004-validator-as-type-checker.md). The kit's strength is that capabilities ship as paragraphs; its one structural weakness is that **prose has no compiler**, so a stale `INDEX.md` row or an uncited promoted claim never fails loudly - it accumulates. |
+
+**Run `python3 validate.py` before showing the `git diff`** at the end of any compound, research or
+close-the-loop pass. Exit 1 means the pass is not finished. CI runs it on every push and PR.
+
+> **Neither script holds judgement, and that is load-bearing.** The toolbox crops images; it does
+> not decide what they mean. The validator checks *form*; it cannot tell you whether a claim is
+> corroborated, whether a frame earns its place, or whether a topic should split - and encoding that
+> would launder judgement as a green check. A green validator means the shape is right, **not** that
+> the thinking is. `AGENTS.md` outranks both: if a check and the contract disagree, the check is the
+> bug.
+
+> **Generate what should vary; freeze what should not.** `yt-dlp` invocations stay ad hoc (format
+> selection genuinely varies). If a step needs to differ for the source at hand, differ - then if you
+> write the same thing a third time, it belongs in the toolbox.
 
 ---
 
@@ -445,6 +478,10 @@ flowchart TD
   ingest/compound (the close-the-loop principle, relocated to the root so the brain is asked at the top).
 - Payoff: source #30 is answered against an already-rich brain; a topic report assembles material
   **no single source contained**.
+- **The pass ends with `python3 validate.py`, then a summary + `git diff`** (§4.1). The validator is
+  what stops this diagram from quietly becoming aspirational: a promoted claim with no citation, a
+  source with no `INDEX.md` row, or a kept frame nothing cites all fail loudly instead of
+  accumulating. A pass that leaves it red is not finished.
 
 ---
 
@@ -470,10 +507,19 @@ battle-tested yet; a Skill is a hardening step, not a starting point.
 scene-detect -> `imagehash` dedup - into one command. **Judgment** (the corroboration gate,
 distillation) stays in `AGENTS.md`/personas - never bake that into a skill.
 
-**Revisit trigger:** after ~5-10 real ingests, once that pre-filter pipeline exists as a stable
-script *and* you know your day-to-day harness, wrap **that mechanical step** as a skill for your
-primary harness - a thin wrapper over the existing contract, capturing its output back into the kit
-file.
+> **Status update (v0.14): the script half of this landed early, the Skill half did not.** The
+> original revisit trigger was *"after ~5-10 real ingests, once that pre-filter pipeline exists as a
+> stable script."* [ADR-0005](brain/decisions/0005-mechanical-toolbox.md) overrode it at **two**
+> ingests, on one narrow ground: [ADR-0003](brain/decisions/0003-optional-visual-leg.md) had created
+> a contract rule (`<= 3 distinct frames` -> skip the visual leg) whose verdict depended on constants
+> that lived only in prose, so two agents would disagree about the same podcast. That is a
+> correctness argument, not an ergonomics one, and it does not wait for a usage count.
+>
+> **The Skill itself is still deferred, and the reasoning above still holds** - `tools/ingest.py`
+> is a plain script every harness can call, which is exactly why it needs no per-harness Skill file.
+> The one harness-specific wrapper in the kit is [`.claude/commands/research.md`](.claude/commands/research.md)
+> (Claude Code has no built-in research command), and it is a thin pointer at §5.5, not a second copy
+> of the contract.
 
 Do all of this **only when the Markdown convention actually hurts** - not before. The convention is
 the asset; tooling is an optimization.
@@ -493,11 +539,14 @@ the asset; tooling is an optimization.
 **Get-the-kit path:** GitHub "Use this template", `gh repo create <you>/brain --template ...`, or a
 plain `git clone`; then `git push` to back up the vault.
 
-**Where packaging *would* belong (future, and only then):** the mechanical ingest **pipeline**
-(`yt-dlp → ffmpeg → imagehash`) as a small standalone `pip` package the agent calls from `.venv`
-(see the Agent Skills entry above - same underlying script). A zero-install `npx create-brain`
-scaffolder is an option only if multiple brains are ever needed - but "Use this template" already
-covers that, so it's not planned.
+**Where packaging *would* belong (future, and only then):** the mechanical ingest steps
+(`yt-dlp → ffmpeg → imagehash`) as a small standalone `pip` package the agent calls from `.venv`.
+**As of v0.14 those steps exist as [`tools/ingest.py`](tools/ingest.py) - checked into the kit, not
+packaged**, and that is the right resting place: it is ~300 lines of stdlib-plus-ffmpeg that the
+agent reads and adapts, and being *in the working tree* is what lets the agent see it at all (the
+same argument that keeps the kit itself out of `site-packages`). Package it only if it ever grows a
+release cadence of its own. A zero-install `npx create-brain` scaffolder is an option only if
+multiple brains are ever needed - but "Use this template" already covers that, so it's not planned.
 
 ### Design decisions recorded (the one-way doors)
 
@@ -508,10 +557,16 @@ sees the *why* without re-deriving it. Full history is in Appendix B.
 |---|---|---|---|
 | **Compounding trigger** | **Automatic by default** - promote eligible nodes in the same pass, then show a summary + `git diff` as undo | The core promise is a brain that compounds; an "offer, then do" gate left the compounding layer stale (the biggest risk the rubber-duck flagged). `git` is the safety net. | v0.8 |
 | **Retrieval entry point** | **Single whole-brain `INDEX.md` at the repo root**; `brain/index.md` demoted to a redirect stub | You ask from the root, so the entry point lives there. One index per *scope* (root=brain-wide, `SOURCE.md`=per-source, topic note=per-topic) gives multi-level indexing with **no same-scope duplication/drift**. | v0.9 |
-| **Index freshness** | `INDEX.md` is a **hard, non-skippable output** of ingest/compound/close-loop + an **integrity rule** (every source folder ⇔ one row) | "Auto-generate" in a script-free kit = the agent regenerates it at defined checkpoints; the integrity rule stops silent unfindable sources. | v0.9 |
+| **Index freshness** | `INDEX.md` is a **hard, non-skippable output** of ingest/compound/close-loop + an **integrity rule** (every source folder ⇔ one row) | "Auto-generate" without a build step = the agent regenerates it at defined checkpoints; the integrity rule stops silent unfindable sources. Since v0.13 `validate.py` checks the rule both ways rather than trusting the agent to have applied it. | v0.9 |
 | **Multi-harness contract** | **One canonical `AGENTS.md`**; `CLAUDE.md` + `.github/copilot-instructions.md` are git-ignored symlinks created per-clone by `link-agents.*` | Codex/Cursor/Copilot-CLI read `AGENTS.md` natively; linking (not copying) the other two avoids maintaining tool-specific duplicates. Committed symlinks break on Windows checkout -> per-clone generation. | v0.4 |
 | **Confidence semantics** | Separate **internal consistency** (two legs agree = extraction confidence) from **external corroboration** (a *second source*) from **fact-checked truth** (human) | Prevents the gate over-claiming "high-confidence/proven"; the kit surfaces + cites, it does not arbitrate truth. | v0.8 |
 | **Code citation durability** | **Immutable GitHub blob permalink with SHA** for code, not bare `path:line` | The cloned `repo/` is git-ignored and discarded, so a bare path is non-inspectable later; a pinned permalink survives. | v0.8 |
+| **External evidence** ([ADR-0002](brain/decisions/0002-deep-research-stage.md)) | **Opt-in** deep-research pass, targeting **gated node IDs** (never a topic), output to a permanent `sources/<id>/context/` note | The gate buys internal consistency only; real confidence needs a *second source*. Made opt-in because most sources do not earn a slow, token-heavy pass. Targeting nodes rather than topics is what keeps it from degenerating into summarizing adjacent reading. | v0.10 |
+| **Visual leg** ([ADR-0003](brain/decisions/0003-optional-visual-leg.md)) | **On by default, skippable** - by user opt-out or by a free static-video probe (`<= 3` distinct frames) | Frames are the whole point on a slide talk and worthless on a webcam interview. The probe is the *first* shell step anyway, so the signal costs no tokens. The cost is **recorded, not discovered**: a skipped leg makes every node `single-leg` by construction. | v0.11 |
+| **Commit messages** | **Conventional Commits** (`docs:` ingest/promote, `feat:` contract change, `fix:` wrong claim or stale row, `chore:`, `refactor:`) | Set by the repo's first commit; binding on agents and humans alike. The subject scans, the body carries what was promoted and what was rejected and why. | v0.12 |
+| **Enforcement** ([ADR-0004](brain/decisions/0004-validator-as-type-checker.md)) | A **`validate.py` type checker** for the prose contract, run before every `git diff` and in CI - checking **form, never judgement** | Prose has no compiler, so drift accumulates silently. Encoding judgement (is this claim corroborated?) would be worse than no check: it launders a guess as a green tick. | v0.13 |
+| **Mechanical steps** ([ADR-0005](brain/decisions/0005-mechanical-toolbox.md)) | Freeze them as a **toolbox** (`tools/ingest.py`), never a pipeline - no do-everything entrypoint | **Generate what should vary, freeze what should not.** Mid-ingest you may abandon phash dedup for transcript-anchored extraction, and a rigid script would fight you; but VTT parsing has no reason to differ between videos, and a threshold computed with different constants is not comparable across sources. | v0.14 |
+| **Diagrams** | **Every diagram carries a walkthrough** - orientation, one-sentence crux, why-this-shape, provenance - enforced by `validate.py` | A picture dropped in with no explanation teaches nobody: the reader who understands it did not need it, the reader who does not is no better off. If you cannot name the crux in one sentence, the diagram is decoration - delete it. Anti-pattern: narrating the arrows. | v0.15 |
 
 ---
 
@@ -523,19 +578,39 @@ sees the *why* without re-deriving it. Full history is in Appendix B.
 | R2 | Agent misreads a figure | Corroboration gate + confidence flags; index approximate description, don't claim exact. |
 | R3 | "Valid" misread as "fact-checked" | Explicit NG1; label confidence; human judges truth. |
 | R4 | YouTube ToS / bot-blocking | Personal use, captions-first, rate-limited; respect ToS. |
-| R5 | Talking-head videos have no useful frames | Degrade to transcript-only gracefully. |
+| R5 | Talking-head videos have no useful frames | **Resolved mechanically in v0.11** ([ADR-0003](brain/decisions/0003-optional-visual-leg.md)): the free static probe auto-degrades at `<= 3` distinct frames, and the degrade is *recorded* in `SOURCE.md` so every node is correctly gated `single-leg`. |
 | R6 | `grep`-retrieval slows at large scale | Future-work vector index; convention shape unchanged. |
 | R7 | Paywalled papers/blogs | Ingest only what you can access; note access limits in `SOURCE.md`. |
+| R8 | **Prose has no compiler** - a stale `INDEX.md` row, an uncited promoted claim, or a broken link never fails loudly, it accumulates | `validate.py` (v0.13) checks form at every compound pass and in CI. |
+| R9 | **A green validator gets misread as "verified"** - the mirror of R3, one layer up | The validator checks *form, never judgement*, and says so in its own docs: it cannot tell you a claim is corroborated or a frame earns its place. Those stay with the fact-checker and architect. It also cannot catch a `log.md` entry misordered *within* a single day - the failure that has actually occurred in practice. |
+| R10 | **Three of the four source types are still unexercised** - two ingests to date, both video; blog, paper and especially **code** (`MAP.md`, `path:line @sha`, docs↔code divergence, generated diagrams) are prose that has never run | Known and accepted. First contact will find bugs, as it did for `tools/ingest.py` (a swallowed `ffmpeg` exit code that made every failure look like a static video). Treat the code flow's first ingest as a shakedown run, not a routine one. |
 
-### Open questions (for you to resolve in this doc)
-- **OQ1:** Captions-first vs. always-Whisper for videos (quality vs. speed/cost)?
-- **OQ2:** Gate strictness - keep `single-leg` nodes (needs-check), or `corroborated`-only?
-- **OQ3:** Seed topic set for `brain/topics/` - Agents, MCP, Skills, RAG, agent-security,
-  inferencing (add more)?
-- **OQ4:** Report default - Markdown-first or HTML-first?
-- **OQ5:** Do you want a quick human-approval step on kept visuals before topic promotion?
+### Open questions
+
+Resolved by practice, kept here with the answer so the reasoning is not re-derived:
+
+- **OQ1 (resolved v0.11): captions-first, Whisper as fallback.** Both ingests to date used
+  `yt-dlp` auto-captions; `tools/ingest.py transcript` de-duplicates YouTube's rolling caption
+  format into timestamped blocks so `&t=` citations land on the right second. Whisper is the
+  documented degrade when a video has no captions, not the default.
+- **OQ2 (resolved v0.8): keep `single-leg` nodes at `needs-check`.** `corroborated`-only would have
+  discarded the honest majority of a transcript-only source. The vocabulary carries the cost
+  instead of the filter doing so - and ADR-0003 then *depends* on this, since a skipped visual leg
+  makes every node `single-leg` by construction.
+- **OQ5 (resolved v0.8): no.** Compounding is automatic; `git diff` + `git revert` is the undo. An
+  approval gate on kept visuals was exactly the "offer, then do" pattern that left the compounding
+  layer stale.
+
+Still open:
+
+- **OQ3: the seed topic set is now moot as a *question*** - v0.6 made the topic set **open**, with
+  the architect persona owning create-vs-merge and `emerging` -> `established` on a second
+  corroborating source. The live question is narrower: **at what point does `agents.md` (170 lines,
+  `established`) want splitting?**
+- **OQ4:** Report default - Markdown-first or HTML-first? (One report exists; Markdown so far.)
 - **OQ6:** For code, how deep should the default orientation pass go before you steer it (just
-  `MAP.md`, or `MAP.md` + auto-trace the single key flow)?
+  `MAP.md`, or `MAP.md` + auto-trace the single key flow)? **This one will answer itself on the
+  first code ingest** - see R10.
 
 ---
 
@@ -594,4 +669,11 @@ is `AGENTS.md`; source folders are named `YYMMDD_slug`.
 | 2026-07-24 | v0.6 | **Made the topic set open/extensible.** Added a "Scope: topics are open" note + domain guardrail to `AGENTS.md`; a new-topic branch in the compound step (create/register/log, `emerging` until a 2nd source corroborates, don't spawn per source); reconciled `architect.md` (create genuinely-new, resist redundant); and an open-topics + `emerging` note in `brain/index.md`. | agent (seed) - owner to curate |
 | 2026-07-24 | v0.7 | **Recorded the distribution decision:** ship as a GitHub *template repo* (clone + edit in place), **not** a `pip`/`npx` package - agents read `AGENTS.md` at the repo root, it's a personal git-tracked vault, and editing-in-place is the feature. Added §10 rationale + README "Get the kit" and "Why not a package" sections. | agent (seed) - owner to curate |
 | 2026-07-24 | v0.9 | **Relocated the whole-brain index to the repo root as `INDEX.md`** so the brain is asked from the top. It is the annotated entry point (Sources + Topics rosters + pointers into `brain/`), **auto-maintained as a hard, non-skippable output** of ingest/compound/close-loop, with an **integrity rule** (every `sources/<x>/` ⇔ one row; every `brain/topics/*.md` ⇔ one row). `brain/index.md` is now a redirect stub - `brain/` keeps the *content* (topics/claims/glossary/log/decisions), avoiding a second whole-brain roster (no drift). Multi-level indexing preserved: root (brain-wide), per-source `SOURCE.md` reading-order, per-topic note - each owns a distinct scope. Repointed all references across `AGENTS.md`, personas, README, how_to_use, and this doc; aligned the flow text to auto-promote + gate vocabulary. Added a consolidated §10 "Design decisions recorded" table (one-way-door calls + rationale). Initialized the repo and pushed to a private GitHub remote. | agent (seed) - owner to curate |
-| 2026-07-24 | v0.8 | **Applied rubber-duck review fixes.** Compounding is now **automatic by default** (auto-promote eligible nodes + summary + `git diff` as undo). Reworked the gate vocabulary to `corroborated` / `single-leg` / `divergence` / `dropped` and **separated internal consistency (extraction confidence) from external corroboration (second source) from fact-checked truth** across `AGENTS.md`, `prd.md` §6, and the fact-checker/synthesizer personas - no more "high-confidence/proven" over-claims. Added **stable node IDs** (`n1..`), **both-legs-cited** nodes, and **immutable GitHub blob permalinks** for code citations. Added a **degrade & failure-handling** table, a local **ADR template** (`brain/decisions/0000-template.md`), a **Status column** on the Topics index + per-topic `Status:` lines, expanded source Status values, **synthesized-diagram provenance**, a whole-`raw/` git-ignore (except README), a PowerShell verify variant, and a clobber-guard in `link-agents.ps1`. **By-design pushbacks:** no full pipeline script (doc-only kit), light node IDs (not a full backlinked registry). | agent (seed) - owner to curate |
+| 2026-07-24 | v0.8 | **Applied rubber-duck review fixes.** Compounding is now **automatic by default** (auto-promote eligible nodes + summary + `git diff` as undo). Reworked the gate vocabulary to `corroborated` / `single-leg` / `divergence` / `dropped` and **separated internal consistency (extraction confidence) from external corroboration (second source) from fact-checked truth** across `AGENTS.md`, `prd.md` §6, and the fact-checker/synthesizer personas - no more "high-confidence/proven" over-claims. Added **stable node IDs** (`n1..`), **both-legs-cited** nodes, and **immutable GitHub blob permalinks** for code citations. Added a **degrade & failure-handling** table, a local **ADR template** (`brain/decisions/0000-template.md`), a **Status column** on the Topics index + per-topic `Status:` lines, expanded source Status values, **synthesized-diagram provenance**, a whole-`raw/` git-ignore (except README), a PowerShell verify variant, and a clobber-guard in `link-agents.ps1`. **By-design pushbacks:** no full pipeline script (doc-only kit) *- superseded at v0.14, see ADR-0005*, light node IDs (not a full backlinked registry). | agent (seed) - owner to curate |
+| 2026-07-25 | v0.10 | **Added the optional deep-research stage** ([ADR-0002](brain/decisions/0002-deep-research-stage.md)) as §5.5: an external-evidence pass between the gate and distillation, **never automatic**. Targets **gated node IDs** (not topics), returns `supports` / `contradicts` / `refines` / `no-evidence`, weighs sources by **tier T1-T5** under a hard **independence rule** (a talk's own companion repo is the same leg wearing a different hat), and writes a permanent note to `sources/<id>/context/`. Read Copilot CLI's `/research` first: borrowed its autonomous stance and Confidence-assessment section, **inverted** its throwaway session storage - ephemeral output that is not captured into a kit file did not happen. Shipped `.claude/commands/research.md` since Claude Code has no built-in equivalent. | agent |
+| 2026-07-25 | v0.11 | **Made the visual leg optional** ([ADR-0003](brain/decisions/0003-optional-visual-leg.md)) - the mirror of v0.10's opt-in research. Analysed **by default**; skipped on user opt-out ("transcript only") or by a **free static-video probe**, since scene-detect + phash dedup is already the first shell step, so `<= 3` distinct frames auto-degrades at zero token cost. **The cost is recorded, not discovered:** a skipped leg makes every node `single-leg` *by construction* (a transcript agreeing with itself is not two legs), tracked in a new `SOURCE.md` **Visual leg** field. Deep research is the designated way back to a second leg. Resolves R5. | agent |
+| 2026-07-25 | v0.12 | **Recorded the Conventional Commits rule** in `AGENTS.md` with a per-type mapping for this kit (`docs:` for the normal compounding pass, `feat:` for contract changes, `fix:` for a wrong claim or stale row). Set by the repo's first commit and binding on agents and contributors alike; the detailed body (what was promoted, what was rejected and why) is where the reasoning survives. | agent |
+| 2026-07-25 | v0.13 | **Added `validate.py`, a type checker for the prose contract** ([ADR-0004](brain/decisions/0004-validator-as-type-checker.md)). The kit's strength - capabilities ship as paragraphs - has one structural weakness: **prose has no compiler**, so drift accumulates silently. Checks enforce only what `AGENTS.md` already requires: INDEX integrity both ways, legal statuses, every kept frame cited, every claim cited, log chronology, unique ADRs, resolving links, balanced mermaid, no em dashes. Stdlib only; CI on every push and PR (`.github/workflows/validate.yml`). **Form, never judgement** - encoding "is this corroborated?" would launder a guess as a green tick. Mutation-tested against a corrupted copy; the first run found 3 bugs, **all in the validator rather than the repo**. Adds R8/R9. | agent |
+| 2026-07-25 | v0.14 | **Froze the mechanical ingest steps as `tools/ingest.py`** ([ADR-0005](brain/decisions/0005-mechanical-toolbox.md)) - a **toolbox, not a pipeline**: `transcript`, `probe`, `frames`, `sheet`, composed per source, deliberately no do-everything entrypoint. Overrides §10's "wait for ~5-10 ingests" trigger at two ingests on one narrow ground: **v0.11 created a contract rule with no canonical implementation**, so "distinct frames" varied with whatever constants an agent picked. Principle: **generate what should vary, freeze what should not**; judgement stays in prose, the same line `validate.py` draws. Verified `transcript` reproduces the 12-factor hand-run byte-for-byte and `probe` discriminates static (0 distinct) from rich (5). **Testing caught a silent-failure bug**: `run_ffmpeg` ignored ffmpeg's exit code, so any error looked like a static video and would have skipped the visual leg without saying why. | agent |
+| 2026-07-25 | v0.15 | **Every diagram now carries a walkthrough** - a hard rule in `AGENTS.md`, enforced by `validate.py`, wired into the four personas that actually draw diagrams (curator, mentor, synthesizer, code-explorer) so it is present at the moment of action rather than only in the contract. Required shape, written as a mentor ramping up an engineer: **orientation** (how to read it, legend for colour), **the crux** (one bold sentence - if you cannot name it, delete the diagram), **why it is shaped this way** (rationale + what a different shape would break - the part that transfers judgement), **provenance** (`synthesized from nX`, so generated material never reads as sourced evidence). Named anti-pattern: **narrating the arrows**. The validator found 5 undocumented diagrams; all backfilled. Reinforcement now at 4 points: contract -> persona -> template scaffold -> validator. | agent |
+| 2026-07-25 | v0.16 | **Reconciled the docs with the kit** (this pass). v0.10-v0.15 had landed in `AGENTS.md`, the ADRs and `brain/log.md` but never reached the three files a new reader opens: `validate.py` appeared in **none** of `README.md` / `how_to_use_this.md` / `prd.md`, `tools/ingest.py` in prd only, deep research in neither user-facing doc. Added §4.1 (the two frozen scripts and the form-vs-judgement line between them), the missing ADR rows to §10's decisions table, R8-R10, resolutions for OQ1/OQ2/OQ5, and v0.10-v0.16 here. Corrected three statements the repo had outgrown: the Agent-Skills revisit trigger (superseded by ADR-0005), "where packaging would belong" (it landed in-tree instead), and "script-free kit". **R10 is the honest headline: two ingests, both video - blog, paper and code remain unexercised prose.** | agent |
