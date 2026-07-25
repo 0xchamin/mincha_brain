@@ -22,7 +22,7 @@
 | Ingested | <date> |
 | Access | open / paywalled-accessible / limited (note any restriction) |
 | Topics | <agents, mcp, skills, rag, agent-security, inferencing, ...> |
-| Status | capture / understand / distill / awaiting-promotion / compounded / blocked / partial |
+| Status | capture / understand / researched (optional) / distill / awaiting-promotion / compounded / blocked / partial |
 
 ## Reading order for this source
 
@@ -30,8 +30,9 @@
 2. For **code**: `MAP.md` - repo orientation (what it demonstrates, module map, key flow).
 3. `raw/` (media) or `repo/` (code, git-ignored) - the captured ground truth.
 4. `nodes.md` - knowledge nodes (corroborated claims + visuals/diagrams + citations).
-5. `LEARNING.md` - the distilled learning document.
-6. `visuals/` - the curated frames/figures/generated diagrams.
+5. `context/` - **external evidence** from a deep-research pass (empty unless requested).
+6. `LEARNING.md` - the distilled learning document.
+7. `visuals/` - the curated frames/figures/generated diagrams.
 
 ## Ingest notes
 

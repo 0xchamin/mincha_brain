@@ -60,6 +60,30 @@ useless". You can put 2M tokens into Gemini and get an answer. The claim is that
 get tighter, higher-reliability results by controlling and limiting what goes in [S2 `&t=388s`].
 Treat window size as a budget you spend deliberately, not a ceiling you fill.
 
+**This is measured, and the measurements are harsher than S2's framing** [R1]. Degradation is not a
+gentle slope you trade off against convenience - it is **non-uniform and adversarial**:
+
+- **Position matters.** Performance "is often highest when relevant information occurs at the
+  beginning or end of the input context, and significantly degrades" in the middle - a U-shaped curve
+  reproduced across six model families ([Lost in the Middle](https://arxiv.org/abs/2307.03172), TACL,
+  T1).
+- **It starts early and hits simple tasks.** Isolating input length across 18 models, performance
+  "varies significantly as input length changes, **even on simple tasks**" like retrieval and text
+  replication; a 200K-window model can degrade materially by 50K
+  ([Context Rot](https://www.trychroma.com/research/context-rot), T2).
+- **There is a mechanism.** Attention is a finite **budget**: the transformer needs "every token to
+  attend to every other token", giving "n² pairwise relationships for n tokens", so the ability to
+  capture them "gets stretched thin" as context grows. Hence: find "the smallest possible set of
+  high-signal tokens" ([Anthropic](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents), T2).
+
+> 💡 **Context rot** - the measurable decline in output quality as input length grows, independent of
+> task difficulty. Not a capacity limit being hit; a gradient you are already on.
+
+**The corollary S2 misses: decompose, don't remember.** The measured win is splitting long tasks into
+short segments and restarting at each boundary (**+13.1 to +41.5 pp** reliability across 10 models);
+a naive episodic memory scaffold "never improves long-horizon reliability, and hurts 6 of 10 models"
+([Beyond pass@1](https://arxiv.org/abs/2603.29231), T3 preprint) [R1].
+
 ### Compact errors rather than appending them
 
 The sharpest practical rule here. When a tool call fails, the naive move is to append the error and
@@ -78,7 +102,10 @@ the whole stack trace. "Figure out what you want to tell the model so you get be
 | You need not use the standard messages format - model the thread as typed events and serialise for density and clarity. | S2 `&t=563s` | emerging |
 | Owning the serialisation is the precondition for pausing/resuming an agent. | S2 `&t=460s` | emerging |
 | Limiting context beats filling it: a 2M-token window returns an answer, not a better one. | S2 `&t=388s` | emerging |
-| Compact errors - clear pending errors after a valid tool call, summarise instead of dumping stack traces - or the agent spins out. | S2 `&t=653s` | emerging |
+| Compact errors - clear pending errors after a valid tool call, summarise instead of dumping stack traces - or the agent spins out. | S2 `&t=653s` + R1 (Anthropic names compaction a core technique, T2) | corroborated (external) |
+| Context degradation is **non-uniform**: position-dependent (U-shaped), worsened by distractors, visible well before the advertised window. | R1 ([Lost in the Middle](https://arxiv.org/abs/2307.03172) T1; [Context Rot](https://www.trychroma.com/research/context-rot) T2) | **measured** |
+| The measured win is **decomposition**, not memory: +13.1 to +41.5 pp reliability from short segments; naive memory scaffolds hurt 6 of 10 models. | R1 ([Beyond pass@1](https://arxiv.org/abs/2603.29231) T3 preprint) | needs-check (preprint) |
+| The thread-as-event-log design is **Event Sourcing** (Fowler 2005), which already names its sharp edges: replay determinism, snapshotting, event versioning. | R1 ([Azure Arch Center](https://learn.microsoft.com/en-us/azure/architecture/patterns/event-sourcing) T1) | emerging |
 
 ## Key visuals
 
@@ -93,15 +120,24 @@ the whole stack trace. "Figure out what you want to tell the model so you get be
 
 ## Open questions / conflicts
 
-- **Single source so far.** Everything here comes from S2; the topic stays `emerging` until a second,
-  unrelated source corroborates. S2's own external leg is the author's own repo, so it is not
-  independent (S2 `nodes.md` `en1`).
-- **No measurements anywhere.** "Limit the tokens and reliability improves" is asserted, never
-  quantified - no benchmark, ablation or failure rate. Actively worth seeking a source with data,
-  because this claim is testable and load-bearing.
+- **One ingested source, but now externally corroborated.** The synthesis still rests on S2; the
+  topic stays `emerging` until a second *ingested* source lands. The R1 research pass supplies
+  independent external evidence (tiered, with independence calls) - see
+  [`../../sources/260725_12-factor-agents/context/01_context-limits-and-decomposition.md`](../../sources/260725_12-factor-agents/context/01_context-limits-and-decomposition.md).
+- ~~**No measurements anywhere.**~~ **Closed by R1 (2026-07-25).** The context claim is now the
+  best-evidenced thing in the topic - and stronger than S2 stated it. See the measured version above.
 - **Unresolved: where compaction should live.** S2 says summarise errors but does not say by what -
   a second LLM call, a heuristic, or hand-written rules - nor how to avoid summarising away the
-  detail that would have fixed the bug.
+  detail that would have fixed the bug. R1 partially helps: Anthropic names compaction as a
+  technique, but likewise does not specify the mechanism.
+- **New, from R1: the memory trap.** Naive episodic memory scaffolding **hurt 6 of 10 models** and
+  never improved long-horizon reliability, losing to plain ReAct. Any future claim here that drifts
+  toward "give the agent richer memory" must be checked against this - the measured win is
+  *decomposition*, not *remembering more*.
+- **New, from R1: this design has an older name.** Modelling the thread as an append-only typed event
+  log and replaying it is **Event Sourcing** (Fowler, 2005). Worth mining that literature for the
+  three sharp edges it already names - replay determinism, snapshotting, event versioning - none of
+  which S2 mentions.
 - **Overlap with `rag.md` needs watching.** As RAG sources arrive, retrieval strategy claims belong
   there; only the "which tokens win the budget" framing belongs here. Revisit the split if the two
   notes start duplicating (see ADR-0001).
@@ -109,3 +145,4 @@ the whole stack trace. "Figure out what you want to tell the model so you get be
 ## Sources feeding this topic
 
 - **S2** - [12-Factor Agents: Patterns of reliable LLM applications](../../sources/260725_12-factor-agents/LEARNING.md) (Dex Horthy, HumanLayer, AI Engineer WF 2025) - factors 2, 3, 9 and the "everything is context engineering" framing.
+- **R1** - [deep-research pass on S2](../../sources/260725_12-factor-agents/context/01_context-limits-and-decomposition.md) (2026-07-25) - external evidence: Lost in the Middle (T1), Context Rot (T2), Anthropic context engineering (T2), Beyond pass@1 (T3), Event Sourcing (T1). Each citation carries a tier and an independence call.

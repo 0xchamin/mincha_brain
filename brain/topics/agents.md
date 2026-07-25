@@ -52,6 +52,20 @@ steps inside deterministic software. S1's spectrum framing - deterministic/britt
 unconstrained/unsafe at the other, with a **guardrailed middle** as the target [S1 `&t=251s`] - is
 the same claim stated as a design space.
 
+**And it is now measured, not just twice-asserted** [R1]. "Beyond pass@1" names task decomposition
+the **highest-leverage reliability intervention**, quantified across 10 open-source models:
+**+13.1 pp (DeepSeek V3)** and **+41.5 pp (Qwen3 30B)** reliability gain from splitting a long task
+into short segments and restarting the agent at each boundary
+([arXiv 2603.29231](https://arxiv.org/abs/2603.29231), T3 preprint). Anthropic reports the same shape
+from its own deployments: the most successful implementations "weren't using complex frameworks or
+specialized libraries. Instead, they were building with simple, composable patterns"
+([Building effective agents](https://www.anthropic.com/engineering/building-effective-agents), T2).
+
+> **The boundary the same paper draws - and S2 misses.** Decomposition helps; *memory scaffolding*
+> does not. A naive episodic memory scaffold "never improves long-horizon reliability, and hurts 6 of
+> 10 models" - plain ReAct beat it. The defensible move is **decompose and keep each segment short**,
+> not **remember more**. Check any future "give the agent better memory" claim against this. [R1]
+
 The expected trajectory is not a jump to full autonomy but **starting deterministic and sprinkling
 LLM steps in**, widening their scope as models improve - while still doing the engineering to hit
 quality at each stage [S2 `&t=814s`].
@@ -114,7 +128,8 @@ API first") are just more events in the same thread [S2 `&t=776s`].
 | Agent design is a spectrum from brittle rules to unconstrained agency; aim for a guardrailed middle. | S1 `&t=251s` | emerging |
 | Agents can self-tune: a reflect+synthesize prompt-optimizer rewrites an agent's config and registers a new version. | S1 `&t=732s` | needs-check (single-leg) |
 | A diagnoser meta-agent localizes which sub-agent is failing and routes the config fix there. | S1 `&t=1144s` | emerging |
-| Not every problem needs an agent - a deterministic script often beats two hours of prompt engineering. | S2 `&t=71s` | needs-check (single-leg anecdote) |
+| Not every problem needs an agent - a deterministic script often beats two hours of prompt engineering. | S2 `&t=71s` + R1 (Anthropic: "find the simplest solution possible, and only increasing complexity when needed", T2) | corroborated (external) |
+| Decomposition is measured (+13.1 to +41.5 pp reliability); naive memory scaffolds are measured *worse* (hurt 6 of 10 models, lost to plain ReAct). | R1 ([Beyond pass@1](https://arxiv.org/abs/2603.29231), T3 preprint) | needs-check (preprint) |
 | Target work at the boundary of reliable model capability, then engineer reliability around it. | S2 `&t=848s` | emerging |
 
 ## Key visuals
@@ -132,9 +147,13 @@ API first") are just more events in the same thread [S2 `&t=776s`].
 ## Open questions / conflicts
 
 - **No conflicts between S1 and S2 so far** - they converge on small-scoped agents inside
-  deterministic pipelines. Worth actively looking for a source that argues the *opposite* (that
-  large autonomous loops now work), since agreement between two talks by practitioners selling
-  adjacent products is weak evidence.
+  deterministic pipelines. That agreement was weak evidence on its own (two practitioner talks by
+  people selling adjacent products); **R1 has since strengthened it** with a measurement and an
+  independent third party (Anthropic). Still worth looking for a source that argues the *opposite* -
+  that large autonomous loops now work.
+- **New from R1, unresolved:** decomposition is measured on coding/web/tool benchmarks (SWE-bench,
+  WebArena, tau-bench), not on the deploy-bot-style workflows S1 and S2 describe. The transfer is
+  plausible, not demonstrated.
 - S2's factors are corroborated by the author's own repo, **not** by an independent party (S2
   `nodes.md` `en1`); the "100+ builders interviewed" basis is uncheckable from the source. No
   benchmarks, ablations or failure rates appear anywhere in S2.
@@ -148,3 +167,4 @@ API first") are just more events in the same thread [S2 `&t=776s`].
 
 - **S1** - [Building Closed-Loop Evals for a Multimodal Agent at Scale](../../sources/260725_closed-loop-evals-multimodal-agent/LEARNING.md) (Uber, AI Engineer 2026).
 - **S2** - [12-Factor Agents: Patterns of reliable LLM applications](../../sources/260725_12-factor-agents/LEARNING.md) (Dex Horthy, HumanLayer, AI Engineer WF 2025).
+- **R1** - [deep-research pass on S2](../../sources/260725_12-factor-agents/context/01_context-limits-and-decomposition.md) (2026-07-25) - external evidence, tiered with independence calls.

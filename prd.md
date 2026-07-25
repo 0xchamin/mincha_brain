@@ -225,8 +225,12 @@ flowchart TD
     Rc --> G
     G -- agree & substantive --> N[Knowledge node<br/>claim + evidence + quote + citation]
     G -- silent / conflict --> Drop[discard, OR keep docs-vs-code<br/>divergence as a finding]
-    N --> L[Write LEARNING.md<br/>text + few curated visuals]
+    N --> DR{User asked for<br/>deep research?}
+    DR -- no default --> L[Write LEARNING.md<br/>text + few curated visuals]
+    DR -- yes --> X[External evidence pass<br/>context/ notes, tiered + independent]
+    X --> L
     N --> P[Promote durable claims<br/>to brain/topics/*.md + root INDEX.md]
+    X --> P
 ```
 
 ### 5.1 YouTube (video)
@@ -270,6 +274,31 @@ flowchart TD
    *does*. Agree -> node. A **divergence** (docs say X, code does Y) is a first-class finding -
    record it with both citations.
 5. **Cite:** `path:line @<commit-sha>`.
+
+### 5.5 Deep research (optional, on request only)
+
+The four flows above produce **internal** corroboration - two legs *within* one source. That is
+consistency, not truth (§6.3). When the user says **"deep research"**, an extra pass runs **after the
+gate and before distilling**: it takes the *gated node IDs* and looks for **independent external
+evidence** for each, returning `supports` / `contradicts` / `refines` / `no-evidence`.
+
+Design points that make it more than a search wrapper:
+
+- **Targets claims, not subjects.** Researching a topic returns adjacent reading; researching node
+  `n8` returns something that changes a confidence value.
+- **Tiered sources + an independence rule.** A companion repo, or a vendor blog restating that
+  vendor's own talk, is the same leg wearing a different hat - recorded, cited, but never allowed to
+  raise confidence.
+- **`no-evidence` is a result.** "This rests on one practitioner's experience" is exactly what this
+  brain exists to record.
+- **Output is permanent.** `sources/<id>/context/<NN>_<slug>.md`, committed - the inverse of a
+  harness's throwaway session research directory.
+- **It stays out of `LEARNING.md`'s body**, which answers only *what did this source teach?*
+
+Full contract (tiers, budget, feedback loop, degrade rules): `AGENTS.md` § "Deep research on
+request". Claude Code wrapper: `.claude/commands/research.md`.
+
+---
 
 > **General principle:** every source has an **evidence leg** and a **claim leg** that must agree.
 > Media: a **visual** (frame/figure) ↔ the **surrounding text**. Code: the **code** (`path:line`)

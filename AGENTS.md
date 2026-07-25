@@ -57,9 +57,13 @@ being asked**:
    what the code actually does** (`path:line`). Record `corroborated`/`single-leg`/`divergence`
    items as knowledge nodes in `nodes.md`, each cited (both legs when both exist). A **docs↔code
    divergence** is itself a valuable finding - record it.
-5. **Distill** (adopt **curator**): write `LEARNING.md` - the distilled, transferable concept the
+5. **Deep research (optional - only when the user asks).** If the user says **"deep research"**
+   alongside the URL (or invokes the harness's research command), run an external-evidence pass
+   **after the gate and before distilling** - see "Deep research on request" below. **Never
+   automatic:** most sources do not earn it, and it is slow and token-heavy.
+6. **Distill** (adopt **curator**): write `LEARNING.md` - the distilled, transferable concept the
    source taught, + 3-8 curated visuals/diagrams, every claim cited.
-6. **Compound (automatic by default).** As soon as the gate yields eligible nodes, **promote them
+7. **Compound (automatic by default).** As soon as the gate yields eligible nodes, **promote them
    without waiting to be asked**: merge durable, **transferable** claims (not source-specific
    trivia) into `brain/topics/*.md`, register them in `brain/claims.md`, add/refresh the annotated
    row in the **root `INDEX.md`** (Sources table - a **hard, non-skippable output**), and append a
@@ -93,6 +97,81 @@ being asked**:
 > assemble for the source at hand and your OS - not a checked-in pipeline. Keep frame filenames
 > timestamped (`frame_<seconds>.jpg`) so citations can deep-link.
 
+## Deep research on request (external evidence)
+
+> **Why this exists.** The corroboration gate buys *internal* consistency - a slide agrees with the
+> narration, code agrees with its docs. That is not truth (see Global rules). Real confidence rises
+> only with **external** corroboration. Deep research is the mechanism: it reaches outside the source
+> to test what the source claims, and to attach the intellectual context that makes a claim land -
+> the prior work, the competing framing, the name the field already has for this thing.
+
+**Trigger (never automatic).** The user says **"deep research"** with the URL, or asks for it on an
+already-ingested source, or invokes the harness's research command. Adopt **fact-checker +
+synthesizer** (+ **mentor** when the goal is teaching a concept).
+
+**Target the nodes, not the subject.** Open-ended "research <topic>" returns adjacent reading and
+makes you a summarizer. Research **specific gated claims by node ID** from `nodes.md`, prioritising:
+`single-leg` nodes, anything marked `needs-check`, recorded divergences, and the `LEARNING.md` open
+questions. Each finding resolves to one of four verdicts:
+
+| Verdict | Meaning | Effect |
+|---|---|---|
+| `supports` | An **independent** source agrees | Node confidence may rise; cite the external source in `brain/claims.md` |
+| `contradicts` | A credible source disagrees | **A finding, not a failure** - record both, flag the conflict |
+| `refines` | Broadly agrees but bounds/qualifies the claim | Rewrite the claim with the qualifier |
+| `no-evidence` | Nothing credible found either way | **Also informative** - the claim is one practitioner's experience; say so |
+
+**Read the brain before you read the web.** `grep` the root `INDEX.md`, `brain/topics/*.md` and
+`brain/claims.md` first - a prior source may already answer this, and the link between them is worth
+more than a fresh fetch.
+
+### Source credibility tiers (record the tier with every citation)
+
+| Tier | What | How to weigh it |
+|---|---|---|
+| **T1** | Peer-reviewed papers, official specs/standards, official API/product docs | Strongest for *how something works*. |
+| **T2** | First-party engineering writing (Anthropic, OpenAI, DeepMind, Cursor, ...) and official repos | Authoritative **about their own system**; **positioned** on the wider field. Flag when a vendor is cited on a topic they sell. |
+| **T3** | Preprints (arXiv) | Good for recency and for the field's vocabulary; **not peer-reviewed** - always label as preprint, never treat as settled. |
+| **T4** | Practitioner experience: conference talks, engineering blogs, respected individual writers | Same evidential class as most sources in this brain - experience reports, rarely measured. |
+| **T5** | Aggregators and directories (Pulse MCP, awesome-lists, doc hubs) | Use for **discovery**; cite the primary source they point to, not them. |
+
+> **The independence rule (hard).** External evidence only counts as corroboration when it is
+> **independent** of the original source - not the same author, organisation, or commercial interest.
+> A talk's companion repo, a vendor blog restating the vendor's own conference talk, or a paper by
+> the same lab is **the same leg wearing a different hat**. Record it, but never let it raise
+> confidence. When independence is unclear, say so.
+
+### Calibration: aim one level above the source
+
+The reader already knows the fundamentals of LLMs and agents. **Do not write 101 explainers.** The
+target is the concept *one level above* the source - the frame that makes its claim feel inevitable
+rather than arbitrary.
+
+> **Take the cross-domain hop.** The most valuable framing is often the established name in an older
+> discipline - cognitive science, distributed systems, PL theory, control theory, information
+> science. (Example: agent skill design is a rediscovery of **procedural memory**.) Searching only AI
+> sources will never surface this, so search for it deliberately.
+
+### Budget, output, and honesty
+
+- **Budget (default):** ≤ 8 searches and ≤ 12 fetches per pass. **Stop early** when two independent
+  T1-T3 sources agree, or when a pass surfaces nothing new. Record the budget actually used.
+- **Never interrupt with clarifying questions.** Make reasonable assumptions, state them explicitly
+  in a **Confidence assessment** section at the end of the note. (Pattern borrowed from Copilot
+  CLI's `/research`.)
+- **Output is a permanent kit file, not a session artifact:**
+  `sources/<id>/context/<NN>_<slug>.md`, one note per pass, numbered in order. Copilot CLI writes
+  research to a throwaway session directory; this kit does the opposite - **ephemeral output that is
+  not captured into a kit file did not happen.**
+- **Feed the findings back** in the same pass: update the affected node's confidence in `nodes.md`
+  (pointing at the context note), cite external support in `brain/claims.md`, add new terms to
+  `brain/glossary.md`, and let `LEARNING.md` cite the context note rather than absorbing it.
+
+> **Keep research out of `LEARNING.md`'s body.** `LEARNING.md` answers exactly one question - *what
+> did this source teach?* Blending external findings into it destroys the distinction between "the
+> author claims this" and "the field thinks this", which is the whole point of citing. External
+> evidence lives in `context/`; durable cross-source synthesis lives in `brain/topics/*.md`.
+
 ### Degrade & failure handling (don't fail silently)
 
 | Situation | Do this |
@@ -105,6 +184,10 @@ being asked**:
 | License missing/unclear (code) | Record `License: unknown` in `SOURCE.md`; keep the clone git-ignored; do not redistribute source. |
 | Symlink not permitted (Windows, no Dev Mode) | `link-agents.ps1` writes a marked one-line pointer instead; the harness still reads `AGENTS.md`. |
 | Ingest interrupted | Leave `SOURCE.md` Status at the last safe stage; resume from there next session. |
+| Deep research finds nothing credible | Record `no-evidence` in the context note - that the claim rests on one practitioner's experience **is** the finding. Do not pad with weak T4/T5 hits. |
+| Deep research finds only non-independent sources | Record them, cite them, but **do not raise confidence** (independence rule). Say plainly that corroboration is still missing. |
+| Sources conflict | Keep **both**, cite both with tiers, flag the conflict in the context note and in the topic note's "Open questions / conflicts". Do not silently pick a winner. |
+| No web access / search unavailable | Say so, skip the research step, leave `SOURCE.md` Status at `distill`; do not fabricate citations or work from memory. |
 
 ## How to work a source
 
@@ -124,11 +207,13 @@ being asked**:
    | Paste **media** URL -> capture + `view` + write `LEARNING.md` | **curator** | + fact-checker at the gate |
    | Paste **GitHub** URL -> clone / orient (`MAP.md`) / trace | **code-explorer** | + fact-checker (docs↔code); + architect if mapping topics |
    | Decide keep/drop + enforce citations (the gate) | **fact-checker** | - |
+   | "Deep research" -> external evidence for gated nodes (`context/`) | **fact-checker + synthesizer** | + mentor when the goal is teaching the concept |
    | "Explain / teach me this" | **mentor** | + curator or code-explorer |
    | "What do I know about X?" / build study material | **synthesizer** | + mentor when teaching |
    | Shape the brain: topic taxonomy, split a note | **architect** | - |
 3. **Follow the flow** - capture (`raw/` or clone into `repo/`) -> understand (`view` visuals /
-   trace code) -> corroborate (`nodes.md`) -> distill (`LEARNING.md`) -> compound (`brain/`).
+   trace code) -> corroborate (`nodes.md`) -> *(optional, on request)* deep research (`context/`)
+   -> distill (`LEARNING.md`) -> compound (`brain/`).
 4. **Keep documents living** - update them *as you work*, not once at the end.
 5. **Ask across the brain (from the repo root)** - known source -> answer from its
    `nodes.md`/`LEARNING.md`; unknown -> read the annotated **root `INDEX.md`** (the entry point),
@@ -149,7 +234,7 @@ the command output is ephemeral; the kit file is what compounds.
 
 | Stage | Kit file | Capability to reach for |
 |---|---|---|
-| Understand a source | `context/` notes, `nodes.md`, `MAP.md` | deep research / web + repo investigation |
+| Understand a source | `context/` notes, `nodes.md`, `MAP.md` | deep research / web + repo investigation (see "Deep research on request" - tiers, independence rule, budget) |
 | Plan an ingest or repo trace | `MAP.md`, plan note | plan draft + plan critique / rubber-duck |
 | Verify a claim or diagram | `nodes.md` | code review, security review, diff review |
 | Synthesize across sources | `reports/` | multi-doc synthesis / long-context read |
@@ -241,7 +326,7 @@ yours calls things**; treat this as a starting map.
 | GitHub Copilot CLI | `AGENTS.md` (native) | `/research` (understand), `/plan` `/rubber-duck` (plan), `/review` `/security-review` (verify), `/pr` | - |
 | GitHub Copilot (IDE / coding agent) | `.github/copilot-instructions.md` (symlink -> `AGENTS.md`) | chat, code review, `@workspace` | `.github/prompts/` |
 | Codex CLI | `AGENTS.md` (native; also `~/.codex/AGENTS.md`) | `/review` `/diff` (verify), `/compact` | `~/.codex/prompts/` |
-| Claude Code | `CLAUDE.md` (symlink -> `AGENTS.md`) | `/plan` (plan mode), `/review` `/code-review` `/security-review` `/diff` (verify), `/agents` (subagents) | `.claude/commands/` |
+| Claude Code | `CLAUDE.md` (symlink -> `AGENTS.md`) | `/plan` (plan mode), `/review` `/code-review` `/security-review` `/diff` (verify), `/agents` (subagents). **No built-in research** - this kit ships [`.claude/commands/research.md`](.claude/commands/research.md) | `.claude/commands/` |
 | Cursor | `AGENTS.md` (native; directory-wide) | Agent / Skills / custom commands | `.cursor/commands/` |
 
 Anything not built in (a `/research` or `/prd` you want everywhere) can be authored as a **custom

@@ -260,14 +260,29 @@ ratio - small green islands in a deterministic sea - is the talk's central claim
 
 ## Open questions / confidence
 
-- **The corroboration here is real but not independent.** The repo README confirms the factor
-  numbering (`en1`), which is why most nodes are gated `corroborated (external)` - but the repo and
-  the talk share one author. This validates *the framework as stated*, not that following it produces
-  reliable agents. Watching for a second, unrelated source is the open item.
-- `n1`'s foundation - "I talked to 100+ founders, builders, engineers" - is the empirical backbone of
-  the whole talk and is **uncheckable from this source**. Treat the patterns as well-argued
-  practitioner consensus, not measured results. No benchmark, ablation or failure rate appears
-  anywhere in the talk.
+> **A deep-research pass has run on this source** (2026-07-25):
+> [`context/01_context-limits-and-decomposition.md`](context/01_context-limits-and-decomposition.md).
+> It closed both open questions below. External evidence lives in that note, not here - this file
+> answers only *what did this source teach?* Nodes `en2`-`en5` and `d3` in `nodes.md` carry the
+> findings.
+
+- ~~**No independent corroboration.**~~ **Closed by R1.** The repo README shares the talk's author, but
+  Anthropic - a different organisation with no shared interest - independently reaches S2's
+  conclusions on `n17` (start simple, don't default to an agent) and `n18`, where the match is
+  near-verbatim on frameworks obscuring the prompt. `n13`'s micro-agent claim is corroborated *and
+  quantified*: +13.1 to +41.5 pp reliability from decomposition across 10 models.
+- ~~**No measurements anywhere.**~~ **Closed by R1**, and the measurements are harsher than the talk's
+  framing: context degradation is position-dependent (U-shaped, peer-reviewed), appears well before
+  the advertised window, and hits even trivial tasks. S2 undersells its own best claim.
+- **New from R1 - the boundary S2 misses.** Decomposition is measured to help; *naive memory
+  scaffolding* is measured to **hurt 6 of 10 models**, losing to plain ReAct. "Own your context
+  window" must not be read as "accumulate a richer thread".
+- **New from R1 - this design has an older name.** Factors 3/5/6/12 are **Event Sourcing** (Fowler,
+  2005). Naming it inherits three failure modes the talk never mentions: replay determinism,
+  snapshotting, event versioning (`nodes.md` `d3`).
+- `n1`'s foundation - "I talked to 100+ founders, builders, engineers" - remains **uncheckable from
+  this source**, and no benchmark, ablation or failure rate appears anywhere in the talk itself. The
+  numbers above are all external.
 - `n12` (factor 11) and `n16` (factor 12) are `needs-check`: mentioned in passing, no worked example.
 - **`d1` - this is not an anti-framework talk**, even though the repo is usually read that way.
   Horthy explicitly calls the factors "a wish list, a list of feature requests" for framework

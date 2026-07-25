@@ -22,16 +22,18 @@
 | Ingested | 2026-07-25 |
 | Access | open |
 | Topics | agents, context-engineering |
-| Status | compounded |
+| Status | compounded (+ researched 2026-07-25) |
 
 ## Reading order for this source
 
 1. `SOURCE.md` - this file (facts).
 2. `raw/` (media, git-ignored) - the captured ground truth (English captions + low-res video).
-3. `nodes.md` - knowledge nodes (18 claims + 1 external corroboration + 2 divergences, cited).
-4. `LEARNING.md` - the distilled learning document (written as a ramp-up read).
-5. `visuals/` - the 9 curated frames.
-6. `../../reports/260725_agent-fundamentals-ramp-up.md` - the cross-source report this fed.
+3. `nodes.md` - knowledge nodes (18 claims + 5 external corroborations + 3 divergences, cited).
+4. `context/01_context-limits-and-decomposition.md` - **external evidence** (deep-research pass,
+   2026-07-25): closes both of `LEARNING.md`'s open questions, adds the Event Sourcing framing.
+5. `LEARNING.md` - the distilled learning document (written as a ramp-up read).
+6. `visuals/` - the 9 curated frames.
+7. `../../reports/260725_agent-fundamentals-ramp-up.md` - the cross-source report this fed.
 
 ## Ingest notes
 
