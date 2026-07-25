@@ -240,6 +240,13 @@ flowchart TD
    **scene-change** (`select='gt(scene,0.4)'`) with a 2s floor, then de-dup with `imagehash`
    (pHash) - yielding **~5-10 candidate frames**, not hundreds. This pre-filter *must* be a shell
    command so the agent only ever `view`s a handful.
+   - **The visual leg is on by default but skippable** (ADR-0003). The user can opt out
+     ("don't analyze video" - for a podcast or webcam interview the picture never changes, so
+     every token spent looking at it is wasted); and because the pre-filter above is free shell
+     work, it doubles as a **static-video probe** - `<= 3` distinct frames means auto-degrade to
+     transcript-only. **Cost, always recorded in `SOURCE.md`:** with one leg gone, every node from
+     that source is `single-leg` by construction and can never be internally `corroborated`. Deep
+     research (§5.5) is the way back to a second leg. Full rules: `AGENTS.md` § "The visual leg".
 3. **Understand:** the agent `view`s each candidate frame and extracts `{type: slide/diagram/code/
    demo, crux, entities}`.
 4. **Corroborate:** compare each frame's crux to the transcript around its timestamp; keep only

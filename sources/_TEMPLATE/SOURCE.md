@@ -22,6 +22,7 @@
 | Ingested | <date> |
 | Access | open / paywalled-accessible / limited (note any restriction) |
 | Topics | <agents, mcp, skills, rag, agent-security, inferencing, ...> |
+| Visual leg | analysed (N frames kept) / skipped (user) / skipped (static probe: N distinct) / n/a (code) |
 | Status | capture / understand / researched (optional) / distill / awaiting-promotion / compounded / blocked / partial |
 
 ## Reading order for this source

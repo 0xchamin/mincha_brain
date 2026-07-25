@@ -42,7 +42,8 @@ being asked**:
    title, author, date; for code also **commit SHA + license**) - Owner defaults to `chamin`.
 3. **Run the matching ingest flow** (see `prd.md` §5). Summary:
    - **Video:** `yt-dlp` transcript (Whisper fallback) + `ffmpeg` scene-change frames + `imagehash`
-     dedup -> **~5-10 candidate frames** -> you `view` each and extract its crux.
+     dedup -> **~5-10 candidate frames** -> you `view` each and extract its crux. The visual leg is
+     **on by default but skippable** - see "The visual leg" below.
    - **Blog:** `web_fetch` the article to `raw/` + download meaningful figures -> `view` each.
    - **Paper:** fetch the PDF, extract text to `raw/` + extract figures/tables -> `view` each.
    - **Code:** `git clone` into `sources/<id>/repo/` (git-ignored) - or `gh repo clone`; use `gh`
@@ -96,6 +97,51 @@ being asked**:
 > `ffmpeg` / `imagehash` / `pdftotext` commands named here and in `prd.md` §5 are the *approach* you
 > assemble for the source at hand and your OS - not a checked-in pipeline. Keep frame filenames
 > timestamped (`frame_<seconds>.jpg`) so citations can deep-link.
+
+## The visual leg (on by default, skippable)
+
+> **Why this switch exists.** Extracting and `view`ing frames is the most token-expensive step in a
+> media ingest. On a slide-heavy talk it is the whole point - the slides *are* the second leg. On a
+> podcast, a webcam interview, or a fireside chat, the picture never changes and every token spent
+> looking at it buys nothing.
+
+**Default: analyse the visual leg.** Three ways it is skipped, in priority order:
+
+1. **The user opts out.** "don't analyze video", "skip the frames", "transcript only", or similar,
+   at any point before distilling. Explicit instruction always wins - skip even the probe.
+2. **The static-video probe says there is nothing to see.** Scene-detect + `imagehash` dedup is the
+   *first* step of the pipeline and costs **no tokens** - it is shell work. If the whole video yields
+   **<= 3 distinct frames**, treat it as visually static, **auto-degrade to transcript-only, and say
+   so in one line.** Do not `view` a handful of near-identical webcam stills to confirm what the
+   dedup already told you. (The threshold is a heuristic - for calibration, a slide-heavy conference
+   talk yields tens of distinct frames; `260725_12-factor-agents` gave 19.)
+3. **Capture fails** - no video stream, download blocked. Note it and proceed.
+
+> **Never skip the probe to save time.** It is the cheapest signal available and it is what makes the
+> default safe. Skipping frames is a *judgement*; skipping the probe is *guessing*.
+
+### The cost of skipping, which is never silent
+
+Dropping the visual leg means **every node from that source is `single-leg` by construction** - the
+source can no longer produce an internally `corroborated` claim, because there is only one leg to
+corroborate with. That is acceptable, often correct, and must be **recorded, not discovered**:
+
+- Set `SOURCE.md` **Visual leg** to `skipped (user)` / `skipped (static probe: N distinct frames)` /
+  `analysed (N frames kept)`.
+- Gate every node `single-leg`, confidence `needs-check`. Do **not** mark anything `corroborated` on
+  transcript agreement alone - a transcript agreeing with itself is not two legs.
+- Say so in one line when it happens, so the human can override.
+
+> **Deep research is the natural complement.** A transcript-only source has one leg; the way back to
+> two is **external** evidence, not a harder look at the video. If a skipped-visual source matters,
+> reach for "deep research" on its nodes.
+
+### Applies to the other media types too
+
+Same rule, same recording: a blog post with only decorative images, or a paper whose figures are
+unreadable at source resolution, degrades to text-only with the same `single-leg` consequence. Code
+sources are unaffected - their visual leg is *generated* from the code, and generating a diagram is
+cheap.
 
 ## Deep research on request (external evidence)
 
@@ -177,7 +223,9 @@ rather than arbitrary.
 | Situation | Do this |
 |---|---|
 | Video has no captions | Transcribe audio with `faster-whisper`; if that fails, note it and proceed transcript-light. |
-| Talking-head video, no useful frames | Degrade to transcript-only; nodes are `single-leg` (needs-check), not `corroborated`. |
+| Talking-head video, no useful frames | The static probe catches this: <= 3 distinct frames after dedup -> auto-degrade to transcript-only, record `Visual leg: skipped (static probe)`. Nodes are `single-leg` (needs-check), never `corroborated`. |
+| User says "don't analyze video" / "transcript only" | Skip frame extraction **and the probe**; record `Visual leg: skipped (user)`; gate every node `single-leg`; say in one line that internal corroboration is now unavailable and deep research is the way back to two legs. |
+| Visual leg skipped but the source turns out to matter | Do **not** retro-mark nodes `corroborated`. Either re-run the visual leg and re-gate, or get the second leg externally via deep research. |
 | Paywalled / login-required article or paper | Ingest only what you can legitimately access; set `SOURCE.md` Access + Status `blocked` or `partial`; do not bypass. |
 | Repo private / huge / has submodules or Git-LFS | Prefer `gh` shallow clone; for huge repos orient from the README + a sparse checkout; never read it all. Non-GitHub git URL: clone by URL, skip `gh`. |
 | Repo has no/shallow/stale docs | Code is the primary leg; nodes are `single-leg`; a docs↔code gap is a `divergence` finding, not a drop. |

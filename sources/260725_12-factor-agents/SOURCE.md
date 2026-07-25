@@ -22,6 +22,7 @@
 | Ingested | 2026-07-25 |
 | Access | open |
 | Topics | agents, context-engineering |
+| Visual leg | analysed (9 frames kept; 19 distinct after dedup - well above the static threshold) |
 | Status | compounded (+ researched 2026-07-25) |
 
 ## Reading order for this source

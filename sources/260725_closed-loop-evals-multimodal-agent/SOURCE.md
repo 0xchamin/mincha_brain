@@ -22,6 +22,7 @@
 | Ingested | 2026-07-25 |
 | Access | open |
 | Topics | evals, agents |
+| Visual leg | analysed (7 frames kept; 13 distinct after dedup) |
 | Status | compounded |
 
 ## Reading order for this source
