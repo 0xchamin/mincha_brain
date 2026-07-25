@@ -1,0 +1,25 @@
+name: validate
+
+# The Brain kit is a prose contract - AGENTS.md specifies the pipeline, the corroboration
+# gate and the file schema in English, and the agent is the runtime. Prose has no compiler,
+# so this workflow is the type checker: it enforces the rules AGENTS.md already states.
+# Stdlib only, so there is nothing to install.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Validate kit conventions
+        run: python3 validate.py

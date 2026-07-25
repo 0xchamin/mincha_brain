@@ -81,6 +81,9 @@ being asked**:
    - **Index integrity (check every compound).** Every `sources/<folder>/` must have **exactly one**
      row in `INDEX.md`'s Sources table, and every `brain/topics/*.md` exactly one Topics row. A
      source or topic on disk but not in `INDEX.md` is unfindable - add the row before finishing.
+   - **Run `python3 validate.py` before you show the `git diff`.** It is the type checker for this
+     contract (see "Validating the contract" below) and it is **not optional** - a compound pass
+     that leaves the validator failing is not finished.
 
 > **Pre-filter before you look, never eyeball hundreds.** For video, `ffmpeg` scene-detect +
 > `imagehash` dedup MUST reduce candidates to a handful *before* you `view` them (viewing is
@@ -97,6 +100,33 @@ being asked**:
 > `ffmpeg` / `imagehash` / `pdftotext` commands named here and in `prd.md` §5 are the *approach* you
 > assemble for the source at hand and your OS - not a checked-in pipeline. Keep frame filenames
 > timestamped (`frame_<seconds>.jpg`) so citations can deep-link.
+
+## Validating the contract (`validate.py`)
+
+> **Why this exists.** This kit is a **convention, not an application** - the pipeline, the gate and
+> the schema are prose, and the agent is the runtime. That is the design's strength and its one
+> structural weakness: **prose has no compiler.** Nothing catches a stale `INDEX.md` row, an uncited
+> frame that survived the prune, a claim promoted without a citation, or a broken cross-link. Those
+> do not fail loudly; they accumulate. `validate.py` is the missing gate.
+
+**Run `python3 validate.py` before showing the `git diff` at the end of any compound, research or
+close-the-loop pass.** Stdlib only - no venv needed. CI runs it on every push and PR
+(`.github/workflows/validate.yml`). Exit code 1 means the pass is not finished.
+
+What it enforces (all of it already required above): INDEX integrity both ways; legal `SOURCE.md`
+Status / Visual leg, and Topics that name real notes; every kept frame cited somewhere; legal topic
+Status; `log.md` chronology; every claim carrying a citation and naming a real topic; unique ADR
+numbers with Status + Date; resolving relative links; balanced mermaid fences; no em dashes.
+
+> **The validator is subordinate to this file.** If a check and `AGENTS.md` disagree, `AGENTS.md`
+> wins and the check is the bug. It enforces the contract; it does not define it.
+
+> **What it cannot do.** It checks *form*, never *judgement*. It cannot tell you whether a claim is
+> corroborated, whether a frame earns its place, whether a topic should split, or whether an
+> external source is genuinely independent. Those stay with the fact-checker and architect personas.
+> It also cannot catch a `log.md` entry misordered *within a single day* - the ordering that has
+> actually gone wrong in practice. A green validator means the shape is right, not that the thinking
+> is.
 
 ## The visual leg (on by default, skippable)
 

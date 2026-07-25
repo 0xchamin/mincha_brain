@@ -1,0 +1,385 @@
+#!/usr/bin/env python3
+"""
+validate.py - the type checker for a prose contract.
+
+Brain is a convention, not an application: the pipeline, the corroboration gate and the
+file schema all live as English in AGENTS.md, and the agent is the runtime. That works,
+but prose has no compiler - nothing catches a stale INDEX row, an uncited frame, or a
+log entry filed out of order. This script is that missing gate.
+
+It enforces only what AGENTS.md already requires. If a check here and AGENTS.md ever
+disagree, AGENTS.md wins and this file is the bug.
+
+Usage:
+    python3 validate.py            # report, exit 1 on any error
+    python3 validate.py --strict   # warnings are errors too
+
+Stdlib only, on purpose: CI must not need a venv to check a folder of Markdown.
+"""
+
+from __future__ import annotations
+
+import argparse
+import re
+import sys
+from dataclasses import dataclass
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent
+
+SOURCE_STATUSES = {
+    "capture", "understand", "researched", "distill",
+    "awaiting-promotion", "compounded", "blocked", "partial",
+}
+TOPIC_STATUSES = {"seed", "emerging", "established"}
+VISUAL_LEG_PREFIXES = ("analysed", "skipped", "n/a")
+
+
+@dataclass
+class Finding:
+    level: str      # "error" | "warn"
+    path: Path
+    line: int       # 0 = whole file
+    message: str
+
+    def __str__(self) -> str:
+        loc = f"{self.path.relative_to(ROOT)}"
+        if self.line:
+            loc += f":{self.line}"
+        return f"  {loc}: {self.message}"
+
+
+findings: list[Finding] = []
+
+
+def err(path: Path, line: int, message: str) -> None:
+    findings.append(Finding("error", path, line, message))
+
+
+def warn(path: Path, line: int, message: str) -> None:
+    findings.append(Finding("warn", path, line, message))
+
+
+def read(path: Path) -> str:
+    return path.read_text(encoding="utf-8")
+
+
+def source_dirs() -> list[Path]:
+    return sorted(
+        d for d in (ROOT / "sources").iterdir()
+        if d.is_dir() and d.name != "_TEMPLATE"
+    )
+
+
+def topic_files() -> list[Path]:
+    return sorted((ROOT / "brain" / "topics").glob("*.md"))
+
+
+def markdown_files() -> list[Path]:
+    """All Markdown in the kit, excluding symlinks.
+
+    CLAUDE.md and .github/copilot-instructions.md are git-ignored symlinks to AGENTS.md
+    (one canonical contract, see AGENTS.md Appendix). Following them would double-report
+    every finding, and would falsely flag AGENTS.md's root-relative links as broken when
+    resolved from .github/.
+    """
+    skip = {".git", ".venv", "__pycache__", "node_modules", "raw", "repo"}
+    return sorted(
+        p for p in ROOT.rglob("*.md")
+        if not any(part in skip for part in p.parts) and not p.is_symlink()
+    )
+
+
+def field(text: str, name: str) -> str | None:
+    """Pull `| Field | value |` out of a SOURCE.md-style table."""
+    m = re.search(rf"^\|\s*{re.escape(name)}\s*\|(.+?)\|\s*$", text, re.M)
+    return m.group(1).strip() if m else None
+
+
+# --------------------------------------------------------------------------
+# Checks
+# --------------------------------------------------------------------------
+
+def check_index_integrity() -> None:
+    """AGENTS.md: every source folder <-> exactly one INDEX row; same for topics.
+
+    A source on disk but not in INDEX.md is unfindable - the failure this rule exists
+    to prevent.
+    """
+    index = ROOT / "INDEX.md"
+    if not index.exists():
+        err(index, 0, "INDEX.md is missing - it is the brain's entry point")
+        return
+    text = read(index)
+
+    # Count table ROWS, not raw occurrences: one row legitimately mentions a path twice,
+    # once as link text and once as the href.
+    rows = [ln for ln in text.splitlines() if ln.lstrip().startswith("|")]
+
+    for d in source_dirs():
+        n = sum(1 for ln in rows if re.search(rf"sources/{re.escape(d.name)}\b", ln))
+        if n == 0:
+            err(index, 0, f"source '{d.name}' has no INDEX row (unfindable)")
+        elif n > 1:
+            warn(index, 0, f"source '{d.name}' appears in {n} rows - expected exactly one")
+
+    for t in topic_files():
+        n = sum(1 for ln in rows if re.search(rf"brain/topics/{re.escape(t.name)}\b", ln))
+        if n == 0:
+            err(index, 0, f"topic '{t.name}' has no INDEX row (unfindable)")
+        elif n > 1:
+            warn(index, 0, f"topic '{t.name}' appears in {n} rows - expected exactly one")
+
+    # And the reverse: INDEX must not point at folders that no longer exist.
+    for m in re.finditer(r"sources/([0-9]{6}_[a-z0-9-]+)", text):
+        if not (ROOT / "sources" / m.group(1)).is_dir():
+            err(index, text[:m.start()].count("\n") + 1,
+                f"INDEX row points to missing source folder '{m.group(1)}'")
+
+
+def check_source_metadata() -> None:
+    """Every SOURCE.md carries a legal Status, a Visual leg, and an Owner."""
+    for d in source_dirs():
+        sf = d / "SOURCE.md"
+        if not sf.exists():
+            err(d, 0, "missing SOURCE.md")
+            continue
+        text = read(sf)
+
+        status = field(text, "Status")
+        if status is None:
+            err(sf, 0, "no Status field")
+        else:
+            first = status.split("(")[0].strip().split()[0] if status.split() else ""
+            if first not in SOURCE_STATUSES:
+                err(sf, 0, f"Status '{status}' is not one of {sorted(SOURCE_STATUSES)}")
+
+        vleg = field(text, "Visual leg")
+        if vleg is None:
+            warn(sf, 0, "no 'Visual leg' field (ADR-0003) - was the visual leg analysed or skipped?")
+        elif not vleg.lower().startswith(VISUAL_LEG_PREFIXES):
+            err(sf, 0, f"Visual leg '{vleg}' must start with one of {VISUAL_LEG_PREFIXES}")
+
+        if not field(text, "Owner"):
+            warn(sf, 0, "no Owner field")
+
+        # Topics named here must exist as topic notes.
+        topics = field(text, "Topics") or ""
+        for raw in (t.strip() for t in topics.split(",")):
+            if not raw or raw.lower() in {"n/a", "-", ""}:
+                continue
+            slug = raw.lower().replace(" ", "-")
+            if not (ROOT / "brain" / "topics" / f"{slug}.md").exists():
+                err(sf, 0, f"Topics names '{raw}' but brain/topics/{slug}.md does not exist")
+
+
+def check_frames_are_cited() -> None:
+    """AGENTS.md: visuals/ keeps ONLY frames a node or report actually cites.
+
+    Signal, not archive. An uncited frame is dead weight that survived the prune step.
+    """
+    citing_text = ""
+    for p in list(topic_files()) + sorted((ROOT / "reports").glob("*.md")):
+        citing_text += read(p)
+
+    for d in source_dirs():
+        vis = d / "visuals"
+        if not vis.is_dir():
+            continue
+        local = ""
+        for name in ("nodes.md", "LEARNING.md"):
+            f = d / name
+            if f.exists():
+                local += read(f)
+        for img in sorted(vis.glob("*.jpg")) + sorted(vis.glob("*.png")):
+            if img.name not in local and img.name not in citing_text:
+                err(img, 0, "frame is cited nowhere - prune it or cite it")
+
+
+def check_topic_notes() -> None:
+    """Topic notes declare a legal Status and list their feeding sources."""
+    for t in topic_files():
+        text = read(t)
+        m = re.search(r"^\*\*Status:\*\*\s*(\S+)", text, re.M)
+        if not m:
+            err(t, 0, "no '**Status:**' line (seed / emerging / established)")
+        else:
+            status = m.group(1).strip("*` ").lower()
+            if status not in TOPIC_STATUSES:
+                err(t, 0, f"Status '{status}' is not one of {sorted(TOPIC_STATUSES)}")
+        if "Sources feeding this topic" not in text:
+            warn(t, 0, "no 'Sources feeding this topic' section")
+
+
+def check_log_chronology() -> None:
+    """log.md is append-only and chronological.
+
+    KNOWN LIMITATION, stated so nobody trusts this further than it goes: entries sharing
+    a date are indistinguishable to this check, so it cannot catch a same-day entry filed
+    in the wrong order - which is the mistake that actually happened twice while building
+    the kit (every entry was 2026-07-25). Catching that would need per-entry timestamps,
+    which are not worth the ceremony. Order within a day stays a human responsibility.
+    """
+    log = ROOT / "brain" / "log.md"
+    if not log.exists():
+        err(log, 0, "brain/log.md is missing")
+        return
+    prev, prev_line = None, 0
+    for i, line in enumerate(read(log).splitlines(), 1):
+        m = re.match(r"^\|\s*(\d{4}-\d{2}-\d{2})\s*\|", line)
+        if not m:
+            continue
+        date = m.group(1)
+        if prev and date < prev:
+            err(log, i, f"date {date} is earlier than {prev} on line {prev_line} - log must be chronological")
+        prev, prev_line = date, i
+
+
+def check_claims() -> None:
+    """Every claim carries a citation, and claim numbers are unique and sequential."""
+    claims = ROOT / "brain" / "claims.md"
+    if not claims.exists():
+        err(claims, 0, "brain/claims.md is missing")
+        return
+    seen: list[int] = []
+    for i, line in enumerate(read(claims).splitlines(), 1):
+        m = re.match(r"^\|\s*(\d+)\s*\|(.+)$", line)
+        if not m:
+            continue
+        num = int(m.group(1))
+        cells = [c.strip() for c in m.group(2).split("|")]
+        seen.append(num)
+        # cells: claim, topic, sources, confidence, (trailing)
+        if len(cells) < 4:
+            err(claims, i, f"claim {num} has too few columns")
+            continue
+        if not cells[2] or cells[2] in {"-", "n/a"}:
+            err(claims, i, f"claim {num} has no citation - AGENTS.md forbids uncited claims")
+        topic = cells[1].strip()
+        if topic and not (ROOT / "brain" / "topics" / f"{topic}.md").exists():
+            err(claims, i, f"claim {num} names topic '{topic}' with no matching note")
+    if seen != sorted(set(seen)):
+        err(claims, 0, f"claim numbers are not unique+ascending: {seen}")
+    if seen and seen != list(range(1, len(seen) + 1)):
+        warn(claims, 0, "claim numbers are not a gapless 1..N sequence")
+
+
+def check_adrs() -> None:
+    """ADRs are numbered uniquely and carry Status + Date."""
+    adr_dir = ROOT / "brain" / "decisions"
+    if not adr_dir.is_dir():
+        return
+    numbers: dict[str, Path] = {}
+    for f in sorted(adr_dir.glob("*.md")):
+        m = re.match(r"^(\d{4})-[a-z0-9-]+\.md$", f.name)
+        if not m:
+            err(f, 0, "ADR filename must be NNNN-kebab-slug.md")
+            continue
+        if m.group(1) in numbers and m.group(1) != "0000":
+            err(f, 0, f"duplicate ADR number {m.group(1)} (also {numbers[m.group(1)].name})")
+        numbers[m.group(1)] = f
+        if f.name.startswith("0000"):
+            continue
+        text = read(f)
+        if not re.search(r"^\|\s*Status\s*\|", text, re.M):
+            err(f, 0, "ADR has no Status row")
+        if not re.search(r"^\|\s*Date\s*\|", text, re.M):
+            err(f, 0, "ADR has no Date row")
+
+
+def check_local_links() -> None:
+    """Relative Markdown links must resolve - cross-links are the brain's connective tissue."""
+    link_re = re.compile(r"\[[^\]]*\]\(([^)]+)\)")
+    for md in markdown_files():
+        for i, line in enumerate(read(md).splitlines(), 1):
+            for target in link_re.findall(line):
+                t = target.strip()
+                if t.startswith(("http://", "https://", "#", "mailto:")):
+                    continue
+                if "<" in t or ">" in t:
+                    continue  # template placeholder, e.g. visuals/<file>.jpg
+                t = t.split("#")[0].strip()
+                if not t:
+                    continue
+                resolved = (md.parent / t).resolve()
+                if not resolved.exists():
+                    err(md, i, f"broken relative link -> {target}")
+
+
+def check_mermaid() -> None:
+    """Mermaid fences are balanced and declare a diagram type."""
+    types = ("flowchart", "graph", "sequenceDiagram", "classDiagram", "stateDiagram",
+             "erDiagram", "journey", "gantt", "pie", "mindmap", "timeline")
+    for md in markdown_files():
+        lines = read(md).splitlines()
+        open_at = None
+        for i, line in enumerate(lines, 1):
+            s = line.strip()
+            if open_at is None and s.startswith("```mermaid"):
+                open_at = i
+                nxt = next((l.strip() for l in lines[i:] if l.strip()), "")
+                if not nxt.startswith(types):
+                    err(md, i, f"mermaid block does not start with a diagram type (got '{nxt[:30]}')")
+            elif open_at is not None and s == "```":
+                open_at = None
+        if open_at is not None:
+            err(md, open_at, "unclosed ```mermaid fence")
+
+
+def check_style() -> None:
+    """AGENTS.md: never use the em dash."""
+    for md in markdown_files():
+        for i, line in enumerate(read(md).splitlines(), 1):
+            if "—" in line:
+                err(md, i, "em dash (U+2014) - AGENTS.md requires a plain dash '-'")
+
+
+CHECKS = [
+    ("INDEX integrity", check_index_integrity),
+    ("source metadata", check_source_metadata),
+    ("frames are cited", check_frames_are_cited),
+    ("topic notes", check_topic_notes),
+    ("log chronology", check_log_chronology),
+    ("claims", check_claims),
+    ("ADRs", check_adrs),
+    ("local links", check_local_links),
+    ("mermaid", check_mermaid),
+    ("style", check_style),
+]
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description="Validate the Brain kit's conventions.")
+    ap.add_argument("--strict", action="store_true", help="treat warnings as errors")
+    args = ap.parse_args()
+
+    for name, fn in CHECKS:
+        try:
+            fn()
+        except Exception as exc:  # a broken check must not masquerade as a clean brain
+            err(ROOT, 0, f"check '{name}' crashed: {exc!r}")
+
+    errors = [f for f in findings if f.level == "error"]
+    warns = [f for f in findings if f.level == "warn"]
+
+    if errors:
+        print(f"\nERRORS ({len(errors)}):")
+        for f in errors:
+            print(f)
+    if warns:
+        print(f"\nWARNINGS ({len(warns)}):")
+        for f in warns:
+            print(f)
+
+    n_src, n_topic = len(source_dirs()), len(topic_files())
+    if not errors and not warns:
+        print(f"OK - {n_src} sources, {n_topic} topics, {len(CHECKS)} checks, nothing to report.")
+    else:
+        print(f"\n{n_src} sources, {n_topic} topics, {len(CHECKS)} checks: "
+              f"{len(errors)} error(s), {len(warns)} warning(s).")
+
+    return 1 if errors or (args.strict and warns) else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
