@@ -1,6 +1,6 @@
 # Topic: Agents
 
-**Status:** established (2 sources - S1 Uber closed-loop evals, S2 12-factor agents)
+**Status:** established (3 sources - S1 Uber closed-loop evals, S2 12-factor agents, S4 Anthropic harness design)
 
 > Living, cross-source synthesis on autonomous LLM agents. Many sources feed this note; **merge
 > and de-duplicate** as they arrive (architect persona) - this should read as one coherent view,
@@ -103,6 +103,52 @@ API first") are just more events in the same thread [S2 `&t=776s`].
   signal, localises *which* sub-agent is failing, and routes the fix to that agent's config [S1
   `&t=1144s`].
 
+### Scaffolding is a set of expiring bets, not an architecture
+
+S4 supplies what S1 and S2 lacked: **a harness built, costed, and then partially deleted on a newer
+model** - which converts S2's throwaway line about the boundary moving into an operating procedure.
+
+The principle it names [S4 §4c]:
+
+> **Every harness component encodes an assumption about what the model cannot do on its own, and
+> those assumptions are worth stress-testing.**
+
+And the criterion for keeping one [S4 §4c]: **whether a component is load-bearing depends on where
+the task sits relative to the model's capability boundary, not on the component's merit.** On a
+stronger model S4 removed its sprint decomposition entirely and demoted the evaluator from per-sprint
+to a single end-of-run pass; the model then ran coherently for 2+ hours unscaffolded [S4 §4c].
+
+**This refines rather than contradicts the decomposition result above.** The 10-model study measures
+decomposition *at a fixed capability*; S4 says the value of any scaffold is a function of the gap
+between task and capability. Together: **decomposition helps until the boundary moves past your
+task.** Note the evidence asymmetry - a measured 10-model study against a vendor's n=1 report - so if
+these ever do conflict, the study wins.
+
+Two practical corollaries:
+
+- **Remove one component at a time.** S4's radical simultaneous cuts failed; methodical
+  single-component removal worked [S4 §4c]. Delete four things and lose quality, and you have learned
+  nothing.
+- **Re-run the question on every model release.** Not "what should I add?" but "**which of these is
+  still load-bearing?**"
+
+### The second agent exists to correct a bias, not to add capability
+
+S4's other structural claim is why a *separate* evaluator beats a self-critical generator:
+**self-evaluation bias** - agents asked to judge their own output confidently praise it even when a
+human would call the quality obviously mediocre [S4 §2]. That is not promptable-away, because the
+generator has no independent vantage point on its own work.
+
+This is the same shape as S1's QA gates and S2's "humans as tool calls", generalised: **the checking
+role wants different context from the producing role.** S4 adds two hard-won details - the evaluator
+needs *tools* to grade what it cannot otherwise perceive (a browser, via Playwright MCP [S4 §3, §4a]),
+and **it needs tuning before it is any good**: out-of-the-box Claude was a poor QA engineer, lenient
+toward AI-generated output, and took several log-driven tuning rounds to catch subtle bugs
+[S4 §4a]. **The grader is not free; you will build it twice.**
+
+The payoff is measurable, if only once: on the DAW build, QA was roughly **8% of total cost**
+($124.70 total) and it is what caught core features shipped as display-only stubs [S4 §5].
+
 ### Two counterweights worth keeping
 
 - **Not every problem needs an agent.** S2's DevOps agent got Makefile build steps in the wrong
@@ -130,7 +176,13 @@ API first") are just more events in the same thread [S2 `&t=776s`].
 | A diagnoser meta-agent localizes which sub-agent is failing and routes the config fix there. | S1 `&t=1144s` | emerging |
 | Not every problem needs an agent - a deterministic script often beats two hours of prompt engineering. | S2 `&t=71s` + R1 (Anthropic: "find the simplest solution possible, and only increasing complexity when needed", T2) | corroborated (external) |
 | Decomposition is measured (+13.1 to +41.5 pp reliability); naive memory scaffolds are measured *worse* (hurt 6 of 10 models, lost to plain ReAct). | R1 ([Beyond pass@1](https://arxiv.org/abs/2603.29231), T3 preprint) | needs-check (preprint) |
-| Target work at the boundary of reliable model capability, then engineer reliability around it. | S2 `&t=848s` | emerging |
+| Target work at the boundary of reliable model capability, then engineer reliability around it. | S2 `&t=848s` + **S4 §4c** (a harness rebuilt around a moved boundary) | **corroborated (2 sources)** |
+| **Every harness component encodes an assumption about what the model cannot do alone; those assumptions expire and should be stress-tested on each model release.** | S4 §4c | emerging |
+| Whether a scaffold is load-bearing depends on the gap between task and model capability, not on the scaffold's merit - so decomposition helps *until the boundary moves past your task*. | S4 §4c (refines the decomposition row above) | emerging |
+| When simplifying a harness, remove one component at a time; simultaneous cuts are uninterpretable. | S4 §4c | emerging |
+| A separate evaluator beats a self-critical generator because of **self-evaluation bias** - agents confidently praise their own mediocre output. | S4 §1, §2 | emerging |
+| The evaluator needs tools to grade what it cannot perceive (a browser to judge a UI), and needs tuning before it is competent - out-of-box models are lenient QA. | S4 §3, §4a | emerging |
+| A harness bought a working app where a solo agent produced a broken one, at ~18x wall clock and ~22x cost (20 min/$9 vs 6 hr/$200). | S4 §4b | needs-check (n=1, self-reported, vendor) |
 
 ## Key visuals
 
@@ -151,6 +203,18 @@ API first") are just more events in the same thread [S2 `&t=776s`].
   people selling adjacent products); **R1 has since strengthened it** with a measurement and an
   independent third party (Anthropic). Still worth looking for a source that argues the *opposite* -
   that large autonomous loops now work.
+- **S4 is the closest thing yet to that opposite argument, and it is partial.** It reports a model
+  running coherently for 2+ hours with decomposition *removed* [S4 §4c] - but frames it as the
+  boundary moving, not as large loops working in general, and it still kept an evaluator. Watch for
+  whether this trend continues; if it does, the "small islands" claim becomes capability-dated rather
+  than structural.
+- **S4 is a T2 vendor source reporting n=1 runs on its own models**, with no released harness code and
+  no independent replication. Its *mechanisms* (self-evaluation bias, boundary-relative scaffolding)
+  are more trustworthy than its *numbers* (18x, 22x, 8% QA cost), which are single observations.
+- **New from S4, unresolved:** is "context anxiety" - premature wrap-up near a *perceived* limit
+  [S4 §2] - a real general phenomenon or an artifact of one model generation? S4 reports it largely
+  disappearing between Sonnet 4.5 and Opus 4.5. No external evidence either way. See
+  [`context-engineering.md`](context-engineering.md).
 - **New from R1, unresolved:** decomposition is measured on coding/web/tool benchmarks (SWE-bench,
   WebArena, tau-bench), not on the deploy-bot-style workflows S1 and S2 describe. The transfer is
   plausible, not demonstrated.
@@ -167,4 +231,7 @@ API first") are just more events in the same thread [S2 `&t=776s`].
 
 - **S1** - [Building Closed-Loop Evals for a Multimodal Agent at Scale](../../sources/260725_closed-loop-evals-multimodal-agent/LEARNING.md) (Uber, AI Engineer 2026).
 - **S2** - [12-Factor Agents: Patterns of reliable LLM applications](../../sources/260725_12-factor-agents/LEARNING.md) (Dex Horthy, HumanLayer, AI Engineer WF 2025).
+- **S4** - [Harness Design for Long-Running Application Development](../../sources/260725_harness-design-long-running-apps/LEARNING.md)
+  (Prithvi Rajasekaran, Anthropic Labs, 2026-03-24). **T2 vendor source, n=1 runs, visual leg
+  skipped - most nodes `single-leg`.** Strongest for the boundary-relative framing of scaffolding.
 - **R1** - [deep-research pass on S2](../../sources/260725_12-factor-agents/context/01_context-limits-and-decomposition.md) (2026-07-25) - external evidence, tiered with independence calls.
