@@ -350,6 +350,20 @@ nodes, promote them in the same pass, then show a summary + `git diff` as the un
 
 ## Writing & style
 
+- **Commit messages use [Conventional Commits](https://www.conventionalcommits.org):
+  `<type>: <subject>`.** Set by this repo's first commit and **binding on agents and contributors
+  alike** - do not fall back to a bare descriptive subject. Mapping for this kit:
+
+  | Type | Use for |
+  |---|---|
+  | `docs:` | ingesting a source, adding a report, promoting claims into `brain/` - the normal compounding pass |
+  | `feat:` | a change to the kit contract itself: a new stage, switch, persona, or capability (`AGENTS.md`, `prd.md`, a new command) |
+  | `fix:` | correcting a wrong claim, a bad citation, a broken link, a stale `INDEX.md` row |
+  | `chore:` | templates, tooling, `.gitignore`, dependencies, housekeeping |
+  | `refactor:` | restructuring notes without changing what they claim (e.g. splitting a topic note) |
+
+  Keep the **detailed body** - what was promoted, what was rejected and why. The subject line is for
+  scanning; the body is where the reasoning survives.
 - Never use the em dash. Use a plain dash `-`.
 - Name sources `YYMMDD_slug` (see defaults). Use `_` only as the date/name divider, `-` between
   words.
