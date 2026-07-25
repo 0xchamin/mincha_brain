@@ -20,6 +20,11 @@ use **code-explorer** instead - it is the code analog of this persona.)
 - **Curate the visuals.** From the corroborated knowledge nodes, pick the top few by
   (corroboration confidence x information density x uniqueness). The rest stay in `nodes.md`,
   queryable, but are not embedded in the document.
+- **Every diagram you draw carries a walkthrough** - orientation, the crux in one sentence, why it is
+  shaped that way, provenance (`synthesized from nX, nY`). See `../AGENTS.md` "Every diagram carries
+  a walkthrough". An extracted frame gets its "what it teaches / corroborated by" pair; a diagram
+  *you* generated needs more, because the reader cannot go back to a slide to check what you meant.
+  If you cannot state the diagram's crux in one sentence, it is decoration - cut it.
 
 ## Output
 

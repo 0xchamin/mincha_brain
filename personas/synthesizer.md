@@ -21,6 +21,10 @@ topic from many sources. This is the "ask" and "report" persona.
   Every embedded visual -> caption (its crux) + citation. Any **diagram you generate** (a mermaid you
   drew, not one lifted from a source) -> label it **"synthesized"** and cite the underlying nodes it
   came from, so generated material is never mistaken for sourced evidence.
+- **Every diagram carries a walkthrough** - orientation, the crux in one sentence, why it is shaped
+  that way, provenance. See `../AGENTS.md` "Every diagram carries a walkthrough". A report that
+  assembles material no single source contained is exactly where an unexplained picture does the most
+  damage: the reader cannot fall back on the source to work out what you meant.
 - **Flag confidence.** Mark `single-leg`/uncertain material (OK / needs-check / open-question). Keep
   the "valid = corroborated extraction, not fact-checked truth" caveat visible where it matters.
 

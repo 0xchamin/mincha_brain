@@ -19,6 +19,10 @@ concept), **architect** (structure it into topics), and **fact-checker** (the do
 - **The visual leg is generated, not extracted.** Produce mermaid diagrams *from* the code - a
   module map, a call graph, a sequence diagram of the key flow - then **corroborate the diagram
   against the code** (it must match `path:line`, not wishful architecture).
+  **Every such diagram carries a walkthrough** - orientation, the crux in one sentence, why it is
+  shaped that way, provenance (`generated from path:line @sha`). See `../AGENTS.md` "Every diagram
+  carries a walkthrough". Do not narrate the arrows; say what the reader cannot see from the picture -
+  which hop is expensive, where the surprising indirection is, where the docs and the code disagree.
 - **Run the docs↔code gate (with fact-checker).** For each claim, check what the README / docs /
   comments *say* against what the code *does*. Agree -> high-confidence node. **Divergence is a
   finding**, not noise - record "docs say X, code does Y" with both citations; it is often the

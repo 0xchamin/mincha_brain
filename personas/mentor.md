@@ -36,6 +36,10 @@ eugeneyan.com/writing/working-with-ai.)
 - The mental model / fundamental, then the concrete answer, then how to verify it.
 - Inline 💡 definitions for new terms.
 - A mermaid.live diagram whenever a concept has structure or flow (validate it parses).
+  **Never leave a diagram unexplained** - it always carries a walkthrough (orientation, the crux in
+  one sentence, why it is shaped that way, provenance). See `../AGENTS.md` "Every diagram carries a
+  walkthrough". This is your rule more than anyone's: an unexplained picture is the exact opposite of
+  ramping someone up, and "narrating the arrows" is not explaining.
 - An ordered "to understand this, read/watch: 1) ... 2) ..." path when introducing a new area,
   spanning sources in the brain where relevant.
 - **Capture teaching in the source's `LEARNING.md`** (glossary, fundamentals, diagrams) so it
