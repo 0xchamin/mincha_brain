@@ -20,6 +20,7 @@ durable, cited, compounding knowledge.
 | Env | `.venv` in this folder | `yt-dlp`, `faster-whisper`, `imagehash`, `pillow` (see `requirements.txt`); `ffmpeg` is a system binary (macOS: `brew install ffmpeg`; Windows: `winget install Gyan.FFmpeg`); `git` for cloning code repos; **`gh` (GitHub CLI) recommended** for code sources (license, commit SHA, orient-before-clone) - optional |
 | Seed topics | agents, mcp, skills, rag, agent-security, inferencing | live under `brain/topics/`; **seeds, not a whitelist - the set is open (see "Scope: topics are open")** |
 | Repo clones | `sources/<id>/repo/` (git-ignored) | clone-per-source, snapshot pinned by commit SHA in `SOURCE.md` |
+| Kit scripts | `tools/ingest.py` (mechanical toolbox), `validate.py` (contract type checker) | the only two frozen scripts; everything else is assembled per source |
 
 ## Scope: topics are open
 
@@ -42,8 +43,10 @@ being asked**:
    title, author, date; for code also **commit SHA + license**) - Owner defaults to `chamin`.
 3. **Run the matching ingest flow** (see `prd.md` §5). Summary:
    - **Video:** `yt-dlp` transcript (Whisper fallback) + `ffmpeg` scene-change frames + `imagehash`
-     dedup -> **~5-10 candidate frames** -> you `view` each and extract its crux. The visual leg is
-     **on by default but skippable** - see "The visual leg" below.
+     dedup -> **~5-10 candidate frames** -> you `view` each and extract its crux. **Use
+     [`tools/ingest.py`](tools/ingest.py) for the mechanical steps** (`transcript`, `probe`,
+     `frames`, `sheet`) rather than re-deriving them - see "The mechanical toolbox" below. The
+     visual leg is **on by default but skippable** - see "The visual leg".
    - **Blog:** `web_fetch` the article to `raw/` + download meaningful figures -> `view` each.
    - **Paper:** fetch the PDF, extract text to `raw/` + extract figures/tables -> `view` each.
    - **Code:** `git clone` into `sources/<id>/repo/` (git-ignored) - or `gh repo clone`; use `gh`
@@ -101,6 +104,38 @@ being asked**:
 > assemble for the source at hand and your OS - not a checked-in pipeline. Keep frame filenames
 > timestamped (`frame_<seconds>.jpg`) so citations can deep-link.
 
+## The mechanical toolbox (`tools/ingest.py`)
+
+> **Why this exists.** "Generate code on the fly" is right when variation is a *feature* - mid-ingest
+> you may abandon phash dedup and switch to transcript-anchored extraction, and a rigid script would
+> fight you. It is wrong when variation is a *bug*. VTT parsing has no reason to differ between
+> videos, and **ADR-0003's `<= 3 distinct frames` threshold is meaningless if every agent computes
+> "distinct" with a different scene threshold or hash distance.** Generate what should vary; freeze
+> what should not.
+
+**A toolbox, not a pipeline.** Independent subcommands you compose per source. There is deliberately
+no `--url do-everything` entrypoint - "the shell steps are reference, not a fixed script" still
+holds, and assembly stays your job.
+
+| Command | Does | Needs |
+|---|---|---|
+| `python3 tools/ingest.py transcript <in.vtt> <out.txt>` | de-duplicates YouTube's rolling captions into timestamped blocks (`[MM:SS t=NNN] ...`) so `&t=` citations land right | **stdlib only** |
+| `python3 tools/ingest.py probe <video.mp4>` | **the ADR-0003 static-video probe** - scene-detect + phash -> `STATIC` / `RICH` + the exact `SOURCE.md` line to record | ffmpeg + `.venv` |
+| `python3 tools/ingest.py frames <video.mp4> --at 233,290 --out DIR` | extracts frames at given seconds (`--crop` for the slide area) | ffmpeg |
+| `python3 tools/ingest.py sheet DIR --out STEM` | tiles frames into contact sheets - **triage 17 candidates in 1-2 `view` calls instead of 17** | ffmpeg |
+
+**Run `probe` before deciding the visual leg.** Do not eyeball it, and do not re-derive the
+threshold: a verdict computed with different constants is not comparable to any previous source's.
+
+> **What must never move into this file: judgement.** Reading a slide, gating a claim, deciding which
+> frames earn their place, calling a docs-vs-code divergence - those stay here and in `personas/`.
+> The toolbox crops images; it does not decide what they mean. Same line `validate.py` draws:
+> **form is code, judgement is prose.**
+
+> **Still assemble per source.** `yt-dlp` invocations stay ad hoc (format selection genuinely varies).
+> If a step needs to differ for the source at hand, differ - then if you write the same thing a third
+> time, add it to the toolbox rather than to your scratch directory.
+
 ## Validating the contract (`validate.py`)
 
 > **Why this exists.** This kit is a **convention, not an application** - the pipeline, the gate and
@@ -139,12 +174,15 @@ numbers with Status + Date; resolving relative links; balanced mermaid fences; n
 
 1. **The user opts out.** "don't analyze video", "skip the frames", "transcript only", or similar,
    at any point before distilling. Explicit instruction always wins - skip even the probe.
-2. **The static-video probe says there is nothing to see.** Scene-detect + `imagehash` dedup is the
-   *first* step of the pipeline and costs **no tokens** - it is shell work. If the whole video yields
-   **<= 3 distinct frames**, treat it as visually static, **auto-degrade to transcript-only, and say
-   so in one line.** Do not `view` a handful of near-identical webcam stills to confirm what the
-   dedup already told you. (The threshold is a heuristic - for calibration, a slide-heavy conference
-   talk yields tens of distinct frames; `260725_12-factor-agents` gave 19.)
+2. **The static-video probe says there is nothing to see.** Run
+   **`python3 tools/ingest.py probe <video>`** - scene-detect + `imagehash` dedup, the *first* step
+   of the pipeline anyway, costing **no tokens**. It prints `STATIC` / `RICH` and the exact
+   `SOURCE.md` line to record. If the whole video yields **<= 3 distinct frames**, treat it as
+   visually static, **auto-degrade to transcript-only, and say so in one line.** Do not `view` a
+   handful of near-identical webcam stills to confirm what the dedup already told you. (The threshold
+   is a heuristic - for calibration, `260725_12-factor-agents` gave 19 distinct.) **Use the tool, not
+   a hand-rolled equivalent:** its scene threshold and hash distance are fixed constants, and a
+   verdict computed with different ones is not comparable across sources.
 3. **Capture fails** - no video stream, download blocked. Note it and proceed.
 
 > **Never skip the probe to save time.** It is the cheapest signal available and it is what makes the

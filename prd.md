@@ -234,8 +234,14 @@ flowchart TD
 ```
 
 ### 5.1 YouTube (video)
+
+> **The mechanical steps are frozen in [`tools/ingest.py`](tools/ingest.py)** (ADR-0005) - a
+> *toolbox*, not a pipeline: `transcript`, `probe`, `frames`, `sheet`, composed per source. Generate
+> what should vary; freeze what should not. Judgement never moves into it.
+
 1. **Capture text:** `yt-dlp` pulls auto-captions; if absent, transcribe audio with
-   `faster-whisper`.
+   `faster-whisper`. Then `tools/ingest.py transcript` de-duplicates the rolling cues into
+   timestamped blocks.
 2. **Capture visuals (pre-filter in the shell, not by the agent):** `ffmpeg` samples on
    **scene-change** (`select='gt(scene,0.4)'`) with a 2s floor, then de-dup with `imagehash`
    (pHash) - yielding **~5-10 candidate frames**, not hundreds. This pre-filter *must* be a shell
