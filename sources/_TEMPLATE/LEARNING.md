@@ -41,6 +41,22 @@ flowchart LR
     A[concept] --> B[concept]
 ```
 
+<!-- Every diagram carries a walkthrough - see AGENTS.md "Every diagram carries a walkthrough".
+     Write it as a mentor ramping up an engineer. Delete these four labels, keep the substance. -->
+
+**How to read it:** <direction of flow; what the shapes and colours mean; a legend if colour carries
+meaning.>
+
+**The crux: <the one idea this diagram exists to convey - if you cannot say it in one sentence,
+delete the diagram.>**
+
+**Why it is shaped this way:** <the design rationale, and what would go wrong with a different shape.
+This is the part that teaches judgement rather than topology. Do NOT narrate the arrows - the reader
+can see those. Explain what they cannot see: why the boundary sits there, which box is expensive,
+what breaks at scale.>
+
+*Synthesized from `n<x>`, `n<y>`.* <or the normal citation if the diagram was lifted from the source.>
+
 ## 💡 Terms
 
 | Term | Explanation |

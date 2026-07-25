@@ -225,6 +225,24 @@ flowchart TB
     style OUT fill:#a8c8e0
 ```
 
+**How to read it:** flow runs top to bottom, one pass round the loop. The boxed group is the four
+parts *you* write; **green is the only LLM call**; the dotted path is what happens when a tool call
+takes minutes or days instead of milliseconds. Factor numbers are marked on the box they belong to.
+
+**The crux: there is exactly one green box, and everything else is ordinary software you already
+know how to write.**
+
+**Why it is shaped this way:** the LLM sits in the *middle* of the diagram rather than around the
+outside, and that placement is the whole argument. Frameworks invert it - they own the loop, the
+dispatch and the context assembly, and hand you a callback - which is how you end up seven layers
+deep in a call stack trying to find where your prompt was built `&t=55s`. Drawn this way, every
+arrow into and out of the model is a seam you control: you can log it, test it, replay it, or break
+out of the loop mid-run. Note the dotted path leaves and re-enters at the **context builder**, not
+at the prompt - resumption works only because the thread was serialisable in the first place, which
+is why factor 3 has to be in place before factors 5 and 6 are even possible.
+
+*Synthesized from `n2`, `n5`, `n6`, `n8`, `n11` - not a slide from the talk.*
+
 ```mermaid
 flowchart LR
     A["github PR merged"] --> B["deploy to dev"] --> C["e2e test dev"]
@@ -242,9 +260,24 @@ flowchart LR
     style F fill:#a8c8e0
 ```
 
-The green nodes are the only LLM-driven parts. Everything blue and plain is ordinary code. That
-ratio - small green islands in a deterministic sea - is the talk's central claim about what works.
-`&t=741s`
+**How to read it:** left to right is one deployment, start to finish. **Blue is a boundary event,
+green is LLM-driven, plain boxes are ordinary deterministic code.** The hexagons are agent loops;
+everything else is CI/CD you already have.
+
+**The crux: the agent owns only the genuinely ambiguous middle - what to ship and in what order -
+and hands control straight back to deterministic code.**
+
+**Why it is shaped this way:** count the green. Two small hexagons in a pipeline of seven steps, and
+the talk reports this handling "100 tools, 20 steps, easy" `&t=814s`. The instinct when an agent
+underperforms is to give it *more* scope; this shape says the opposite - shrink the window until the
+model only decides the thing that actually requires judgement. Note where the boundary sits: not at
+"hard vs easy", but at **deterministic vs ambiguous**. Running the tests is hard and stays code,
+because the answer is knowable in advance. Deciding deploy order is easy for a human and goes to the
+model, because it depends on context nobody encoded. Note too that the human sits *inside* the agent
+loop rather than gating it from outside - approval is an event in the thread (factor 7), which is
+what lets a rejection carry a reason the agent can act on rather than just a "no".
+
+*Synthesized from `n1`, `n11`, `n13`, `n14` - a redrawing of `frame_800.jpg` `&t=741s`.*
 
 ## 💡 Terms
 

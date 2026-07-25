@@ -105,6 +105,24 @@ flowchart LR
     DIAG -.auto-tune config.-> R
 ```
 
+**How to read it:** left to right is one image's journey from upload to menu. Diamonds are decision
+points, and every one of them is an **eval boundary**. The dotted lines are the part that runs on a
+different clock - not per image, but periodically over sampled production traffic.
+
+**The crux: the solid path is the product; the dotted path is why the product stays good.** Most
+teams build the solid path and stop, and their quality decays silently as traffic drifts.
+
+**Why it is shaped this way:** the diamonds exist because each stage fails differently and so needs
+its own metric - a router is a classifier judged on recall, a generator is judged on pass@k. One
+end-to-end "is it good?" score would tell you quality dropped but never *where*, which is the
+difference between an eval you can act on and a number you watch. Note that `LLM QA` loops back to
+`Prompt gen` rather than to `Generation`: retrying the same prompt just re-rolls the dice, so the
+failure reasoning has to re-enter the context for the retry to be worth anything. And every path,
+including `Keep original`, terminates in `Logging` - the flat trace is a precondition for the dotted
+loop existing at all, which is why "log first" is the first thing the talk says.
+
+*Synthesized from `n2`, `n7`, `n9`, `n11`, `n13` - not a verbatim slide.*
+
 ## 💡 Terms
 
 | Term | Explanation |

@@ -86,8 +86,24 @@ flowchart TB
     style OUT fill:#a8c8e0
 ```
 
-One green box. **Everything else is ordinary software you control.** Keep that ratio in your head -
-section 3 is the same claim at system scale.
+**How to read it:** top to bottom is one trip round the loop. The boxed group is the four parts *you*
+write; **green is the only LLM call**; the dotted path is what happens when a tool call takes minutes
+rather than milliseconds. Factor numbers sit on the box they belong to.
+
+**The crux: one green box. Everything else is ordinary software you already know how to write.**
+
+**Why it is shaped this way:** the model sits in the *middle* rather than around the outside, and
+that placement is the argument. A framework inverts it - it owns the loop, the dispatch and the
+context assembly and hands you a callback - which is how you end up seven layers deep in a call stack
+looking for where your prompt was built [S2 `&t=55s`]. Drawn this way, every arrow into and out of
+the model is a seam you can log, test, replay, or break out of. And notice the dotted path re-enters
+at the **context builder**, not the prompt: pause/resume works only because the thread was
+serialisable first. That ordering is not cosmetic - factor 3 is a precondition for factors 5 and 6,
+which is why "own your context window" is worth doing before you need it.
+
+*Synthesized from S2 `n2`, `n5`, `n6`, `n8`, `n11`.*
+
+Keep that ratio in your head - section 3 is the same claim at system scale.
 
 ---
 
@@ -134,6 +150,24 @@ flowchart LR
     style A fill:#a8c8e0
     style F fill:#a8c8e0
 ```
+
+**How to read it:** the HumanLayer pipeline above with the specifics stripped out. **Blue is a
+boundary event, green (hexagonal) is an agent loop, plain boxes are deterministic code.** Read it as
+a template to lay over your own problem.
+
+**The crux: the agent gets the ambiguous middle and nothing else - deterministic code on both sides,
+with a verify step that can hand failure to a second small agent.**
+
+**Why it is shaped this way:** the useful question this poses is *where do my boundaries go?* - and
+the answer is **not** "hard parts to the agent". It is **deterministic vs ambiguous**. Verification
+is hard and stays code, because the answer is knowable in advance. Deciding what to ship is easy for
+a human and goes to the model, because it depends on context nobody wrote down. Two more things earn
+their place: the human sits *inside* the loop, so a rejection carries a reason the agent can act on
+rather than a bare "no"; and recovery is a **separate small agent**, not error handling bolted onto
+the first one - which keeps both loops inside the 3-10 step window where reliability actually lives.
+If your agent box needs more than ~10 steps, the boundary is in the wrong place.
+
+*Synthesized from S2 `n13`, `n14` + S1 `n2` - generalised, not lifted from either source.*
 
 ---
 

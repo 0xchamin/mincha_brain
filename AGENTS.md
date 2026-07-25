@@ -413,6 +413,25 @@ nodes, promote them in the same pass, then show a summary + `git diff` as the un
 - **Flag confidence** on anything non-obvious (OK / needs-check / open-question).
 - **Diagrams** use mermaid.live syntax (validate before commit; avoid `<> {} ;` inside sequence
   message text).
+- **Every diagram carries a walkthrough (hard rule).** A diagram in a `LEARNING.md`, topic note or
+  report is **teaching material**, and a picture dropped in without explanation teaches nobody - the
+  reader who already understands it does not need it, and the reader who does not is no better off.
+  Write the walkthrough **as a mentor ramping up an engineer**, immediately after the diagram:
+
+  1. **Orientation** (1-2 sentences) - how to read it: direction of flow, what the shapes and colours
+     mean. If colour carries meaning, give a legend. Do not make the reader reverse-engineer your
+     notation.
+  2. **The crux** (one bold sentence) - the single idea this diagram exists to convey. **If you
+     cannot name it in one sentence, delete the diagram** - it is decoration.
+  3. **Why it is shaped this way** (2-4 sentences) - the design rationale, and what would go wrong
+     with a different shape. This is the part that actually teaches: it transfers *judgement*, not
+     topology.
+  4. **Provenance** - `synthesized from n4, n8` for a diagram you generated, or the normal citation
+     if you lifted it. Never let generated material read as sourced evidence.
+
+  > **The anti-pattern: narrating the arrows.** "A calls B, which returns to C" restates what the
+  > reader can already see and teaches nothing. Explain what is *not* visible - why the boundary sits
+  > there, what the shape rules out, which box is the expensive one, what breaks at scale.
 - **Teach as you go.** When a key term surfaces, explain it inline `> 💡 <1-2 sentences>` and
   capture it in `brain/glossary.md` (the **mentor** persona owns deeper teaching).
 

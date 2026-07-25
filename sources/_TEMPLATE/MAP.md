@@ -48,6 +48,21 @@ sequenceDiagram
     Module-->>Caller: response
 ```
 
+<!-- Every diagram carries a walkthrough - see AGENTS.md. Delete these labels, keep the substance. -->
+
+**How to read it:** <direction of flow; what each participant is; a legend if colour or shape carries
+meaning.>
+
+**The crux: <the one thing this flow teaches about the repo - if you cannot say it in a sentence,
+you have not finished tracing it.>**
+
+**Why it is shaped this way:** <why the code is factored this way, what the boundaries buy, and what
+would break if they moved. Do NOT narrate the arrows - explain what the reader cannot see from the
+diagram: which hop is expensive, where the surprising indirection is, what the docs claim happens
+here versus what the code actually does.>
+
+*Generated from the code at `path:line @<sha>` - a diagram the repo does not contain.*
+
 ## Concepts to learn here (queue)
 
 - [ ] <concept 1 - trace it, produce a node>

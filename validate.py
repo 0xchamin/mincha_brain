@@ -326,6 +326,53 @@ def check_mermaid() -> None:
             err(md, open_at, "unclosed ```mermaid fence")
 
 
+def check_diagram_walkthroughs() -> None:
+    """AGENTS.md: every diagram in teaching material carries a walkthrough.
+
+    Scoped to knowledge OUTPUTS - LEARNING.md, topic notes, reports, and the templates that
+    model them. Not prd.md or how_to_use_this.md, where a diagram illustrates surrounding
+    prose rather than teaching on its own.
+
+    This checks only that an explanation EXISTS and has some substance. Whether it teaches
+    judgement or merely narrates the arrows is a judgement call, and judgement stays in
+    AGENTS.md - a validator that scored explanation quality would be laundering taste as a
+    green check.
+    """
+    MIN_CHARS = 150
+    LOOKAHEAD = 14
+
+    targets: list[Path] = []
+    targets += sorted((ROOT / "sources").glob("*/LEARNING.md"))
+    targets += sorted((ROOT / "sources").glob("*/MAP.md"))
+    targets += topic_files()
+    targets += sorted((ROOT / "reports").glob("*.md"))
+
+    for md in targets:
+        lines = read(md).splitlines()
+        i = 0
+        while i < len(lines):
+            if not lines[i].strip().startswith("```mermaid"):
+                i += 1
+                continue
+            close = next((j for j in range(i + 1, len(lines))
+                          if lines[j].strip() == "```"), None)
+            if close is None:
+                break  # unclosed fence - check_mermaid reports it
+            prose = 0
+            for k in range(close + 1, min(close + 1 + LOOKAHEAD, len(lines))):
+                s = lines[k].strip()
+                if s.startswith("#") or s.startswith("```"):
+                    break  # next section or next diagram - the walkthrough is missing
+                if s.startswith("<!--") or s.startswith("-->"):
+                    continue
+                prose += len(s)
+            if prose < MIN_CHARS:
+                err(md, i + 1,
+                    f"diagram has no walkthrough ({prose} chars of prose follow it, need >= {MIN_CHARS}) "
+                    f"- AGENTS.md requires orientation, crux, why-this-shape, provenance")
+            i = close + 1
+
+
 def check_style() -> None:
     """AGENTS.md: never use the em dash."""
     for md in markdown_files():
@@ -344,6 +391,7 @@ CHECKS = [
     ("ADRs", check_adrs),
     ("local links", check_local_links),
     ("mermaid", check_mermaid),
+    ("diagram walkthroughs", check_diagram_walkthroughs),
     ("style", check_style),
 ]
 
