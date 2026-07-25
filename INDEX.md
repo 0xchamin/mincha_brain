@@ -24,6 +24,7 @@
 
 | Source | Type | Summary | Topics | When to read | Folder |
 |---|---|---|---|---|---|
+| 12-Factor Agents: Patterns of reliable LLM applications (Dex Horthy / HumanLayer, AI Engineer WF 2025) | video | **Start here for agent fundamentals.** An agent is a prompt + switch statement + context builder + loop - own all four. Tools are just structured JSON; what ships in production is micro agents (3-10 steps) inside deterministic code, with humans contacted via tool calls. | agents, context-engineering | First principles before building any agent; deciding what to own vs delegate to a framework; why your agent stalls at 70-80%; pause/resume design. | [`sources/260725_12-factor-agents/`](sources/260725_12-factor-agents/LEARNING.md) |
 | Building Closed-Loop Evals for a Multimodal Agent at Scale (Uber, AI Engineer WF 2026) | video | Blueprint for evaluating an agent pipeline in production: log-first, per-stage metrics (routers as classifiers, generation pass@k, pairwise comparison), Swiss-cheese QA gates, and a closed self-tuning loop on drift. | evals, agents | Designing evals for an agent/LLM pipeline; router precision-recall; pass@k; auto-tuning on drift. | [`sources/260725_closed-loop-evals-multimodal-agent/`](sources/260725_closed-loop-evals-multimodal-agent/LEARNING.md) |
 
 ## Topics (living notes)
@@ -37,8 +38,9 @@ The compounding synthesis layer - many sources feed each note. See [`brain/topic
 
 | Topic | Status | What it covers | Sources feeding it | Note |
 |---|---|---|---|---|
+| Agents | **established** | Autonomous LLM agents: the four owned parts (prompt/switch/context/loop), structured output, micro agents inside deterministic code, state + pause/resume, humans as tool calls, self-tuning | 2 | [`brain/topics/agents.md`](brain/topics/agents.md) |
+| Context engineering | emerging | Which tokens reach the model: prompt authorship, context-window ownership, thread-as-typed-events serialisation, token budget as a reliability lever, error compaction ([ADR-0001](brain/decisions/0001-context-engineering-topic.md)) | 1 | [`brain/topics/context-engineering.md`](brain/topics/context-engineering.md) |
 | Evals | emerging | Evaluating agent/LLM pipelines: per-stage metrics, pass@k, pairwise comparison, QA gates, closed-loop self-tuning | 1 | [`brain/topics/evals.md`](brain/topics/evals.md) |
-| Agents | emerging | Autonomous LLM agents: planning, tools, memory, loops; routed multi-agent pipelines, self-tuning | 1 | [`brain/topics/agents.md`](brain/topics/agents.md) |
 | MCP | seed | Model Context Protocol: servers, tools, resources, transport | 0 | [`brain/topics/mcp.md`](brain/topics/mcp.md) |
 | Skills | seed | Agent skills: definition, invocation, packaging | 0 | [`brain/topics/skills.md`](brain/topics/skills.md) |
 | RAG | seed | Retrieval-augmented generation: chunking, embeddings, retrieval | 0 | [`brain/topics/rag.md`](brain/topics/rag.md) |
@@ -51,6 +53,7 @@ The compounding synthesis layer - many sources feed each note. See [`brain/topic
 - [`brain/glossary.md`](brain/glossary.md) - 💡 **terms** defined once, reused across sources.
 - [`brain/log.md`](brain/log.md) - dated **ingest milestones**.
 - [`brain/decisions/`](brain/decisions/) - **ADRs** for durable structural decisions (architect persona).
+- [`reports/`](reports/README.md) - **synthesized cross-source study material** (synthesizer persona). Start with [agent fundamentals ramp-up](reports/260725_agent-fundamentals-ramp-up.md).
 
 ## Config (taste + workflow)
 
