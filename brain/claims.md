@@ -22,7 +22,7 @@
 | 14 | The naive agent loop degrades on long workflows, primarily from unbounded context growth. | agents | S2 (`8kMaTybvDUw` `&t=371s`) + **R1** ([Lost in the Middle](https://arxiv.org/abs/2307.03172), TACL, T1; [Context Rot](https://www.trychroma.com/research/context-rot), 18 models, T2) | **corroborated (external, measured)** |
 | 15 | Unify execution + business state behind a REST/MCP API; serialise the context window with a state ID to pause and resume - the agent never knows it was suspended. | agents | S2 (`8kMaTybvDUw` `&t=460s`) | emerging |
 | 16 | Make contacting a human a tool call / intent among the others, not a structural branch before the first output token. | agents | S2 (`8kMaTybvDUw` `&t=687s`) | emerging |
-| 17 | Not every problem needs an agent - a deterministic script often beats hours of prompt engineering. | agents | S2 (`8kMaTybvDUw` `&t=71s`) + **R1** ([Anthropic](https://www.anthropic.com/engineering/building-effective-agents): "find the simplest solution possible, and only increasing complexity when needed", T2) | corroborated (external) |
+| 17 | Not every problem needs an agent - a deterministic script often beats hours of prompt engineering. **S5 reaches the same boundary from skill design: "if exact step-by-step execution is required, write a script instead of a skill".** | agents | S2 (`8kMaTybvDUw` `&t=71s`) + **S5 (`0vphxNt4wyk` `&t=558s`)** + **R1** ([Anthropic](https://www.anthropic.com/engineering/building-effective-agents): "find the simplest solution possible, and only increasing complexity when needed", T2) | **corroborated (2 ingested sources + external)** |
 | 18 | Target work at the boundary of what the model does *reliably*, then engineer reliability around it - that is where the differentiation is. | agents | S2 (`8kMaTybvDUw` `&t=848s`) | emerging |
 | 19 | LLMs are stateless pure functions; input-token quality is the only lever on output quality short of retraining. | context-engineering | S2 (`8kMaTybvDUw` `&t=547s`) | emerging |
 | 20 | Prompt, memory, RAG and history are one problem - which tokens reach the model. | context-engineering | S2 (`8kMaTybvDUw` `&t=616s`) | emerging |
@@ -43,6 +43,16 @@
 | 35 | **Subjective quality becomes gradable by fixing the question, not the model.** "Is this beautiful?" grades inconsistently; "does this follow our design principles?" supplies criteria. When a quality judgement grades inconsistently, suspect the question before the grader. | evals | S4 (§2, §3) | emerging |
 | 36 | **The grader is not free.** Out-of-the-box models are lenient QA, biased toward AI-generated output; S4's evaluator took several log-driven tuning rounds to catch subtle bugs. It also needs **tools to perceive what it grades** (a browser to judge a UI), and **its modality is a hard ceiling on what "quality" can mean** - a model that cannot hear cannot grade audio. | evals | S4 (§4a, §5) | emerging |
 | 37 | **"Context anxiety": a model may prematurely wrap up work as it nears its *perceived* context limit** - a behavioural failure distinct from degradation caused by a full window (claims 14, 22). **Compaction does not fix it; a context reset does**, at the cost of a handoff artifact that must carry enough state to resume - which is claim 21's serialisation requirement arriving from the opposite direction. | context-engineering | S4 (§2) | needs-check (single-leg, vendor, model-version-bound) |
+| 38 | **A skill is a three-layer cost ladder, not a document.** Frontmatter (name + description) sits in context on *every* model call; the `SKILL.md` body loads on trigger; references and scripts cost nothing until the agent explicitly reads them. The description is a per-call tax of 100-200 tokens whether the skill fires or not. | skills | S5 (`0vphxNt4wyk` `&t=159s`,`&t=471s`) | emerging |
+| 39 | **The reliability bar rises with the user's distance from the mechanism.** An engineer using their own agent repairs a mis-trigger in seconds and is the eval; a shipped user does not know the mechanism exists, has no fallback, and leaves on first failure - so the checking must be automated. | skills | S5 (`0vphxNt4wyk` `&t=126s`) | emerging |
+| 40 | **Two kinds of skill with opposite lifespans.** Capability skills teach what the model cannot do consistently *yet* and are temporary; preference skills encode team workflow and convention and are durable. Evals are the retirement signal for the first and the regression guard for the second. | skills | S5 (`0vphxNt4wyk` `&t=194s`,`&t=213s`) | emerging |
+| 41 | **Skills move performance in both directions.** Curated skills lift task resolution 33.9% -> 50.5% (+16.6 pts) on SkillsBench 1.1; **self-generated (AI-written) skills cost 8.1 to 11.5 points.** Human-written skills perform best. | skills | S5 (`0vphxNt4wyk` `&t=266s`,`&t=299s`) - **SkillsBench, a public third-party benchmark** | emerging |
+| 42 | **Skill length is an inverted-U, not a slope.** <200 lines +19.0%; **200-500 lines +21.5% (peak)**; 500-1000 +14.5%; **>1000 lines +0.7%, statistically a no-op.** "As short as possible" is the wrong reading. | skills | S5 (`0vphxNt4wyk` `&t=315s`) - **the curve is visual-only; the narration states only a 500-line ceiling** | emerging |
+| 43 | **The description is the trigger mechanism, and the trigger causes 50%+ of all skill failures** - the highest-leverage line in a skill. Write directives not essays, include the *what* and the *when*, and declare negative cases or a broad description hijacks the trigger on unrelated work. | skills | S5 (`0vphxNt4wyk` `&t=1036s`,`&t=437s`,`&t=594s`) | emerging |
+| 44 | **Ablation is an eval method, and the delta is the verdict, not the absolute score.** Run the same suite with and without the component loaded: 94% vs 32% means keep it; 96% vs 95% means the base model absorbed the knowledge and the component is now pure context cost. **This is the measurement claim 31 lacked** - it converts "assumptions expire" from a judgement into a test. | evals | S5 (`0vphxNt4wyk` `&t=713s`,`&t=1268s`) - instruments claim 31 | emerging |
+| 45 | **Keep the eval after you retire the component.** It becomes a regression detector on the bare model and is what tells you when to reintroduce the scaffolding. Closes the loop claim 31 leaves open: S4 can tell you a component stopped being load-bearing but cannot notice if that reverses. | evals | S5 (`0vphxNt4wyk` `&t=1181s`,`&t=1199s`) | needs-check (single-leg) |
+| 46 | **Gate the diff, not the release.** At Google DeepMind evals sit alongside every skill, run on every change, and **a change cannot merge unless it improves the test cases.** The strongest instance in this brain of claim 34's independent checker - a merge gate is the only one a human cannot wave through. | evals | S5 (`0vphxNt4wyk` `&t=1002s`,`&t=1019s`) | emerging (self-reported practice, T2 vendor) |
+| 47 | **Grade outcomes, not paths; and isolate every run, because agents cheat.** Assert the task succeeded rather than that the component was invoked on turn one. Run each case in a clean workspace - coding agents will read prior chats or executions to obtain the content without invoking the thing under test. | evals | S5 (`0vphxNt4wyk` `&t=1091s`,`&t=1109s`,`&t=1129s`) | emerging |
 
 > **S1** = `sources/260725_closed-loop-evals-multimodal-agent/` (Uber, "Building Closed-Loop Evals
 > for a Multimodal Agent at Scale", AI Engineer World's Fair 2026).
@@ -55,13 +65,27 @@
 > "Harness Design for Long-Running Application Development", 2026-03-24). **T2 vendor source**
 > writing about its own models, **n=1 per configuration**, no released harness code, **visual leg
 > skipped** - so its mechanisms are more trustworthy than its numbers.
+> **S5** = `sources/260726_dont-ship-skills-without-evals/` (Philipp Schmid, Google DeepMind, "Don't
+> Ship Skills Without Evals", AI Engineer World's Fair 2026). **T4 conference talk by a T2 vendor
+> employee.** Its numbers split into two credibility classes that must never be quoted as one:
+> **SkillsBench** (claims 41, 42) is a **public third-party benchmark** and is the strongest evidence
+> in this brain that is not peer-reviewed; the **DeepMind-internal** figures (claim 46, the
+> 39.2% -> 91.6% case study) are self-reported, single-case and unreplicated.
 > **R1** = deep-research pass `sources/260725_12-factor-agents/context/01_context-limits-and-decomposition.md`
 > (2026-07-25) - external evidence, each citation tiered T1-T5 with an independence call.
 
-> **Claim 11** is the only claim corroborated by a second *ingested* source - two separate talks, one
-> arguing from first principles and one reporting production practice. Weakness: both are
-> practitioner talks by people selling adjacent products, delivered a year apart into the same
-> discourse, neither with measurements - convergence, not replication.
+> **Claims 11 and 17 are corroborated by a second *ingested* source.** Claim 11: two talks, one
+> arguing from first principles and one reporting production practice. Claim 17 gained S5 on
+> 2026-07-26 - a talk about *skills* landing on the same boundary as a talk about *agents*, which is
+> the more interesting of the two convergences because the authors were not addressing the same
+> question. Shared weakness: all are practitioner talks by people selling adjacent products, none
+> with measurements - convergence, not replication.
+>
+> **Claims 44 and 45 instrument claim 31.** S4 named the principle (harness assumptions expire) but
+> offered only "remove one component at a time"; S5 supplies the ablation test that turns it into a
+> measurement, and adds the part S4 lacks - keep the eval after removing the part, so a reversal is
+> detectable. This is the brain's first case of one source supplying the *method* for another
+> source's *principle*.
 >
 > **Claims 14, 17, 22, 23 carry external corroboration** from the R1 research pass, and 14/22 are now
 > **measured** rather than asserted (peer-reviewed position effects + an 18-model degradation study).

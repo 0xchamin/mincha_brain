@@ -43,8 +43,16 @@
 | Self-evaluation bias | The tendency of an agent asked to judge its own output to confidently praise it, even when a human would call the quality obviously mediocre. The reason a separate evaluator beats a self-critical generator. | S4 (§1, §2) |
 | Capability boundary | The frontier of what a model does reliably. Scaffolding is worth keeping only for tasks at or beyond it - so a component's value is **boundary-relative**, and a new model can turn essential scaffolding into pure overhead. | S4 (§4c) |
 
+| Progressive disclosure (skills) | The three-layer loading contract of a skill: **frontmatter** (name + description) in context on every turn, **`SKILL.md` body** on trigger, **references and scripts** on demand. Each layer has a different price, which is the whole design constraint. | S5 (`0vphxNt4wyk` `&t=159s`) |
+| Capability skill vs preference skill | **Capability**: teaches what the model cannot do consistently yet - *temporary*, retire as models improve. **Preference**: encodes team workflow and convention - *durable*, must track the team. Opposite lifespans, so opposite eval purposes. | S5 (`0vphxNt4wyk` `&t=194s`) |
+| Trigger hijacking | A skill description broad enough that it fires on unrelated work ("use for any web development task" firing on Angular when it is a React skill), stealing context from tasks it cannot help. The fix is declaring **negative cases**. | S5 (`0vphxNt4wyk` `&t=611s`) |
+| No-op (skill instruction) | An instruction that does not alter the agent's behaviour - "write clear, high-quality code", "make the implementation easy to read". Common in AI-authored skills; burns reasoning tokens and obscures the real instructions. Credited to Matt Pocock. | S5 (`0vphxNt4wyk` `&t=680s`) |
+| Ablation (eval) | Running the same eval suite **with and without** a component loaded, and reading the *delta* rather than the absolute score. 94% vs 32% means the component is load-bearing; 96% vs 95% means the base model absorbed it and it is now pure context cost. The retirement test for any expiring scaffold. | S5 (`0vphxNt4wyk` `&t=713s`) |
+| Skill lift | The performance delta a skill produces in an ablation. SkillsBench 1.1: curated skills +16.6 pts (33.9% -> 50.5%); self-generated skills **negative** (-8.1 to -11.5). Also the merge criterion at Google DeepMind - no skill PR lands without proof of positive lift. | S5 (`0vphxNt4wyk` `&t=266s`,`&t=1002s`) |
+
 > **S1** = `sources/260725_closed-loop-evals-multimodal-agent/` (Uber, AI Engineer World's Fair 2026).
 > **S2** = `sources/260725_12-factor-agents/` (Dex Horthy / HumanLayer, AI Engineer World's Fair 2025).
 > **S3** = `sources/260725_oauth2-oidc-plain-english/` (Nate Barbettini / Okta, 2018).
 > **S4** = `sources/260725_harness-design-long-running-apps/` (Prithvi Rajasekaran, Anthropic Labs, 2026).
+> **S5** = `sources/260726_dont-ship-skills-without-evals/` (Philipp Schmid, Google DeepMind, AI Engineer WF 2026).
 > **R1** = deep-research pass on S2, `sources/260725_12-factor-agents/context/01_context-limits-and-decomposition.md`.

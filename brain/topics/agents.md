@@ -132,6 +132,21 @@ Two practical corollaries:
 - **Re-run the question on every model release.** Not "what should I add?" but "**which of these is
   still load-bearing?**"
 
+**S5 supplies the instrument S4 lacked.** A skill *is* a harness component - it exists precisely
+because the model cannot do something reliably - so the same expiry applies, and S5 makes the
+stress-test a measurement rather than a judgement: **run the eval with and without the component
+loaded.** A 94% vs 32% split means keep it; 96% vs 95% means the base model absorbed the knowledge
+and the component is now pure context cost [S5 `&t=713s`, `&t=1268s`]. S4's "remove one at a time"
+tells you the *procedure*; S5's ablation tells you the *verdict*.
+
+And the part neither S4 nor claim 31 contains [S5 `&t=1181s`, `&t=1199s`]:
+
+> **Keep the eval after you retire the component.** It becomes a regression detector on the bare
+> model, and it is what tells you when to put the scaffolding back.
+
+That closes the loop S4 leaves open: S4 can tell you a component stopped being load-bearing, but has
+no mechanism for noticing if that ever reverses. *(`single-leg` in S5 - narration only.)*
+
 ### The second agent exists to correct a bias, not to add capability
 
 S4's other structural claim is why a *separate* evaluator beats a self-critical generator:
@@ -174,12 +189,14 @@ The payoff is measurable, if only once: on the DAW build, QA was roughly **8% of
 | Agent design is a spectrum from brittle rules to unconstrained agency; aim for a guardrailed middle. | S1 `&t=251s` | emerging |
 | Agents can self-tune: a reflect+synthesize prompt-optimizer rewrites an agent's config and registers a new version. | S1 `&t=732s` | needs-check (single-leg) |
 | A diagnoser meta-agent localizes which sub-agent is failing and routes the config fix there. | S1 `&t=1144s` | emerging |
-| Not every problem needs an agent - a deterministic script often beats two hours of prompt engineering. | S2 `&t=71s` + R1 (Anthropic: "find the simplest solution possible, and only increasing complexity when needed", T2) | corroborated (external) |
+| Not every problem needs an agent - a deterministic script often beats two hours of prompt engineering. | S2 `&t=71s` + R1 (Anthropic: "find the simplest solution possible, and only increasing complexity when needed", T2) + **S5 `&t=558s`** ("if exact step-by-step execution is required, write a script instead of a skill") | **corroborated (2 ingested sources + external)** |
 | Decomposition is measured (+13.1 to +41.5 pp reliability); naive memory scaffolds are measured *worse* (hurt 6 of 10 models, lost to plain ReAct). | R1 ([Beyond pass@1](https://arxiv.org/abs/2603.29231), T3 preprint) | needs-check (preprint) |
 | Target work at the boundary of reliable model capability, then engineer reliability around it. | S2 `&t=848s` + **S4 §4c** (a harness rebuilt around a moved boundary) | **corroborated (2 sources)** |
 | **Every harness component encodes an assumption about what the model cannot do alone; those assumptions expire and should be stress-tested on each model release.** | S4 §4c | emerging |
 | Whether a scaffold is load-bearing depends on the gap between task and model capability, not on the scaffold's merit - so decomposition helps *until the boundary moves past your task*. | S4 §4c (refines the decomposition row above) | emerging |
 | When simplifying a harness, remove one component at a time; simultaneous cuts are uninterpretable. | S4 §4c | emerging |
+| **Ablation is the stress-test for an expiring assumption:** run the eval with and without the component. 94% vs 32% means keep; 96% vs 95% means the model absorbed it. | S5 `&t=713s`, `&t=1268s` (slide `frame_720` + narration) | emerging |
+| **Keep the eval after retiring the component** - it becomes a regression detector on the bare model and signals when to reintroduce the scaffolding. | S5 `&t=1181s` | needs-check (single-leg) |
 | A separate evaluator beats a self-critical generator because of **self-evaluation bias** - agents confidently praise their own mediocre output. | S4 §1, §2 | emerging |
 | The evaluator needs tools to grade what it cannot perceive (a browser to judge a UI), and needs tuning before it is competent - out-of-box models are lenient QA. | S4 §3, §4a | emerging |
 | A harness bought a working app where a solo agent produced a broken one, at ~18x wall clock and ~22x cost (20 min/$9 vs 6 hr/$200). | S4 §4b | needs-check (n=1, self-reported, vendor) |
@@ -234,4 +251,8 @@ The payoff is measurable, if only once: on the DAW build, QA was roughly **8% of
 - **S4** - [Harness Design for Long-Running Application Development](../../sources/260725_harness-design-long-running-apps/LEARNING.md)
   (Prithvi Rajasekaran, Anthropic Labs, 2026-03-24). **T2 vendor source, n=1 runs, visual leg
   skipped - most nodes `single-leg`.** Strongest for the boundary-relative framing of scaffolding.
+- **S5** - [Don't Ship Skills Without Evals](../../sources/260726_dont-ship-skills-without-evals/LEARNING.md)
+  (Philipp Schmid, Google DeepMind, AI Engineer WF 2026). Feeds this note only where skills act as
+  harness components - **ablation as the expiry test**, and the script-not-a-skill boundary. Full
+  synthesis in [`skills.md`](skills.md).
 - **R1** - [deep-research pass on S2](../../sources/260725_12-factor-agents/context/01_context-limits-and-decomposition.md) (2026-07-25) - external evidence, tiered with independence calls.

@@ -1,9 +1,12 @@
 # Topic: Evals
 
-**Status:** established (2 sources - S1 Uber closed-loop evals, S4 Anthropic harness design).
-**Basis:** both independently arrive at *an independent checking stage that can fail the work* - S1's
-Swiss-cheese QA gates on a production pipeline, S4's evaluator agent with hard thresholds on a build
-loop. S4's other eval claims are new and `single-leg`.
+**Status:** established (3 sources - S1 Uber closed-loop evals, S4 Anthropic harness design, S5
+Google DeepMind skill evals).
+**Basis:** all three independently arrive at *an independent checking stage that can fail the work* -
+S1's Swiss-cheese QA gates on a production pipeline, S4's evaluator agent with hard thresholds on a
+build loop, and S5's CI gate that blocks a skill diff from merging without proof of lift. **S5 is the
+strongest instance**: a hard merge gate is the only one of the three that a human cannot wave
+through. S4's other eval claims are new and `single-leg`.
 
 > Living, cross-source synthesis on **evaluating LLM / agent systems** - how you measure, gate, and
 > continuously align an agent pipeline in production. Many sources feed this note; **merge and
@@ -69,6 +72,15 @@ self-learning loop to build [S1 `&t=418s`]. From there:
 | **The grader is not free: out-of-the-box models are lenient QA**, and it took several log-driven tuning rounds to make the evaluator catch subtle bugs and stop favouring AI-generated output. | S4 §4a | emerging |
 | **Negotiate "done" before producing** - generator and evaluator agree acceptance criteria up front, bridging a product-language spec to something testable. | S4 §4a | emerging |
 | An independent QA pass cost ~8% of a build's total spend and caught core features shipped as display-only stubs. | S4 §5 | needs-check (n=1, self-reported, vendor) |
+| **A third object of evaluation: the instruction artifact.** S1 evaluates a pipeline, S4 evaluates generated output, **S5 evaluates the prompt-side asset itself** (a skill) - and does it by ablation rather than by scoring. | S5 `&t=713s` (slide `frame_720` + narration) | emerging |
+| **Ablation as an eval method:** run the same suite with and without the component loaded. The delta, not the absolute score, is the verdict - 94% vs 32% means keep, 96% vs 95% means delete. | S5 `&t=713s`, `&t=1268s` | emerging |
+| **Gate the diff, not the release:** evals sit alongside every skill, run on every change, and a change cannot merge unless it improves the test cases. | S5 `&t=1002s`, `&t=1019s` (slide `frame_950` + narration) | emerging (self-reported practice) |
+| **Grade outcomes, not paths** - assert the task succeeded, not that the component was invoked on turn one. Invocation on turn five is still a pass. | S5 `&t=1091s`, `&t=1109s` | emerging |
+| **Isolate every run in a clean workspace - agents cheat**, reading prior chats or executions to obtain content without invoking the thing under test. | S5 `&t=1109s`, `&t=1129s` (slide `frame_950` + narration) | emerging |
+| **Run multiple trials per case** (up to six) and report reliability rather than a single pass/fail, because the system is non-deterministic. | S5 `&t=1146s` | needs-check (single-leg) |
+| **Test across harnesses.** The same asset can pass on one agent harness and fail on another, and your users may be on the one you never tested. | S5 `&t=1163s` | needs-check (single-leg) |
+| **Most asserts can be cheap regex** (correct SDK, model ID, methods, no deprecated patterns), which is what makes many trials affordable; LLM-as-judge is reserved for trace-level checks. | S5 `&t=878s`, `&t=914s` | emerging |
+| **Start with 10-20 real prompts** - 5 happy-path, 5 negative/near-miss, 5 production traces. Real traces beat synthetic guesses, and a small suite beats none. | S5 `&t=628s`, `&t=645s` | emerging |
 
 ## Key visuals
 
@@ -97,6 +109,14 @@ self-learning loop to build [S1 `&t=418s`]. From there:
 - **The modality ceiling is a real limit with no answer here.** S4's DAW QA could confirm audio played
   but not that it sounded good [S4 §5]. Anything needing taste, hearing, or physical interaction has
   this problem, and both sources' methods assume the grader can perceive the artifact.
+- **Ablation sidesteps "who grades the grader", and it may be the more general answer.** S1 and S4
+  both bottom out in a judgement of quality that needs a competent grader. S5's ablation asks a
+  *comparative* question instead - is the system better **with** this component than **without** it -
+  which needs only a consistent metric, not a good one [S5 `&t=713s`]. Open: how far does that
+  generalise beyond components you can cleanly remove?
+- **S5's numbers split into two credibility classes and should never be quoted as one.** SkillsBench
+  (+16.6 pts, the length curve, the -8 to -11 pt self-generated penalty) is a public third-party
+  benchmark; the CI gate and the 39.2% -> 91.6% case study are Google DeepMind reporting on itself.
 
 ## Sources feeding this topic
 
@@ -105,3 +125,7 @@ self-learning loop to build [S1 `&t=418s`]. From there:
   (Prithvi Rajasekaran, Anthropic Labs, 2026-03-24). **T2 vendor source, n=1 runs, visual leg
   skipped - most nodes `single-leg`.** Strongest here for the generator/evaluator split and for
   making subjective quality gradable.
+- **S5** - [Don't Ship Skills Without Evals](../../sources/260726_dont-ship-skills-without-evals/LEARNING.md)
+  (Philipp Schmid, Google DeepMind, AI Engineer WF 2026). **T4 talk by a T2 vendor employee.**
+  Strongest here for **ablation as an eval method** and for the **CI merge gate**. See
+  [`skills.md`](skills.md) for the full skill-side synthesis.
