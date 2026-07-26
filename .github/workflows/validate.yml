@@ -23,3 +23,9 @@ jobs:
 
       - name: Validate kit conventions
         run: python3 validate.py
+
+      # BUILD.md embeds AGENTS.md, the personas, the templates and both scripts verbatim so the
+      # kit can be rebuilt from one file. Nothing stops it going stale except this check, and a
+      # BUILD.md that claims to build the current kit but does not is worse than no BUILD.md.
+      - name: Check BUILD.md is not stale
+        run: python3 tools/make_build_doc.py --check

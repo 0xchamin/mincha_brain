@@ -82,11 +82,20 @@ def markdown_files() -> list[Path]:
     (one canonical contract, see AGENTS.md Appendix). Following them would double-report
     every finding, and would falsely flag AGENTS.md's root-relative links as broken when
     resolved from .github/.
+
+    BUILD.md is excluded for the same reason one level up: it is a *generated bundle*
+    (tools/make_build_doc.py) that embeds those files verbatim, so checking it re-checks
+    content already checked at its source, and reports false positives because embedded
+    relative links resolve from the wrong directory - personas/README.md's `](architect.md)`
+    would resolve to <root>/architect.md. Regenerate it rather than lint it; the generator
+    fails loudly if a source file is missing, and `--check` catches staleness.
     """
     skip = {".git", ".venv", "__pycache__", "node_modules", "raw", "repo"}
     return sorted(
         p for p in ROOT.rglob("*.md")
-        if not any(part in skip for part in p.parts) and not p.is_symlink()
+        if not any(part in skip for part in p.parts)
+        and not p.is_symlink()
+        and p != ROOT / "BUILD.md"
     )
 
 
