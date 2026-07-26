@@ -120,7 +120,7 @@ holds, and assembly stays your job.
 | Command | Does | Needs |
 |---|---|---|
 | `python3 tools/ingest.py transcript <in.vtt> <out.txt>` | de-duplicates YouTube's rolling captions into timestamped blocks (`[MM:SS t=NNN] ...`) so `&t=` citations land right | **stdlib only** |
-| `python3 tools/ingest.py probe <video.mp4>` | **the ADR-0003 static-video probe** - scene-detect + phash -> `STATIC` / `RICH` + the exact `SOURCE.md` line to record | ffmpeg + `.venv` |
+| `python3 tools/ingest.py probe <video.mp4>` | **the ADR-0003 static-video probe** - scene-detect + phash -> `STATIC` / `RICH` + the exact `SOURCE.md` line to record. On `STATIC` it also writes a **9-frame confirmation sheet** to `view` first (ADR-0006) - the verdict is advisory | ffmpeg + `.venv` |
 | `python3 tools/ingest.py frames <video.mp4> --at 233,290 --out DIR` | extracts frames at given seconds (`--crop` for the slide area) | ffmpeg |
 | `python3 tools/ingest.py sheet DIR --out STEM` | tiles frames into contact sheets - **triage 17 candidates in 1-2 `view` calls instead of 17** | ffmpeg |
 
@@ -174,19 +174,34 @@ numbers with Status + Date; resolving relative links; balanced mermaid fences; n
 
 1. **The user opts out.** "don't analyze video", "skip the frames", "transcript only", or similar,
    at any point before distilling. Explicit instruction always wins - skip even the probe.
-2. **The static-video probe says there is nothing to see.** Run
+2. **The static-video probe says there is nothing to see, *and you confirmed it*.** Run
    **`python3 tools/ingest.py probe <video>`** - scene-detect + `imagehash` dedup, the *first* step
    of the pipeline anyway, costing **no tokens**. It prints `STATIC` / `RICH` and the exact
-   `SOURCE.md` line to record. If the whole video yields **<= 3 distinct frames**, treat it as
-   visually static, **auto-degrade to transcript-only, and say so in one line.** Do not `view` a
-   handful of near-identical webcam stills to confirm what the dedup already told you. (The threshold
-   is a heuristic - for calibration, `260725_12-factor-agents` gave 19 distinct.) **Use the tool, not
-   a hand-rolled equivalent:** its scene threshold and hash distance are fixed constants, and a
-   verdict computed with different ones is not comparable across sources.
+   `SOURCE.md` line to record. If the whole video yields **<= 3 distinct frames** it reports
+   `STATIC`. (The threshold is a heuristic - for calibration, `260725_12-factor-agents` gave 19
+   distinct.) **Use the tool, not a hand-rolled equivalent:** its scene threshold and hash distance
+   are fixed constants, and a verdict computed with different ones is not comparable across sources.
+
+   > ⚠️ **`STATIC` is advisory, never dispositive** ([ADR-0006](brain/decisions/0006-static-probe-is-advisory.md)).
+   > **Scene detection measures whole-frame delta**, so a **templated slide deck** - fixed background,
+   > logo, speaker inset, track footer, with the slide body a minority of the pixels - reads as static
+   > while every slide changes. This has happened twice
+   > (`260726_dont-ship-skills-without-evals`: `candidates=3` on ~20 dense slides;
+   > `260725_12-factor-agents` at the dedup stage). On `STATIC` the tool now writes a
+   > **9-frame confirmation sheet** spread across the runtime and prints its path: **`view` it before
+   > honouring the verdict.** Differing slides mean **override** - extract transcript-anchored frames
+   > and record the override in `SOURCE.md`.
+   >
+   > **Why the extra call is worth it:** the two errors are not symmetric. A false `RICH` wastes one
+   > `view`. A false `STATIC` destroys the source's second leg and cannot be cheaply undone, because
+   > the degrade rule below forbids retro-marking nodes `corroborated`. Only after the sheet agrees do
+   > you **auto-degrade to transcript-only and say so in one line.** Do not `view` full-resolution
+   > webcam stills to re-confirm what the sheet already settled.
 3. **Capture fails** - no video stream, download blocked. Note it and proceed.
 
 > **Never skip the probe to save time.** It is the cheapest signal available and it is what makes the
-> default safe. Skipping frames is a *judgement*; skipping the probe is *guessing*.
+> default safe. Skipping frames is a *judgement*; skipping the probe is *guessing*. And **never
+> honour a `STATIC` without the confirmation sheet** - that is guessing one level up.
 
 ### The cost of skipping, which is never silent
 
@@ -291,7 +306,8 @@ rather than arbitrary.
 | Situation | Do this |
 |---|---|
 | Video has no captions | Transcribe audio with `faster-whisper`; if that fails, note it and proceed transcript-light. |
-| Talking-head video, no useful frames | The static probe catches this: <= 3 distinct frames after dedup -> auto-degrade to transcript-only, record `Visual leg: skipped (static probe)`. Nodes are `single-leg` (needs-check), never `corroborated`. |
+| Talking-head video, no useful frames | The static probe catches this: <= 3 distinct frames after dedup -> **`view` the confirmation sheet it writes (ADR-0006)**, then auto-degrade to transcript-only and record `Visual leg: skipped (static probe)`. Nodes are `single-leg` (needs-check), never `corroborated`. |
+| **Probe says `STATIC` but the sheet shows changing slides** | A **false STATIC** - a templated deck defeating whole-frame scene detection (ADR-0006). **Override**: extract transcript-anchored frames, record `Visual leg: analysed (N frames kept) - static probe overridden` in `SOURCE.md`, and say why. Do **not** file a bug against the constants; the metric is wrong for this input class, not mis-tuned. |
 | User says "don't analyze video" / "transcript only" | Skip frame extraction **and the probe**; record `Visual leg: skipped (user)`; gate every node `single-leg`; say in one line that internal corroboration is now unavailable and deep research is the way back to two legs. |
 | Visual leg skipped but the source turns out to matter | Do **not** retro-mark nodes `corroborated`. Either re-run the visual leg and re-gate, or get the second leg externally via deep research. |
 | Paywalled / login-required article or paper | Ingest only what you can legitimately access; set `SOURCE.md` Access + Status `blocked` or `partial`; do not bypass. |

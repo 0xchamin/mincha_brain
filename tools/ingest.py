@@ -51,6 +51,18 @@ STATIC_FRAME_THRESHOLD = 3
 SCENE_THRESHOLD = 0.30   # ffmpeg select='gt(scene,X)'
 PHASH_DISTANCE = 10      # imagehash pHash Hamming distance below which frames are "the same"
 
+# ADR-0006: a STATIC verdict is ADVISORY, never dispositive. Scene detection measures
+# WHOLE-FRAME delta, so a heavily templated deck (fixed background, logo, speaker inset,
+# footer) can change every slide and still never cross SCENE_THRESHOLD. Observed twice:
+# 260726_dont-ship-skills-without-evals (candidates=3 on ~20 dense slides) and, at the
+# dedup stage, 260725_12-factor-agents. So on STATIC we sample evenly across the runtime
+# and tile one confirmation sheet: the agent spends ONE `view` call before honouring a
+# verdict that would otherwise discard the entire visual leg.
+#
+# Deliberately additive: the verdict and the three constants above are untouched, so every
+# past probe result stays comparable. Confirming a verdict is not the same as recomputing it.
+CONFIRM_SAMPLES = 9
+
 
 def die(msg: str, code: int = 2) -> "None":
     print(f"error: {msg}", file=sys.stderr)
@@ -176,6 +188,48 @@ def distinct_count(frames: list[Path]) -> int:
     return len(kept)
 
 
+def duration_seconds(video: Path) -> int:
+    """Runtime in whole seconds, via ffprobe. 0 if it cannot be determined."""
+    try:
+        out = subprocess.run(
+            ["ffprobe", "-v", "error", "-show_entries", "format=duration",
+             "-of", "default=nw=1:nk=1", str(video)],
+            capture_output=True, text=True, check=True).stdout.strip()
+        return int(float(out))
+    except (subprocess.CalledProcessError, FileNotFoundError, ValueError):
+        return 0
+
+
+def confirmation_sheet(video: Path, out: Path) -> Path | None:
+    """ADR-0006: tile CONFIRM_SAMPLES frames spread across the runtime into one sheet.
+
+    The cheapest possible check on a STATIC verdict - one `view` call. Returns the sheet
+    path, or None if the runtime could not be read (in which case say so; never pretend
+    the verdict was confirmed).
+    """
+    dur = duration_seconds(video)
+    if dur <= 0:
+        return None
+    step = dur / (CONFIRM_SAMPLES + 1)
+    stamps = [int(step * (i + 1)) for i in range(CONFIRM_SAMPLES)]
+    out.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory() as tmp:
+        tmpd = Path(tmp)
+        for idx, t in enumerate(stamps):
+            # Zero-padded so the tile order is chronological. Plain frame_<seconds> names
+            # sort as STRINGS, which is why frame_1100 precedes frame_60 in a `sheet` call.
+            run_ffmpeg(["-loglevel", "error", "-ss", str(t), "-i", str(video),
+                        "-frames:v", "1", "-vf", "scale=640:-1", "-q:v", "4",
+                        "-pix_fmt", "yuvj420p", str(tmpd / f"{idx:03d}_t{t}.jpg")])
+        run_ffmpeg([
+            "-loglevel", "error", "-pattern_type", "glob", "-i", str(tmpd / "*.jpg"),
+            "-filter_complex",
+            "scale=640:-1,tile=3x3:margin=8:padding=6:color=white",
+            "-frames:v", "1", "-pix_fmt", "yuvj420p", str(out),
+        ])
+    return out if out.exists() else None
+
+
 def cmd_probe(args: argparse.Namespace) -> int:
     video = Path(args.video)
     if not video.exists():
@@ -188,9 +242,27 @@ def cmd_probe(args: argparse.Namespace) -> int:
     verdict = "STATIC" if static else "RICH"
     print(f"candidates={len(cands)} distinct={n} threshold={STATIC_FRAME_THRESHOLD} -> {verdict}")
     if static:
-        print(f"ADR-0003: visually static. Skip the visual leg; record "
-              f"'Visual leg: skipped (static probe: {n} distinct)' in SOURCE.md. "
-              f"Every node from this source is single-leg by construction.")
+        print(f"ADR-0003: probe says visually static ({n} distinct).")
+        if args.no_confirm:
+            print("ADR-0006: confirmation skipped (--no-confirm). You are honouring an "
+                  "ADVISORY verdict unchecked - say so in SOURCE.md.")
+        else:
+            dest = Path(args.confirm_out) if args.confirm_out else video.parent / "probe_confirm.jpg"
+            sheet = confirmation_sheet(video, dest)
+            if sheet is None:
+                print("ADR-0006: could not build the confirmation sheet (no readable "
+                      "duration). Do NOT record this as a confirmed STATIC.")
+            else:
+                print(f"ADR-0006: STATIC is ADVISORY, not dispositive. `view` this sheet "
+                      f"before skipping the visual leg:\n  {sheet}\n"
+                      f"  {CONFIRM_SAMPLES} frames spread across the runtime, chronological.\n"
+                      f"  Scene-detect measures WHOLE-FRAME delta, so a templated slide deck "
+                      f"(fixed background / logo / speaker inset / footer) reads as static "
+                      f"while every slide changes. If you see differing slides, OVERRIDE: "
+                      f"analyse the visual leg via transcript-anchored `frames`, and record "
+                      f"the override in SOURCE.md.")
+        print(f"If confirmed static: record 'Visual leg: skipped (static probe: {n} distinct)' "
+              f"in SOURCE.md. Every node from this source is then single-leg by construction.")
     else:
         print(f"ADR-0003: analyse the visual leg. Record "
               f"'Visual leg: analysed (N frames kept)' once pruned.")
@@ -276,8 +348,14 @@ def main() -> int:
     p.add_argument("--block-seconds", type=int, default=15)
     p.set_defaults(func=cmd_transcript)
 
-    p = sub.add_parser("probe", help="ADR-0003 static-video probe")
+    p = sub.add_parser("probe", help="ADR-0003 static-video probe (+ ADR-0006 confirmation)")
     p.add_argument("video")
+    p.add_argument("--confirm-out", default=None,
+                   help="where to write the ADR-0006 confirmation sheet "
+                        "(default: <video dir>/probe_confirm.jpg)")
+    p.add_argument("--no-confirm", action="store_true",
+                   help="skip the confirmation sheet on a STATIC verdict. You are then "
+                        "honouring an advisory verdict unchecked - record that in SOURCE.md.")
     p.set_defaults(func=cmd_probe)
 
     p = sub.add_parser("frames", help="extract frames at given timestamps")
