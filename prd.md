@@ -611,6 +611,28 @@ Still open:
 - **OQ6:** For code, how deep should the default orientation pass go before you steer it (just
   `MAP.md`, or `MAP.md` + auto-trace the single key flow)? **This one will answer itself on the
   first code ingest** - see R10.
+- **OQ7 (deferred by decision at 4 sources - revisit at ~20): should a kit change cite the claims
+  that motivated it?** The brain already feeds back into the kit, but **untraceably**: none of the
+  five ADRs cites a claim ID as its rationale, though several rhyme with one. ADR-0005's "generate
+  what should vary, freeze what should not" is claims 11 and 17 applied to the kit's own tooling,
+  and ADR-0003's token-budget argument sits on claim 22. `validate.py` is the sharpest case and the
+  instructive one: it is exactly claim 34's design (never let the producer grade its own work), yet
+  it **predates** the S4 ingest that produced claim 34 - convergence, not application, and nothing
+  in the repo records either reading. The proposal was a `brain/applied.md` ledger (claim ->
+  `candidate` / `applied` / `rejected` / `falsified` -> where) plus a `Claims applied:` line in the
+  ADR template, with the `candidate` rows doubling as the parked-idea list. **Deferred because a
+  five-row ledger costs more than it returns**; the trigger is source volume, not a date.
+
+  Two constraints that must survive the wait, recorded now so they are not re-derived:
+
+  1. **Dogfooding is never a corroboration leg.** Applying a claim to this kit and then observing
+     that the kit works is the independence rule violated at close range - same author, same
+     interest, no counterfactual. It may be logged; it must never raise confidence.
+  2. **An application is only evidence when its failure condition was declared in advance.** "I
+     applied it and it feels better" is unfalsifiable. This is why the stronger form is an
+     **external build** that names the claim it tests and what would count as that claim failing:
+     such a build is genuinely independent of the original author, and a `contradicts` result from
+     one would be worth more than any number of internal applications.
 
 ---
 
