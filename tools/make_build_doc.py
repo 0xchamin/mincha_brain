@@ -67,6 +67,12 @@ VERBATIM: list[tuple[str, list[str]]] = [
     ("Plumbing", [
         "requirements.txt", ".gitignore", ".gitattributes", "link-agents.sh",
         "link-agents.ps1", ".github/workflows/validate.yml",
+        # This generator ships with the bundle because the workflow above invokes it
+        # (`make_build_doc.py --check`). Omit it and a kit built from BUILD.md alone gets a red
+        # CI run on its first push - the bundle would break the very build it describes. It is
+        # not one of the "two frozen scripts" (ADR-0005) - it is the bundler, so it lives here
+        # in plumbing beside the workflow that calls it.
+        "tools/make_build_doc.py",
         ".claude/commands/research.md", "brain/index.md", "LICENSE",
     ]),
 ]
@@ -482,7 +488,7 @@ compounding safe.
 
 | Omitted | Why |
 |---|---|
-| `README.md`, `prd.md`, `how_to_use_this.md` | Their procedural role is this file. The durable design rationale lives in the ADRs (section 5.5), which **are** included. |
+| `README.md`, `prd.md`, `how_to_use_this.md` | Their **procedural** role is this file, so a build from this bundle alone needs none of them. The durable design rationale lives in the ADRs (section 5.5), which **are** included. They are not dead weight, though: the reference repo ships all three, `README.md` is what a newcomer reads first, and `prd.md` carries the risk register and the changelog. Copy them across if you want the full documentation set. |
 | ADR-0001 | A content decision specific to the reference brain (creating a topic from one of its sources), not a kit decision. It also links to a source you will not have. |
 | All ingested sources, claims, glossary terms, reports | This is a kit, not someone else's knowledge. Your brain starts empty and earns its content. |
 
