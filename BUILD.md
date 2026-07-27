@@ -1,6 +1,6 @@
 # BUILD.md - build Brain from scratch, from this file alone
 
-> **Generated 2026-07-27 from commit `4d924b6`** by `tools/make_build_doc.py`. Do not hand-edit: edit the
+> **Generated 2026-07-27 from commit `2eeb096`** by `tools/make_build_doc.py`. Do not hand-edit: edit the
 > source files in the reference clone and regenerate, or your copy silently diverges from the kit
 > it claims to build.
 
@@ -1494,6 +1494,13 @@ def vtt_to_blocks(vtt_text: str, block_seconds: int = 15) -> list[str]:
     parsing yields the transcript three times over. De-duplicating by exact line and
     keeping the FIRST timestamp each line appeared at is what makes `&t=` deep-links land
     on the right moment.
+
+    INVARIANT: every line in a block was spoken less than `block_seconds` after that
+    block's header timestamp. The block is closed BEFORE the cue that would breach it,
+    never after - otherwise a cue arriving long after the block opened gets filed under
+    the old timestamp and its `&t=` link points at the wrong moment. That matters because
+    YouTube emits no cues during silence, so a musical interlude, a long pause or an
+    unmiked audience question leaves a gap of arbitrary size between consecutive cues.
     """
     seen: set[str] = set()
     cues: list[tuple[int, str]] = []
@@ -1513,18 +1520,23 @@ def vtt_to_blocks(vtt_text: str, block_seconds: int = 15) -> list[str]:
         seen.add(line)
         cues.append((current, line))
 
+    def emit(start: int, lines: list[str]) -> str:
+        return f"[{start // 60:02d}:{start % 60:02d} t={start}] " + " ".join(lines)
+
     blocks: list[str] = []
     buf: list[str] = []
     start: int | None = None
     for ts, line in cues:
+        # Close before appending, so `line` opens a new block rather than being filed
+        # under a header it postdates by more than block_seconds.
+        if start is not None and ts - start >= block_seconds:
+            blocks.append(emit(start, buf))
+            buf, start = [], None
         if start is None:
             start = ts
         buf.append(line)
-        if ts - start >= block_seconds:
-            blocks.append(f"[{start // 60:02d}:{start % 60:02d} t={start}] " + " ".join(buf))
-            buf, start = [], None
     if buf and start is not None:
-        blocks.append(f"[{start // 60:02d}:{start % 60:02d} t={start}] " + " ".join(buf))
+        blocks.append(emit(start, buf))
     return blocks
 
 
