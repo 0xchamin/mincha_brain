@@ -220,9 +220,9 @@ as an input to the next pass than as a durable override.
   Treat the *direction* (memory synthesis is expensive enough to gate rollout) as the durable part.
 - **Consumer product, not agent platform.** Everything here is a chat assistant serving one human.
   Whether the same architecture holds for a multi-agent system - where memory is shared across agents
-  and the "user" is a fleet - is not addressed. The parked
-  [`staging/260731_anthropic-memory-and-dreaming/`](../../staging/README.md) capture covers exactly
-  that case and is the natural independent second leg.
+  and the "user" is a fleet - is not addressed. The in-flight
+  `sources/260731_agent-memory-and-dreaming/` capture (Anthropic, Claude Managed Agents) covers
+  exactly that case and is the natural independent second leg.
 - **The sleep metaphor is agent commentary, not sourced evidence.** The article does not cite the
   memory-consolidation literature; the cross-domain link is flagged above as worth checking, not as
   established.

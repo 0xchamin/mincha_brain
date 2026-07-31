@@ -61,9 +61,9 @@ edit.
   S6 is not about agents at all (it is a consumer chat assistant), and the material would read as an
   aside in a note about loops and control flow.
 - **Wait for a second source before creating the note** - rejected on a specific ground: a second
-  source is already captured on disk
-  ([`staging/260731_anthropic-memory-and-dreaming`](../../staging/README.md),
-  an Anthropic talk on memory and dreaming in Claude Managed Agents), so the recurrence test
+  source is already captured on disk (`sources/260731_agent-memory-and-dreaming/`,
+  an Anthropic talk on memory and dreaming in Claude Managed Agents, being ingested in parallel by
+  another agent), so the recurrence test
   `AGENTS.md` asks for is already met in substance. Creating the note now means that source merges
   into a structure rather than triggering a restructure.
 

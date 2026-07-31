@@ -7,8 +7,8 @@
 and its three eval charts did not survive capture, so **this topic currently contains mechanism and
 zero measurement.** Every claim below is a design argument, not a result. `established` needs a
 genuinely independent second source - the parked
-[`staging/260731_anthropic-memory-and-dreaming`](../../staging/README.md) capture is the obvious
-candidate.
+`sources/260731_agent-memory-and-dreaming/` capture (Anthropic, in flight under another agent) is the
+obvious candidate - **merge into this note, do not create a second one.**
 
 > Living, cross-source synthesis on agent and assistant memory. Many sources feed this note; **merge
 > and de-duplicate** as they arrive (architect persona). Every claim cited.
@@ -196,9 +196,8 @@ position for now:
   disagreement, or whether saved memories feed dreaming or run parallel to it.
 - **Consumer assistant, not agent platform.** One user, one assistant. Nothing here addresses memory
   **shared across agents**, memory as a tool-accessible file system, or who arbitrates when two agents
-  learn contradictory things. The parked
-  [`staging/260731_anthropic-memory-and-dreaming`](../../staging/README.md) capture covers exactly
-  that case.
+  learn contradictory things. The in-flight `sources/260731_agent-memory-and-dreaming/` capture
+  covers exactly that case.
 - **Memory is an unexamined attack surface.** A background process that ingests conversation content
   and writes durable, automatically-applied instructions about a user is a **persistent
   prompt-injection sink** - inject once, and the instruction is re-applied in every future session

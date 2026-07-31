@@ -48,9 +48,10 @@
   numbers surviving capture. Every performance claim reduces to an unquantified direction
   ("substantial lift", "improves"). The *mechanism* claims are well corroborated by the screenshots;
   the *magnitude* claims carry no evidence at all in this ingest and must not be cited as measured.
-- **Related source parked, not ingested:** [`staging/260731_anthropic-memory-and-dreaming/`](../../staging/README.md)
-  holds a captured-but-undistilled Anthropic conference talk on memory and dreaming in Claude Managed
-  Agents. It is the natural **independent** second leg for this topic - different org, different
+- **Related source in flight, not ingested:** `sources/260731_agent-memory-and-dreaming/` (untracked,
+  **another agent is working it**) holds a captured Anthropic conference talk on memory and dreaming
+  in Claude Managed Agents. It is the natural **independent** second leg for this topic - different
+  org, different
   commercial interest, agent platform rather than consumer product. Until it is distilled, `memory`
   stays `emerging`.
 
