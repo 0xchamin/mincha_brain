@@ -20,12 +20,20 @@ shipped UI in the figures**. That pairing is stronger than the usual blog case, 
   correctable and the figure shows a `Make a correction` control, the UI is genuine independent
   evidence that the described mechanism shipped.
 - **What it cannot do is show the mechanism works, or how well.** A screenshot proves the affordance
-  exists, not that dreaming keeps memory fresh. **Every claim about *quality* in this source is
-  single-leg by construction** - and the charts that would have carried them did not survive capture
-  (`d1`).
+  exists, not that dreaming keeps memory fresh.
 
-**Nothing here is externally corroborated.** This is a **T2 vendor** writing about its own consumer
-product, and the one quantitative claim in the article (`n9`) has no supporting artifact at all.
+**The numeric leg was recovered late in the pass (`d1`).** The three eval charts never render in a
+static capture, but they are **Vega-Lite** components and their specs - including the full data
+arrays - are embedded in the page's RSC flight payload. Extracted to
+[`chart_data.json`](chart_data.json), which makes `n12`-`n14` possible. Their second leg is
+**the article's own prose direction** ("improves", "a substantial lift"), which is the weak
+same-author-twice pairing, so they are gated `corroborated (spec + prose)` for *extraction* accuracy
+only.
+
+**Nothing here is externally corroborated.** This is a **T2 vendor** publishing evals of its own
+consumer product with **no sample size, eval-set description, methodology or confidence intervals**
+anywhere in the page or the specs. The numbers are real and precisely extracted; what they measure is
+undisclosed.
 
 ## Nodes
 
@@ -42,12 +50,15 @@ product, and the one quantitative claim in the article (`n9`) has no supporting 
 | n9 | **Serving cost, not answer quality, was the gate on universal rollout.** "Recent improvements reduced the compute required to serve dreaming to Free users by approximately **5x**, making it possible to begin rolling out dreaming to Free users." | prose, S6 §A more scalable foundation for the future | (none - no chart, no baseline, no methodology) | single-leg | needs-check (vendor self-report, unreplicated, no method given) |
 | n10 | **Dreaming was not standalone-viable for a year.** It "supplemented saved memories" from 2025 and "historically was never sufficient as a standalone memory system"; only the 2026 architecture is "built on top of dreaming" as the foundation. | prose, S6 §How memory has evolved | `visuals/fig_memory_settings.png` - `Reference chat history` and `Reference saved memories` are still **two independent toggles**, i.e. the older store is still shipped and separately switchable | corroborated | OK |
 | n11 | **Memory is exposed as user-governable surface, not as an implementation detail.** Five separate switches govern it, including one controlling *proactive* use ("Reference memory in suggestions... turning this off will disable Pulse"). | `visuals/fig_memory_settings.png` - Memory section (3 controls) + Pulse section (2 controls) | prose, S6 §How memory has evolved (the summary is reviewable and instructable) plus the closing pointer to a "Memory FAQ... memory user controls" | corroborated | OK |
+| n12 | **All three memory objectives improve across both generations, on the vendor's own evals.** Task success, by chart: **Factual recall 41.5 -> 67.9 -> 82.8%**; **Preference adherence 31.4 -> 55.3 -> 71.3%**; **Staying correct over time 9.4 -> 52.2 -> 75.1%** (2024 saved memories -> 2025 saved + Dreaming V0 -> 2026 Dreaming V3). | Vega-Lite specs in the RSC payload -> [`chart_data.json`](chart_data.json) | prose, S6 §§Carrying forward context / Following preferences / Staying current over time ("improves", "a substantial lift") - direction only | corroborated (spec + prose) | needs-check (T2 self-report, **no n, no eval-set description, no method, no CIs**) |
+| n13 | **Staleness was the worst failure by a wide margin, and this is the number that carries the article's thesis.** "Staying correct over time" starts at **9.4%** - near-total failure - against 41.5% and 31.4% for the other two objectives, and gains the most (**+65.7 points**). The write-once diagnosis (`n1`) is the only claim here with quantitative support. | `chart_data.json` (9.4% baseline, lowest of three) | prose, S6 §Staying current over time - the worked example where the model still believes the user is in Singapore | corroborated (spec + prose) | needs-check (same T2 limits as `n12`) |
+| n14 | **Introducing dreaming at all mattered more than improving it.** The 2024 -> 2025 step (adding Dreaming V0 alongside saved memories) beats the 2025 -> 2026 step (V0 -> V3) on **every** objective: +26.4 vs +14.9, +23.9 vs +16.0, +42.8 vs +22.9. **And the ceiling is low** - even 2026 tops out at 71-83%, so memory still fails roughly **1 task in 5** on the vendor's own measure. | `chart_data.json` (computed deltas across all three charts) | (none - the article never presents deltas, and never mentions the residual failure rate) | single-leg | needs-check (arithmetic on `n12`, so it inherits every limit above) |
 
 ## Dropped / divergences (audit trail)
 
 | Candidate | Verdict | Note |
 |---|---|---|
-| The three eval charts - **the entire quantitative case of the article** (`d1`) | **gap, recorded** | The charts are **client-rendered components** and appear as `Loading…` placeholders in every static capture attempted. The recoverable text gives only unquantified direction: "the new dreaming-based system **improves** the model's ability to recall relevant facts"; "Dreaming provides a **substantial lift** in this area". **This means the source contributes mechanism to the brain and no measurement whatsoever.** Do not let "improves" harden into a number later. |
+| The three eval charts - **the entire quantitative case of the article** (`d1`) | **RESOLVED - recovered 2026-07-31** | Originally recorded as an unrecoverable gap: the charts are client-rendered and show `Loading…` in every static capture, leaving only "improves" / "a substantial lift". **They are Vega-Lite components, and the specs - data arrays included - are embedded in the Next.js RSC flight payload.** Extracted to [`chart_data.json`](chart_data.json); now `n12`-`n14`. **The original warning stands in modified form:** the numbers are precise and the methodology is entirely undisclosed. |
 | The two long worked examples - underwater TTL camera gear, Singapore itinerary (`d2`) | dropped | Product demonstrations, not transferable claims. Their *structure* serves as the second leg for `n5`; their content is source-specific trivia and is not promoted. |
 | Rollout scope - "Plus and Pro users in the US today", Free/Go "over the coming weeks" (`d3`) | dropped | True but perishable product-release detail with no transferable content. Stays in `raw/` only. |
 

@@ -15,7 +15,7 @@
 | Title | Dreaming: Better memory for a more helpful ChatGPT |
 | Author / channel | OpenAI (no individual byline - the article credits "OpenAI") |
 | Published | 2026-06-04 |
-| Duration / length | ~1,800 words + 3 product screenshots + 3 eval charts (charts unrecoverable, see below) |
+| Duration / length | ~1,800 words + 3 product screenshots + 3 eval charts (chart data recovered, see below) |
 | Commit SHA | n/a |
 | License | n/a - copyrighted vendor post, quoted under fair use, not redistributed |
 | Ingested | 2026-07-31 |
@@ -41,13 +41,21 @@
   time`), because the capture preserves no stable paragraph index.
 - **Visual pre-filter:** the page carries 6 content images. **3 product screenshots** (saved-memories
   list, memory summary modal, memory settings) were downloaded and viewed - all 3 kept, all 3 cited.
-  The other **3 are the eval charts** for the article's three stated objectives, and they are
-  **client-rendered components** that appear as `Loading…` placeholders in any static capture. **No
-  eval number in this article is recoverable** - see `nodes.md` `d1`.
-- **Notable limitation:** a **T2 vendor post about the vendor's own consumer product**, with zero
-  numbers surviving capture. Every performance claim reduces to an unquantified direction
-  ("substantial lift", "improves"). The *mechanism* claims are well corroborated by the screenshots;
-  the *magnitude* claims carry no evidence at all in this ingest and must not be cited as measured.
+- **The eval charts, and the technique that recovered them.** The other 3 images are the eval charts
+  for the article's three objectives. They are **client-rendered and show `Loading…` in any static
+  capture** - initially recorded as an unrecoverable gap. They are **Vega-Lite** components
+  (`reactComponent: "VegaChart"`), and a Vega-Lite spec **carries its own data inline**, so the full
+  `data.values` arrays sit in the Next.js **RSC flight payload** (`self.__next_f`) of the same HTML.
+  Extracted to [`chart_data.json`](chart_data.json) -> `nodes.md` `n12`-`n14`.
+  > **Reusable rule:** when a chart will not render in a static capture, grep the payload for the
+  > charting library before declaring the numbers lost. Vega/Vega-Lite, Plotly and Chart.js all embed
+  > their data in the spec. `view`ing a rendered chart is *lossier* than this - you read values off
+  > pixels; here the publisher's own numbers are exact.
+- **Notable limitation:** a **T2 vendor post about the vendor's own consumer product.** The numbers
+  are now exact, but **"task success" is never defined and no sample size, eval-set description,
+  methodology or confidence interval is published anywhere** in the page or the specs. The
+  *mechanism* claims are well corroborated by the screenshots; the *magnitude* claims are a vendor's
+  directional self-report and must never be cited as a benchmark result.
 - **Related source in flight, not ingested:** `sources/260731_agent-memory-and-dreaming/` (untracked,
   **another agent is working it**) holds a captured Anthropic conference talk on memory and dreaming
   in Claude Managed Agents. It is the natural **independent** second leg for this topic - different

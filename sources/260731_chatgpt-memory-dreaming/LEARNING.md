@@ -12,9 +12,11 @@ between sessions**, which it calls **dreaming**. The transferable idea is not th
 diagnosis: memory written *during* a conversation inherits that conversation's tense, and therefore
 decays into wrongness rather than into irrelevance. The fix is architectural: move the write off the
 conversation turn, change the representation from a list of facts to a maintained narrative, and
-**revise** stale entries rather than expiring them. **Read it for the mechanism and the failure
-taxonomy; take no numbers from it** - the article's three eval charts do not survive capture, so
-every performance claim here reduces to the word "improves" (`nodes.md` `d1`).
+**revise** stale entries rather than expiring them. The vendor's own evals put numbers on it - and
+the sharpest is that **"staying correct over time" started at 9.4%**, near-total failure, which is
+what makes the staleness diagnosis more than rhetoric. **Read it for the mechanism and the failure
+taxonomy; treat the numbers as directionally real and methodologically opaque** - there is no sample
+size, eval-set description or method published anywhere (`nodes.md` `n12`).
 
 ## Key claims
 
@@ -35,6 +37,9 @@ every performance claim here reduces to the word "improves" (`nodes.md` `d1`).
 - **Cost, not quality, gated universal rollout:** a claimed ~5x reduction in serving compute is what
   made Free-tier dreaming possible. `S6 §A more scalable foundation for the future` - **single-leg,
   vendor self-report, no method given.**
+- **The measured case, recovered from the chart specs** (`chart_data.json`): factual recall
+  **41.5 -> 67.9 -> 82.8%**, preference adherence **31.4 -> 55.3 -> 71.3%**, staying correct over time
+  **9.4 -> 52.2 -> 75.1%**, across 2024 saved memories -> 2025 + Dreaming V0 -> 2026 Dreaming V3.
 
 ## Walkthrough
 
@@ -145,9 +150,34 @@ the one most memory evaluations omit entirely, because it is the only one that r
 construct a case where **the correct answer changes with the passage of time** while the stored fact
 does not.
 
-> ⚠️ **Take the frame, not the results.** The three charts backing these objectives are
-> client-rendered and did not survive capture (`nodes.md` `d1`), so the recoverable claims are
-> "improves" and "a substantial lift". This source contributes **zero measurements** to the brain.
+### What the numbers actually say
+
+Each objective has a chart, and each chart renders as `Loading…` in any static capture. They are
+Vega-Lite components, so the specs - data included - sit in the page's RSC payload and were recovered
+to [`chart_data.json`](chart_data.json) (`n12`). Task success, in percent:
+
+| Objective | 2024 saved memories | 2025 + Dreaming V0 | 2026 Dreaming V3 | Total gain |
+|---|---|---|---|---|
+| Factual recall | 41.5 | 67.9 | 82.8 | **+41.3** |
+| Preference adherence | 31.4 | 55.3 | 71.3 | **+39.9** |
+| Staying correct over time | **9.4** | 52.2 | 75.1 | **+65.7** |
+
+Three readings the article never states, and the last two are the interesting ones:
+
+1. **Staleness was catastrophic, not merely suboptimal** (`n13`). 9.4% is not a weak score, it is a
+   system that is wrong about time-sensitive facts nine times in ten. This is the quantitative
+   backing for the whole write-once diagnosis - and it is the only claim in the source that has any.
+2. **Introducing dreaming mattered more than improving it** (`n14`). The 2024 -> 2025 step beats the
+   2025 -> 2026 step on every objective (+26.4 vs +14.9, +23.9 vs +16.0, +42.8 vs +22.9). The
+   architectural move is where the value is; V0 -> V3 is refinement.
+3. **The ceiling is low.** Even 2026 tops out at 71-83%, so memory still fails **roughly one task in
+   five** on the vendor's own measure. A post announcing a memory system does not foreground that,
+   and it is the number to carry into any design that assumes memory is reliable.
+
+> ⚠️ **Precise numbers, opaque method.** These are read from the publisher's own chart specs, so
+> extraction is exact. But **no sample size, eval-set description, methodology or confidence interval
+> is published anywhere** in the page or the specs, and "task success" is never defined. Treat them
+> as the vendor's directional self-report, not as a benchmark result.
 
 ## Diagram (mental model)
 
@@ -206,10 +236,10 @@ as an input to the next pass than as a durable override.
 
 ## Open questions / confidence
 
-- **No measurements survive.** The three eval charts are client-rendered and unrecoverable
-  (`nodes.md` `d1`). Every quality claim in this source is the word "improves". **Highest-value
-  deep-research target on this source** - and the charts may be readable in a browser-rendered
-  capture, which this ingest did not attempt.
+- ~~**No measurements survive.**~~ **Closed 2026-07-31** - the charts are Vega-Lite and their specs
+  were recovered from the RSC payload (`n12`-`n14`, `chart_data.json`). What remains open is
+  **what they measure**: "task success" is undefined, and no sample size, eval-set or method is
+  published. That is now the highest-value deep-research target on this source.
 - **What is the saved-memories store still for?** Both toggles still ship (`n10`), and the article
   never says which store wins when they disagree, or whether saved memories are an input to dreaming
   or a parallel path.

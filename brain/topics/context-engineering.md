@@ -178,12 +178,13 @@ the whole stack trace. "Figure out what you want to tell the model so you get be
   never improved long-horizon reliability, losing to plain ReAct. Any future claim here that drifts
   toward "give the agent richer memory" must be checked against this - the measured win is
   *decomposition*, not *remembering more*.
-  > **Now contested, and unresolved (2026-07-31).** S6 ([`memory.md`](memory.md)) argues that
-  > append-everything episodic memory is precisely the broken design, and that a **maintained,
-  > synthesized** memory rewritten by a background pass is a different object (claims 48, 50, 52).
-  > **That argument carries no measurement** - S6's eval charts did not survive capture. So the
-  > position stands: the measured evidence says memory scaffolds hurt, and the only source arguing
-  > otherwise is a vendor with no numbers. **Do not resolve this in the vendor's favour.**
+  > **Refined, not contested (2026-07-31).** S6 ([`memory.md`](memory.md)) argues append-everything
+  > episodic memory is precisely the broken design, and that a **maintained, synthesized** memory is a
+  > different object (claims 48, 50, 52) - so it *agrees* with this finding's premise. Its own numbers
+  > (claims 56-57) measure a **chat assistant's** recall and freshness, not an **agent's** task
+  > reliability, so they do not speak to this bullet at all. **The rule stands unchanged: the measured
+  > win on agent loops is decomposition, not remembering more.** What nobody has measured is whether a
+  > *maintained* memory helps an agent - the open question worth carrying.
 - **New, from R1: this design has an older name.** Modelling the thread as an append-only typed event
   log and replaying it is **Event Sourcing** (Fowler, 2005). Worth mining that literature for the
   three sharp edges it already names - replay determinism, snapshotting, event versioning - none of

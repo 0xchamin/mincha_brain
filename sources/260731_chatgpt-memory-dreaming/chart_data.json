@@ -1,0 +1,67 @@
+{
+  "source": "https://openai.com/index/chatgpt-memory-dreaming/",
+  "recovered_from": "Vega-Lite specs embedded in the Next.js RSC flight payload (self.__next_f) of the Internet Archive snapshot; the charts never render in a static capture",
+  "recovered_on": "2026-07-31",
+  "generation_labels": {
+    "2024": "Saved memories",
+    "2025": "Saved memories + Dreaming V0",
+    "2026": "Dreaming V3"
+  },
+  "note": "No sample size, eval-set description, methodology or confidence intervals are published anywhere in the page or the specs. Units are percent; the shared x-axis is titled 'Task success'.",
+  "charts": [
+    {
+      "chart_title": "Factual recall",
+      "x_axis_title": "Task success",
+      "values": [
+        {
+          "year": "2024",
+          "adherence": 41.5
+        },
+        {
+          "year": "2025",
+          "adherence": 67.9
+        },
+        {
+          "year": "2026",
+          "adherence": 82.8
+        }
+      ]
+    },
+    {
+      "chart_title": "Preference adherence",
+      "x_axis_title": "Task success",
+      "values": [
+        {
+          "year": "2024",
+          "adherence": 31.4
+        },
+        {
+          "year": "2025",
+          "adherence": 55.3
+        },
+        {
+          "year": "2026",
+          "adherence": 71.3
+        }
+      ]
+    },
+    {
+      "chart_title": "Staying correct over time",
+      "x_axis_title": "Task success",
+      "values": [
+        {
+          "year": "2024",
+          "adherence": 9.4
+        },
+        {
+          "year": "2025",
+          "adherence": 52.2
+        },
+        {
+          "year": "2026",
+          "adherence": 75.1
+        }
+      ]
+    }
+  ]
+}

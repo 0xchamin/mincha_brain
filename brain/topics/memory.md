@@ -3,9 +3,10 @@
 **Status:** emerging (1 source - S6 "Dreaming: Better memory for a more helpful ChatGPT", OpenAI,
 2026-06-04).
 **Basis:** first source on this topic, created under [ADR-0007](../decisions/0007-memory-topic.md).
-**Read the evidence limit first:** S6 is a **T2 vendor post about the vendor's own consumer product**,
-and its three eval charts did not survive capture, so **this topic currently contains mechanism and
-zero measurement.** Every claim below is a design argument, not a result. `established` needs a
+**Read the evidence limit first:** S6 is a **T2 vendor post about the vendor's own consumer product**.
+Its three eval charts are recovered (see "What the numbers say"), so this topic **does** carry
+measurements - but they are the vendor's own, with **no sample size, eval-set description, method or
+confidence interval published**. Precise numbers, opaque provenance. `established` needs a
 genuinely independent second source - the parked
 `sources/260731_agent-memory-and-dreaming/` capture (Anthropic, in flight under another agent) is the
 obvious candidate - **merge into this note, do not create a second one.**
@@ -137,6 +138,34 @@ stored fact does not.
 This is a memory-specific instance of the pattern in [`evals.md`](evals.md): making a subjective
 quality gradable by fixing the *question* rather than by finding a better judge.
 
+### What the numbers say
+
+Each objective has a published chart. They never render in a static capture, but they are Vega-Lite
+components and their specs were recovered from the page payload [S6, `n12`,
+`sources/260731_chatgpt-memory-dreaming/chart_data.json`]. Task success, in percent:
+
+| Objective | 2024 saved memories | 2025 + Dreaming V0 | 2026 Dreaming V3 | Total gain |
+|---|---|---|---|---|
+| Factual recall | 41.5 | 67.9 | 82.8 | +41.3 |
+| Preference adherence | 31.4 | 55.3 | 71.3 | +39.9 |
+| Staying correct over time | **9.4** | 52.2 | 75.1 | **+65.7** |
+
+Three readings the source never states:
+
+- **Staleness was catastrophic, not suboptimal** [`n13`]. A 9.4% baseline is a system wrong about
+  time-sensitive facts nine times in ten. This is the quantitative backing for the write-once
+  diagnosis above, and the only claim in this topic that has any.
+- **Introducing dreaming beat improving it** [`n14`]. The 2024 -> 2025 step wins on every objective
+  (+26.4 vs +14.9, +23.9 vs +16.0, +42.8 vs +22.9). The architectural move carries the value; V0 -> V3
+  is refinement.
+- **The ceiling is low.** 2026 tops out at 71-83%, so memory still fails **roughly one task in five**
+  on the vendor's own measure. Any design that assumes memory is reliable should carry that number.
+
+> ⚠️ **Precise extraction, opaque method.** These come from the publisher's own chart specs, so the
+> figures are exact. But "task success" is never defined and **no sample size, eval set, methodology
+> or confidence interval is published anywhere.** They are a vendor's directional self-report about
+> its own product, not a benchmark result, and nothing here is independently replicated.
+
 ### The tension this topic must not paper over
 
 [`context-engineering.md`](context-engineering.md) records, from R1's measured evidence, that **naive
@@ -146,12 +175,29 @@ to plain ReAct - the measured win was *decomposition*, not *remembering more* (c
 
 S6 is best read as an argument that the thing measured there is the wrong design - append-everything
 episodic memory is precisely what `n1` and `n4` diagnose as broken - and that a **maintained,
-synthesized** memory is a different object. **That argument is entirely unmeasured.** The honest
-position for now:
+synthesized** memory is a different object. **S6 now has numbers of its own** (`n12`), so the shape of
+the disagreement has changed, but it has not gone away.
 
-> **The one measured result in this brain about agent memory says memory scaffolds hurt. The one
-> source advocating memory offers no measurement.** Do not resolve this in favour of the vendor. Any
-> future claim that maintained memory beats decomposition needs evidence that S6 does not supply.
+**Sharpened after recovering the charts: these two results do not measure the same construct, and
+that is the actual resolution.**
+
+| | Claim 24 (R1, T3 preprint, 10 models) | S6 (`n12`, T2 vendor self-report) |
+|---|---|---|
+| System under test | An **agent loop** on long-horizon tasks | A **chat assistant** serving one human |
+| Memory design | Naive **episodic append + retrieve** | **Maintained synthesized** user model |
+| Metric | Task **reliability** over many steps | **Recall / adherence / freshness** about the user |
+| Verdict | Scaffold **hurt 6 of 10 models** | All three objectives improve |
+
+So the honest position is **not** "one says memory helps, the other says it hurts". It is:
+
+> **Nothing in this brain yet measures the same memory design on the same kind of task.** Claim 24
+> retires the naive episodic scaffold on agent loops - and S6 agrees with that much, since its whole
+> argument is that write-once append-only memory is broken. **Whether a *maintained* memory helps an
+> *agent* is measured by neither**, and S6's numbers - vendor-run, methodologically undisclosed, on a
+> different system class - cannot be borrowed to answer it.
+
+**This is the highest-value thing an agent-platform memory source could settle**, which is another
+reason the second source below matters.
 
 ## Key claims
 
@@ -165,6 +211,8 @@ position for now:
 | Offer correction on the **synthesized artifact**, not on the raw records - once a process authors memory, hand-curating its inputs is the job you just automated. | S6 §How memory has evolved (prose + `fig_memory_summary`) | emerging |
 | "Good memory" decomposes into three separately-evaluable objectives - carry forward, follow preferences, stay current - and only the third can fail purely through the passage of time. | S6 §How we evaluate memory | emerging |
 | Memory synthesis is expensive enough to gate rollout: **cost, not answer quality**, was the stated constraint on serving it universally (a claimed ~5x compute reduction unlocked it). | S6 §A more scalable foundation for the future | needs-check (single-leg, vendor self-report, no method) |
+| **Staleness was the worst of the three failures by far** - "staying correct over time" starts at **9.4%** against 41.5% and 31.4%, and gains the most (+65.7 pts). The quantitative backing for the write-once diagnosis. | S6 `n13` (recovered chart specs) | needs-check (vendor self-report, no method published) |
+| **Introducing memory synthesis beat refining it**, on every objective (2024 -> 2025 gains exceed 2025 -> 2026). **And the ceiling is low: 71-83% in 2026, so memory still fails ~1 task in 5** on the vendor's own measure. | S6 `n14` (deltas computed from the same specs) | needs-check (arithmetic on a self-report; the article states neither) |
 
 ## Key visuals
 
@@ -183,11 +231,13 @@ position for now:
 
 ## Open questions / conflicts
 
-- **This topic has no measurements at all.** S6's three eval charts are client-rendered and did not
-  survive capture (`nodes.md` `d1`), so every claim above is a design argument. **The highest-value
-  next step for this topic is any source that measures memory quality.**
-- **Unresolved against claim 24** - see "The tension this topic must not paper over". Measured
-  evidence says naive memory scaffolds hurt; the advocate offers no numbers. Not resolved here.
+- ~~**This topic has no measurements at all.**~~ **Closed 2026-07-31** by recovering the chart specs
+  (`n12`-`n14`). What replaced it is narrower and sharper: **"task success" is never defined**, and no
+  sample size, eval set, method or confidence interval is published. The numbers are exact and their
+  meaning is unknown. **Highest-value deep-research target on this topic.**
+- **Claim 24 is not actually contradicted** - see the table above. The two results measure different
+  memory designs on different system classes. **What no source here measures is whether a *maintained*
+  memory helps an *agent*,** which is the question this brain actually needs answered.
 - **Does a user correction survive the next synthesis pass?** `n6` establishes the affordance;
   nothing establishes whether it is a durable override or another input. This is the difference
   between control and its appearance.

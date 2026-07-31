@@ -62,18 +62,23 @@
 | 54 | **"Good memory" is not one metric.** It decomposes into three separately-evaluable objectives - carry forward context (catches under-capture), follow preferences (catches **recall without compliance**), stay current (catches staleness). Only the third can fail purely through the passage of time, and it is the one most memory evals omit. | memory | S6 (§How we evaluate memory) | emerging |
 | 55 | **Memory synthesis is expensive enough to gate rollout: cost, not answer quality, was the stated constraint** on serving it universally (a claimed ~5x compute reduction unlocked the free tier). The durable part is the direction - maintaining memory is a recurring per-user compute cost, not a storage cost. | memory | S6 (§A more scalable foundation for the future) | needs-check (single-leg, vendor self-report, no method) |
 
-> **Claims 48-55 arrive with no measurements, and that is load-bearing.** S6's three eval charts are
-> client-rendered and did not survive capture, so every performance statement in the source reduces to
-> "improves" or "a substantial lift". These are **design arguments corroborated by product
-> screenshots** - the UI is real second-leg evidence that the described affordances shipped, but it
-> cannot show they work.
+| 56 | **Staleness was the worst memory failure by a wide margin, and it is the one claim here with quantitative backing.** On the vendor's own evals, "staying correct over time" starts at **9.4%** - wrong about time-sensitive facts nine times in ten - against 41.5% (factual recall) and 31.4% (preference adherence), and gains the most (**+65.7 points** to 75.1%). | memory | S6 (`n13`, chart specs recovered to `chart_data.json`) | needs-check (T2 self-report; no n, eval set, method or CIs published) |
+| 57 | **Introducing memory synthesis beat refining it** - the 2024 -> 2025 step (adding dreaming at all) exceeds 2025 -> 2026 (V0 -> V3) on every objective: +26.4 vs +14.9, +23.9 vs +16.0, +42.8 vs +22.9. **And the ceiling is low: 71-83% in 2026, so memory still fails roughly 1 task in 5** on the vendor's own measure. The article states neither fact. | memory | S6 (`n14`, deltas computed from the same specs) | needs-check (arithmetic on a self-report) |
+
+> **Claims 48-57 rest on one T2 vendor writing about its own consumer product.** Mechanism claims
+> (48-54) are corroborated by **product screenshots**, which are real second-leg evidence that the
+> described affordances shipped - a photograph of the artifact, not the author restating himself - but
+> cannot show they work. Numeric claims (56-57) were recovered from the publisher's own Vega-Lite
+> chart specs, so extraction is exact while **"task success" is never defined and no sample size,
+> eval set, method or confidence interval is published anywhere.** Precise numbers, opaque provenance.
 >
-> **They also sit in unresolved tension with claim 24.** That claim - the only *measured* evidence in
-> this brain about agent memory - found naive episodic memory scaffolding never improved long-horizon
-> reliability and **hurt 6 of 10 models**. S6 is best read as arguing that append-everything episodic
-> memory is precisely the broken design (claims 48, 52) and that maintained synthesized memory is a
-> different object. **That argument is entirely unmeasured, and must not be resolved in the vendor's
-> favour.** See [`topics/memory.md`](topics/memory.md).
+> **On claim 24, which looked like a contradiction and is not.** Claim 24 (T3 preprint, 10 models)
+> found naive **episodic append-and-retrieve** memory hurt **agent** long-horizon reliability. S6
+> measures a **maintained synthesized user model** in a **chat assistant** on recall/adherence/
+> freshness. Different design, different system class, different metric - and S6 *agrees* with claim
+> 24's premise, since its whole argument is that write-once append-only memory is broken (claims 48,
+> 52). **What no source in this brain yet measures is whether a maintained memory helps an agent.**
+> Do not borrow S6's numbers to answer it. See [`topics/memory.md`](topics/memory.md).
 
 > **S1** = `sources/260725_closed-loop-evals-multimodal-agent/` (Uber, "Building Closed-Loop Evals
 > for a Multimodal Agent at Scale", AI Engineer World's Fair 2026).
@@ -95,9 +100,10 @@
 > **S6** = `sources/260731_chatgpt-memory-dreaming/` (OpenAI, "Dreaming: Better memory for a more
 > helpful ChatGPT", 2026-06-04). **T2 vendor post about its own consumer product.** Its mechanism
 > claims carry a genuine second leg - product screenshots are a photograph of the artifact the prose
-> describes, not the author restating himself - but **its three eval charts are client-rendered and
-> did not survive capture, so the source contributes no measurement whatsoever.** Cite it for
-> architecture and failure taxonomy; never for magnitude.
+> describes, not the author restating himself. Its three eval charts never render in a static capture
+> but are **Vega-Lite**, so the specs and their data were recovered from the page's RSC payload:
+> **exact figures, undisclosed methodology.** Cite it for architecture and failure taxonomy; cite the
+> numbers only with the vendor-self-report caveat attached.
 > **R1** = deep-research pass `sources/260725_12-factor-agents/context/01_context-limits-and-decomposition.md`
 > (2026-07-25) - external evidence, each citation tiered T1-T5 with an independence call.
 
