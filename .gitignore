@@ -26,3 +26,8 @@ staging/*
 Thumbs.db
 .DS_Store
 
+
+# The mobile reader - a pure render of brain/ + sources/, rebuilt by
+# tools/build_site.py and published to GitHub Pages by CI. Never a source of truth.
+/site/
+tools/site_assets/vendor/

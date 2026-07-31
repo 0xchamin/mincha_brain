@@ -10,3 +10,4 @@ faster-whisper    # ASR fallback when a video has no captions
 imagehash         # perceptual-hash dedup of sampled frames
 pillow            # image handling for frame/figure processing
 requests          # fetch article/paper assets (figures, PDFs)
+markdown          # render brain/ + sources/ into the mobile reader (tools/build_site.py)

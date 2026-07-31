@@ -20,7 +20,7 @@ durable, cited, compounding knowledge.
 | Env | `.venv` in this folder | `yt-dlp`, `faster-whisper`, `imagehash`, `pillow` (see `requirements.txt`); `ffmpeg` is a system binary (macOS: `brew install ffmpeg`; Windows: `winget install Gyan.FFmpeg`); `git` for cloning code repos; **`gh` (GitHub CLI) recommended** for code sources (license, commit SHA, orient-before-clone) - optional |
 | Seed topics | agents, mcp, skills, rag, agent-security, inferencing | live under `brain/topics/`; **seeds, not a whitelist - the set is open (see "Scope: topics are open")** |
 | Repo clones | `sources/<id>/repo/` (git-ignored) | clone-per-source, snapshot pinned by commit SHA in `SOURCE.md` |
-| Kit scripts | `tools/ingest.py` (mechanical toolbox), `validate.py` (contract type checker) | the only two frozen scripts; everything else is assembled per source |
+| Kit scripts | `tools/ingest.py` (mechanical toolbox), `validate.py` (contract type checker), `tools/build_site.py` (the mobile reader) | the only three frozen scripts; everything else is assembled per source |
 
 ## Scope: topics are open
 
@@ -162,6 +162,38 @@ numbers with Status + Date; resolving relative links; balanced mermaid fences; n
 > It also cannot catch a `log.md` entry misordered *within a single day* - the ordering that has
 > actually gone wrong in practice. A green validator means the shape is right, not that the thinking
 > is.
+
+## Reading the brain on a phone (`tools/build_site.py`)
+
+> **Why this exists.** A brain you only read at a desk compounds at desk speed. The notes were
+> already the right shape for a reader - every `LEARNING.md` opens with a **TL;DR** and **Key
+> claims**, and `brain/topics/*.md` plus `claims.md` *are* the meta-lessons - but GitHub's markdown
+> view on a phone is a wall of tables and raw citations. This renders what already exists.
+
+**`python3 tools/build_site.py` -> `site/`**, a static, offline-capable reader.
+`.github/workflows/pages.yml` runs it on every push to `main` and publishes to GitHub Pages, so
+**every ingest reaches the phone with no extra step**. Add it to the home screen and it behaves
+like an app.
+
+| It does | Notes |
+|---|---|
+| Landing page = **the lessons** | each source's TL;DR + Key claims, each topic's status and scope |
+| Full notes behind them | topic notes, `LEARNING.md`, ADRs, dreams, reports, glossary, log |
+| `&t=NNNs` citations become **tappable YouTube deep links** | the citation you cannot retype on a phone |
+| `claims.md`'s 5-column table becomes filterable **cards** | a wide table is unreadable at 390px |
+| Offline via service worker | text precached; images and mermaid cached on first view |
+| Collapses each note's agent-directed preamble | persona lines are instructions to *you*, not reading material - collapsed, never dropped, because some hide real trust caveats |
+
+> **It is a renderer, and that is the whole discipline.** Every word it emits comes from a file
+> already in this repo. It **adds no claims, drops no citations, and resolves no judgement** - if a
+> claim reads wrong on the phone, the note is wrong, and you fix the note. `site/` is git-ignored
+> and disposable: `rm -rf site && python3 tools/build_site.py` reproduces it exactly. **Never edit
+> `site/`, and never let it become a place a fact lives.** Same line the other two scripts draw:
+> **form is code, judgement is prose.**
+
+> **If a note renders badly, suspect the note.** A source with no `## TL;DR`, a topic note with no
+> `**Status:**` line, or a missing `INDEX.md` row shows up as a hole in the reader. That is the
+> renderer working as an *additional* contract check, not a bug in it - fix the note, then rebuild.
 
 ## The visual leg (on by default, skippable)
 
