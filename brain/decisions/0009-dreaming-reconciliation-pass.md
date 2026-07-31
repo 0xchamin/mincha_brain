@@ -39,6 +39,14 @@ A third source sharpened the framing. Karpathy's *LLM Wiki* gist describes this 
 kit has all three. **What it does not have is what S6 and S7 both argue is the load-bearing one** -
 a maintenance pass that runs on its own clock rather than inside the ingest.
 
+> ⚠️ **The last sentence of that paragraph is wrong, and is corrected by
+> [ADR-0010](0010-lint-is-the-dream-pass.md).** The gist was cited here from a review, not an ingest.
+> Once ingested as S8 (2026-07-31), §Lint turns out to *be* the out-of-band maintenance pass - four of
+> its six defect classes are verbatim members of the eight below. The error was matching the word
+> "lint" to `validate.py`. **The decision below stands and is better supported than it appears here**;
+> only this reading of the third source changes. Left in place rather than edited: an ADR records what
+> was decided and why *at the time*.
+
 ## Decision
 
 **Add a `dream` stage: a global reconciliation pass over `brain/` itself, triggered on request,

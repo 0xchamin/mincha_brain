@@ -1,7 +1,9 @@
 # Topic: Memory
 
-**Status:** **established** (2 sources - S6 "Dreaming: Better memory for a more helpful ChatGPT",
-OpenAI, 2026-06-04; S7 "Memory and dreaming for self learning agents", Anthropic, 2026-05-21).
+**Status:** **established** (3 sources - S6 "Dreaming: Better memory for a more helpful ChatGPT",
+OpenAI, 2026-06-04; S7 "Memory and dreaming for self learning agents", Anthropic, 2026-05-21;
+**S8 "LLM Wiki", Andrej Karpathy, 2026-04-04 - a partial feeder**, contributing only to the
+decoupled-curation claim, from outside agent memory entirely).
 **Basis:** created under [ADR-0007](../decisions/0007-memory-topic.md); promoted to `established`
 under [ADR-0008](../decisions/0008-memory-established.md) on **two-vendor architectural
 convergence**.
@@ -11,6 +13,11 @@ numbers say"), so this topic carries measurements - the vendor's own, with **no 
 set, method or confidence interval published**. **S7 carries no measurement at all**, only customer
 testimonials. What the second source buys is **independent convergence on the design**, not
 corroboration that the design works.
+**S8 does not change that, and is worth reading for what it does change.** It is T4, unmeasured, and
+about a document wiki rather than agent memory - so it adds no evidence that any of this works
+either. What it adds is that **the third proponent of decoupled curation is not a vendor, and is the
+earliest of the three** (2026-04-04, seven weeks before S7 and two months before S6). The design was
+not a vendor idea that a practitioner picked up; the ordering runs the other way.
 
 > Living, cross-source synthesis on agent and assistant memory. Many sources feed this note; **merge
 > and de-duplicate** as they arrive (architect persona). Every claim cited.
@@ -29,6 +36,15 @@ how you evaluate whether any of it works.
 - [`rag.md`](rag.md) owns **retrieval over a corpus someone else authored**. Memory is a corpus **the
   system authors about its user**, which is why it can be wrong in a way a document store cannot: a
   retrieved document is stale *as a document*, a memory is stale *as a belief*.
+
+  > **Qualified on S8's arrival, which straddles this line.** An LLM Wiki is a corpus the system
+  > authors **about documents someone else authored** - derived like memory, about the world rather
+  > than about the user, and layered over an immutable third-party raw source [S8 `n4`]. So
+  > "who authored it" does not cleanly separate the two notes. **The refined rule: `rag.md` owns
+  > knowledge derived from external sources; this note owns knowledge derived from the system's own
+  > experience.** What differs is what the knowledge is *about*, not who wrote it. The **maintenance
+  > machinery is shared** - which is exactly why S8 feeds both notes and why the decoupling claim
+  > below now has a source from the other side of the boundary.
 
 ## Synthesis
 
@@ -79,6 +95,40 @@ sessions. It's completely decoupled" [S7 `n11`, `IGo225tfF2I&t=700s`, slide "How
 **The transferable claim is the decoupling, not the name.** A write that only happens while the user
 is talking can only ever record the present tense of that talk; giving some process the standing *job*
 of revisiting is the only way revision happens at all.
+
+##### The third proponent is not a vendor, and it got there first
+
+S8 reaches the same operation from a completely different starting point - a personal document wiki,
+no agents, no product. Its third operation: "**Periodically**, ask the LLM to health-check the wiki.
+Look for: contradictions between pages, stale claims that newer sources have superseded, orphan pages
+with no inbound links, important concepts mentioned but lacking their own page, missing
+cross-references, data gaps that could be filled with a web search" [S8 §Operations - Lint, `n8`].
+
+| | S6 | S7 | S8 |
+|---|---|---|---|
+| Date | 2026-06-04 | 2026-05-21 | **2026-04-04 (earliest)** |
+| Tier / interest | T2, own consumer product | T2, own agent platform | **T4, nothing sold** |
+| Object maintained | a user model | agent memory stores | **a document wiki** |
+| Trigger | background, continuous | ad hoc / nightly / hourly / event | **"periodically", human-invoked** |
+| States *why* out of band | capability (cross-session reading) | **objective conflict** (`n12`) | **no reason given** |
+
+**Two things this does and does not buy, and the distinction matters.**
+
+It *does* rule out the cheap explanation for S6 and S7's convergence. Two vendors agreeing could be
+two marketing departments reaching for the same metaphor; a practitioner with no product, publishing
+before both of them, about a different object entirely, cannot be doing that. **The pattern is not
+downstream of either vendor.**
+
+It *does not* corroborate the rationale. **S8 says to reconcile periodically and never says why
+periodic beats doing it at ingest** - the argument in the row above is S7's alone. The closest S8
+comes is by accident: its own §Why this works claims LLMs "don't forget to update a cross-reference"
+while §Lint tells you to hunt for missing ones [S8 `d1`]. That internal contradiction is an admission
+that integrate-on-ingest leaves defects behind - which is the *observation* underneath claim 59, not
+the argument for it.
+
+> **The honest reading of S8's economics: LLM bookkeeping is cheap enough to be worth doing
+> repeatedly, not so reliable that doing it once is enough** [S8 `n13`, `d1`]. That is the weaker
+> claim, and the only one that implies a recurring pass.
 
 #### Why decouple: the incentive argument, which only S7 states
 
@@ -290,9 +340,11 @@ convincingly and supplies **no measurement whatsoever**.
 > own chart specs. **The field's two most visible memory systems are both shipped on design
 > conviction, and neither has published the experiment.**
 
-**This remains the highest-value open question on this topic.** Two independent vendors converging on
-an architecture is genuine evidence that the *design* is the natural answer; it is not evidence that
-the design works, and it would look identical if it did not.
+**This remains the highest-value open question on this topic, and S8 does not touch it.** Two
+independent vendors converging on an architecture - now with a third, non-vendor source arriving at
+the same operation earlier and from outside agent memory entirely - is genuine evidence that the
+*design* is the natural answer. **It is not evidence that the design works, and it would look
+identical if it did not.** Three unmeasured sources are not more measured than two.
 
 ## Key claims
 
@@ -309,7 +361,9 @@ the design works, and it would look identical if it did not.
 | **Staleness was the worst of the three failures by far** - "staying correct over time" starts at **9.4%** against 41.5% and 31.4%, and gains the most (+65.7 pts). The quantitative backing for the write-once diagnosis. | S6 `n13` (recovered chart specs) | needs-check (vendor self-report, no method published) |
 | **Introducing memory synthesis beat refining it**, on every objective (2024 -> 2025 gains exceed 2025 -> 2026). **And the ceiling is low: 71-83% in 2026, so memory still fails ~1 task in 5** on the vendor's own measure. | S6 `n14` (deltas computed from the same specs) | needs-check (arithmetic on a self-report; the article states neither) |
 | **Two independent vendors converged on the same architecture and the same name** - a background batch process that curates what sessions wrote. Different orgs, different system classes, different commercial interests. | **S6 + S7** (`n3`, `n11`) | **corroborated (2 independent sources, design only)** |
-| **Decouple curation from the work loop because of objective conflict, not throughput** - one loop asked to optimise two things trades them off silently and untunably. | S7 (`n12`, `IGo225tfF2I&t=764s`) | emerging |
+| **Decouple curation from the work loop because of objective conflict, not throughput** - one loop asked to optimise two things trades them off silently and untunably. | S7 (`n12`, `IGo225tfF2I&t=764s`). **The *practice* is corroborated by S8** (§Operations - Lint, `n8`) from outside agent memory, and earliest of the three; **the *rationale* is not** - S8 gives no reason at all | emerging (**practice: 3 sources, 1 non-vendor; rationale: still S7 alone**) |
+| **A periodic reconciliation pass over a knowledge store has recurring, enumerable defect classes**: contradictions between pages, claims superseded by newer sources, orphans with no inbound links, concepts lacking a page, missing cross-references, researchable gaps. **Independent of whether the store holds memory or documents** - which is what makes it a design pattern rather than a product feature. | S8 (§Operations - Lint, `n8`) | emerging (single-leg) |
+| **The binding constraint on any maintained knowledge store is maintenance labour** - not storage, retrieval or linking. Bush's Memex (1945) was blocked on exactly this. **But "the cost of maintenance is near zero" overstates it**: the cost moved and shrank, and the same document's lint list is an admission that defects still accumulate. | S8 (§Why this works, `n13`, `n15`, `d1`) | needs-check (single-leg, unmeasured; the source contradicts itself on reliability) |
 | **Model agent memory as a file system, not a memory API** - the model is already strong at `bash`/`grep`; this is the same "get out of the model's way" bet that produced skills. | S7 (`n2`, `n3`, slide "Built to maximize intelligence") | emerging |
 | **The moment a second writer exists, memory needs a versioned multi-writer store**: scoped read-only vs read-write attachment, optimistic concurrency via a `content_sha256` precondition, and per-session attribution. | S7 (`n5`-`n7`, corroborated by the running console) | emerging |
 | **Agents write instructions to their successors, not just facts** - making a shared store a coordination channel, where a wrong entry redirects every reader rather than degrading one answer. | S7 (`n20`, the demo store) | emerging |
@@ -389,6 +443,14 @@ the design works, and it would look identical if it did not.
   it** - which makes the shared name either convergent evolution or shared cultural borrowing, and the
   brain cannot currently tell which. The cross-domain hop is unmade and is the best deep-research
   target on this topic after the measurement gap (`AGENTS.md`: "take the cross-domain hop").
+
+  > **S8 sharpens this by naming the same operation something else.** Karpathy calls it **lint** - a
+  > compiler-toolchain metaphor, not a sleep one - for a pass that does substantially the same job
+  > [S8 `n8`]. So the *operation* converges across three sources while the *metaphor* does not, which
+  > is mild evidence that the sleep framing is decoration rather than a load-bearing analogy. It also
+  > cuts the other way as a warning: **"lint" carries its own wrong connotation**, since a linter is
+  > normally a form checker and this pass is entirely judgement - a confusion that has already caused
+  > one error in this brain ([ADR-0010](../decisions/0010-lint-is-the-dream-pass.md)).
 - **METR's task-horizon claim is load-bearing and unverified.** S7 rests its motivation on a 2025 METR
   study that agent task length doubles every ~7 months [`n23`, single-leg]. It is external, public and
   checkable - the cheapest external corroboration available to this topic.
@@ -410,8 +472,19 @@ the design works, and it would look identical if it did not.
   customer testimonials with no baseline or method, softer than S6's recovered figures. Read it for
   the architecture, never for the numbers.
 
-> **What the pair does and does not establish.** Two vendors, independently, shipped the same
-> architecture under the same name. That is strong evidence this design is the natural answer to
-> maintaining memory across sessions, and it is why this topic is `established`. **It is not evidence
-> that the architecture works** - neither has published an experiment, and convergence would look
-> identical if both were wrong.
+- **S8** - [LLM Wiki](../../sources/260731_llm-wiki/LEARNING.md) (Andrej Karpathy, 2026-04-04).
+  **T4 practitioner essay, and a partial feeder only** - it is about a personal document wiki, not
+  agent memory, and it contributes to exactly one thread here: the periodic out-of-band reconciliation
+  pass (`n8`), plus the maintenance-as-binding-constraint framing (`n13`, `n15`). **Read it for the
+  independence, not for the content.** It predates both vendors, sells nothing, and reaches the same
+  operation about a different object - which rules out the cheap explanation of S6 and S7's
+  convergence. It supplies **no measurement**, no rationale for why periodic beats at-ingest, and one
+  of its two efficacy claims contradicts its own operations section (`d1`).
+
+> **What the three sources do and do not establish.** Two vendors independently shipped the same
+> architecture under the same name, and a practitioner with nothing to sell described the same
+> operation two months earlier about documents rather than memory. That is strong evidence this design
+> is the natural answer to maintaining a knowledge store across sessions - **and it is still not
+> evidence that it works.** None of the three has published an experiment. Convergence would look
+> identical if all three were wrong, and adding a third agreeing source does not change that; it only
+> removes "the vendors copied each other" as the explanation.

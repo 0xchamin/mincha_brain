@@ -61,6 +61,10 @@
 | Memory scope | The access level a memory store is attached at, and the unit of multi-agent memory design. Read-only org-wide stores hold slow-changing conventions readable by all agents; read-write task stores hold what one team's agents are currently learning. Multiple stores attach per session at different levels. | S7 (`IGo225tfF2I` `&t=466s`) |
 | Procedural memory | Memory of **how to do things** rather than of facts. S7's memory ladder names `skills` as exactly this rung, which puts skills and memory in one family: a skill is procedural memory, a `memory/` tree is the declarative kind. | S7 (`IGo225tfF2I` `&t=338s`) |
 | Organizational memory | The end state S7 argues toward: memory grown from per-task notes into an org-wide store that functions as the model's understanding of how a whole company works, written by many agents and organised by a curation pass. | S7 (`IGo225tfF2I` `&t=873s`) |
+| LLM Wiki | A persistent, interlinked markdown knowledge base an LLM writes and maintains between you and your raw sources - compiled once at ingest and kept current, rather than retrieved and re-synthesized per query. | S8 (gist @ac46de1, §The core idea) |
+| Query-time synthesis | Relating documents to each other *when the question arrives*. Cheap to build because nothing must be maintained, paid for on every question while the user waits, and discarded afterwards. The thing an LLM Wiki trades away. | S8 (gist @ac46de1, §The core idea) |
+| Lint (knowledge base) | A periodic, separately invoked health check over the **whole** store, hunting contradictions, superseded claims, orphans, missing pages and missing cross-references. **Not a form checker** - every item on the list is a judgement, which is why this kit calls its version `dream` instead ([ADR-0010](decisions/0010-lint-is-the-dream-pass.md)). | S8 (gist @ac46de1, §Operations) |
+| Memex | Vannevar Bush's 1945 proposal for a personal, curated document store where the **trails between** documents matter as much as the documents. Blocked for eighty years on maintenance labour rather than on storage or linking - which reframes the LLM's contribution as economic, not intellectual. | S8 (gist @ac46de1, §Why this works) |
 
 > **S1** = `sources/260725_closed-loop-evals-multimodal-agent/` (Uber, AI Engineer World's Fair 2026).
 > **S2** = `sources/260725_12-factor-agents/` (Dex Horthy / HumanLayer, AI Engineer World's Fair 2025).
@@ -69,4 +73,5 @@
 > **S5** = `sources/260726_dont-ship-skills-without-evals/` (Philipp Schmid, Google DeepMind, AI Engineer WF 2026).
 > **S6** = `sources/260731_chatgpt-memory-dreaming/` (OpenAI, 2026-06-04).
 > **S7** = `sources/260731_claude-memory-dreaming/` (Anthropic, "Code w/ Claude", 2026-05-21).
+> **S8** = `sources/260731_llm-wiki/` (Andrej Karpathy, gist `ac46de1`, 2026-04-04).
 > **R1** = deep-research pass on S2, `sources/260725_12-factor-agents/context/01_context-limits-and-decomposition.md`.

@@ -1,10 +1,13 @@
 # Topic: Context engineering
 
-**Status:** established (2 sources - S2 12-factor agents, S4 Anthropic harness design; plus the R1
-research pass). **Basis for the promotion:** S4 independently arrives at S2's serialisation claim
-from the opposite direction - S2 argues you should own the thread format so you *can* pause and
-resume; S4 needs exactly that artifact to make context resets work [S4 §2]. Most of S4's other
-context claims are new and `single-leg`, not corroborating.
+**Status:** established (3 sources - S2 12-factor agents, S4 Anthropic harness design, **S8 LLM Wiki
+(a partial feeder, 2 claims)**; plus the R1 research pass). **Basis for the promotion:** S4
+independently arrives at S2's serialisation claim from the opposite direction - S2 argues you should
+own the thread format so you *can* pause and resume; S4 needs exactly that artifact to make context
+resets work [S4 §2]. Most of S4's other context claims are new and `single-leg`, not corroborating.
+**S8 corroborates nothing here** - it contributes two new claims (the contract document as the
+persistent counterpart to owning the prompt; the two-pass text-then-images constraint) and is T4 and
+unmeasured. It does not move the status, which S2 and S4 already carried.
 
 > Living, cross-source synthesis on context engineering. Many sources feed this note; **merge and
 > de-duplicate** as they arrive (architect persona). Every claim cited.
@@ -124,6 +127,46 @@ Instead, once a valid tool call succeeds, **clear the pending errors**; summaris
 the whole stack trace. "Figure out what you want to tell the model so you get better results"
 [S2 `&t=653s`].
 
+### The prompt you own for one call has a persistent counterpart: the contract document
+
+S2's rule is about the tokens in a single call. **S8 pushes the same idea onto a file that persists
+across every call**: the schema document - "e.g. CLAUDE.md for Claude Code or AGENTS.md for Codex" -
+that tells the model how the store is structured, what the conventions are, and what workflow each
+operation follows. It is "**the key configuration file - it's what makes the LLM a disciplined wiki
+maintainer rather than a generic chatbot**" [S8 §Architecture, `n5`].
+
+Two things make this worth keeping rather than filing as trivia:
+
+- **It is an unusual answer to *where the difficulty lives*.** Asked what makes an LLM knowledge
+  system work, the expected answers are the retrieval stack, the chunking, the embedding model. S8
+  says none of them - the load-bearing artifact is **prose**.
+- **It is the only layer both parties write.** Raw sources are immutable and the wiki is the LLM's;
+  the schema is explicitly "**co-evolved**" [`n4`]. That makes it the place where a correction to
+  *behaviour* - as opposed to a correction to a *fact* - can actually be recorded and survive.
+
+The same source turns this into a claim about how such designs should be **shipped**: as
+"intentionally abstract" prose sized for an agent's context window, deliberately underspecified so
+the reader's own agent instantiates it [`n16`]. **The artifact distributed is a context document, not
+a library** - which is what makes the schema file the place instantiation lands.
+
+> ⚠️ **Unmeasured, and self-descriptive.** S8 is a practitioner describing a workflow he already
+> prefers, with no evaluation of any kind. The framing is valuable; the confidence is not earned.
+
+### A mechanical constraint: text and its inline images cannot be read in one pass
+
+"LLMs can't natively read markdown with inline images in one pass - the workaround is to have the LLM
+read the text first, **then view some or all of the referenced images separately**" [S8 §Tips and
+tricks, `n12`].
+
+This is a constraint on what can reach the model per call, not a preference, and it forces a two-pass
+shape on any document with figures. Note the selectivity - "**some or all**" - which makes the second
+pass a **budget decision**, not a completeness one: you choose which images are worth the tokens.
+
+> This brain's ingest flow is an independent instance of exactly that shape - read the transcript or
+> article text, then `view` a pre-filtered handful of frames - arrived at for the same reason and
+> costed the same way (`AGENTS.md`, "The visual leg"). S8 states the constraint that makes it
+> necessary; it does not corroborate any claim about how well the two-pass split works.
+
 ## Key claims
 
 | Claim | Sources (cited) | Confidence |
@@ -140,6 +183,9 @@ the whole stack trace. "Figure out what you want to tell the model so you get be
 | The thread-as-event-log design is **Event Sourcing** (Fowler 2005), which already names its sharp edges: replay determinism, snapshotting, event versioning. | R1 ([Azure Arch Center](https://learn.microsoft.com/en-us/azure/architecture/patterns/event-sourcing) T1) | emerging |
 | **"Context anxiety": a model may prematurely wrap up work as it nears its *perceived* limit** - a behavioural failure distinct from degradation caused by a full window. | S4 §2 | needs-check (single-leg, vendor, model-version-bound) |
 | **Compaction and context reset are not interchangeable.** Compaction preserves continuity but does not remove context anxiety; a reset does, at the cost of a handoff artifact that must carry enough state to resume. | S4 §2 | needs-check (single-leg) |
+| **The persistent counterpart to owning the prompt is the contract document** (`AGENTS.md` / `CLAUDE.md`) - "the key configuration file", and the load-bearing engineering artifact of an LLM knowledge system rather than the retrieval stack. It is also **the only layer both human and model write**, so it is where a correction to *behaviour* can persist. | S8 §Architecture (`n5`, `n4`) | needs-check (single-leg, T4, unmeasured, self-descriptive) |
+| **Ship an agent-oriented design as deliberately underspecified prose sized for a context window**, to be instantiated by the reader's own agent - the unit distributed is a context document, not a library or a spec. | S8 §Note (`n16`) | needs-check (single-leg) |
+| **Text and its inline images cannot be read in one pass** - read the text, then view selected images. A mechanical constraint that forces a two-pass shape on any document with figures, and makes the second pass a token-budget decision ("some or all"). | S8 §Tips and tricks (`n12`) | needs-check (single-leg) |
 
 ## Key visuals
 
@@ -203,4 +249,6 @@ the whole stack trace. "Figure out what you want to tell the model so you get be
 ## Sources feeding this topic
 
 - **S2** - [12-Factor Agents: Patterns of reliable LLM applications](../../sources/260725_12-factor-agents/LEARNING.md) (Dex Horthy, HumanLayer, AI Engineer WF 2025) - factors 2, 3, 9 and the "everything is context engineering" framing.
+- **S4** - [Harness Design for Long-Running Application Development](../../sources/260725_harness-design-long-running-apps/LEARNING.md) (Prithvi Rajasekaran, Anthropic Labs, 2026) - the serialisation artifact that makes context resets work, **context anxiety**, and compaction-vs-reset. **T2 vendor, n=1 self-reported runs, visual leg skipped** - mechanisms transfer, numbers are not replicated. *(Row added 2026-07-31: S4 was named in this note's status line and cited by two claims but had no row here - an orphan of exactly the class [ADR-0009](../decisions/0009-dreaming-reconciliation-pass.md) exists to catch, found incidentally while ingesting S8.)*
+- **S8** - [LLM Wiki](../../sources/260731_llm-wiki/LEARNING.md) (Andrej Karpathy, 2026-04-04) - **a partial feeder**, contributing two claims only: the schema document as the load-bearing artifact, and the mechanical two-pass constraint on markdown with inline images. **T4, unmeasured, no figures** - read it for the framing, never as evidence.
 - **R1** - [deep-research pass on S2](../../sources/260725_12-factor-agents/context/01_context-limits-and-decomposition.md) (2026-07-25) - external evidence: Lost in the Middle (T1), Context Rot (T2), Anthropic context engineering (T2), Beyond pass@1 (T3), Event Sourcing (T1). Each citation carries a tier and an independence call.
