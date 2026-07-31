@@ -53,6 +53,27 @@
 | 45 | **Keep the eval after you retire the component.** It becomes a regression detector on the bare model and is what tells you when to reintroduce the scaffolding. Closes the loop claim 31 leaves open: S4 can tell you a component stopped being load-bearing but cannot notice if that reverses. | evals | S5 (`0vphxNt4wyk` `&t=1181s`,`&t=1199s`) | needs-check (single-leg) |
 | 46 | **Gate the diff, not the release.** At Google DeepMind evals sit alongside every skill, run on every change, and **a change cannot merge unless it improves the test cases.** The strongest instance in this brain of claim 34's independent checker - a merge gate is the only one a human cannot wave through. | evals | S5 (`0vphxNt4wyk` `&t=1002s`,`&t=1019s`) | emerging (self-reported practice, T2 vendor) |
 | 47 | **Grade outcomes, not paths; and isolate every run, because agents cheat.** Assert the task succeeded rather than that the component was invoked on turn one. Run each case in a clean workspace - coding agents will read prior chats or executions to obtain the content without invoking the thing under test. | evals | S5 (`0vphxNt4wyk` `&t=1091s`,`&t=1109s`,`&t=1129s`) | emerging |
+| 48 | **Write-once memory goes stale as a structural property, not as a bug.** Written during a conversation and never revisited, a memory keeps that conversation's tense and decays into **confident wrongness** rather than into irrelevance. A missing fact degrades an answer; a stale fact poisons it, because the system acts on it with full confidence. | memory | S6 (§How memory has evolved, prose + `fig_saved_memories`) | emerging |
+| 49 | **Explicit-cue capture systematically under-collects**, and the category it misses is **implicit preferences** - context that governs what is relevant ("I live near San Francisco") but is never uttered as an instruction. Response instructions and stated constraints are easy to capture; the third kind is not. | memory | S6 (§How memory has evolved, §Following preferences) | needs-check (taxonomy is single-leg) |
+| 50 | **Decouple the memory write from the conversation turn.** Synthesis runs as a background process on its own clock, reading across many past sessions - which is what makes revision possible at all, since a write that happens only while the user is talking can only record the present tense of that talk. | memory | S6 (§How memory has evolved, prose + "Updated 2h ago") | emerging |
+| 51 | **Revision, not expiry.** Rewrite a stale memory into a new tense ("going to Singapore in July" -> "went to Singapore in July 2026") rather than deleting it on a TTL. **Expiry treats age as invalidity; revision treats age as information** - and the revised fact stays useful context. | memory | S6 (§Staying current over time, prose + paired worked example) | emerging |
+| 52 | **Representation is a maintenance decision, not a storage one - pick the shape whose edits you can express.** A flat append-only list of atomic assertions makes revision inexpressible; a maintained narrative some process owns does not. | memory | S6 (§How memory has evolved, `fig_saved_memories` vs `fig_memory_summary`, same persona) | emerging |
+| 53 | **Put the human on the synthesized artifact, not on the raw records.** Once a background process authors memory, asking the user to hand-curate its inputs is asking them to do the job you just automated. **Unresolved:** whether a correction is a durable override or merely another input to the next pass. | memory | S6 (§How memory has evolved, prose + `fig_memory_summary`) | emerging |
+| 54 | **"Good memory" is not one metric.** It decomposes into three separately-evaluable objectives - carry forward context (catches under-capture), follow preferences (catches **recall without compliance**), stay current (catches staleness). Only the third can fail purely through the passage of time, and it is the one most memory evals omit. | memory | S6 (§How we evaluate memory) | emerging |
+| 55 | **Memory synthesis is expensive enough to gate rollout: cost, not answer quality, was the stated constraint** on serving it universally (a claimed ~5x compute reduction unlocked the free tier). The durable part is the direction - maintaining memory is a recurring per-user compute cost, not a storage cost. | memory | S6 (§A more scalable foundation for the future) | needs-check (single-leg, vendor self-report, no method) |
+
+> **Claims 48-55 arrive with no measurements, and that is load-bearing.** S6's three eval charts are
+> client-rendered and did not survive capture, so every performance statement in the source reduces to
+> "improves" or "a substantial lift". These are **design arguments corroborated by product
+> screenshots** - the UI is real second-leg evidence that the described affordances shipped, but it
+> cannot show they work.
+>
+> **They also sit in unresolved tension with claim 24.** That claim - the only *measured* evidence in
+> this brain about agent memory - found naive episodic memory scaffolding never improved long-horizon
+> reliability and **hurt 6 of 10 models**. S6 is best read as arguing that append-everything episodic
+> memory is precisely the broken design (claims 48, 52) and that maintained synthesized memory is a
+> different object. **That argument is entirely unmeasured, and must not be resolved in the vendor's
+> favour.** See [`topics/memory.md`](topics/memory.md).
 
 > **S1** = `sources/260725_closed-loop-evals-multimodal-agent/` (Uber, "Building Closed-Loop Evals
 > for a Multimodal Agent at Scale", AI Engineer World's Fair 2026).
@@ -71,6 +92,12 @@
 > **SkillsBench** (claims 41, 42) is a **public third-party benchmark** and is the strongest evidence
 > in this brain that is not peer-reviewed; the **DeepMind-internal** figures (claim 46, the
 > 39.2% -> 91.6% case study) are self-reported, single-case and unreplicated.
+> **S6** = `sources/260731_chatgpt-memory-dreaming/` (OpenAI, "Dreaming: Better memory for a more
+> helpful ChatGPT", 2026-06-04). **T2 vendor post about its own consumer product.** Its mechanism
+> claims carry a genuine second leg - product screenshots are a photograph of the artifact the prose
+> describes, not the author restating himself - but **its three eval charts are client-rendered and
+> did not survive capture, so the source contributes no measurement whatsoever.** Cite it for
+> architecture and failure taxonomy; never for magnitude.
 > **R1** = deep-research pass `sources/260725_12-factor-agents/context/01_context-limits-and-decomposition.md`
 > (2026-07-25) - external evidence, each citation tiered T1-T5 with an independence call.
 

@@ -178,6 +178,12 @@ the whole stack trace. "Figure out what you want to tell the model so you get be
   never improved long-horizon reliability, losing to plain ReAct. Any future claim here that drifts
   toward "give the agent richer memory" must be checked against this - the measured win is
   *decomposition*, not *remembering more*.
+  > **Now contested, and unresolved (2026-07-31).** S6 ([`memory.md`](memory.md)) argues that
+  > append-everything episodic memory is precisely the broken design, and that a **maintained,
+  > synthesized** memory rewritten by a background pass is a different object (claims 48, 50, 52).
+  > **That argument carries no measurement** - S6's eval charts did not survive capture. So the
+  > position stands: the measured evidence says memory scaffolds hurt, and the only source arguing
+  > otherwise is a vendor with no numbers. **Do not resolve this in the vendor's favour.**
 - **New, from R1: this design has an older name.** Modelling the thread as an append-only typed event
   log and replaying it is **Event Sourcing** (Fowler, 2005). Worth mining that literature for the
   three sharp edges it already names - replay determinism, snapshotting, event versioning - none of
@@ -185,6 +191,13 @@ the whole stack trace. "Figure out what you want to tell the model so you get be
 - **Overlap with `rag.md` needs watching.** As RAG sources arrive, retrieval strategy claims belong
   there; only the "which tokens win the budget" framing belongs here. Revisit the split if the two
   notes start duplicating (see ADR-0001).
+- **Boundary with [`memory.md`](memory.md), set by [ADR-0007](../decisions/0007-memory-topic.md).**
+  Claim 20 ("prompt, memory, RAG and history are one problem") absorbs memory into this note, and that
+  remains true *as a framing*. The split is by question: **a claim about which tokens win a budget
+  belongs here; a claim about what is stored between calls, when it is rewritten, and who repairs it
+  belongs in `memory.md`.** Memory is an input to context engineering, not a subset of it - which is
+  why nesting it here would invert the dependency. Same watch item as `rag.md`: revisit if the two
+  notes start duplicating.
 
 ## Sources feeding this topic
 

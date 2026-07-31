@@ -50,9 +50,16 @@
 | Ablation (eval) | Running the same eval suite **with and without** a component loaded, and reading the *delta* rather than the absolute score. 94% vs 32% means the component is load-bearing; 96% vs 95% means the base model absorbed it and it is now pure context cost. The retirement test for any expiring scaffold. | S5 (`0vphxNt4wyk` `&t=713s`) |
 | Skill lift | The performance delta a skill produces in an ablation. SkillsBench 1.1: curated skills +16.6 pts (33.9% -> 50.5%); self-generated skills **negative** (-8.1 to -11.5). Also the merge criterion at Google DeepMind - no skill PR lands without proof of positive lift. | S5 (`0vphxNt4wyk` `&t=266s`,`&t=1002s`) |
 
+| Dreaming | Memory maintenance as a **background process on its own clock**: it reads across many past sessions and rewrites the system's memory state between them, rather than appending during one. Named for sleep-time memory consolidation - the analogy is framing, not evidence, since no source here cites that literature. | S6 (§How memory has evolved) |
+| Saved memories | The write-once predecessor to dreaming: a flat, append-only list of atomic assertions about the user, written during a conversation on an explicit cue and never revisited. The shape that makes staleness structural. | S6 (§How memory has evolved) |
+| Memory staleness | The failure where a stored fact **was true when written and is false now**. Sharply distinct from irrelevance: a missing fact degrades an answer, a stale fact **poisons** it, because the system acts on it with full confidence. | S6 (§How memory has evolved) |
+| Implicit preference | Context that governs what is relevant to a user but is **never uttered as an instruction** ("I live near San Francisco"). The category explicit-cue memory capture structurally misses - as opposed to response instructions and stated constraints, which are easy to catch. | S6 (§Following preferences) |
+| Memory summary | The synthesized narrative rendering of what a system believes about a user, and the surface on which the user is offered correction **in place of** the underlying records. The design consequence: a correction may be an input to the next synthesis pass rather than a durable override. | S6 (§How memory has evolved) |
+
 > **S1** = `sources/260725_closed-loop-evals-multimodal-agent/` (Uber, AI Engineer World's Fair 2026).
 > **S2** = `sources/260725_12-factor-agents/` (Dex Horthy / HumanLayer, AI Engineer World's Fair 2025).
 > **S3** = `sources/260725_oauth2-oidc-plain-english/` (Nate Barbettini / Okta, 2018).
 > **S4** = `sources/260725_harness-design-long-running-apps/` (Prithvi Rajasekaran, Anthropic Labs, 2026).
 > **S5** = `sources/260726_dont-ship-skills-without-evals/` (Philipp Schmid, Google DeepMind, AI Engineer WF 2026).
+> **S6** = `sources/260731_chatgpt-memory-dreaming/` (OpenAI, 2026-06-04).
 > **R1** = deep-research pass on S2, `sources/260725_12-factor-agents/context/01_context-limits-and-decomposition.md`.

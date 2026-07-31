@@ -117,6 +117,15 @@ self-learning loop to build [S1 `&t=418s`]. From there:
 - **S5's numbers split into two credibility classes and should never be quoted as one.** SkillsBench
   (+16.6 pts, the length curve, the -8 to -11 pt self-generated penalty) is a public third-party
   benchmark; the CI gate and the 39.2% -> 91.6% case study are Google DeepMind reporting on itself.
+- **Cross-reference, not promoted here: decomposing a fuzzy quality into objectives with different
+  failure modes.** S6 splits "good memory" into three separately-evaluable objectives - carry forward
+  context, follow preferences, stay current - where the second separates **recall from compliance** (a
+  system can retrieve "I'm vegetarian" and still recommend a steak house) and the third fails only
+  through **the passage of time**. That is the same move S4 makes on subjective quality: make it
+  gradable by fixing the *question*, not by finding a better judge. Kept in
+  [`memory.md`](memory.md) (claim 54) because the objectives are memory-specific; noted here because
+  the *method* is not. **S6 supplies no results** - its eval charts did not survive capture - so it is
+  not counted as a source feeding this topic.
 
 ## Sources feeding this topic
 
