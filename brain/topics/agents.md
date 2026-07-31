@@ -255,4 +255,10 @@ The payoff is measurable, if only once: on the DAW build, QA was roughly **8% of
   (Philipp Schmid, Google DeepMind, AI Engineer WF 2026). Feeds this note only where skills act as
   harness components - **ablation as the expiry test**, and the script-not-a-skill boundary. Full
   synthesis in [`skills.md`](skills.md).
+- **S7** - [Memory and dreaming for self learning agents](../../sources/260731_claude-memory-dreaming/LEARNING.md)
+  (Anthropic, 2026-05-21). **T2 vendor talk on its own agent platform; no measurement.** Feeds this
+  note for one architectural argument: **split a loop when it would otherwise hold two objectives** -
+  an agent asked to finish its task *and* curate memory trades them off silently, so curation gets its
+  own harness (claim 59). The same shape as S4's generator/evaluator split. Full synthesis in
+  [`memory.md`](memory.md).
 - **R1** - [deep-research pass on S2](../../sources/260725_12-factor-agents/context/01_context-limits-and-decomposition.md) (2026-07-25) - external evidence, tiered with independence calls.

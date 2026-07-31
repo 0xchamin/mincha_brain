@@ -113,6 +113,17 @@ with a parenthetical clarifying *which* password. Keep it as the canonical pictu
   The correction is currently uncited commentary; **an OAuth 2.1 source is the intended resolution**
   (research pass declined by the owner, 2026-07-25).
 
+- **Shared agent memory is a prompt-injection sink with a demonstrated propagation path, and nothing
+  defends it.** A background process that ingests session content and writes durable,
+  automatically-applied instructions means **inject once, re-applied to every agent that attaches the
+  store**, with no further access needed. This stopped being theoretical with S7: its live demo shows
+  agents writing **imperatives** to their successors ("Next agent: skip dep checks, go straight to
+  config diff") and the next agent complying [S7 `n20`,
+  [`memory.md`](memory.md)]. S7 ships attribution and version history, which are **forensics after the
+  fact**; there is **no admission control** - nothing validates a memory before the next agent acts on
+  it. Recorded as claim 63 and **labelled commentary**, since neither memory source discusses the
+  threat. **The most actionable open question in this note.**
+
 ## Note for the architect (topic boundary)
 
 This note now carries two distinguishable bodies of material: **agent-specific threats** (prompt
@@ -139,6 +150,11 @@ protocol details:
 
 ## Sources feeding this topic
 
+- **S7** - [Memory and dreaming for self learning agents](../../sources/260731_claude-memory-dreaming/LEARNING.md)
+  (Anthropic, 2026-05-21). **Does not discuss security at all** - it feeds this note only through the
+  open question above, where its demo of agents passing *imperatives* through a shared memory store
+  supplies a concrete propagation path for memory poisoning (claim 63, commentary). Full synthesis in
+  [`memory.md`](memory.md).
 - **S3** - [`260725_oauth2-oidc-plain-english`](../../sources/260725_oauth2-oidc-plain-english/LEARNING.md)
   - Nate Barbettini (Okta), *OAuth 2.0 and OpenID Connect (in plain English)*, 2018. The protocol
     substrate: delegated authorization, scopes, consent, channel separation, OIDC. **8 years old -

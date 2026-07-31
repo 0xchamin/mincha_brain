@@ -78,6 +78,38 @@
 > freshness. Different design, different system class, different metric - and S6 *agrees* with claim
 > 24's premise, since its whole argument is that write-once append-only memory is broken (claims 48,
 > 52). **What no source in this brain yet measures is whether a maintained memory helps an agent.**
+
+| 58 | **Two independent vendors converged on the same memory architecture, and on the same name for it** - a background batch process that curates what sessions wrote, decoupled from the session. Different organisations, different commercial interests, different system classes (consumer chat assistant vs multi-agent platform). **The convergence is evidence about the design, not about the results.** | memory | **S6 (§How memory has evolved) + S7 (`IGo225tfF2I` `&t=700s`, slide "How dreaming works")** | **corroborated (2 independent sources - design only)** |
+| 59 | **Decouple memory curation from the work loop because of objective conflict, not throughput.** An agent asked to both finish its task and maintain memory quality will trade them off silently; an out-of-band process has exactly one objective. Generalises past memory: **one loop optimising two things creates a trade-off you can neither observe nor tune.** Same shape as the generator/evaluator split (claim 33). | memory | S7 (`IGo225tfF2I` `&t=764s`) | emerging |
+| 60 | **Model agent memory as a file system, not a memory API** - the model is already strong at navigating files with `bash`/`grep`, so give it a directory rather than bespoke primitives. Explicitly the same "get out of the model's way" bet that produced skills, and an instance of claim 31: it wagers that the assumption "the model cannot manage its own files" has already expired. | memory | S7 (`IGo225tfF2I` `&t=386s`, slide "Built to maximize intelligence") | emerging |
+| 61 | **The moment memory has a second writer it needs the machinery of a versioned multi-writer store**: scoped attachment (read-only org-wide vs read-write task stores), **optimistic concurrency via a `content_sha256` write precondition** rather than locking, and per-session attribution with rollback and diff. Single-loop designs need none of this, which is why they look simpler and stop scaling at the second agent. | memory | S7 (`IGo225tfF2I` `&t=466s`,`&t=498s`,`&t=514s`; corroborated by the running console) | emerging |
+| 62 | **Agents write instructions to their successors, not just facts** - an observed demo handoff reads "Next agent: skip dep checks, go straight to config diff", and the next agent complies. **This makes a shared memory store a coordination channel rather than a knowledge base**, with a different failure mode: a wrong fact degrades one answer, a wrong instruction redirects every agent that reads it. | memory | S7 (`IGo225tfF2I` `&t=1004s`, the live store in `frame_1030`) | emerging |
+| 63 | **A shared agent memory store is a persistent prompt-injection sink with a propagation path.** Inject once and the instruction is re-applied to every agent that attaches the store, with no further access needed. Attribution and version history (claim 61) give **forensics after the fact but no admission control** - nothing validates a memory before the next agent acts on it. **No source in this brain addresses the defence.** | agent-security | S7 (`IGo225tfF2I` `&t=1004s`, `n20` + `n7`) - **agent inference from two gated nodes, not a claim the source makes** | needs-check (commentary, not sourced evidence) |
+| 64 | **A skill is procedural memory.** S7's memory-evolution ladder places `skills` as one rung - `CLAUDE.md` -> memory tool -> **skills (procedural memory)** -> `memory/` - naming the category `skills.md` had been describing without a name, and putting skills and memory in one family rather than two. | skills | S7 (`IGo225tfF2I` `&t=338s`, slide "How agent memory evolved") | emerging |
+
+> **Claims 58-64 come from S7, a second T2 vendor talk about its own agent platform** - and the
+> evidence bar moved *down*, not up. S7's mechanism claims gate well (slides plus a **live product
+> demo**, which is a photograph of the artifact rather than a restatement of the pitch). **But S7
+> contributes no measurement at all**: its only outcome claims are customer testimonials with no
+> baseline, sample size or eval set - **softer than S6's recovered chart figures**, which were at
+> least exact. Nothing in 58-64 is a measured result, and none of it belongs in an argument that
+> memory works.
+>
+> **Claim 58 is the reason `memory` is `established`, and it is narrower than it looks.** Two vendors
+> independently shipping one architecture is real evidence that the design is the natural answer.
+> **It is not external corroboration that the design works** - convergence would look identical if
+> both were wrong, and neither has published an experiment.
+>
+> **S7 was the source that could have closed claim 24's gap and did not.** It is the first source here
+> on the right side of both axes - maintained memory, agent platform, long-horizon, multi-agent - and
+> it answers the design question while supplying no method. **Whether a maintained memory helps an
+> agent remains measured by nobody**, and this is now known not to be answerable by reading more
+> vendor material.
+>
+> **Claim 63 is labelled commentary deliberately.** S7 never discusses memory poisoning; the claim is
+> assembled by the agent from two of its gated nodes plus `topics/agent-security.md`. It is recorded
+> because the demo makes the propagation path concrete, and flagged because inference across nodes is
+> not the same evidential class as either leg.
 > Do not borrow S6's numbers to answer it. See [`topics/memory.md`](topics/memory.md).
 
 > **S1** = `sources/260725_closed-loop-evals-multimodal-agent/` (Uber, "Building Closed-Loop Evals

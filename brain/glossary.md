@@ -56,10 +56,17 @@
 | Implicit preference | Context that governs what is relevant to a user but is **never uttered as an instruction** ("I live near San Francisco"). The category explicit-cue memory capture structurally misses - as opposed to response instructions and stated constraints, which are easy to catch. | S6 (§Following preferences) |
 | Memory summary | The synthesized narrative rendering of what a system believes about a user, and the surface on which the user is offered correction **in place of** the underlying records. The design consequence: a correction may be an input to the next synthesis pass rather than a durable override. | S6 (§How memory has evolved) |
 
+| Out-of-band (processing) | Work done **outside the request path it affects** - here, memory curation running between sessions rather than during them. Buys three things: cross-session vantage, **no objective conflict** with the task, and no latency cost. The general form: any loop asked to optimise two things trades them off untunably. | S7 (`IGo225tfF2I` `&t=764s`) |
+| Optimistic concurrency control | Allowing concurrent writes without locking: each write carries a **precondition** (in S7, a `content_sha256` of the content the writer believed it was editing) and **fails rather than clobbering** if the underlying state moved on. What lets many agents share one memory store safely. | S7 (`IGo225tfF2I` `&t=498s`, `frame_1030`) |
+| Memory scope | The access level a memory store is attached at, and the unit of multi-agent memory design. Read-only org-wide stores hold slow-changing conventions readable by all agents; read-write task stores hold what one team's agents are currently learning. Multiple stores attach per session at different levels. | S7 (`IGo225tfF2I` `&t=466s`) |
+| Procedural memory | Memory of **how to do things** rather than of facts. S7's memory ladder names `skills` as exactly this rung, which puts skills and memory in one family: a skill is procedural memory, a `memory/` tree is the declarative kind. | S7 (`IGo225tfF2I` `&t=338s`) |
+| Organizational memory | The end state S7 argues toward: memory grown from per-task notes into an org-wide store that functions as the model's understanding of how a whole company works, written by many agents and organised by a curation pass. | S7 (`IGo225tfF2I` `&t=873s`) |
+
 > **S1** = `sources/260725_closed-loop-evals-multimodal-agent/` (Uber, AI Engineer World's Fair 2026).
 > **S2** = `sources/260725_12-factor-agents/` (Dex Horthy / HumanLayer, AI Engineer World's Fair 2025).
 > **S3** = `sources/260725_oauth2-oidc-plain-english/` (Nate Barbettini / Okta, 2018).
 > **S4** = `sources/260725_harness-design-long-running-apps/` (Prithvi Rajasekaran, Anthropic Labs, 2026).
 > **S5** = `sources/260726_dont-ship-skills-without-evals/` (Philipp Schmid, Google DeepMind, AI Engineer WF 2026).
 > **S6** = `sources/260731_chatgpt-memory-dreaming/` (OpenAI, 2026-06-04).
+> **S7** = `sources/260731_claude-memory-dreaming/` (Anthropic, "Code w/ Claude", 2026-05-21).
 > **R1** = deep-research pass on S2, `sources/260725_12-factor-agents/context/01_context-limits-and-decomposition.md`.

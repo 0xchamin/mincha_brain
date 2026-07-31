@@ -195,3 +195,10 @@ what S4 does not have: **keep the meter after you remove the part.**
   (Philipp Schmid, Google DeepMind, AI Engineer World's Fair 2026). **T4 conference talk by a T2
   vendor employee.** The SkillsBench figures are third-party and are the strongest evidence; the
   DeepMind-internal figures are self-reported and unreplicated.
+- **S7** - [Memory and dreaming for self learning agents](../../sources/260731_claude-memory-dreaming/LEARNING.md)
+  (Anthropic, 2026-05-21). Contributes one thing, and it is a naming: S7's memory-evolution ladder
+  places `skills` as the **procedural memory** rung - `CLAUDE.md` -> memory tool -> **skills
+  (procedural memory)** -> `memory/` (claim 64). **A skill is procedural memory**: memory of *how to
+  do things* rather than of facts. That puts skills and memory in one family rather than two adjacent
+  topics, and supplies the category name this note had been describing without. See
+  [`memory.md`](memory.md).

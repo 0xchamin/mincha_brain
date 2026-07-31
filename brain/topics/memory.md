@@ -1,15 +1,16 @@
 # Topic: Memory
 
-**Status:** emerging (1 source - S6 "Dreaming: Better memory for a more helpful ChatGPT", OpenAI,
-2026-06-04).
-**Basis:** first source on this topic, created under [ADR-0007](../decisions/0007-memory-topic.md).
-**Read the evidence limit first:** S6 is a **T2 vendor post about the vendor's own consumer product**.
-Its three eval charts are recovered (see "What the numbers say"), so this topic **does** carry
-measurements - but they are the vendor's own, with **no sample size, eval-set description, method or
-confidence interval published**. Precise numbers, opaque provenance. `established` needs a
-genuinely independent second source - the parked
-`sources/260731_agent-memory-and-dreaming/` capture (Anthropic, in flight under another agent) is the
-obvious candidate - **merge into this note, do not create a second one.**
+**Status:** **established** (2 sources - S6 "Dreaming: Better memory for a more helpful ChatGPT",
+OpenAI, 2026-06-04; S7 "Memory and dreaming for self learning agents", Anthropic, 2026-05-21).
+**Basis:** created under [ADR-0007](../decisions/0007-memory-topic.md); promoted to `established`
+under [ADR-0008](../decisions/0008-memory-established.md) on **two-vendor architectural
+convergence**.
+**Read the evidence limit first, because it did not improve with the second source.** Both S6 and S7
+are **T2 vendors describing their own products**. S6's eval charts were recovered (see "What the
+numbers say"), so this topic carries measurements - the vendor's own, with **no sample size, eval
+set, method or confidence interval published**. **S7 carries no measurement at all**, only customer
+testimonials. What the second source buys is **independent convergence on the design**, not
+corroboration that the design works.
 
 > Living, cross-source synthesis on agent and assistant memory. Many sources feed this note; **merge
 > and de-duplicate** as they arrive (architect persona). Every claim cited.
@@ -65,17 +66,91 @@ work in practice, because it governs relevance rather than a single answer.
 
 ### The architecture: a second loop on a second clock
 
-**Dreaming** is a background process that reads across many past conversations and **synthesizes** the
-memory state, rather than appending to it during a chat [S6 §How memory has evolved, `n3`;
+**Dreaming** is a background process that reads across many past sessions and **synthesizes** the
+memory state, rather than appending to it during the session [S6 §How memory has evolved, `n3`;
 corroborated by a "Memory summary - Updated 2h ago" header, a write with no user action attached].
+S7 ships the same architecture on an agent platform: "It is a batch process. It runs out of band from
+sessions. It's completely decoupled" [S7 `n11`, `IGo225tfF2I&t=700s`, slide "How dreaming works"].
 
 > 💡 **Dreaming** - memory maintenance as a scheduled process between sessions, decoupled from the
-> conversation turn. Named for sleep-time memory consolidation; the source does not cite that
+> conversation turn. Named for sleep-time memory consolidation; neither source cites that
 > literature, so the analogy is framing, not evidence.
 
 **The transferable claim is the decoupling, not the name.** A write that only happens while the user
 is talking can only ever record the present tense of that talk; giving some process the standing *job*
 of revisiting is the only way revision happens at all.
+
+#### Why decouple: the incentive argument, which only S7 states
+
+S6 decouples for capability - a background pass can read across conversations. **S7 gives a second
+reason that is sharper and generalises further** [S7 `n12`, `IGo225tfF2I&t=764s`]:
+
+| Reason to run curation out of band | What it buys |
+|---|---|
+| Cross-session pattern detection | Patterns *across* sessions are invisible from inside any one of them. An information argument. |
+| **No objective conflict** | **An agent told to finish its task *and* maintain memory quality will trade them off silently.** A separate process has exactly one objective. |
+| No added latency | Curation is off the hot path, so it can afford to be expensive. |
+
+**The middle row is the durable idea and it is not really about memory:** whenever one loop is asked
+to optimise two things, you have created a trade-off you can neither observe nor tune. This is the
+same shape [`evals.md`](evals.md) records for the generator/evaluator split (claim 33) - separation
+introduced to defeat a conflict of interest, not to add capability.
+
+#### The economics: curation as test-time compute
+
+S7 frames dreaming as test-time compute applied to memory - spend tokens up front, get better
+outcomes downstream [S7 `n13`, single-leg]. The part worth keeping is **who pays and who benefits**:
+the cost is borne once by a process that completes no user task, and the return is paid to every
+downstream agent. That asymmetry is what makes an expensive curation pass economically sane, and it
+only works because the curator is on a different clock.
+
+### Memory as a file system, not an API (S7)
+
+S6's memory is a synthesized narrative the user reads. **S7's is a directory the model manipulates
+with `bash` and `grep`** - a deliberate bet that the model is already better at file systems than at
+any bespoke memory API [S7 `n2`, `IGo225tfF2I&t=386s`; slide "Built to maximize intelligence",
+"Filesystem-native / Flexible and agent-native"].
+
+The rationale is explicitly the same one that produced skills: *"as models improve, we really just
+want to get out of Claude's way, similar to what we did with skills"* [S7 `n3`]. S7's own evolution
+ladder puts them on one axis - `CLAUDE.md` -> memory tool -> **skills (procedural memory)** ->
+`memory/` (files read and written by agents) [S7 `n1`] - which supplies [`skills.md`](skills.md) the
+cross-domain name it was missing: **a skill is procedural memory.**
+
+> This is claim 31 in [`agents.md`](agents.md) applied to memory: **scaffolding encodes an assumption
+> about what the model cannot do alone, and those assumptions expire.** A bespoke memory API assumes
+> the model cannot manage files; this design bets that assumption has already expired. It is a bet,
+> not a result - and if it is wrong, it is wrong quietly.
+
+### What multi-agent memory needs that single-user memory does not
+
+The whole of this section is S7-only, and it is the half of the topic the consumer framing could not
+reach.
+
+| Requirement | Mechanism | Citation |
+|---|---|---|
+| **Sharing** | One store, many agents - what A learns, B and C read on next attach | S7 `n5` |
+| **Scopes** | Read-only org-wide store (slow-changing conventions) + read-write task stores, multiple attached per session at different levels | S7 `n5`, `IGo225tfF2I&t=466s` |
+| **Write arbitration** | **Optimistic concurrency**, not locking: each write carries a `content_sha256` precondition and fails rather than clobbering | S7 `n6`, visible in the running console |
+| **Attribution** | Every memory links to the session that produced it; full version history with rollback and diff | S7 `n7` |
+| **Portability** | A standalone CRUD API with export and redaction, decoupled from the agent runtime | S7 `n8` |
+
+**The generalisable rule: the moment a second writer exists, memory needs the machinery of a
+versioned multi-writer store** - preconditions, attribution, history. A single-loop design needs none
+of it, which is exactly why single-loop designs look simpler and stop scaling at the second agent.
+
+#### Agents write instructions to their successors, not just facts
+
+The most interesting thing in either source, and the speaker passes over it. In S7's demo,
+`sre-agent-a07` ends a triage note with "**Next agent: skip dep checks, go straight to config diff**",
+and one minute later `sre-agent-a16` writes "Confirmed... **per a07's lead, skipped dep checks**"
+[S7 `n20`, `IGo225tfF2I&t=1004s`, the running store in `frame_1030`].
+
+> **A memory store carrying imperatives is a coordination channel, not a knowledge base.** That is a
+> different object with different failure modes: a wrong *fact* degrades one answer, a wrong
+> *instruction* redirects every agent that reads it. Nothing in either source addresses what happens
+> when a bad instruction lands there - see the security open question below, which this finding
+> makes considerably less theoretical.
 
 ### Revision over expiry
 
@@ -196,8 +271,28 @@ So the honest position is **not** "one says memory helps, the other says it hurt
 > *agent* is measured by neither**, and S6's numbers - vendor-run, methodologically undisclosed, on a
 > different system class - cannot be borrowed to answer it.
 
-**This is the highest-value thing an agent-platform memory source could settle**, which is another
-reason the second source below matters.
+#### S7 was the source that could have settled it, and does not
+
+S7 is the first source in this brain on the **right side of both axes**: a maintained, out-of-band
+curated memory, on a multi-agent platform, on long-horizon work. It answers the design question
+convincingly and supplies **no measurement whatsoever**.
+
+| | What would close the gap | What S7 supplies |
+|---|---|---|
+| System class | An agent loop on long-horizon tasks | **Yes** - agent platform, multi-agent (S7 `n5`, `n15`) |
+| Memory design | Maintained, not append-only | **Yes** - out-of-band curator (S7 `n11`, `n12`, `n14`) |
+| Measurement | A disclosed method on a stated eval set | **No** - three customer testimonials on a slide (S7 `n17`, `n18`) |
+
+> **The gap stays open, and that is the finding.** It would be easy to let "97% fewer first-pass
+> errors" (Rakuten) or "~6x completion rate" (Harvey) stand in for evidence. They cannot: a figure
+> with no baseline, no n and no eval set cannot refute a 10-model preprint. **And note the direction
+> of the asymmetry - S7's numbers are *softer* than S6's**, which at least came from the publisher's
+> own chart specs. **The field's two most visible memory systems are both shipped on design
+> conviction, and neither has published the experiment.**
+
+**This remains the highest-value open question on this topic.** Two independent vendors converging on
+an architecture is genuine evidence that the *design* is the natural answer; it is not evidence that
+the design works, and it would look identical if it did not.
 
 ## Key claims
 
@@ -213,6 +308,12 @@ reason the second source below matters.
 | Memory synthesis is expensive enough to gate rollout: **cost, not answer quality**, was the stated constraint on serving it universally (a claimed ~5x compute reduction unlocked it). | S6 §A more scalable foundation for the future | needs-check (single-leg, vendor self-report, no method) |
 | **Staleness was the worst of the three failures by far** - "staying correct over time" starts at **9.4%** against 41.5% and 31.4%, and gains the most (+65.7 pts). The quantitative backing for the write-once diagnosis. | S6 `n13` (recovered chart specs) | needs-check (vendor self-report, no method published) |
 | **Introducing memory synthesis beat refining it**, on every objective (2024 -> 2025 gains exceed 2025 -> 2026). **And the ceiling is low: 71-83% in 2026, so memory still fails ~1 task in 5** on the vendor's own measure. | S6 `n14` (deltas computed from the same specs) | needs-check (arithmetic on a self-report; the article states neither) |
+| **Two independent vendors converged on the same architecture and the same name** - a background batch process that curates what sessions wrote. Different orgs, different system classes, different commercial interests. | **S6 + S7** (`n3`, `n11`) | **corroborated (2 independent sources, design only)** |
+| **Decouple curation from the work loop because of objective conflict, not throughput** - one loop asked to optimise two things trades them off silently and untunably. | S7 (`n12`, `IGo225tfF2I&t=764s`) | emerging |
+| **Model agent memory as a file system, not a memory API** - the model is already strong at `bash`/`grep`; this is the same "get out of the model's way" bet that produced skills. | S7 (`n2`, `n3`, slide "Built to maximize intelligence") | emerging |
+| **The moment a second writer exists, memory needs a versioned multi-writer store**: scoped read-only vs read-write attachment, optimistic concurrency via a `content_sha256` precondition, and per-session attribution. | S7 (`n5`-`n7`, corroborated by the running console) | emerging |
+| **Agents write instructions to their successors, not just facts** - making a shared store a coordination channel, where a wrong entry redirects every reader rather than degrading one answer. | S7 (`n20`, the demo store) | emerging |
+| **Curation is test-time compute with an asymmetric payer**: cost borne once by a process that completes no task, benefit paid to every downstream agent. | S7 (`n13`) | needs-check (single-leg) |
 
 ## Key visuals
 
@@ -229,6 +330,20 @@ reason the second source below matters.
 > Memory as governable surface. Also the evidence that the older saved-memories store still ships as
 > its own toggle, despite the article's replacement framing. S6 §How memory has evolved.
 
+![A unified memory system: agent sessions and a shared store on the left, dreaming on the right](../../sources/260731_claude-memory-dreaming/visuals/frame_925.jpg)
+> **The two-clock architecture in one picture, and the best single visual on this topic.** Agent
+> sessions read and write a shared `team-memory` store in real time (left); session transcripts feed a
+> periodic batch **Dreaming** pass that verifies, organises and enriches it (right). The footers name
+> the distinction the whole topic turns on - "real-time updates as agents work" against "periodic
+> batch updates between sessions". S7 `n14`, `IGo225tfF2I&t=921s`.
+
+![A live memory file showing version history, session attribution and a content-hash write precondition](../../sources/260731_claude-memory-dreaming/visuals/frame_1030.jpg)
+> **The running artifact, not a slide - which is why it is worth the space.** Three metadata rows do
+> the work: `version` (`v1..v6 head`), `written by` (a session ID), and `precondition
+> content_sha256` - optimistic concurrency made concrete. In the body, `sre-agent-a07` ends its note
+> "Next agent: skip dep checks, go straight to config diff" and `sre-agent-a16` acts on it a minute
+> later: agents leaving **instructions**, not just facts. S7 `n6`, `n7`, `n20`.
+
 ## Open questions / conflicts
 
 - ~~**This topic has no measurements at all.**~~ **Closed 2026-07-31** by recovering the chart specs
@@ -237,26 +352,46 @@ reason the second source below matters.
   meaning is unknown. **Highest-value deep-research target on this topic.**
 - **Claim 24 is not actually contradicted** - see the table above. The two results measure different
   memory designs on different system classes. **What no source here measures is whether a *maintained*
-  memory helps an *agent*,** which is the question this brain actually needs answered.
+  memory helps an *agent*.** S7 sits on exactly that side of the line and **still does not close it**,
+  supplying design conviction and customer testimonials instead of a method. **Still the highest-value
+  open question on this topic**, and now demonstrably not answerable by reading more vendor material.
+- **What does "verified" mean?** S7 says dreaming's output is "a verified, better organized snapshot"
+  that agents "can choose to adopt", and never says verified by what, against what, or what happens on
+  failure [S7 `d4`]. **For a system whose entire premise is that unsupervised memory writes drift, this
+  is the load-bearing step and the only one with nothing behind it** - no mechanism, no slide, no demo.
+- **Write conflicts are solved; semantic conflicts are not.** S7's `content_sha256` preconditions stop
+  two agents clobbering the same *file* (`n6`). **Nothing addresses two agents learning contradictory
+  *things***, or which store wins when read-only org memory and a read-write team store disagree
+  [S7 `d5`]. The multi-agent arbitration question below is therefore only **half** closed, and the
+  mechanical half is easily mistaken for the whole.
 - **Does a user correction survive the next synthesis pass?** `n6` establishes the affordance;
   nothing establishes whether it is a durable override or another input. This is the difference
   between control and its appearance.
 - **What is the write-once store still for?** Both `Reference chat history` and `Reference saved
   memories` still ship as separate toggles (`n10`), and the source never says which wins on
   disagreement, or whether saved memories feed dreaming or run parallel to it.
-- **Consumer assistant, not agent platform.** One user, one assistant. Nothing here addresses memory
-  **shared across agents**, memory as a tool-accessible file system, or who arbitrates when two agents
-  learn contradictory things. The in-flight `sources/260731_agent-memory-and-dreaming/` capture
-  covers exactly that case.
-- **Memory is an unexamined attack surface.** A background process that ingests conversation content
-  and writes durable, automatically-applied instructions about a user is a **persistent
+- ~~**Consumer assistant, not agent platform.**~~ **Closed 2026-07-31 by S7.** Memory shared across
+  agents (`n5`), memory as a tool-accessible file system (`n2`, `n3`) and multi-agent write
+  arbitration (`n6`) are all now covered. **One part remains open** - who arbitrates *semantic*
+  contradictions, as distinct from concurrent writes (see above).
+- **Memory is an unexamined attack surface, and S7 made it concrete.** A background process that
+  ingests session content and writes durable, automatically-applied instructions is a **persistent
   prompt-injection sink** - inject once, and the instruction is re-applied in every future session
-  with no further access needed. No source in this brain touches this. See
+  with no further access needed. **S7's demo shows the propagation mechanism in a shared store**:
+  agents write imperatives to their successors ("Next agent: skip dep checks") and successors follow
+  them (`n20`), so a single poisoned entry redirects every agent that attaches the store. S7 supplies
+  attribution and version history as forensics (`n7`) but **no admission control** - nothing validates
+  a memory before the next agent acts on it. **No source in this brain addresses the defence.** See
   [`agent-security.md`](agent-security.md).
-- **The sleep analogy is unexamined.** "Dreaming" invokes memory consolidation, and cognitive science
-  has an established literature on offline replay and schema formation that would predict which parts
-  of this design generalise. S6 cites none of it; the cross-domain hop is unmade and is a good deep
-  research target (`AGENTS.md`: "take the cross-domain hop").
+- **The sleep analogy is unexamined, and now by two vendors independently.** "Dreaming" invokes memory
+  consolidation, and cognitive science has an established literature on offline replay and schema
+  formation that would predict which parts of this design generalise. **Neither S6 nor S7 cites any of
+  it** - which makes the shared name either convergent evolution or shared cultural borrowing, and the
+  brain cannot currently tell which. The cross-domain hop is unmade and is the best deep-research
+  target on this topic after the measurement gap (`AGENTS.md`: "take the cross-domain hop").
+- **METR's task-horizon claim is load-bearing and unverified.** S7 rests its motivation on a 2025 METR
+  study that agent task length doubles every ~7 months [`n23`, single-leg]. It is external, public and
+  checkable - the cheapest external corroboration available to this topic.
 
 ## Sources feeding this topic
 
@@ -266,3 +401,17 @@ reason the second source below matters.
   shipped. Its eval numbers were recovered from the page's own Vega-Lite chart specs, so **extraction
   is exact and methodology is undisclosed**: treat every performance figure as the vendor's
   directional self-report, never as a benchmark result.
+- **S7** - [Memory and dreaming for self learning agents](../../sources/260731_claude-memory-dreaming/LEARNING.md)
+  (Anthropic, 2026-05-21). **T2 vendor conference talk about its own agent platform.** The
+  **independent** counterpart to S6: different organisation, different commercial interest, agent
+  platform rather than chat assistant. Mechanism claims gate on slides plus a **live product demo**,
+  which is the stronger evidence - a running console showing write preconditions, version history and
+  one agent consuming another's note. **Contributes no measurement**: its only outcome claims are
+  customer testimonials with no baseline or method, softer than S6's recovered figures. Read it for
+  the architecture, never for the numbers.
+
+> **What the pair does and does not establish.** Two vendors, independently, shipped the same
+> architecture under the same name. That is strong evidence this design is the natural answer to
+> maintaining memory across sessions, and it is why this topic is `established`. **It is not evidence
+> that the architecture works** - neither has published an experiment, and convergence would look
+> identical if both were wrong.
