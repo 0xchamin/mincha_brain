@@ -31,7 +31,7 @@ OUT = ROOT / "BUILD.md"
 F = "``````"
 
 LANG = {".md": "markdown", ".py": "python", ".sh": "bash", ".ps1": "powershell",
-        ".yml": "yaml", ".txt": "text"}
+        ".yml": "yaml", ".txt": "text", ".css": "css", ".js": "javascript"}
 
 
 def lang_for(path: str) -> str:
@@ -49,7 +49,7 @@ VERBATIM: list[tuple[str, list[str]]] = [
         "personas/curator.md", "personas/fact-checker.md", "personas/mentor.md",
         "personas/synthesizer.md",
     ]),
-    ("The two frozen scripts", ["validate.py", "tools/ingest.py"]),
+    ("The three frozen scripts", ["validate.py", "tools/ingest.py", "tools/build_site.py"]),
     ("Source template", [
         "sources/_TEMPLATE/SOURCE.md", "sources/_TEMPLATE/nodes.md",
         "sources/_TEMPLATE/LEARNING.md", "sources/_TEMPLATE/MAP.md",
@@ -70,9 +70,14 @@ VERBATIM: list[tuple[str, list[str]]] = [
         # This generator ships with the bundle because the workflow above invokes it
         # (`make_build_doc.py --check`). Omit it and a kit built from BUILD.md alone gets a red
         # CI run on its first push - the bundle would break the very build it describes. It is
-        # not one of the "two frozen scripts" (ADR-0005) - it is the bundler, so it lives here
+        # not one of the frozen scripts (ADR-0005) - it is the bundler, so it lives here
         # in plumbing beside the workflow that calls it.
         "tools/make_build_doc.py",
+        # The reader's assets. tools/build_site.py is a frozen script above, but it is inert
+        # without these three - AGENTS.md promises a mobile reader, so the bundle must ship one
+        # that actually renders.
+        "tools/site_assets/style.css", "tools/site_assets/app.js", "tools/site_assets/sw.js",
+        ".github/workflows/pages.yml",
         ".claude/commands/research.md", "brain/index.md", "LICENSE",
     ]),
 ]
@@ -279,7 +284,7 @@ durable parts into living topic notes. Every claim carries a citation. Ingest th
 the thirtieth starts richer than the first.
 
 **There is no application.** The agent is the runtime; the kit is a contract written in Markdown
-plus two small frozen scripts. That is why this file can rebuild it.
+plus three small frozen scripts. That is why this file can rebuild it.
 
 ---
 

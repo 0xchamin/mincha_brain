@@ -1,6 +1,6 @@
 # BUILD.md - build Brain from scratch, from this file alone
 
-> **Generated 2026-07-27 from commit `2eeb096`** by `tools/make_build_doc.py`. Do not hand-edit: edit the
+> **Generated 2026-07-31 from commit `5272935`** by `tools/make_build_doc.py`. Do not hand-edit: edit the
 > source files in the reference clone and regenerate, or your copy silently diverges from the kit
 > it claims to build.
 
@@ -11,7 +11,7 @@ durable parts into living topic notes. Every claim carries a citation. Ingest th
 the thirtieth starts richer than the first.
 
 **There is no application.** The agent is the runtime; the kit is a contract written in Markdown
-plus two small frozen scripts. That is why this file can rebuild it.
+plus three small frozen scripts. That is why this file can rebuild it.
 
 ---
 
@@ -141,7 +141,7 @@ durable, cited, compounding knowledge.
 | Env | `.venv` in this folder | `yt-dlp`, `faster-whisper`, `imagehash`, `pillow` (see `requirements.txt`); `ffmpeg` is a system binary (macOS: `brew install ffmpeg`; Windows: `winget install Gyan.FFmpeg`); `git` for cloning code repos; **`gh` (GitHub CLI) recommended** for code sources (license, commit SHA, orient-before-clone) - optional |
 | Seed topics | agents, mcp, skills, rag, agent-security, inferencing | live under `brain/topics/`; **seeds, not a whitelist - the set is open (see "Scope: topics are open")** |
 | Repo clones | `sources/<id>/repo/` (git-ignored) | clone-per-source, snapshot pinned by commit SHA in `SOURCE.md` |
-| Kit scripts | `tools/ingest.py` (mechanical toolbox), `validate.py` (contract type checker) | the only two frozen scripts; everything else is assembled per source |
+| Kit scripts | `tools/ingest.py` (mechanical toolbox), `validate.py` (contract type checker), `tools/build_site.py` (the mobile reader) | the only three frozen scripts; everything else is assembled per source |
 
 ## Scope: topics are open
 
@@ -283,6 +283,38 @@ numbers with Status + Date; resolving relative links; balanced mermaid fences; n
 > It also cannot catch a `log.md` entry misordered *within a single day* - the ordering that has
 > actually gone wrong in practice. A green validator means the shape is right, not that the thinking
 > is.
+
+## Reading the brain on a phone (`tools/build_site.py`)
+
+> **Why this exists.** A brain you only read at a desk compounds at desk speed. The notes were
+> already the right shape for a reader - every `LEARNING.md` opens with a **TL;DR** and **Key
+> claims**, and `brain/topics/*.md` plus `claims.md` *are* the meta-lessons - but GitHub's markdown
+> view on a phone is a wall of tables and raw citations. This renders what already exists.
+
+**`python3 tools/build_site.py` -> `site/`**, a static, offline-capable reader.
+`.github/workflows/pages.yml` runs it on every push to `main` and publishes to GitHub Pages, so
+**every ingest reaches the phone with no extra step**. Add it to the home screen and it behaves
+like an app.
+
+| It does | Notes |
+|---|---|
+| Landing page = **the lessons** | each source's TL;DR + Key claims, each topic's status and scope |
+| Full notes behind them | topic notes, `LEARNING.md`, ADRs, dreams, reports, glossary, log |
+| `&t=NNNs` citations become **tappable YouTube deep links** | the citation you cannot retype on a phone |
+| `claims.md`'s 5-column table becomes filterable **cards** | a wide table is unreadable at 390px |
+| Offline via service worker | text precached; images and mermaid cached on first view |
+| Collapses each note's agent-directed preamble | persona lines are instructions to *you*, not reading material - collapsed, never dropped, because some hide real trust caveats |
+
+> **It is a renderer, and that is the whole discipline.** Every word it emits comes from a file
+> already in this repo. It **adds no claims, drops no citations, and resolves no judgement** - if a
+> claim reads wrong on the phone, the note is wrong, and you fix the note. `site/` is git-ignored
+> and disposable: `rm -rf site && python3 tools/build_site.py` reproduces it exactly. **Never edit
+> `site/`, and never let it become a place a fact lives.** Same line the other two scripts draw:
+> **form is code, judgement is prose.**
+
+> **If a note renders badly, suspect the note.** A source with no `## TL;DR`, a topic note with no
+> `**Status:**` line, or a missing `INDEX.md` row shows up as a hole in the reader. That is the
+> renderer working as an *additional* contract check, not a bug in it - fix the note, then rebuild.
 
 ## The visual leg (on by default, skippable)
 
@@ -436,7 +468,7 @@ rather than arbitrary.
 | Repo has no/shallow/stale docs | Code is the primary leg; nodes are `single-leg`; a docs↔code gap is a `divergence` finding, not a drop. |
 | License missing/unclear (code) | Record `License: unknown` in `SOURCE.md`; keep the clone git-ignored; do not redistribute source. |
 | Symlink not permitted (Windows, no Dev Mode) | `link-agents.ps1` writes a marked one-line pointer instead; the harness still reads `AGENTS.md`. |
-| Ingest interrupted | Leave `SOURCE.md` Status at the last safe stage; resume from there next session. |
+| Ingest interrupted | Leave `SOURCE.md` Status at the last safe stage; resume from there next session. **If it stopped at `capture` (nothing gated, `SOURCE.md` still template) - and `ls -la` shows no recent writes, because an unfilled template does not mean no live process - move the folder to git-ignored [`staging/`](staging/README.md) instead of leaving it in `sources/`** - `sources/<id>/` is `validate.py`'s namespace and every folder there is checked as a *finished* source, so a bare capture can only be silenced by faking an INDEX row or deleting the download. **A capture becomes a source when it is distilled, not when it is downloaded.** Move it back when you intend to finish it. |
 | Deep research finds nothing credible | Record `no-evidence` in the context note - that the claim rests on one practitioner's experience **is** the finding. Do not pad with weak T4/T5 hits. |
 | Deep research finds only non-independent sources | Record them, cite them, but **do not raise confidence** (independence rule). Say plainly that corroboration is still missing. |
 | Sources conflict | Keep **both**, cite both with tiers, flag the conflict in the context note and in the topic note's "Open questions / conflicts". Do not silently pick a winner. |
@@ -473,6 +505,42 @@ rather than arbitrary.
    `grep` topic notes + sources, then synthesize a cited report into `reports/` (adopt
    **synthesizer**).
 
+## You are probably not the only writer (re-read before you compound)
+
+> **Why this exists.** On 2026-07-31 two agent sessions ingested the memory/dreaming pair
+> concurrently. One created `brain/topics/memory.md` and ADR-0007 while the other was mid-capture on
+> the source that would merge into it, renamed that source's folder, and briefly moved it to
+> `staging/`. Nothing was lost, but only because both noticed. **This is claim 61 happening to this
+> repo:** the moment memory has a second writer, it needs versioning, attribution and arbitration.
+
+**Git already supplies the machinery** - commits are attribution, history is versioning, a merge
+conflict is the arbitration. There is nothing to build. What is needed is the convention, because
+the failure is silent: an agent holding a copy of `claims.md` read forty minutes ago will happily
+number its claims from a ceiling that has since moved.
+
+**Source-local files are always safe.** `SOURCE.md`, `nodes.md`, `LEARNING.md`, `MAP.md`,
+`visuals/`, `context/` belong to one source and one session. Write them whenever.
+
+**Before touching anything shared, re-read it from disk.** That means `INDEX.md`,
+`brain/claims.md`, `brain/glossary.md`, `brain/log.md`, `brain/topics/*.md` and `brain/decisions/`.
+Specifically:
+
+- **Take every number from disk, never from context** - the next claim number, the next `S<n>`
+  source label, the next ADR number. These are the values most likely to be stale and the ones that
+  silently collide.
+- **`git log --oneline -10` and `git status`** before the compound step. Commits that landed since
+  you started are the fastest signal that a topic note was rewritten under you.
+- **A topic note that already exists is a merge target, not a naming collision.** Merge into it and
+  update its Status and source count; **never create a second note for the same topic.**
+- **If a source folder vanishes mid-ingest, look in `staging/` before re-capturing.** An unfilled
+  `SOURCE.md` reads as an abandoned capture to another agent, and moving it there is the correct
+  behaviour under the degrade table - it is not a lost folder.
+- **A superseded duplicate capture goes to git-ignored `staging/`, never `rm -rf`.** Deleting is the
+  human's call.
+
+> **Do not build a locking scheme for this.** Scaffolding encodes an assumption that expires
+> (claim 31), and this one has fired once. Re-reading before writing is the whole mitigation.
+
 ## Leverage your harness's built-in commands (then capture into the kit)
 
 You (the agent) are the engine, but your **host harness** (Copilot CLI, Claude Code, Codex,
@@ -506,6 +574,67 @@ nodes, promote them in the same pass, then show a summary + `git diff` as the un
 - one annotated row -> the **root `INDEX.md`**; one dated line -> `brain/log.md`
 - durable structural decisions (topic taxonomy, a topic split) -> record ADR-style in
   `brain/decisions/` (copy `brain/decisions/0000-template.md`) - the **architect** persona owns these.
+
+## Dreaming on request (the reconciliation pass)
+
+> **Why this exists, and it is the kit taking its own medicine.** Ingest writes to `brain/` **while
+> doing something else** - finishing a source. That write is locally optimal and globally
+> unexamined: it merges into the topic note in front of it and never asks whether a claim it just
+> added contradicts one promoted three sources ago. This is exactly the diagnosis
+> [`brain/topics/memory.md`](brain/topics/memory.md) records from S6 and S7 - **memory updated
+> in a locally optimal way that is not globally optimal, producing duplication and fragmentation**
+> (claim 59, `n10`) - pointed at this repo. `validate.py` does not catch it: it checks **form**, and
+> this is **drift**. A green validator means the shape is right, not that the thinking is.
+
+**Dreaming is the global reconciliation pass over `brain/` itself.** Not an ingest, not a research
+pass, not lint. It reads across every topic note, `claims.md`, `glossary.md` and `INDEX.md` and asks
+one question: **is what this brain believes still coherent with itself?**
+
+**Trigger (never automatic).** The user says **"dream"**, or invokes the harness command. Adopt
+**architect + fact-checker** - the architect owns merge/split/status calls, the fact-checker owns
+claim verdicts.
+
+> **It must never run as part of an ingest, and this is a design rule, not a preference.** An agent
+> finishing a source is holding two objectives - land this source, and keep the brain coherent - and
+> it will trade the second against the first silently, because the first is the one with a visible
+> finish line (claim 59). Curation gets its own invocation and its own objective, or it gets a token
+> effort. **Same reason the generator and the evaluator are separate processes (claim 33).**
+
+### What a pass looks for
+
+| Class | The question | Typical finding |
+|---|---|---|
+| **Contradiction** | Do two claims disagree? Did a later source overturn an earlier one? | Keep both, cite both, flag the conflict - never silently pick a winner |
+| **Duplication / fragmentation** | Is one idea stated in two topic notes, or as two claims? | Merge and de-duplicate; the contract already says *don't stack* |
+| **Stale confidence** | Is a claim still `emerging` after a second source corroborated it? Is a `needs-check` now resolved? | Promote or demote the confidence, citing what changed |
+| **Stale status** | Is a topic `emerging` on two corroborating sources, or `seed` with one? | Advance it, and record an ADR if the call is a judgement |
+| **Orphans** | A claim no topic note references; a topic claim with no `claims.md` row; a source feeding nothing | Wire it up or drop it - an unreferenced claim is invisible |
+| **Closed open questions** | Did a later source answer an "Open questions" bullet nobody struck through? | Strike it through with the date and the closing source |
+| **Superseded framing** | Was a synthesis section written when the brain knew less? | Rewrite it. **This has already happened once** - `memory.md` kept "this topic has zero measurements" after the charts were recovered, and needed a fix commit |
+| **Drift from source** | Does the citation still support the claim as written? | Correct the claim, not the citation |
+
+### How a pass runs
+
+1. **Read the whole brain first.** `INDEX.md`, every `brain/topics/*.md`, `claims.md`, `glossary.md`,
+   `brain/decisions/`, and the tail of `log.md`. **Do not sample.** The entire value of being out of
+   band is that you can afford to read everything, which is the one thing an ingest cannot.
+2. **Collect findings before changing anything**, each naming the files and claim IDs involved.
+3. **Write the pass note** to `brain/dreams/<NNNN>-<YYMMDD>.md`, numbered in order. One note per
+   pass, permanent. **Ephemeral output not captured into a kit file did not happen.**
+4. **Apply the changes** in the same pass - this is a reconciliation, not a report - then run
+   `python3 validate.py` and show the `git diff`.
+5. **Propose, do not impose.** Anything that changes what the brain *believes* (dropping a claim,
+   splitting a topic, reversing a confidence) goes in the note as a **proposal with its reasoning**
+   and is applied only if it is a clear defect. **When it is a judgement call, ask.** The human
+   adopts; `git revert` is the undo.
+
+> **Findings are the point, including "nothing found".** A pass that surfaces no drift is a real
+> result and gets its note - it is evidence the compounding is holding. **Do not manufacture
+> findings to justify the pass.**
+
+> **What dreaming must not do:** re-litigate the gate. Whether a node was corroborated is settled in
+> the source's `nodes.md` by the fact-checker at ingest time. Dreaming reconciles what was
+> **promoted**; it does not re-open source-local judgements, and it never edits a `nodes.md`.
 
 ## Global rules
 
@@ -932,7 +1061,7 @@ topic from many sources. This is the "ask" and "report" persona.
   to the exact moment.
 ``````
 
-### 5.3 The two frozen scripts
+### 5.3 The three frozen scripts
 
 #### `validate.py`
 
@@ -1780,6 +1909,952 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
+``````
+
+#### `tools/build_site.py`
+
+``````python
+#!/usr/bin/env python3
+"""Render the brain into a static, mobile-first reading site (`site/`).
+
+A *renderer*, not a source of truth. Every word it emits comes from a file already
+in this repo - `INDEX.md`, `brain/`, `sources/*/LEARNING.md`, `reports/`. It adds
+no claims, drops no citations, and is safe to delete: `rm -rf site && python3
+tools/build_site.py` reproduces it exactly.
+
+    python3 tools/build_site.py            # -> site/
+    python3 tools/build_site.py --serve    # build, then serve on :8000
+
+Needs `markdown` + `pillow` (both in requirements.txt). Mermaid is vendored on
+first run into tools/site_assets/vendor/ (git-ignored); without network the
+diagrams degrade to their source text and everything else still builds.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import posixpath
+import re
+import shutil
+import sys
+import urllib.request
+from dataclasses import dataclass, field
+from pathlib import Path
+
+REPO = Path(__file__).resolve().parent.parent
+ASSETS = REPO / "tools" / "site_assets"
+VENDOR = ASSETS / "vendor"
+OUT = REPO / "site"
+
+GITHUB_BLOB = "https://github.com/0xchamin/mincha_brain/blob/main/"
+MERMAID_URL = "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"
+
+IMAGE_EXT = {".jpg", ".jpeg", ".png", ".gif", ".svg", ".webp"}
+
+# ---------------------------------------------------------------- markdown ---
+
+try:
+    import markdown as _markdown
+except ImportError:  # pragma: no cover - guidance beats a traceback
+    sys.exit("missing dependency: pip install markdown  (see requirements.txt)")
+
+
+def md_to_html(text: str) -> str:
+    return _markdown.markdown(
+        text,
+        extensions=["tables", "fenced_code", "attr_list", "sane_lists", "md_in_html"],
+        output_format="html5",
+    )
+
+
+# ------------------------------------------------------------ md utilities ---
+
+
+def read(path: Path) -> str:
+    return path.read_text(encoding="utf-8")
+
+
+def sections(md: str, level: int = 2) -> dict[str, str]:
+    """Split markdown on `## ` headings -> {heading_text: body}. Preserves order."""
+    marker = "#" * level + " "
+    out: dict[str, str] = {}
+    current, buf = None, []
+    in_fence = False
+    for line in md.splitlines():
+        if line.startswith("```"):
+            in_fence = not in_fence
+        if not in_fence and line.startswith(marker):
+            if current is not None:
+                out[current] = "\n".join(buf).strip()
+            current, buf = line[len(marker):].strip(), []
+        elif current is not None:
+            buf.append(line)
+    if current is not None:
+        out[current] = "\n".join(buf).strip()
+    return out
+
+
+def section(md: str, *names: str) -> str:
+    """First matching `## ` section body, matched case-insensitively by prefix."""
+    secs = sections(md)
+    for want in names:
+        for head, body in secs.items():
+            if head.lower().startswith(want.lower()):
+                return body
+    return ""
+
+
+def split_preamble(md: str) -> tuple[str, str]:
+    """Everything between the H1 and the first `## ` heading, and the rest.
+
+    That preamble is written *to the agent* - persona lines, "merge and de-duplicate
+    as they arrive", file conventions. On a phone it buries the TL;DR under kit
+    boilerplate. It is not all noise though: some notes hide real trust caveats
+    there, so it gets collapsed rather than dropped.
+    """
+    lines = md.splitlines()
+    start, in_fence = 0, False
+    for i, line in enumerate(lines):
+        if line.startswith("```"):
+            in_fence = not in_fence
+        if line.startswith("# ") and not in_fence:
+            start = i + 1
+            break
+    for j in range(start, len(lines)):
+        if lines[j].startswith("```"):
+            in_fence = not in_fence
+        if lines[j].startswith("## ") and not in_fence:
+            return "\n".join(lines[start:j]).strip(), "\n".join(lines[j:])
+    return "", md
+
+
+def title_of(md: str) -> str:
+    for line in md.splitlines():
+        if line.startswith("# "):
+            return line[2:].strip()
+    return ""
+
+
+def link_target(cell: str) -> str:
+    """`[`brain/topics/agents.md`](brain/topics/agents.md)` -> `brain/topics/agents.md`."""
+    m = re.search(r"\]\(([^)]+)\)", cell)
+    return m.group(1).strip().strip("`") if m else ""
+
+
+def facts_table(md: str) -> dict[str, str]:
+    """Parse a `| Field | Value |` two-column table into a dict."""
+    out: dict[str, str] = {}
+    for line in md.splitlines():
+        if not line.startswith("|"):
+            continue
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        if len(cells) != 2 or set(cells[0]) <= set("-: "):
+            continue
+        if cells[0].lower() in ("field", "term"):
+            continue
+        out[cells[0]] = cells[1]
+    return out
+
+
+def table_rows(md: str, ncols: int) -> list[list[str]]:
+    """Every `|`-delimited body row with exactly `ncols` cells (header + rule dropped)."""
+    rows: list[list[str]] = []
+    seen_rule = False
+    for line in md.splitlines():
+        if not line.strip().startswith("|"):
+            continue
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        if len(cells) != ncols:
+            continue
+        if all(set(c) <= set("-: ") and c for c in cells):
+            seen_rule = True
+            continue
+        if not seen_rule:
+            continue
+        rows.append(cells)
+    return rows
+
+
+def strip_md(text: str) -> str:
+    """Markdown -> rough plain text, for search snippets and meta descriptions."""
+    text = re.sub(r"```.*?```", " ", text, flags=re.S)
+    text = re.sub(r"!\[[^\]]*\]\([^)]*\)", " ", text)
+    text = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", text)
+    text = re.sub(r"[`*_>#|]+", " ", text)
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def first_paragraph(md: str) -> str:
+    for block in re.split(r"\n\s*\n", md.strip()):
+        block = block.strip()
+        if block and not block.startswith((">", "|", "#", "!")):
+            return block
+    return ""
+
+
+# ---------------------------------------------------------------- the model ---
+
+
+@dataclass
+class Page:
+    """One rendered page. `path` is site-relative, e.g. `topics/agents.html`."""
+
+    path: str
+    title: str
+    kind: str
+    body_md: str
+    src_dir: Path
+    subtitle: str = ""
+    meta: list[tuple[str, str]] = field(default_factory=list)
+    video: str = ""
+    search_text: str = ""
+
+
+def youtube_id(url: str) -> str:
+    m = re.search(r"(?:v=|youtu\.be/|embed/)([A-Za-z0-9_-]{11})", url or "")
+    return m.group(1) if m else ""
+
+
+def collect() -> tuple[list[Page], list[dict], list[dict], list[dict]]:
+    pages: list[Page] = []
+    topics: list[dict] = []
+    sources: list[dict] = []
+    claims: list[dict] = []
+
+    # --- topics -------------------------------------------------------------
+    index_md = read(REPO / "INDEX.md")
+    # INDEX Topics table: Topic | Status | What it covers | Sources feeding it | Note
+    topic_rows = {
+        Path(link_target(r[4])).stem: r
+        for r in table_rows(section(index_md, "Topics"), 5)
+        if link_target(r[4])
+    }
+    for path in sorted((REPO / "brain" / "topics").glob("*.md")):
+        md = read(path)
+        slug = path.stem
+        status = ""
+        m = re.search(r"\*\*Status:\*\*\s*(.+)", md)
+        if m:
+            status = m.group(1).strip()
+        row = topic_rows.get(slug)
+        topics.append(
+            {
+                "slug": slug,
+                "title": title_of(md).replace("Topic: ", ""),
+                "status": re.sub(r"\s*\(.*", "", status).strip("* "),
+                "status_full": status,
+                "covers": strip_md(section(md, "What this covers")),
+                "nsources": (row[3] if row else "0"),
+                "url": f"topics/{slug}.html",
+            }
+        )
+        pages.append(
+            Page(
+                path=f"topics/{slug}.html",
+                title=title_of(md) or slug,
+                kind="topic",
+                body_md=md,
+                src_dir=path.parent,
+                subtitle=status,
+            )
+        )
+
+    # --- sources ------------------------------------------------------------
+    index_rows = {
+        link_target(r[5]).split("/")[1]: r
+        for r in table_rows(section(index_md, "Sources"), 6)
+        if link_target(r[5]).startswith("sources/")
+    }
+    for d in sorted((REPO / "sources").iterdir()):
+        learning = d / "LEARNING.md"
+        if d.name.startswith("_") or not learning.is_file():
+            continue
+        md = read(learning)
+        facts = facts_table(read(d / "SOURCE.md")) if (d / "SOURCE.md").is_file() else {}
+        row = index_rows.get(d.name)
+        vid = youtube_id(facts.get("URL", ""))
+        sources.append(
+            {
+                "id": d.name,
+                "title": facts.get("Title") or title_of(md).replace("Learning - ", ""),
+                "type": facts.get("Type", ""),
+                "author": facts.get("Author / channel", ""),
+                "published": facts.get("Published", ""),
+                "topics": [t.strip() for t in facts.get("Topics", "").split(",") if t.strip()],
+                "url": f"sources/{d.name}.html",
+                "external": facts.get("URL", ""),
+                "tldr": section(md, "TL;DR"),
+                "key_claims": section(md, "Key claims"),
+                "when": strip_md(row[4]) if row else "",
+                "summary": strip_md(row[2]) if row else "",
+            }
+        )
+        pages.append(
+            Page(
+                path=f"sources/{d.name}.html",
+                title=facts.get("Title") or title_of(md),
+                kind="source",
+                body_md=md,
+                src_dir=d,
+                subtitle=facts.get("Author / channel", ""),
+                meta=[
+                    (k, facts[k])
+                    for k in ("Type", "Published", "Topics", "Visual leg", "Status")
+                    if facts.get(k)
+                ],
+                video=vid,
+            )
+        )
+
+    # --- claims -------------------------------------------------------------
+    claims_md = read(REPO / "brain" / "claims.md")
+    for r in table_rows(claims_md, 5):
+        if not r[0].strip("* ").isdigit():
+            continue
+        conf = strip_md(r[4]).lower()
+        claims.append(
+            {
+                "n": int(r[0].strip("* ")),
+                "claim": r[1],
+                "topic": strip_md(r[2]),
+                "sources": r[3],
+                "confidence": conf,
+                "tier": (
+                    "corroborated"
+                    if "corroborated" in conf
+                    else "needs-check"
+                    if "needs-check" in conf or "open" in conf
+                    else "emerging"
+                ),
+            }
+        )
+
+    # --- standalone brain pages --------------------------------------------
+    for rel, kind in (
+        ("brain/glossary.md", "glossary"),
+        ("brain/log.md", "log"),
+    ):
+        p = REPO / rel
+        if p.is_file():
+            md = read(p)
+            pages.append(
+                Page(
+                    path=Path(rel).stem + ".html",
+                    title=title_of(md) or p.stem,
+                    kind=kind,
+                    body_md=md,
+                    src_dir=p.parent,
+                )
+            )
+
+    for sub, kind in (("decisions", "decision"), ("dreams", "dream")):
+        for p in sorted((REPO / "brain" / sub).glob("*.md")):
+            if p.stem in ("0000-template", "README"):
+                continue
+            md = read(p)
+            pages.append(
+                Page(
+                    path=f"{sub}/{p.stem}.html",
+                    title=title_of(md) or p.stem,
+                    kind=kind,
+                    body_md=md,
+                    src_dir=p.parent,
+                )
+            )
+
+    for p in sorted((REPO / "reports").glob("*.md")):
+        if p.stem == "README":
+            continue
+        md = read(p)
+        pages.append(
+            Page(
+                path=f"reports/{p.stem}.html",
+                title=title_of(md) or p.stem,
+                kind="report",
+                body_md=md,
+                src_dir=p.parent,
+            )
+        )
+
+    return pages, topics, sources, claims
+
+
+# ------------------------------------------------------------ link rewriting ---
+
+
+def build_routes(pages: list[Page]) -> dict[str, str]:
+    """repo-relative markdown path -> site-relative html path."""
+    routes = {
+        "INDEX.md": "index.html",
+        "brain/index.md": "index.html",
+        "brain/claims.md": "claims.html",
+    }
+    for pg in pages:
+        rel = pg.src_dir.relative_to(REPO).as_posix()
+        if pg.kind == "source":
+            routes[f"{rel}/LEARNING.md"] = pg.path
+            routes[rel] = pg.path
+            routes[f"{rel}/"] = pg.path
+        else:
+            stem = Path(pg.path).stem
+            routes[f"{rel}/{stem}.md"] = pg.path
+    return routes
+
+
+class Rewriter:
+    """Retargets in-repo links: kit pages -> site pages, images -> copied media,
+    everything else (nodes.md, SOURCE.md, context/) -> the GitHub blob."""
+
+    def __init__(self, routes: dict[str, str]) -> None:
+        self.routes = routes
+        self.media: dict[Path, str] = {}
+
+    def _media(self, abs_path: Path) -> str:
+        if abs_path not in self.media:
+            rel = abs_path.relative_to(REPO)
+            dest = "media/" + rel.as_posix().replace("sources/", "").replace("/visuals", "")
+            self.media[abs_path] = dest
+        return self.media[abs_path]
+
+    def target(self, href: str, src_dir: Path, out_dir: str) -> tuple[str, bool]:
+        """-> (new href, is_external)."""
+        if re.match(r"^(https?:|mailto:|#|data:)", href):
+            return href, href.startswith("http")
+        path, _, frag = href.partition("#")
+        if not path:
+            return href, False
+        try:
+            abs_path = (src_dir / path).resolve()
+            rel = abs_path.relative_to(REPO).as_posix()
+        except (ValueError, OSError):
+            return href, True
+
+        if abs_path.suffix.lower() in IMAGE_EXT and abs_path.is_file():
+            dest = self._media(abs_path)
+        elif rel in self.routes:
+            dest = self.routes[rel]
+        elif rel.rstrip("/") in self.routes:
+            dest = self.routes[rel.rstrip("/")]
+        else:
+            return GITHUB_BLOB + rel + (("#" + frag) if frag else ""), True
+
+        out = posixpath.relpath(dest, out_dir or ".")
+        return out + (("#" + frag) if frag else ""), False
+
+    def apply(self, html: str, src_dir: Path, out_path: str) -> str:
+        out_dir = posixpath.dirname(out_path)
+
+        def sub(m: re.Match[str]) -> str:
+            attr, raw = m.group(1), m.group(2)
+            href, external = self.target(raw.replace("&amp;", "&"), src_dir, out_dir)
+            href = href.replace("&", "&amp;")
+            if attr == "href" and external and href.startswith("http"):
+                return f'href="{href}" target="_blank" rel="noopener"'
+            if attr == "src":
+                return f'src="{href}" loading="lazy" decoding="async"'
+            return f'{attr}="{href}"'
+
+        return re.sub(r'(href|src)="([^"]*)"', sub, html)
+
+
+def copy_media(rewriter: Rewriter) -> int:
+    for abs_path, dest in rewriter.media.items():
+        target = OUT / dest
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(abs_path, target)
+    return len(rewriter.media)
+
+
+# ------------------------------------------------ post-render html polishing ---
+
+MERMAID_BLOCK = re.compile(
+    r'<pre><code class="language-mermaid">(.*?)</code></pre>', re.S
+)
+
+
+def mermaidify(html: str) -> tuple[str, bool]:
+    found = bool(MERMAID_BLOCK.search(html))
+    html = MERMAID_BLOCK.sub(
+        lambda m: f'<pre class="mermaid">{m.group(1)}</pre>', html
+    )
+    return html, found
+
+
+TS = re.compile(r"<code>&amp;t=(\d+)s?</code>")
+TS_PAIR = re.compile(r"<code>([A-Za-z0-9_-]{11})</code>\s*<code>&amp;t=(\d+)s?</code>")
+
+
+def linkify_timestamps(html: str, default_video: str) -> str:
+    """`&t=616s` citations become tappable YouTube deep links - the single biggest
+    quality-of-life win on a phone, where you cannot paste a timestamp by hand."""
+    html = TS_PAIR.sub(
+        lambda m: f'<a class="ts" href="https://youtu.be/{m.group(1)}?t={m.group(2)}"'
+        f' target="_blank" rel="noopener"><code>&amp;t={m.group(2)}s</code></a>',
+        html,
+    )
+    if default_video:
+        html = TS.sub(
+            lambda m: f'<a class="ts" href="https://youtu.be/{default_video}?t={m.group(1)}"'
+            f' target="_blank" rel="noopener"><code>&amp;t={m.group(1)}s</code></a>',
+            html,
+        )
+    return html
+
+
+def wrap_tables(html: str) -> str:
+    """Tables must scroll inside their own box, never the page body."""
+    return html.replace("<table>", '<div class="scroll"><table>').replace(
+        "</table>", "</table></div>"
+    )
+
+
+def add_heading_ids(html: str) -> tuple[str, list[tuple[int, str, str]]]:
+    toc: list[tuple[int, str, str]] = []
+    used: set[str] = set()
+
+    def sub(m: re.Match[str]) -> str:
+        lvl, inner = int(m.group(1)), m.group(2)
+        text = strip_md(re.sub(r"<[^>]+>", "", inner))
+        slug = re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")[:60] or "s"
+        n, base = 2, slug
+        while slug in used:
+            slug, n = f"{base}-{n}", n + 1
+        used.add(slug)
+        if 2 <= lvl <= 3:
+            toc.append((lvl, slug, text))
+        return f'<h{lvl} id="{slug}">{inner}<a class="anchor" href="#{slug}">#</a></h{lvl}>'
+
+    html = re.sub(r"<h([1-6])>(.*?)</h\1>", sub, html, flags=re.S)
+    return html, toc
+
+
+def figure_captions(html: str) -> str:
+    """`![alt](visuals/x.jpg)` carries the frame's meaning in its alt text - show it."""
+
+    def sub(m: re.Match[str]) -> str:
+        tag, alt = m.group(0), m.group(1)
+        if not alt.strip():
+            return tag
+        return f'<figure>{tag}<figcaption>{alt}</figcaption></figure>'
+
+    return re.sub(r'<img alt="([^"]*)"[^>]*>', sub, html)
+
+
+# ------------------------------------------------------------------ templates ---
+
+
+def esc(s: str) -> str:
+    return (
+        s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
+    )
+
+
+def shell(
+    *,
+    path: str,
+    title: str,
+    body: str,
+    description: str = "",
+    mermaid: bool = False,
+    active: str = "",
+) -> str:
+    depth = path.count("/")
+    base = "../" * depth or "./"
+    nav = [
+        ("lessons", "index.html", "Lessons", "M4 5h16M4 12h16M4 19h10"),
+        ("topics", "topics.html", "Topics", "M4 6h7v7H4zM13 6h7v4h-7zM13 13h7v5h-7zM4 15h7v3H4z"),
+        ("sources", "sources.html", "Sources", "M5 4h11l3 3v13H5zM8 9h8M8 13h8M8 17h5"),
+        ("claims", "claims.html", "Claims", "M5 12l4 4 10-10"),
+        ("search", "search.html", "Search", "M11 4a7 7 0 100 14 7 7 0 000-14zM20 20l-4-4"),
+    ]
+    tabs = "".join(
+        f'<a class="tab{" on" if key == active else ""}" href="{base}{href}">'
+        f'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="{d}"/></svg>'
+        f"<span>{label}</span></a>"
+        for key, href, label, d in nav
+    )
+    up = f'<a class="up" href="{base}index.html" aria-label="Home">' if depth else "<span class='up'>"
+    up_close = "</a>" if depth else "</span>"
+    return f"""<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="{esc(description[:180])}">
+<meta name="theme-color" content="#0f1115" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#fbfbfa" media="(prefers-color-scheme: light)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Brain">
+<title>{esc(title)}</title>
+<link rel="manifest" href="{base}manifest.webmanifest">
+<link rel="icon" href="{base}assets/icon-192.png">
+<link rel="apple-touch-icon" href="{base}assets/icon-192.png">
+<link rel="stylesheet" href="{base}assets/style.css">
+<script>window.SITE_BASE="{base}";window.HAS_MERMAID={str(mermaid).lower()};
+(function(){{try{{var t=localStorage.getItem("brain-theme");if(t)document.documentElement.dataset.theme=t;}}catch(e){{}}}})();</script>
+</head>
+<body>
+<header class="bar">
+  {up}<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>{up_close}
+  <span class="bar-title">{esc(title)}</span>
+  <button class="icon" id="theme" aria-label="Toggle theme">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14a8 8 0 01-10-10 8 8 0 1010 10z"/></svg>
+  </button>
+</header>
+<div class="progress"><i></i></div>
+<main>{body}</main>
+<nav class="tabs">{tabs}</nav>
+<script src="{base}assets/app.js" defer></script>
+</body>
+</html>
+"""
+
+
+def pill(text: str, kind: str = "") -> str:
+    cls = re.sub(r"[^a-z0-9]+", "-", (kind or text).lower()).strip("-")
+    return f'<span class="pill {cls}">{esc(text)}</span>'
+
+
+# --------------------------------------------------------------- page builders ---
+
+
+def render_page(pg: Page, rw: Rewriter) -> tuple[str, str]:
+    """-> (html document, plain-text search body)."""
+    preamble_md, body_md = split_preamble(pg.body_md)
+    html = md_to_html(body_md)
+    html = rw.apply(html, pg.src_dir, pg.path)
+    html, has_mermaid = mermaidify(html)
+    html = linkify_timestamps(html, pg.video)
+    html = figure_captions(html)
+    html = wrap_tables(html)
+    html, toc = add_heading_ids(html)
+    # The document's own H1 duplicates the top bar; the bar is always visible.
+    html = re.sub(r"<h1[^>]*>.*?</h1>", "", html, count=1, flags=re.S)
+
+    pre_html = ""
+    if strip_md(preamble_md):
+        inner = linkify_timestamps(
+            rw.apply(md_to_html(preamble_md), pg.src_dir, pg.path), pg.video
+        )
+        pre_html = (
+            f'<details class="frontmatter"><summary>About this note</summary>'
+            f"{wrap_tables(inner)}</details>"
+        )
+
+    head = ""
+    if pg.meta:
+        head = '<div class="facts">' + "".join(
+            f"<div><dt>{esc(k)}</dt><dd>{md_to_html(v)[3:-4]}</dd></div>" for k, v in pg.meta
+        ) + "</div>"
+        head = rw.apply(head, pg.src_dir, pg.path)
+
+    toc_html = ""
+    if len([t for t in toc if t[0] == 2]) >= 3:
+        items = "".join(
+            f'<a class="l{lvl}" href="#{slug}">{esc(text)}</a>' for lvl, slug, text in toc
+        )
+        toc_html = f'<details class="toc"><summary>On this page</summary>{items}</details>'
+
+    body = f'<article class="doc"><p class="kicker">{esc(pg.kind)}</p><h1>{esc(pg.title)}</h1>'
+    if pg.subtitle:
+        body += f'<p class="sub">{md_to_html(pg.subtitle)[3:-4]}</p>'
+    body += head + pre_html + toc_html + html + "</article>"
+    return (
+        shell(
+            path=pg.path,
+            title=pg.title,
+            body=body,
+            description=strip_md(pg.body_md)[:180],
+            mermaid=has_mermaid,
+            active={"topic": "topics", "source": "sources"}.get(pg.kind, ""),
+        ),
+        # Preamble excluded: it is kit boilerplate and would drown real snippets.
+        strip_md(body_md),
+    )
+
+
+def render_home(topics: list[dict], sources: list[dict], claims: list[dict], rw: Rewriter) -> str:
+    corr = sum(1 for c in claims if c["tier"] == "corroborated")
+    stats = "".join(
+        f'<div class="stat"><b>{v}</b><span>{k}</span></div>'
+        for k, v in (
+            ("sources", len(sources)),
+            ("topics", len(topics)),
+            ("claims", len(claims)),
+            ("corroborated", corr),
+        )
+    )
+
+    # Meta lessons: the compounding layer.
+    tcards = ""
+    for t in sorted(topics, key=lambda t: ({"established": 0, "emerging": 1}.get(t["status"], 2), t["title"])):
+        n = t["nsources"] or "0"
+        tcards += (
+            f'<a class="card" href="{t["url"]}"><div class="card-head"><h3>{esc(t["title"])}</h3>'
+            f'{pill(t["status"] or "seed")}</div>'
+            f'<p>{esc(t["covers"][:210])}{"..." if len(t["covers"]) > 210 else ""}</p>'
+            f'<span class="meta">{esc(n)} source{"" if n == "1" else "s"}</span></a>'
+        )
+
+    # Source lessons: TL;DR + key claims, lifted verbatim from each LEARNING.md.
+    scards = ""
+    for s in sources:
+        tldr = rw.apply(md_to_html(s["tldr"]), REPO / "sources" / s["id"], "index.html")
+        tldr = linkify_timestamps(tldr, youtube_id(s["external"]))
+        claims_html = rw.apply(md_to_html(s["key_claims"]), REPO / "sources" / s["id"], "index.html")
+        claims_html = linkify_timestamps(claims_html, youtube_id(s["external"]))
+        topics_html = "".join(pill(t, "topic-tag") for t in s["topics"])
+        scards += f"""<article class="lesson">
+  <div class="card-head"><h3><a href="{s["url"]}">{esc(s["title"])}</a></h3>{pill(s["type"] or "note", "type")}</div>
+  <p class="byline">{esc(s["author"])}</p>
+  <div class="tldr">{tldr}</div>
+  <details class="claims"><summary>Key claims</summary>{claims_html}</details>
+  <div class="tags">{topics_html}</div>
+  <p class="when"><b>When to read:</b> {esc(s["when"])}</p>
+  <a class="go" href="{s["url"]}">Read the full note &rarr;</a>
+</article>"""
+
+    body = f"""<article class="doc home">
+<p class="kicker">compounding notes</p>
+<h1>Brain</h1>
+<p class="sub">Lessons distilled from every source, and the meta lessons they compound into.</p>
+<div class="stats">{stats}</div>
+
+<h2 id="meta">Meta lessons <span class="hint">what the brain believes across sources</span></h2>
+<div class="grid">{tcards}</div>
+
+<h2 id="source-lessons">Source lessons <span class="hint">TL;DR + key claims, per source</span></h2>
+{scards}
+</article>"""
+    return shell(
+        path="index.html",
+        title="Brain",
+        body=body,
+        description="Lessons from every ingested source, and the topic syntheses they compound into.",
+        active="lessons",
+    )
+
+
+def render_topics(topics: list[dict]) -> str:
+    rows = ""
+    for t in sorted(topics, key=lambda t: ({"established": 0, "emerging": 1}.get(t["status"], 2), t["title"])):
+        rows += (
+            f'<a class="row" href="{t["url"]}"><div class="row-main"><h3>{esc(t["title"])}</h3>'
+            f'<p>{esc(t["covers"][:180])}</p></div>'
+            f'<div class="row-side">{pill(t["status"] or "seed")}'
+            f'<span class="meta">{esc(t["nsources"] or "0")} src</span></div></a>'
+        )
+    return shell(
+        path="topics.html",
+        title="Topics",
+        body=f'<article class="doc"><p class="kicker">meta lessons</p><h1>Topics</h1>'
+        f'<p class="sub">Living cross-source syntheses. Status advances seed &rarr; emerging &rarr; established.</p>'
+        f'<div class="rows">{rows}</div></article>',
+        description="Cross-source topic syntheses.",
+        active="topics",
+    )
+
+
+def render_sources(sources: list[dict]) -> str:
+    rows = ""
+    for s in sources:
+        rows += (
+            f'<a class="row" href="{s["url"]}"><div class="row-main"><h3>{esc(s["title"])}</h3>'
+            f'<p>{esc(s["summary"][:200])}</p>'
+            f'<span class="meta">{esc(s["author"])}</span></div>'
+            f'<div class="row-side">{pill(s["type"] or "note", "type")}</div></a>'
+        )
+    return shell(
+        path="sources.html",
+        title="Sources",
+        body=f'<article class="doc"><p class="kicker">{len(sources)} ingested</p><h1>Sources</h1>'
+        f'<p class="sub">Every source distilled into a cited learning note.</p>'
+        f'<div class="rows">{rows}</div></article>',
+        description="Every ingested source.",
+        active="sources",
+    )
+
+
+def render_claims(claims: list[dict], rw: Rewriter) -> str:
+    """A five-column table is unreadable on a phone - render each claim as a card."""
+    cards = ""
+    for c in claims:
+        text = rw.apply(md_to_html(c["claim"]), REPO / "brain", "claims.html")
+        srcs = rw.apply(md_to_html(c["sources"]), REPO / "brain", "claims.html")
+        srcs = linkify_timestamps(srcs, "")
+        cards += (
+            f'<article class="claim {c["tier"]}" data-topic="{esc(c["topic"])}" data-tier="{c["tier"]}">'
+            f'<div class="claim-head"><span class="n">{c["n"]}</span>'
+            f'{pill(c["topic"], "topic-tag")}{pill(c["tier"])}</div>'
+            f'<div class="claim-body">{text}</div>'
+            f'<details><summary>Sources</summary>{srcs}</details></article>'
+        )
+    topics = sorted({c["topic"] for c in claims})
+    chips = '<button class="chip on" data-filter="*">all</button>' + "".join(
+        f'<button class="chip" data-filter="{esc(t)}">{esc(t)}</button>' for t in topics
+    )
+    return shell(
+        path="claims.html",
+        title="Claims",
+        body=f'<article class="doc"><p class="kicker">{len(claims)} promoted</p><h1>Claims</h1>'
+        f'<p class="sub">Durable claims promoted from source notes. Every one carries a citation.</p>'
+        f'<div class="chips" id="claim-filter">{chips}</div>{cards}</article>',
+        description="Cross-source corroborated claims.",
+        active="claims",
+    )
+
+
+def render_search() -> str:
+    return shell(
+        path="search.html",
+        title="Search",
+        body='<article class="doc"><h1>Search</h1>'
+        '<input id="q" type="search" placeholder="Search lessons, claims, terms..." '
+        'autocomplete="off" autocapitalize="none" spellcheck="false">'
+        '<p class="sub" id="q-status">Type to search the whole brain. Works offline.</p>'
+        '<div id="results" class="rows"></div></article>',
+        description="Search the brain.",
+        active="search",
+    )
+
+
+# ------------------------------------------------------------------- assets ---
+
+
+def icon(size: int, dest: Path) -> None:
+    from PIL import Image, ImageDraw
+
+    img = Image.new("RGB", (size, size), "#0f1115")
+    d = ImageDraw.Draw(img)
+    u = size / 16
+    d.rounded_rectangle([0, 0, size - 1, size - 1], radius=int(u * 3.6), fill="#0f1115")
+    # Three stacked layers narrowing upward: raw -> distilled -> promoted.
+    for i, (w, y, col) in enumerate(
+        ((10, 10.6, "#3d4a63"), (7.6, 8.0, "#5b7cc4"), (5.2, 5.4, "#e8c37a"))
+    ):
+        d.rounded_rectangle(
+            [u * (8 - w / 2), u * y, u * (8 + w / 2), u * (y + 1.5)],
+            radius=int(u * 0.45),
+            fill=col,
+        )
+    d.ellipse([u * 6.4, u * 2.0, u * 9.6, u * 5.2], fill="#e8c37a")
+    d.ellipse([u * 7.15, u * 2.75, u * 8.85, u * 4.45], fill="#0f1115")
+    img.save(dest, "PNG", optimize=True)
+
+
+def vendor_mermaid() -> bool:
+    VENDOR.mkdir(parents=True, exist_ok=True)
+    local = VENDOR / "mermaid.min.js"
+    if not local.is_file():
+        try:
+            print("  fetching mermaid...", end=" ", flush=True)
+            with urllib.request.urlopen(MERMAID_URL, timeout=60) as r:  # noqa: S310 - pinned CDN
+                local.write_bytes(r.read())
+            print("ok")
+        except Exception as e:  # noqa: BLE001 - offline builds must still succeed
+            print(f"skipped ({e}); diagrams will render as source text")
+            return False
+    shutil.copy2(local, OUT / "assets" / "mermaid.min.js")
+    return True
+
+
+# --------------------------------------------------------------------- build ---
+
+
+def build() -> None:
+    if OUT.exists():
+        shutil.rmtree(OUT)
+    (OUT / "assets").mkdir(parents=True)
+
+    pages, topics, sources, claims = collect()
+    rw = Rewriter(build_routes(pages))
+    search: list[dict] = []
+
+    for pg in pages:
+        html, text = render_page(pg, rw)
+        dest = OUT / pg.path
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_text(html, encoding="utf-8")
+        search.append({"t": pg.title, "u": pg.path, "k": pg.kind, "x": text[:6000]})
+
+    (OUT / "index.html").write_text(render_home(topics, sources, claims, rw), encoding="utf-8")
+    (OUT / "topics.html").write_text(render_topics(topics), encoding="utf-8")
+    (OUT / "sources.html").write_text(render_sources(sources), encoding="utf-8")
+    (OUT / "claims.html").write_text(render_claims(claims, rw), encoding="utf-8")
+    (OUT / "search.html").write_text(render_search(), encoding="utf-8")
+
+    for c in claims:
+        search.append(
+            {"t": f"Claim {c['n']}", "u": f"claims.html#c{c['n']}", "k": "claim", "x": strip_md(c["claim"])}
+        )
+    (OUT / "search.json").write_text(json.dumps(search, separators=(",", ":")), encoding="utf-8")
+
+    n_media = copy_media(rw)
+    for name in ("style.css", "app.js"):
+        shutil.copy2(ASSETS / name, OUT / "assets" / name)
+    icon(192, OUT / "assets" / "icon-192.png")
+    icon(512, OUT / "assets" / "icon-512.png")
+    has_mermaid = vendor_mermaid()
+
+    (OUT / "manifest.webmanifest").write_text(
+        json.dumps(
+            {
+                "name": "Brain - compounding notes",
+                "short_name": "Brain",
+                "start_url": "./index.html",
+                "scope": "./",
+                "display": "standalone",
+                "background_color": "#0f1115",
+                "theme_color": "#0f1115",
+                "icons": [
+                    {"src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable"},
+                    {"src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"},
+                ],
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+    precache = sorted(
+        p.relative_to(OUT).as_posix()
+        for p in OUT.rglob("*")
+        if p.is_file() and p.suffix in {".html", ".css", ".js", ".json", ".webmanifest"}
+        and p.name != "mermaid.min.js"
+    )
+    sw = read(ASSETS / "sw.js")
+    revision = str(sum(p.stat().st_mtime_ns for p in OUT.rglob("*") if p.is_file()) % 10**12)
+    sw = sw.replace("__PRECACHE__", json.dumps(precache)).replace("__REV__", revision)
+    (OUT / "sw.js").write_text(sw, encoding="utf-8")
+    (OUT / ".nojekyll").write_text("", encoding="utf-8")
+
+    print(
+        f"site/ built: {len(pages) + 5} pages, {len(sources)} sources, {len(topics)} topics, "
+        f"{len(claims)} claims, {n_media} images, mermaid={'yes' if has_mermaid else 'no'}"
+    )
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--serve", action="store_true", help="serve site/ on :8000 after building")
+    ap.add_argument("--port", type=int, default=8000)
+    args = ap.parse_args()
+    build()
+    if args.serve:
+        import http.server
+        import socketserver
+
+        os.chdir(OUT)
+        handler = http.server.SimpleHTTPRequestHandler
+        with socketserver.TCPServer(("", args.port), handler) as httpd:
+            print(f"serving http://localhost:{args.port}  (ctrl-c to stop)")
+            httpd.serve_forever()
+
+
+if __name__ == "__main__":
+    main()
 ``````
 
 ### 5.4 Source template
@@ -2651,6 +3726,7 @@ faster-whisper    # ASR fallback when a video has no captions
 imagehash         # perceptual-hash dedup of sampled frames
 pillow            # image handling for frame/figure processing
 requests          # fetch article/paper assets (figures, PDFs)
+markdown          # render brain/ + sources/ into the mobile reader (tools/build_site.py)
 ``````
 
 #### `.gitignore`
@@ -2669,6 +3745,11 @@ sources/**/raw/*
 # Cloned code repos - snapshots for learning, never committed
 sources/**/repo/
 
+# Captured-but-not-ingested sources (see staging/README.md). A capture becomes a source when it is
+# distilled, not when it is downloaded - until then it stays local and out of the contract.
+staging/*
+!staging/README.md
+
 # Harness pointer symlinks - generated per clone by link-agents.sh / link-agents.ps1
 # (AGENTS.md is the single canonical contract; these just point to it. Codex, Cursor and
 #  Copilot CLI read AGENTS.md natively and need no link.)
@@ -2679,6 +3760,11 @@ sources/**/repo/
 Thumbs.db
 .DS_Store
 
+
+# The mobile reader - a pure render of brain/ + sources/, rebuilt by
+# tools/build_site.py and published to GitHub Pages by CI. Never a source of truth.
+/site/
+tools/site_assets/vendor/
 ``````
 
 #### `.gitattributes`
@@ -2833,7 +3919,7 @@ OUT = ROOT / "BUILD.md"
 F = "``````"
 
 LANG = {".md": "markdown", ".py": "python", ".sh": "bash", ".ps1": "powershell",
-        ".yml": "yaml", ".txt": "text"}
+        ".yml": "yaml", ".txt": "text", ".css": "css", ".js": "javascript"}
 
 
 def lang_for(path: str) -> str:
@@ -2851,7 +3937,7 @@ VERBATIM: list[tuple[str, list[str]]] = [
         "personas/curator.md", "personas/fact-checker.md", "personas/mentor.md",
         "personas/synthesizer.md",
     ]),
-    ("The two frozen scripts", ["validate.py", "tools/ingest.py"]),
+    ("The three frozen scripts", ["validate.py", "tools/ingest.py", "tools/build_site.py"]),
     ("Source template", [
         "sources/_TEMPLATE/SOURCE.md", "sources/_TEMPLATE/nodes.md",
         "sources/_TEMPLATE/LEARNING.md", "sources/_TEMPLATE/MAP.md",
@@ -2872,9 +3958,14 @@ VERBATIM: list[tuple[str, list[str]]] = [
         # This generator ships with the bundle because the workflow above invokes it
         # (`make_build_doc.py --check`). Omit it and a kit built from BUILD.md alone gets a red
         # CI run on its first push - the bundle would break the very build it describes. It is
-        # not one of the "two frozen scripts" (ADR-0005) - it is the bundler, so it lives here
+        # not one of the frozen scripts (ADR-0005) - it is the bundler, so it lives here
         # in plumbing beside the workflow that calls it.
         "tools/make_build_doc.py",
+        # The reader's assets. tools/build_site.py is a frozen script above, but it is inert
+        # without these three - AGENTS.md promises a mobile reader, so the bundle must ship one
+        # that actually renders.
+        "tools/site_assets/style.css", "tools/site_assets/app.js", "tools/site_assets/sw.js",
+        ".github/workflows/pages.yml",
         ".claude/commands/research.md", "brain/index.md", "LICENSE",
     ]),
 ]
@@ -3081,7 +4172,7 @@ durable parts into living topic notes. Every claim carries a citation. Ingest th
 the thirtieth starts richer than the first.
 
 **There is no application.** The agent is the runtime; the kit is a contract written in Markdown
-plus two small frozen scripts. That is why this file can rebuild it.
+plus three small frozen scripts. That is why this file can rebuild it.
 
 ---
 
@@ -3342,6 +4433,605 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+``````
+
+#### `tools/site_assets/style.css`
+
+``````css
+/* Brain - mobile reading surface.
+   One column, thumb-reachable navigation, legible at arm's length.
+   Light and dark are both first-class: the OS decides, the toggle overrides. */
+
+:root {
+  --bg: #fbfbfa;
+  --bg-soft: #f2f1ee;
+  --card: #ffffff;
+  --line: #e2e0da;
+  --ink: #1b1c1e;
+  --ink-2: #55575c;
+  --ink-3: #86888e;
+  --accent: #2f5fd0;
+  --accent-soft: #e8eefc;
+  --gold: #9a6b12;
+  --gold-soft: #fbf1dc;
+  --green: #1d6b45;
+  --green-soft: #e2f2e9;
+  --amber: #8a5a10;
+  --radius: 14px;
+  --tabh: 60px;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f1115;
+    --bg-soft: #171a20;
+    --card: #171a20;
+    --line: #262a33;
+    --ink: #e7e8ea;
+    --ink-2: #a4a8b2;
+    --ink-3: #767b87;
+    --accent: #7ea2f0;
+    --accent-soft: #1a2438;
+    --gold: #e8c37a;
+    --gold-soft: #2a2416;
+    --green: #6fc99a;
+    --green-soft: #12251c;
+    --amber: #d7a95e;
+    color-scheme: dark;
+  }
+}
+
+/* The in-page toggle must beat the media query in both directions. */
+:root[data-theme="light"] {
+  --bg: #fbfbfa; --bg-soft: #f2f1ee; --card: #fff; --line: #e2e0da;
+  --ink: #1b1c1e; --ink-2: #55575c; --ink-3: #86888e;
+  --accent: #2f5fd0; --accent-soft: #e8eefc;
+  --gold: #9a6b12; --gold-soft: #fbf1dc;
+  --green: #1d6b45; --green-soft: #e2f2e9; --amber: #8a5a10;
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  --bg: #0f1115; --bg-soft: #171a20; --card: #171a20; --line: #262a33;
+  --ink: #e7e8ea; --ink-2: #a4a8b2; --ink-3: #767b87;
+  --accent: #7ea2f0; --accent-soft: #1a2438;
+  --gold: #e8c37a; --gold-soft: #2a2416;
+  --green: #6fc99a; --green-soft: #12251c; --amber: #d7a95e;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; scroll-padding-top: 64px; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 17px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, "Helvetica Neue", sans-serif;
+  overflow-wrap: break-word;
+  padding-bottom: calc(var(--tabh) + env(safe-area-inset-bottom));
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ------------------------------------------------------------- chrome --- */
+
+.bar {
+  position: sticky; top: 0; z-index: 20;
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; padding-top: calc(10px + env(safe-area-inset-top));
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: saturate(180%) blur(14px);
+  border-bottom: 1px solid var(--line);
+}
+.bar-title {
+  flex: 1; min-width: 0;
+  font-size: 15px; font-weight: 600; color: var(--ink-2);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.bar .up { display: flex; color: var(--ink-2); }
+.bar .up svg, .icon svg { width: 22px; height: 22px; }
+.bar span.up { visibility: hidden; }
+.icon {
+  background: none; border: 0; padding: 0; color: var(--ink-2);
+  display: flex; cursor: pointer;
+}
+svg { fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+
+.progress { position: sticky; top: 0; z-index: 21; height: 2px; }
+.progress i { display: block; height: 2px; width: 0; background: var(--accent); transition: width .1s linear; }
+
+.tabs {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 30;
+  display: grid; grid-template-columns: repeat(5, 1fr);
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
+  backdrop-filter: saturate(180%) blur(14px);
+  border-top: 1px solid var(--line);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.tab {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 3px; height: var(--tabh); font-size: 11px; color: var(--ink-3);
+  text-decoration: none;
+}
+.tab:hover { text-decoration: none; }
+.tab svg { width: 21px; height: 21px; }
+.tab.on { color: var(--accent); }
+
+/* --------------------------------------------------------------- layout --- */
+
+main { max-width: 760px; margin: 0 auto; padding: 4px 18px 40px; }
+.doc { font-size: 17px; }
+.kicker {
+  margin: 18px 0 2px; font-size: 12px; font-weight: 700;
+  letter-spacing: .09em; text-transform: uppercase; color: var(--ink-3);
+}
+h1 { font-size: 29px; line-height: 1.2; letter-spacing: -.02em; margin: 4px 0 8px; }
+h2 { font-size: 22px; line-height: 1.25; letter-spacing: -.01em; margin: 2.1em 0 .5em; }
+h3 { font-size: 18.5px; line-height: 1.3; margin: 1.7em 0 .4em; }
+h4 { font-size: 16.5px; margin: 1.5em 0 .35em; color: var(--ink-2); }
+h2 .hint { display: block; font-size: 13px; font-weight: 400; color: var(--ink-3); letter-spacing: 0; }
+.sub { color: var(--ink-2); margin: 0 0 14px; }
+p, ul, ol { margin: 0 0 1em; }
+li { margin-bottom: .35em; }
+hr { border: 0; border-top: 1px solid var(--line); margin: 2em 0; }
+
+.anchor { margin-left: .4em; color: var(--ink-3); opacity: 0; font-weight: 400; }
+h2:hover .anchor, h3:hover .anchor { opacity: 1; }
+
+blockquote {
+  margin: 1.2em 0; padding: 12px 16px;
+  border-left: 3px solid var(--line);
+  background: var(--bg-soft); border-radius: 0 10px 10px 0;
+  color: var(--ink-2);
+}
+blockquote p:last-child { margin-bottom: 0; }
+
+code {
+  font: 500 .855em/1.5 ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  background: var(--bg-soft); padding: .12em .38em; border-radius: 5px;
+  border: 1px solid var(--line);
+}
+pre {
+  background: var(--bg-soft); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 14px; overflow-x: auto;
+  font-size: 13.5px; line-height: 1.55;
+}
+pre code { background: none; border: 0; padding: 0; font-size: inherit; }
+
+a.ts code { background: var(--accent-soft); border-color: transparent; color: var(--accent); }
+
+/* Wide content scrolls in its own box - the page body never does. */
+.scroll { overflow-x: auto; margin: 1.2em 0; border: 1px solid var(--line); border-radius: var(--radius); }
+table { border-collapse: collapse; width: 100%; font-size: 14.5px; }
+th, td { padding: 9px 12px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { background: var(--bg-soft); font-weight: 650; white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+
+figure { margin: 1.4em 0; }
+img { max-width: 100%; height: auto; border-radius: 10px; display: block; border: 1px solid var(--line); }
+figcaption { font-size: 13.5px; color: var(--ink-3); margin-top: 7px; line-height: 1.45; }
+
+pre.mermaid { background: transparent; border: 0; padding: 0; text-align: center; }
+pre.mermaid svg { max-width: 100%; height: auto; }
+
+details { margin: 1em 0; }
+summary {
+  cursor: pointer; font-weight: 600; font-size: 15px; color: var(--ink-2);
+  padding: 8px 0; list-style: none;
+}
+summary::-webkit-details-marker { display: none; }
+summary::before { content: "▸ "; color: var(--ink-3); }
+details[open] > summary::before { content: "▾ "; }
+
+.toc {
+  border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 2px 14px; background: var(--bg-soft);
+}
+.toc a { display: block; padding: 5px 0; font-size: 14.5px; color: var(--ink-2); border-top: 1px solid var(--line); }
+.toc a.l3 { padding-left: 16px; font-size: 14px; color: var(--ink-3); }
+.toc summary { border: 0; }
+
+/* ---------------------------------------------------------------- pills --- */
+
+.pill {
+  display: inline-block; font-size: 11.5px; font-weight: 650;
+  letter-spacing: .02em; padding: 3px 9px; border-radius: 999px;
+  background: var(--bg-soft); color: var(--ink-2); border: 1px solid var(--line);
+  white-space: nowrap;
+}
+.pill.established, .pill.corroborated { background: var(--green-soft); color: var(--green); border-color: transparent; }
+.pill.emerging { background: var(--gold-soft); color: var(--gold); border-color: transparent; }
+.pill.needs-check { background: var(--gold-soft); color: var(--amber); border-color: transparent; }
+.pill.topic-tag { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
+
+/* ----------------------------------------------------------- home cards --- */
+
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 18px 0 6px; }
+.stat {
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 11px 8px; text-align: center;
+}
+.stat b { display: block; font-size: 21px; letter-spacing: -.02em; }
+.stat span { font-size: 10.5px; color: var(--ink-3); text-transform: uppercase; letter-spacing: .05em; }
+
+.grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+@media (min-width: 620px) { .grid { grid-template-columns: 1fr 1fr; } }
+
+.card {
+  display: block; background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 14px 16px; color: inherit;
+}
+.card:hover { text-decoration: none; border-color: var(--accent); }
+.card h3 { margin: 0; font-size: 17px; }
+.card p { margin: 6px 0 8px; font-size: 14.5px; color: var(--ink-2); line-height: 1.5; }
+.card-head { display: flex; align-items: center; gap: 10px; justify-content: space-between; }
+.card .meta, .row .meta { font-size: 12.5px; color: var(--ink-3); }
+
+.lesson {
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 16px 18px; margin: 12px 0;
+}
+.lesson h3 { margin: 0; font-size: 18px; line-height: 1.3; }
+.lesson h3 a { color: inherit; }
+.byline { margin: 4px 0 10px; font-size: 13.5px; color: var(--ink-3); }
+.tldr { font-size: 15.5px; color: var(--ink); }
+.tldr p:last-child { margin-bottom: 0; }
+.lesson .claims { border-top: 1px solid var(--line); margin: 12px 0 0; }
+.lesson .claims ul { font-size: 15px; padding-left: 20px; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+.when { font-size: 13.5px; color: var(--ink-2); margin: 8px 0; }
+.go { display: inline-block; font-size: 14.5px; font-weight: 600; margin-top: 2px; }
+
+/* ------------------------------------------------------------ list rows --- */
+
+.rows { display: flex; flex-direction: column; gap: 8px; }
+.row {
+  display: flex; gap: 12px; align-items: flex-start; justify-content: space-between;
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 13px 15px; color: inherit;
+}
+.row:hover { text-decoration: none; border-color: var(--accent); }
+.row h3 { margin: 0 0 3px; font-size: 16.5px; line-height: 1.3; }
+.row p { margin: 0 0 3px; font-size: 14px; color: var(--ink-2); line-height: 1.45; }
+.row-side { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex-shrink: 0; }
+.row-main { min-width: 0; }
+
+/* --------------------------------------------------------------- claims --- */
+
+.chips { display: flex; gap: 7px; overflow-x: auto; padding: 4px 0 12px; margin: 0 -18px; padding-left: 18px; padding-right: 18px; }
+.chip {
+  flex-shrink: 0; font: inherit; font-size: 13px; font-weight: 600;
+  padding: 6px 13px; border-radius: 999px; cursor: pointer;
+  background: var(--card); color: var(--ink-2); border: 1px solid var(--line);
+}
+.chip.on { background: var(--accent); color: #fff; border-color: transparent; }
+
+.claim {
+  background: var(--card); border: 1px solid var(--line);
+  border-left: 3px solid var(--line);
+  border-radius: var(--radius); padding: 13px 15px; margin: 9px 0;
+}
+.claim.corroborated { border-left-color: var(--green); }
+.claim.emerging { border-left-color: var(--gold); }
+.claim.needs-check { border-left-color: var(--amber); }
+.claim-head { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; margin-bottom: 7px; }
+.claim-head .n { font-size: 12.5px; font-weight: 700; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.claim-body { font-size: 15.5px; }
+.claim-body p { margin: 0; }
+.claim details { margin: 8px 0 0; }
+.claim summary { font-size: 13px; padding: 4px 0; }
+.claim details p { font-size: 13.5px; margin: 0; color: var(--ink-2); }
+
+/* --------------------------------------------------------------- search --- */
+
+#q {
+  width: 100%; font: inherit; font-size: 17px; padding: 12px 14px;
+  border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--card); color: var(--ink); margin: 6px 0 10px;
+}
+#q:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: transparent; }
+.hit mark { background: var(--gold-soft); color: var(--gold); padding: 0 2px; border-radius: 3px; }
+
+/* --------------------------------------------------------------- facts --- */
+
+.facts {
+  display: grid; grid-template-columns: auto 1fr; gap: 5px 14px;
+  background: var(--bg-soft); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 12px 15px; margin: 14px 0;
+  font-size: 14px;
+}
+.facts > div { display: contents; }
+.facts dt { color: var(--ink-3); white-space: nowrap; }
+.facts dd { margin: 0; color: var(--ink-2); }
+
+@media print { .bar, .tabs, .progress { display: none; } body { padding: 0; } }
+
+.frontmatter {
+  border: 1px dashed var(--line); border-radius: var(--radius);
+  padding: 2px 14px; margin: 12px 0;
+}
+.frontmatter > summary { color: var(--ink-3); font-size: 13.5px; font-weight: 500; }
+.frontmatter blockquote { background: none; border-left-color: var(--line); padding: 4px 12px; margin: .6em 0; }
+.frontmatter p, .frontmatter li { font-size: 14px; color: var(--ink-2); }
+``````
+
+#### `tools/site_assets/app.js`
+
+``````javascript
+/* Brain reader - theme, reading progress, claim filter, offline search, mermaid.
+   Everything degrades: with JS off the pages are still complete documents. */
+
+(function () {
+  var BASE = window.SITE_BASE || "./";
+
+  /* ---- theme ---------------------------------------------------------- */
+  var btn = document.getElementById("theme");
+  if (btn) {
+    btn.addEventListener("click", function () {
+      var cur = document.documentElement.dataset.theme;
+      if (!cur) {
+        cur = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      }
+      var next = cur === "dark" ? "light" : "dark";
+      document.documentElement.dataset.theme = next;
+      try { localStorage.setItem("brain-theme", next); } catch (e) {}
+    });
+  }
+
+  /* ---- reading progress ----------------------------------------------- */
+  var bar = document.querySelector(".progress i");
+  if (bar) {
+    var tick = function () {
+      var h = document.documentElement.scrollHeight - innerHeight;
+      bar.style.width = (h > 40 ? Math.min(100, (scrollY / h) * 100) : 0) + "%";
+    };
+    addEventListener("scroll", tick, { passive: true });
+    addEventListener("resize", tick);
+    tick();
+  }
+
+  /* ---- claim filter ---------------------------------------------------- */
+  var filter = document.getElementById("claim-filter");
+  if (filter) {
+    filter.addEventListener("click", function (e) {
+      var chip = e.target.closest(".chip");
+      if (!chip) return;
+      filter.querySelectorAll(".chip").forEach(function (c) { c.classList.remove("on"); });
+      chip.classList.add("on");
+      var want = chip.dataset.filter;
+      document.querySelectorAll(".claim").forEach(function (c) {
+        c.hidden = want !== "*" && c.dataset.topic !== want;
+      });
+    });
+  }
+
+  /* ---- search ---------------------------------------------------------- */
+  var q = document.getElementById("q");
+  if (q) {
+    var results = document.getElementById("results");
+    var status = document.getElementById("q-status");
+    var index = null;
+
+    var load = fetch(BASE + "search.json")
+      .then(function (r) { return r.json(); })
+      .then(function (d) { index = d; if (q.value) run(); })
+      .catch(function () { if (status) status.textContent = "Search index unavailable offline yet - open once online."; });
+
+    var esc = function (s) {
+      return s.replace(/[&<>"]/g, function (c) {
+        return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+      });
+    };
+
+    function snippet(text, term) {
+      var i = text.toLowerCase().indexOf(term);
+      if (i < 0) return esc(text.slice(0, 150));
+      var s = Math.max(0, i - 60);
+      return (s ? "..." : "") + esc(text.slice(s, i)) +
+        "<mark>" + esc(text.substr(i, term.length)) + "</mark>" +
+        esc(text.slice(i + term.length, i + term.length + 110)) + "...";
+    }
+
+    function run() {
+      var term = q.value.trim().toLowerCase();
+      if (!index) return;
+      if (term.length < 2) {
+        results.innerHTML = "";
+        if (status) status.textContent = "Type to search the whole brain. Works offline.";
+        return;
+      }
+      var hits = [];
+      for (var i = 0; i < index.length; i++) {
+        var e = index[i];
+        var t = e.t.toLowerCase().indexOf(term);
+        var x = e.x.toLowerCase().indexOf(term);
+        if (t < 0 && x < 0) continue;
+        hits.push({ e: e, score: (t >= 0 ? 1000 - t : 0) + (x >= 0 ? 100 : 0) });
+      }
+      hits.sort(function (a, b) { return b.score - a.score; });
+      if (status) status.textContent = hits.length + (hits.length === 1 ? " result" : " results");
+      results.innerHTML = hits.slice(0, 60).map(function (h) {
+        return '<a class="row hit" href="' + BASE + h.e.u + '"><div class="row-main">' +
+          "<h3>" + esc(h.e.t) + "</h3><p>" + snippet(h.e.x, term) + "</p></div>" +
+          '<div class="row-side"><span class="pill">' + esc(h.e.k) + "</span></div></a>";
+      }).join("");
+    }
+
+    var timer;
+    q.addEventListener("input", function () {
+      clearTimeout(timer);
+      timer = setTimeout(run, 90);
+    });
+    var pre = new URLSearchParams(location.search).get("q");
+    if (pre) { q.value = pre; }
+    q.focus();
+  }
+
+  /* ---- mermaid (lazy: only pages that actually hold a diagram) ---------- */
+  if (window.HAS_MERMAID && document.querySelector("pre.mermaid")) {
+    var s = document.createElement("script");
+    s.src = BASE + "assets/mermaid.min.js";
+    s.onload = function () {
+      var dark = document.documentElement.dataset.theme
+        ? document.documentElement.dataset.theme === "dark"
+        : matchMedia("(prefers-color-scheme: dark)").matches;
+      window.mermaid.initialize({
+        startOnLoad: true,
+        securityLevel: "loose",
+        theme: dark ? "dark" : "neutral",
+        fontFamily: "inherit",
+      });
+    };
+    s.onerror = function () {
+      document.querySelectorAll("pre.mermaid").forEach(function (p) {
+        p.classList.remove("mermaid");
+      });
+    };
+    document.head.appendChild(s);
+  }
+
+  /* ---- offline ---------------------------------------------------------- */
+  if ("serviceWorker" in navigator && location.protocol !== "file:") {
+    addEventListener("load", function () {
+      navigator.serviceWorker.register(BASE + "sw.js", { scope: BASE }).catch(function () {});
+    });
+  }
+})();
+``````
+
+#### `tools/site_assets/sw.js`
+
+``````javascript
+/* Brain reader - offline cache.
+   Text (html/css/js/search index) is precached on install, so the whole brain is
+   readable with no network. Images and the 3.4MB mermaid bundle are NOT precached
+   - they are cached lazily on first view, which keeps the install cheap on cellular. */
+
+var REV = "__REV__";
+var SHELL = "brain-shell-" + REV;
+var MEDIA = "brain-media-v1";
+var PRECACHE = __PRECACHE__;
+
+self.addEventListener("install", function (e) {
+  e.waitUntil(
+    caches.open(SHELL).then(function (c) {
+      // addAll is all-or-nothing; a single 404 must not sink the whole install.
+      return Promise.all(PRECACHE.map(function (u) {
+        return c.add(new Request(u, { cache: "reload" })).catch(function () {});
+      }));
+    }).then(function () { return self.skipWaiting(); })
+  );
+});
+
+self.addEventListener("activate", function (e) {
+  e.waitUntil(
+    caches.keys().then(function (keys) {
+      return Promise.all(keys.map(function (k) {
+        if (k !== SHELL && k !== MEDIA) return caches.delete(k);
+      }));
+    }).then(function () { return self.clients.claim(); })
+  );
+});
+
+self.addEventListener("fetch", function (e) {
+  var req = e.request;
+  if (req.method !== "GET" || new URL(req.url).origin !== location.origin) return;
+
+  var isMedia = /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(req.url) || /mermaid\.min\.js$/.test(req.url);
+
+  if (isMedia) {
+    // Cache-first: bytes that never change under the same name.
+    e.respondWith(
+      caches.match(req).then(function (hit) {
+        return hit || fetch(req).then(function (res) {
+          var copy = res.clone();
+          caches.open(MEDIA).then(function (c) { c.put(req, copy); });
+          return res;
+        });
+      })
+    );
+    return;
+  }
+
+  // Network-first for documents: a rebuilt brain should win when there is signal.
+  e.respondWith(
+    fetch(req).then(function (res) {
+      var copy = res.clone();
+      caches.open(SHELL).then(function (c) { c.put(req, copy); });
+      return res;
+    }).catch(function () {
+      return caches.match(req).then(function (hit) {
+        return hit || caches.match(new URL("index.html", req.url).pathname);
+      });
+    })
+  );
+});
+``````
+
+#### `.github/workflows/pages.yml`
+
+``````yaml
+name: pages
+
+# Publishes the mobile reader to GitHub Pages on every push to main.
+# The site is a pure render of brain/ + sources/ - nothing here is a source of
+# truth, so a failed build never costs anything but the deploy.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Let a running deploy finish; queue at most one behind it.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install
+        run: pip install markdown pillow
+
+      - name: Validate the contract
+        run: python3 validate.py
+
+      - name: Build the site
+        run: python3 tools/build_site.py
+
+      # One-time repo setup this cannot do for itself:
+      #   Settings -> Pages -> Build and deployment -> Source: GitHub Actions
+      # Until that is set, this step fails and nothing deploys.
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4
 ``````
 
 #### `.claude/commands/research.md`
@@ -3776,7 +5466,7 @@ _(Diagrams/slides across sources, embedded with caption + citation.)_
 
 | Date | Source | Entry |
 |---|---|---|
-| 2026-07-27 | brain (kit) | Kit built from `BUILD.md` (a generated bundle of the reference clone). Empty brain: 6 seed topics, no sources, no claims. |
+| 2026-07-31 | brain (kit) | Kit built from `BUILD.md` (a generated bundle of the reference clone). Empty brain: 6 seed topics, no sources, no claims. |
 ``````
 
 #### `reports/README.md`
