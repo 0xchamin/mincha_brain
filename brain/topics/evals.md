@@ -124,8 +124,10 @@ self-learning loop to build [S1 `&t=418s`]. From there:
   through **the passage of time**. That is the same move S4 makes on subjective quality: make it
   gradable by fixing the *question*, not by finding a better judge. Kept in
   [`memory.md`](memory.md) (claim 54) because the objectives are memory-specific; noted here because
-  the *method* is not. **S6 supplies no results** - its eval charts did not survive capture - so it is
-  not counted as a source feeding this topic.
+  the *method* is not. **S6 is still not counted as a source feeding this topic**, on a narrower
+  ground than originally recorded: it does have numbers (its chart specs were recovered), but they are
+  **memory-domain results with an undisclosed method**, not evidence about eval design. What it
+  contributes here is the decomposition move, and that is already stated above.
 
 ## Sources feeding this topic
 

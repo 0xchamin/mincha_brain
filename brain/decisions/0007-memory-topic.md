@@ -85,3 +85,20 @@ edit.
 - **Follow-up edits:** a Topics row in the root [`INDEX.md`](../../INDEX.md); cross-links added to
   [`context-engineering.md`](../topics/context-engineering.md) and [`evals.md`](../topics/evals.md);
   claims 48-55 in [`claims.md`](../claims.md); 5 terms in [`glossary.md`](../glossary.md).
+
+## Update 2026-07-31 (same day, after the decision)
+
+**The "zero measurements" consequence above no longer holds, and the decision is unaffected.** S6's
+eval charts turned out to be Vega-Lite components whose specs - data included - are embedded in the
+page's RSC payload; they were recovered to
+[`chart_data.json`](../../sources/260731_chatgpt-memory-dreaming/chart_data.json) and promoted as
+claims 56-57. The note now carries measurements with an exact-figures / undisclosed-method caveat.
+
+**The claim-24 tension recorded above also softened**, and this is the part worth keeping: with
+numbers in hand the two results are measuring different constructs - claim 24 tests episodic
+append-and-retrieve on **agent** long-horizon reliability, S6 tests a maintained user model in a
+**chat assistant**. Not a conflict, a gap. **Whether a maintained memory helps an agent is measured
+by nobody**, and that is now the topic's headline open question.
+
+*Left as an addendum rather than an edit to the text above: an ADR records what was known when the
+call was made, and the original reasoning stands on its own.*

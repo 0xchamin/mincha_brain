@@ -263,5 +263,6 @@ reason the second source below matters.
 - **S6** - [Dreaming: Better memory for a more helpful ChatGPT](../../sources/260731_chatgpt-memory-dreaming/LEARNING.md)
   (OpenAI, 2026-06-04). **T2 vendor post about its own consumer product.** Mechanism claims are
   corroborated by product screenshots - real second-leg evidence that the described affordances
-  shipped. **No quantitative claim survives capture**; treat every performance statement as
-  unevidenced direction.
+  shipped. Its eval numbers were recovered from the page's own Vega-Lite chart specs, so **extraction
+  is exact and methodology is undisclosed**: treat every performance figure as the vendor's
+  directional self-report, never as a benchmark result.
