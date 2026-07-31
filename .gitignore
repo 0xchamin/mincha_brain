@@ -11,6 +11,11 @@ sources/**/raw/*
 # Cloned code repos - snapshots for learning, never committed
 sources/**/repo/
 
+# Captured-but-not-ingested sources (see staging/README.md). A capture becomes a source when it is
+# distilled, not when it is downloaded - until then it stays local and out of the contract.
+staging/*
+!staging/README.md
+
 # Harness pointer symlinks - generated per clone by link-agents.sh / link-agents.ps1
 # (AGENTS.md is the single canonical contract; these just point to it. Codex, Cursor and
 #  Copilot CLI read AGENTS.md natively and need no link.)
