@@ -1,6 +1,7 @@
 # Topic: Agents
 
-**Status:** established (3 sources - S1 Uber closed-loop evals, S2 12-factor agents, S4 Anthropic harness design)
+**Status:** established (6 sources - S1 Uber closed-loop evals, S2 12-factor agents, S4 Anthropic
+harness design, S5 skills evals, S7 Anthropic memory and dreaming, S9 Microsoft Agent Framework)
 
 > Living, cross-source synthesis on autonomous LLM agents. Many sources feed this note; **merge
 > and de-duplicate** as they arrive (architect persona) - this should read as one coherent view,
@@ -164,6 +165,68 @@ toward AI-generated output, and took several log-driven tuning rounds to catch s
 The payoff is measurable, if only once: on the DAW build, QA was roughly **8% of total cost**
 ($124.70 total) and it is what caught core features shipped as display-only stubs [S4 §5].
 
+### The vocabulary: loop, workflow, harness are three separable purchases
+
+S9 contributes a **taxonomy**, not a finding - and it is the cleanest statement in the brain of what
+the pieces of an agent system are called. Three separable ideas [S9 §intro, `fig_AgentFramework`]:
+the **agent loop** (the execution cycle over models, conversations, tools and state), **workflows**
+(structured orchestration for multi-step or multi-agent processes), and the **harness** (the reusable
+runtime capabilities around the agent - tools, context, memory, planning, middleware, permissions).
+
+**The shape is the argument.** In the summary figure, `Workflows` and `Harness` sit side by side
+above `Agent Loop`, and the two peers do not touch - two optional surrounds over a mandatory base,
+not a three-tier stack [S9 `fig_AgentFramework`]. A stack would imply containment, so adopting
+orchestration would drag in the whole runtime. Drawn as peers, each is separately declinable, which
+is what turns the article's closing line into a design property rather than a slogan [S9 §Why this
+matters]:
+
+> **Not every agent needs a complex workflow. Not every workflow needs a highly autonomous agent.**
+
+That is **claim 17 one level up.** S2 says not every problem needs an agent; S9 says not every agent
+needs orchestration. Same discipline, applied to the layer above.
+
+The five orchestration patterns it names are worth carrying as vocabulary: **Sequential**,
+**Handoff**, **Author/Critic**, **Magentic** (a coordinator plans and supervises subagents and
+tools), and **Custom** [S9 §Workflows, `fig_Workflows`]. `Author/Critic` is drawn explicitly as
+`worker` and `reviewer` in a cycle - **which is this note's generator/evaluator split (claim 34)
+shipped as a named SDK primitive by a third vendor.** Treat that as corroboration of the pattern's
+*currency*, not its *efficacy*: S9 measures nothing, and S4 remains the only source here that
+measured anything about the split.
+
+### The harness as a catalog - useful inventory, missing the subtraction
+
+S4 built a harness and then deleted half of it. S9 enumerates one. Read together they are more useful
+than either alone, because S9 supplies the **list** and S4 supplies the **discipline for pruning it**.
+
+S9's inventory, in four named columns [S9 `fig_AgentHarness`]: **Common Tools** (file system, code
+execution, shell execution), **Context** (prompts, skills, memory), **Planning** (todo, subagents),
+**Middleware** (context compaction, tool selection, permissions) - above a row of preset harnesses by
+task archetype (deep research, coding, content generation, data analysis, custom). *Four of those
+items - skills, todo, tool selection, the presets - appear only in the figure and never in the prose,
+so they are `needs-check`.*
+
+The justification is the strongest sentence in the source, and the one place it agrees with S4
+outright [S9 §Harnesses]:
+
+> **A strong model with poor tools, weak context and no controls will still produce a poor result.**
+
+The figure makes the same point structurally: **the model appears in none of the boxes.** Every
+element of a harness is something the developer supplies.
+
+**And note what is absent.** Claim 31 - every harness component encodes an assumption about what the
+model cannot do alone, and those assumptions expire - has no counterpart anywhere in S9. A catalog
+invites you to take the whole shelf, and an SDK vendor has a structural reason never to suggest
+subtraction. **Read S9's inventory as a menu of things you might need, and claim 31 as the standing
+instruction to keep re-asking which ones you still do.**
+
+> **One more thing S9 shows that nothing else here does.** In its ecosystem figure, an *agent
+> provider* slot accepts a **whole third-party agent product** - `Claude Code Agent` and `GitHub
+> Copilot CLI Agent` appear as peer tiles beside a prompt-configured first-party agent and beside
+> A2A, a wire protocol [S9 `fig_AgentLoop`]. The unit of composition moves up a level: from *which
+> model does this agent call* to *which finished agent does this system delegate to*. **`single-leg`
+> on a diagram tile** - the prose claims only that the framework can "interact with agents hosted
+> elsewhere" and never names Claude Code - so treat it as a direction of travel, not a capability.
+
 ### Two counterweights worth keeping
 
 - **Not every problem needs an agent.** S2's DevOps agent got Makefile build steps in the wrong
@@ -200,6 +263,11 @@ The payoff is measurable, if only once: on the DAW build, QA was roughly **8% of
 | A separate evaluator beats a self-critical generator because of **self-evaluation bias** - agents confidently praise their own mediocre output. | S4 §1, §2 | emerging |
 | The evaluator needs tools to grade what it cannot perceive (a browser to judge a UI), and needs tuning before it is competent - out-of-box models are lenient QA. | S4 §3, §4a | emerging |
 | A harness bought a working app where a solo agent produced a broken one, at ~18x wall clock and ~22x cost (20 min/$9 vs 6 hr/$200). | S4 §4b | needs-check (n=1, self-reported, vendor) |
+| **Loop, workflows and harness are three separable purchases, not a three-tier stack** - the loop is the only mandatory layer, so "not every agent needs a complex workflow" is a design property. Claim 17 one level up. | S9 §intro + §Why this matters + `fig_AgentFramework` | emerging (T2 vendor taxonomy, nothing measured) |
+| Five orchestration patterns worth having names for: Sequential, Handoff, **Author/Critic**, Magentic (a coordinator plans and supervises subagents), Custom. | S9 §Workflows + `fig_Workflows` | emerging |
+| **A harness is an inventory**: Common Tools (file system, code/shell execution), Context (prompts, skills, memory), Planning (todo, subagents), Middleware (compaction, tool selection, permissions), plus presets per task archetype. | S9 `fig_AgentHarness` (skills, todo, tool selection and presets are **figure-only**) | emerging / needs-check on the figure-only items |
+| **Environment quality bounds agent quality regardless of model strength** - a strong model with poor tools, weak context and no controls still produces a poor result. | S9 §Harnesses + `fig_AgentHarness` (the model is in none of the boxes) | emerging |
+| An **agent provider** slot can accept a whole third-party agent product (Claude Code, GitHub Copilot CLI) as a peer of a first-party agent and of A2A - the unit of composition moves from *model* to *finished agent*. | S9 `fig_AgentLoop` | needs-check (**single-leg** - one diagram tile; the prose says only "interact with") |
 
 ## Key visuals
 
@@ -212,6 +280,15 @@ The payoff is measurable, if only once: on the DAW build, QA was roughly **8% of
 
 ![while True loop calling llm.determine_next_step, appending to context, exiting on intent "done"](../../sources/260725_12-factor-agents/visuals/frame_345.jpg)
 > The whole of "agent" in ten lines - prompt, switch, context builder, loop. S2 `&t=406s`.
+
+![Three boxes in one container: Workflows and Harness side by side above Agent Loop alone](../../sources/260801_agent-framework-layered-sdk/visuals/fig_AgentFramework.png)
+> **Two optional surrounds over a mandatory base - not a stack.** The peers do not touch, so
+> orchestration and runtime capability are separately declinable. S9 `fig_AgentFramework`.
+
+![Harness panel: preset harnesses above four columns - Common Tools, Context, Planning, Middleware](../../sources/260801_agent-framework-layered-sdk/visuals/fig_AgentHarness.png)
+> The harness enumerated rather than gestured at - and note the model appears in **none** of the
+> boxes. Pair it with claim 31: this is the menu, not the instruction to order everything.
+> S9 `fig_AgentHarness`.
 
 ## Open questions / conflicts
 
@@ -228,6 +305,25 @@ The payoff is measurable, if only once: on the DAW build, QA was roughly **8% of
 - **S4 is a T2 vendor source reporting n=1 runs on its own models**, with no released harness code and
   no independent replication. Its *mechanisms* (self-evaluation bias, boundary-relative scaffolding)
   are more trustworthy than its *numbers* (18x, 22x, 8% QA cost), which are single observations.
+- **New from S9, and the first flat contradiction in this note: own the loop, or let the framework
+  own it?** S2 and S9 start from a near-identical premise and land on opposite conclusions.
+
+  | | S2 (12-factor agents, T4) | S9 (Agent Framework, T2) |
+  |---|---|---|
+  | Implementing the loop well is | the whole job | difficult, repetitive plumbing |
+  | Therefore | **own all four parts** - the 70-80% wall comes from a framework owning one [S2 `&t=406s`, `&t=37s`] | **let the SDK own it**, so you work on agent behaviour [S9 §Agent loops] |
+
+  **Kept, not resolved** - both are unmeasured assertions and neither author is disinterested (S2's
+  author sells an agent framework; S9 is a product post for an SDK). They may also be answering
+  different questions: S2 is about **where the debuggable seam sits when quality stalls at 80%**,
+  S9 about **how much plumbing you write before reaching 80% at all**. A framework whose loop is
+  *inspectable and overridable* satisfies both; one that hides it satisfies only S9. **What would
+  settle it - what happens at the 80% wall with this SDK - is exactly what S9 never discusses.**
+  Good deep-research target; the question is checkable from outside both vendors.
+- **New from S9, unresolved:** the harness catalog says nothing about **subtraction**. S9 lists what
+  a harness may contain; claim 31 (S4) says every one of those items is an expiring bet. No source
+  yet reconciles "here is the inventory" with "delete the ones that stopped being load-bearing", and
+  the two sources have opposite incentives to raise it.
 - **New from S4, unresolved:** is "context anxiety" - premature wrap-up near a *perceived* limit
   [S4 §2] - a real general phenomenon or an artifact of one model generation? S4 reports it largely
   disappearing between Sonnet 4.5 and Opus 4.5. No external evidence either way. See
@@ -261,4 +357,10 @@ The payoff is measurable, if only once: on the DAW build, QA was roughly **8% of
   an agent asked to finish its task *and* curate memory trades them off silently, so curation gets its
   own harness (claim 59). The same shape as S4's generator/evaluator split. Full synthesis in
   [`memory.md`](memory.md).
+- **S9** - [Inside the Microsoft Agent Framework: How we designed a layered SDK](../../sources/260801_agent-framework-layered-sdk/LEARNING.md)
+  (Shawn Henry, 2026-05-28). **T2 vendor design post about its own SDK; nothing measured, nothing
+  compared.** Read it for **vocabulary and taxonomy** - loop / workflows / harness as three separable
+  purchases, five named orchestration patterns, and the only enumerated harness inventory in this
+  brain. Its figures are richer than its prose, which is unusual and is why it gated as a genuine
+  two-leg source. **Contradicts claim 12 head-on (`d1`), and is silent on claim 31's subtraction.**
 - **R1** - [deep-research pass on S2](../../sources/260725_12-factor-agents/context/01_context-limits-and-decomposition.md) (2026-07-25) - external evidence, tiered with independence calls.

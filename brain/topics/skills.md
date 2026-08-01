@@ -202,3 +202,13 @@ what S4 does not have: **keep the meter after you remove the part.**
   do things* rather than of facts. That puts skills and memory in one family rather than two adjacent
   topics, and supplies the category name this note had been describing without. See
   [`memory.md`](memory.md).
+- **S9** - [Inside the Microsoft Agent Framework](../../sources/260801_agent-framework-layered-sdk/LEARNING.md)
+  (2026-05-28). Contributes **one box in one diagram**, and it is worth recording only because of
+  *whose* diagram it is. S9's harness inventory files `Skills` under **Context**, as a peer of
+  `Prompts` and `Memory` [S9 `fig_AgentHarness`] - a different vendor, with no stake in S7's argument
+  and no reference to it, independently placing skills in the same drawer as memory rather than
+  treating them as documentation or as a tool. **Weak evidence of the scarce kind: independent.** It
+  supports claim 64's *family assignment* and says nothing about anything else in this note - S9
+  never defines a skill, never discusses writing or evaluating one, and does not mention skills in
+  its prose at all. **This does not move the topic off `emerging`**; a box position is not a second
+  source on the claims that matter here ([ADR-0012](../decisions/0012-a-mention-is-not-a-source.md)).

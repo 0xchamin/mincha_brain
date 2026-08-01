@@ -65,6 +65,12 @@
 | Query-time synthesis | Relating documents to each other *when the question arrives*. Cheap to build because nothing must be maintained, paid for on every question while the user waits, and discarded afterwards. The thing an LLM Wiki trades away. | S8 (gist @ac46de1, §The core idea) |
 | Lint (knowledge base) | A periodic, separately invoked health check over the **whole** store, hunting contradictions, superseded claims, orphans, missing pages and missing cross-references. **Not a form checker** - every item on the list is a judgement, which is why this kit calls its version `dream` instead ([ADR-0010](decisions/0010-lint-is-the-dream-pass.md)). | S8 (gist @ac46de1, §Operations) |
 | Memex | Vannevar Bush's 1945 proposal for a personal, curated document store where the **trails between** documents matter as much as the documents. Blocked for eighty years on maintenance labour rather than on storage or linking - which reframes the LLM's contribution as economic, not intellectual. | S8 (gist @ac46de1, §Why this works) |
+| Agent loop | The repeated cycle where an agent takes input, reasons over context, decides an action, optionally calls tools, observes the result, and continues until done. Six lines of pseudocode; the difficulty is the surrounding management of messages, tool schemas, errors, streaming, permissions and state. **Whether you or your framework should own it is an open conflict** - see claim 12 vs claim 75. | S9 (article, §Agent loops) |
+| Harness (as an inventory) | The runtime layer around an agent - tools, context, memory, planning, middleware, permissions. S9's contribution is **enumerating** it in four named columns rather than describing it in prose; S4's is the discipline for **pruning** it (claim 31). Read the two together. | S9 (article, `fig_AgentHarness`) |
+| Agent provider | A pluggable implementation that *is* the agent, rather than a model the agent calls - it brings its own loop, tools and context strategy. In S9's figure, whole third-party products (Claude Code, GitHub Copilot CLI) occupy this slot beside a wire protocol (A2A). | S9 (`fig_AgentLoop`, `single-leg`) |
+| Magentic orchestration | A vendor's name for the supervisor pattern: a coordinating agent plans and supervises work across subagents and tools rather than performing it. Same shape as S1's *diagnoser meta-agent* and S4's planner. | S9 (article, §Workflows) |
+| Author/Critic workflow | A workflow where one agent produces output and a **separate** one reviews or improves it, drawn as `worker` and `reviewer` in a cycle. The generator/evaluator split (claims 34, 59) as a named, reusable SDK primitive. | S9 (`fig_Workflows`) |
+| Tool selection (as middleware) | Choosing which subset of the available tools reaches the model on a given call, treated as a cross-cutting policy rather than per-call authoring. An instance of claim 20 - the tool list is a context-window decision like any other. **Figure-only in S9; nothing in this brain measures it.** | S9 (`fig_AgentHarness`, `single-leg`) |
 
 > **S1** = `sources/260725_closed-loop-evals-multimodal-agent/` (Uber, AI Engineer World's Fair 2026).
 > **S2** = `sources/260725_12-factor-agents/` (Dex Horthy / HumanLayer, AI Engineer World's Fair 2025).
@@ -74,4 +80,5 @@
 > **S6** = `sources/260731_chatgpt-memory-dreaming/` (OpenAI, 2026-06-04).
 > **S7** = `sources/260731_claude-memory-dreaming/` (Anthropic, "Code w/ Claude", 2026-05-21).
 > **S8** = `sources/260731_llm-wiki/` (Andrej Karpathy, gist `ac46de1`, 2026-04-04).
+> **S9** = `sources/260801_agent-framework-layered-sdk/` (Shawn Henry, 2026-05-28).
 > **R1** = deep-research pass on S2, `sources/260725_12-factor-agents/context/01_context-limits-and-decomposition.md`.

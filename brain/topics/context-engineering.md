@@ -1,7 +1,8 @@
 # Topic: Context engineering
 
-**Status:** established (3 sources - S2 12-factor agents, S4 Anthropic harness design, **S8 LLM Wiki
-(a partial feeder, 2 claims)**; plus the R1 research pass). **Basis for the promotion:** S4
+**Status:** established (4 sources - S2 12-factor agents, S4 Anthropic harness design, **S8 LLM Wiki
+(a partial feeder, 2 claims)**, **S9 Agent Framework (a partial feeder, 1 claim)**; plus the R1
+research pass). **Basis for the promotion:** S4
 independently arrives at S2's serialisation claim from the opposite direction - S2 argues you should
 own the thread format so you *can* pause and resume; S4 needs exactly that artifact to make context
 resets work [S4 §2]. Most of S4's other context claims are new and `single-leg`, not corroborating.
@@ -127,6 +128,31 @@ Instead, once a valid tool call succeeds, **clear the pending errors**; summaris
 the whole stack trace. "Figure out what you want to tell the model so you get better results"
 [S2 `&t=653s`].
 
+### Context management as middleware, not as ad-hoc prompt work
+
+A small but useful reframing from S9, and it is a **placement** claim rather than a technique. In its
+harness inventory, `context compaction`, `tool selection` and `permissions` sit together in a column
+labelled **Middleware** [S9 `fig_AgentHarness`] - the same architectural slot as request logging or
+auth in an ordinary web stack: cross-cutting, applied uniformly on every pass through the loop,
+configured once rather than reasoned about per call.
+
+**Why that placement earns a paragraph.** Everything else in this note is something you do while
+authoring a call - choose the tokens, model the thread, compact the errors. Middleware is the claim
+that some of it should stop being authored at all and become policy the loop applies for you. S9 says
+the same thing in prose about the loop generally: making the loop explicit gives you **a consistent
+place to apply controls** - limit which tools an agent may call, require approval for certain
+actions, compact context when conversations grow, log every step [S9 §Agent loops].
+
+`tool selection` is the item worth noticing, because this note has no other source on it: choosing
+*which subset of the available tools reaches the model on this call* is treated as a context-window
+decision, which is exactly the framing claim 20 argues for - prompt, memory, RAG and history are one
+problem, and so, it turns out, is the tool list. **Figure-only in S9 and `needs-check`** - the prose
+never mentions tool selection, and no source in this brain measures it.
+
+> **Do not read the placement as a recommendation to adopt a middleware stack.** S9 is an SDK vendor
+> and this is its product's shape. The transferable part is the *distinction* - authored per call vs
+> applied as policy - not the packaging.
+
 ### The prompt you own for one call has a persistent counterpart: the contract document
 
 S2's rule is about the tokens in a single call. **S8 pushes the same idea onto a file that persists
@@ -186,6 +212,7 @@ pass a **budget decision**, not a completeness one: you choose which images are 
 | **The persistent counterpart to owning the prompt is the contract document** (`AGENTS.md` / `CLAUDE.md`) - "the key configuration file", and the load-bearing engineering artifact of an LLM knowledge system rather than the retrieval stack. It is also **the only layer both human and model write**, so it is where a correction to *behaviour* can persist. | S8 §Architecture (`n5`, `n4`) | needs-check (single-leg, T4, unmeasured, self-descriptive) |
 | **Ship an agent-oriented design as deliberately underspecified prose sized for a context window**, to be instantiated by the reader's own agent - the unit distributed is a context document, not a library or a spec. | S8 §Note (`n16`) | needs-check (single-leg) |
 | **Text and its inline images cannot be read in one pass** - read the text, then view selected images. A mechanical constraint that forces a two-pass shape on any document with figures, and makes the second pass a token-budget decision ("some or all"). | S8 §Tips and tricks (`n12`) | needs-check (single-leg) |
+| **Some context management belongs in middleware, not in per-call authoring** - compaction, tool selection and permissions applied uniformly by the loop rather than reasoned about each pass. The explicit loop is what gives controls a consistent place to live. | S9 `fig_AgentHarness` + §Agent loops | emerging (T2 vendor; `tool selection` is figure-only) |
 
 ## Key visuals
 
@@ -251,4 +278,5 @@ pass a **budget decision**, not a completeness one: you choose which images are 
 - **S2** - [12-Factor Agents: Patterns of reliable LLM applications](../../sources/260725_12-factor-agents/LEARNING.md) (Dex Horthy, HumanLayer, AI Engineer WF 2025) - factors 2, 3, 9 and the "everything is context engineering" framing.
 - **S4** - [Harness Design for Long-Running Application Development](../../sources/260725_harness-design-long-running-apps/LEARNING.md) (Prithvi Rajasekaran, Anthropic Labs, 2026) - the serialisation artifact that makes context resets work, **context anxiety**, and compaction-vs-reset. **T2 vendor, n=1 self-reported runs, visual leg skipped** - mechanisms transfer, numbers are not replicated. *(Row added 2026-07-31: S4 was named in this note's status line and cited by two claims but had no row here - an orphan of exactly the class [ADR-0009](../decisions/0009-dreaming-reconciliation-pass.md) exists to catch, found incidentally while ingesting S8.)*
 - **S8** - [LLM Wiki](../../sources/260731_llm-wiki/LEARNING.md) (Andrej Karpathy, 2026-04-04) - **a partial feeder**, contributing two claims only: the schema document as the load-bearing artifact, and the mechanical two-pass constraint on markdown with inline images. **T4, unmeasured, no figures** - read it for the framing, never as evidence.
+- **S9** - [Inside the Microsoft Agent Framework](../../sources/260801_agent-framework-layered-sdk/LEARNING.md) (2026-05-28) - **a partial feeder, contributing one placement claim**: compaction, tool selection and permissions as **middleware** applied by the loop rather than authored per call. Also the only mention of *tool selection* anywhere in this brain, and it is figure-only. **T2 vendor design post, nothing measured** - take the authored-vs-policy distinction, not the packaging.
 - **R1** - [deep-research pass on S2](../../sources/260725_12-factor-agents/context/01_context-limits-and-decomposition.md) (2026-07-25) - external evidence: Lost in the Middle (T1), Context Rot (T2), Anthropic context engineering (T2), Beyond pass@1 (T3), Event Sourcing (T1). Each citation carries a tier and an independence call.
