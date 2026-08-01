@@ -1,11 +1,21 @@
 # Topic: RAG (Retrieval-Augmented Generation)
 
-**Status:** **emerging** (1 source - S8 "LLM Wiki", Andrej Karpathy, 2026-04-04).
-**Basis:** the topic's first source, and it arrives from an unexpected direction - **it is an argument
-against query-time retrieval**, not a description of how to do it. That is still the right home for
-it: a claim about what to build *instead* of RAG belongs in the note that owns RAG, and splitting it
-into a `knowledge-bases` note would put two halves of one argument in two places (architect call, see
-"Scope" below).
+**Status:** **emerging** (2 sources - S8 "LLM Wiki", Andrej Karpathy, 2026-04-04; S10 "Tool search",
+Microsoft, 2026-07-29).
+**Basis:** the topic's first source arrived from an unexpected direction - **it is an argument against
+query-time retrieval**, not a description of how to do it. That is still the right home for it: a
+claim about what to build *instead* of RAG belongs in the note that owns RAG, and splitting it into a
+`knowledge-bases` note would put two halves of one argument in two places (architect call, see "Scope"
+below).
+
+**Why a second source does not make this `established`.** S10 brings what S8 could not - real
+retrieval mechanics, on a public benchmark, with numbers - but it retrieves over **tool schemas**, not
+over a document corpus. Chunking, embeddings, vector stores and grounding evaluation still have
+**zero** sources. The two sources also barely touch: they agree only that heavyweight retrieval
+infrastructure is often avoidable, and reach that from opposite ends. Two sources that do not
+corroborate each other on the topic's core machinery is `emerging` with better coverage, not
+`established` - the same call [ADR-0012](../decisions/0012-a-mention-is-not-a-source.md) asks for, run
+in the honest direction.
 
 **Read the evidence limit first.** S8 is **T4 - one practitioner describing his own workflow** - with
 **no measurement of any kind**: no eval, no baseline, no comparison against the retrieval systems it
@@ -188,6 +198,93 @@ underspecified so the agent fills in the particulars for its own harness and dom
 document [`n5`] as where that instantiation lands and persists. It is also conveniently
 unfalsifiable: a document that specifies nothing cannot be wrong about an implementation.
 
+### S10: what happens when the retrieved corpus is the *tool catalog*
+
+The topic's second source retrieves over something this note did not anticipate, and the shift is
+worth stating plainly: **the corpus is 44,000 tool schemas and the consumer is the model itself,
+mid-turn.** That changes the economics in one specific way - a retrieval miss does not return a worse
+answer, it removes a **capability**, and the model may not know the capability existed.
+
+**The first retrieval mechanics in this note, and the first numbers.** Recall@10 on ToolRet, three
+slices [S10 Figure 3, `n11`]:
+
+| Method | Web | Code | Customized |
+|---|---|---|---|
+| **Tool search** (enhanced sparse, lexical similarity) | **45.99%** | **39.56%** | 41.36% |
+| BM25s | 24.62% | 28.23% | 32.39% |
+| BGE-reranker-v2-gemma (GPU cross-encoder) | 45.94% | 38.23% | **49.43%** |
+
+> 💡 **Recall@k** - the share of queries where the correct item appears anywhere in the top k. Silent
+> about rank within those k, and silent about the rest.
+
+> 💡 **Cross-encoder reranker** - a model that scores query and candidate *together* rather than
+> comparing precomputed vectors. More accurate and far more expensive, because nothing can be indexed
+> ahead of time: every candidate needs a forward pass at query time.
+
+**The claim S10 draws is defensible and useful: a tuned sparse lexical pipeline matched a GPU
+cross-encoder in two of three categories without paying for the GPU at serving time** [`n12`]. That is
+a genuine data point against the reflex that quality retrieval requires neural reranking.
+
+**Two things weaken it, and the first is stated by the source itself:**
+
+1. **It is not one experiment** [`d2`]. The BM25s and BGE columns are "**from [1]**" - lifted from
+   another paper - while the tool-search column is a self-run that deliberately "left out the
+   benchmark's instruction string" to avoid an extra LLM call at serving time. Whether the borrowed
+   baselines also omitted it is never said, so the columns may not be like-for-like and **the
+   direction of the bias is unknown**.
+2. **The absolute level goes undiscussed.** Recall@10 in the low forties means the right tool is
+   **outside the top ten for more than half of queries**, while the shortlist default is **five**.
+   S10's closing line - "Smaller is not better if the right capability disappears. The shortlist has
+   to be good" - is never placed beside its own table.
+
+### The finding that transfers: retrieval quality is an editorial problem before it is an algorithmic one
+
+The most reusable thing in S10 is what happened when the benchmark failed. The failures were not in
+the ranker: descriptions "capturing implementation detail instead of user intent vocabulary", and
+generic verbs - "get", "create", "manage", "REST API" - that cannot distinguish a tool from its
+neighbours [S10 §Tuning the search space, `n13`]. Their example is exact: `execute_query`, described
+truthfully as "runs a query against the configured database", must be found by users typing
+"analytics", "dashboard", "SQL", "reporting", "warehouse". **Accurate and unsearchable are perfectly
+compatible.**
+
+The fix is an **index-only alias field** (`additional_search_text`): indexed for retrieval, invisible
+to the model in MCP responses, and leaving the upstream schema untouched [`n14`]. So retrieval
+vocabulary and consumer-facing schema become **independently tunable**, and a third-party corpus can
+be tuned for local vocabulary without forking it.
+
+Self-reported gain: retrieval hit rate "+about 56%", end-to-end accuracy "+about 55%", "within about
+4% of the full-catalog baseline" [`n15`]. **Do not quote these** - no dataset, no absolute baselines,
+no statement of relative-versus-points, and it is not the ToolRet run above. Two evaluation regimes
+are blended in one argument.
+
+> **The generalisation, which is not about tools:** the moment an item is *retrieved* rather than
+> *enumerated*, its description stops being documentation and becomes an index entry - and it must be
+> written in the vocabulary of whoever is searching. The first tuning pass on any retrieval system is
+> therefore **editorial**, and S10 says so outright: "The first useful tuning pass probably won't be
+> algorithmic. It will be editorial."
+
+### Where S8 and S10 actually meet, and where they do not
+
+**They agree on one thing, arrived at from opposite ends:** heavyweight retrieval infrastructure is
+more avoidable than the field assumes. S8 defers it entirely at moderate scale [`n10`, `n11`]; S10
+keeps a real index but shows an enhanced **sparse lexical** pipeline holding its own against a GPU
+cross-encoder [`n12`].
+
+**But S10 does not corroborate `n10`, and it would be an easy mistake to record that it does.** S8's
+claim is that a **hand-maintained index file read by the model** substitutes for embedding retrieval
+at ~100 sources. S10 runs a **real search engine over 44,000 items**. The shared word is "you may not
+need embeddings"; the designs have nothing else in common, and S10's scale is three orders of
+magnitude past S8's stated ceiling. Recorded as `refines` at most: **sparse lexical retrieval is more
+competitive than expected**, which makes S8's instinct more plausible without testing his design.
+
+**They disagree, usefully, on where synthesis happens.** S8 moves work to ingest time because
+query-time synthesis is repeated and discarded. S10 does the opposite - the index is built ahead of
+time, but the *selection* happens per query, and it must, because which tools a task needs is not
+knowable at ingest. **The dividing question is whether the query set is predictable.** For a document
+corpus answering repeated synthesis questions, S8's compile-once wins. For a tool catalog serving one
+agent across many workflows, nothing can be compiled and the per-query cost is unavoidable. That is a
+sharper boundary than either source states alone.
+
 ## Key claims
 
 | Claim | Sources (cited) | Confidence |
@@ -200,11 +297,24 @@ unfalsifiable: a document that specifies nothing cannot be wrong about an implem
 | **The binding constraint on a knowledge base is maintenance labour** - not storage, retrieval or linking. Bush's Memex was blocked on exactly this in 1945. | S8 §Why this works (`n13`, `n15`) | emerging (single-leg) |
 | **An index file may substitute for embedding-retrieval infrastructure at moderate scale (~100 sources).** | S8 §Indexing and logging (`n10`) | **needs-check - unmeasured.** The one falsifiable claim here, with no eval, baseline or derivation. Do not cite as a result |
 | **Defer search infrastructure until the index stops working**, then use a real engine; prefer one shipping both a CLI and an MCP server, so the harness chooses how to call it. | S8 §Optional: CLI tools (`n11`) | emerging (single-leg) |
+| **A tuned sparse lexical pipeline was competitive with a GPU cross-encoder reranker** on two of three ToolRet categories (Recall@10 45.99 / 39.56 vs 45.94 / 38.23; behind by 8pp on the third), without serving-time GPU cost. | S10 Figure 3 (`n11`, `n12`) | **needs-check despite being measured** - the baselines are borrowed from another paper and the self-run used a different protocol (`d2`) |
+| **Retrieval quality is an editorial problem before it is an algorithmic one.** The dominant failure is descriptions written in implementer vocabulary; the first useful tuning pass is rewriting them, not changing the ranker. | S10 §Tuning the search space + §Try it (`n13`, `n19`) | emerging (single-leg, but it is an experience report about their own benchmark run) |
+| **Separate the indexed surface from the consumer-facing one.** An index-only alias field makes retrieval vocabulary and exposed schema independently tunable, and lets a third-party corpus be tuned for local vocabulary without forking it. | S10 §Tuning the search space (`n14`, prose vs code) | emerging |
+| **When the retrieved items are *capabilities*, a miss removes an option rather than degrading an answer** - and the consumer may never learn the option existed. Recall@10 of 39-46% against a default shortlist of 5 is the unexamined half of S10's result. | S10 Figure 3 (`n11`) + §When we would use tool search | **needs-check - this brain's reading of the source's own numbers**, not a claim S10 makes |
 
 ## Key visuals
 
-_None. **S8 contains no figures, diagrams, images or data of any kind** - which is also why every claim
-above is single-leg. The two generated diagrams for this source live in its
+![Tokens saved using tool search: baseline context climbing to 541k tokens at 1,180 tools while the tool-search series stays roughly flat near 15k](../../sources/260801_tool-search-toolboxes/visuals/fig_tokens-chart.png)
+> **The topic's first measurement of anything.** Retrieval instead of enumeration, priced: 541k tokens
+> to 15k at 1,180 items, and the retrieved series stays roughly flat as the corpus grows 24x. The
+> curve is the argument - retrieval turns corpus size from a per-query cost into an indexing cost.
+> Note the unexplained step in the baseline between ~500 and ~550 items, recorded in the source's
+> [`nodes.md`](../../sources/260801_tool-search-toolboxes/nodes.md). S10 `fig_tokens-chart`, `n9`/`n10`;
+> full walkthrough in the
+> [source note](../../sources/260801_tool-search-toolboxes/LEARNING.md).
+
+_**S8 contains no figures, diagrams, images or data of any kind** - which is why every S8 claim above
+is single-leg. The two generated diagrams for that source live in its
 [`LEARNING.md`](../../sources/260731_llm-wiki/LEARNING.md) and are labelled as synthesized, not
 sourced._
 
@@ -219,9 +329,23 @@ sourced._
   `INDEX.md` read first, an append-only `log.md` - at **8 sources**, an order of magnitude below the
   claimed ceiling. **n=1, well inside the easy regime**: no evidence either way, and worth saying so
   before the coincidence gets mistaken for corroboration.
-- **Nothing here addresses retrieval mechanics at all.** Chunking, embeddings, reranking, hybrid
-  search and grounding evaluation - the topic's original scope - still have **zero sources**. The one
-  source arrived arguing you may not need them, which is not the same as covering them.
+- ~~**Nothing here addresses retrieval mechanics at all.**~~ **Partially closed by S10
+  (2026-08-01)**, and the remainder is worth stating precisely. Now covered: **sparse lexical
+  retrieval, cross-encoder reranking as the baseline to beat, Recall@k as the metric, index-field
+  selection, and description quality as the dominant lever.** Still at **zero sources**: **chunking,
+  embeddings, vector stores, hybrid search, and grounding evaluation.** The gap is not accidental -
+  S10 retrieves over short structured records (tool schemas), where chunking does not arise and
+  lexical matching is unusually strong. **A source retrieving over long prose is still missing, and
+  the topic's core machinery is what it would bring.**
+- **How much of S10 survives leaving the tool-catalog setting?** Its corpus is short, structured,
+  curated and writable - the friendliest possible conditions for sparse retrieval, and the reason the
+  editorial fix works at all. You cannot rewrite someone else's documents to be more searchable.
+  **Which of its findings are about retrieval and which are about tool catalogs is the open question
+  this note most needs answered**, and it is answerable with existing IR literature.
+- **The unexamined trust surface.** An index-only field that is invisible to the consumer decides what
+  gets retrieved [S10 `n14`]. In a tool catalog that means invisibly steering which capability an
+  agent is offered. No source here addresses adversarial or careless index metadata. *(Commentary,
+  not a claim - see [`agent-security.md`](agent-security.md).)*
 - **Does the human keep their grip on knowledge they never wrote?** The division of labour [`n14`]
   hands the human taste and the LLM the writing. Nothing addresses what a reader retains of a corpus
   they have only ever read.
@@ -238,3 +362,13 @@ sourced._
   two efficacy claims (`n10`, `n13`) are assertion phrased with a confidence nothing behind them
   supports, and `d1` catches one of them contradicting the document's own operations section. Its
   unusual virtue among this brain's sources is that **nothing is being sold**.
+- **S10** - [Tool search: Finding the right tool at the right time](../../sources/260801_tool-search-toolboxes/LEARNING.md)
+  (Microsoft, 2026-07-29). **The opposite evidence profile to S8, and the complement this note
+  needed**: a T2 vendor post about a product it is selling, which nonetheless runs a **public
+  benchmark** (ToolRet, 44,000+ tools), reports a category where it **loses**, and states a protocol
+  deviation that works against it. Read it for the first retrieval numbers, the sparse-vs-neural
+  comparison, and the editorial-before-algorithmic finding. **Read the caveats with it:** the
+  head-to-head mixes borrowed baselines with a self-run (`d2`), the metadata-tuning percentages are
+  method-free self-report (`n15`), and its corpus is tool schemas rather than prose. Its context-cost
+  half lives in [`context-engineering.md`](context-engineering.md) and its protocol half in
+  [`mcp.md`](mcp.md).

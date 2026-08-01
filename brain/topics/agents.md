@@ -1,7 +1,8 @@
 # Topic: Agents
 
-**Status:** established (6 sources - S1 Uber closed-loop evals, S2 12-factor agents, S4 Anthropic
-harness design, S5 skills evals, S7 Anthropic memory and dreaming, S9 Microsoft Agent Framework)
+**Status:** established (7 sources - S1 Uber closed-loop evals, S2 12-factor agents, S4 Anthropic
+harness design, S5 skills evals, S7 Anthropic memory and dreaming, S9 Microsoft Agent Framework,
+S10 tool search)
 
 > Living, cross-source synthesis on autonomous LLM agents. Many sources feed this note; **merge
 > and de-duplicate** as they arrive (architect persona) - this should read as one coherent view,
@@ -227,6 +228,38 @@ instruction to keep re-asking which ones you still do.**
 > on a diagram tile** - the prose claims only that the framework can "interact with agents hosted
 > elsewhere" and never names Claude Code - so treat it as a direction of travel, not a capability.
 
+### The tool catalog is a design decision, not an integration list
+
+S2 established that tools are "just structured JSON the model emits" - nothing magic about them. S10
+adds the thing that only shows up at scale: **once the catalog passes roughly 10-15 tools, deciding
+what the agent can *see* becomes a distinct design problem from deciding what it can *do*** [S10 §When
+we would use tool search, `n18`].
+
+The shape S10 argues for is a **Pareto split**, and it is the transferable part [S10 §Search is for
+the long tail, `n16`]:
+
+| | What it holds | How it reaches the model |
+|---|---|---|
+| **The head** | the agent's core contract - policy tools, frequent data access, "capabilities the model should never have to rediscover" | **pinned**, always present, never retrieved |
+| **The long tail** | rare but high-stakes tools: "rotate a credential, recover a failed deployment, apply a compliance exception, inspect an audit trail" | **retrieved on demand** by a search tool |
+
+**Why the tail is the interesting half, and why it is not the obvious argument.** The reflex reading is
+that rare tools matter less, so hiding them is cheap. S10's point is the reverse: rare tools are
+disproportionately the **emergency** ones, so the tail is exactly where a retrieval miss is most
+expensive. That is what makes the split a design decision rather than an optimisation - **you are
+choosing which capabilities the agent is allowed to forget it has.**
+
+The cost side is measured and large: deferring the manifest cut context from 541k to 15k tokens at
+1,180 tools [S10 `fig_tokens-chart`, `n9`]. The reliability side is not: Recall@10 of 39-46% with a
+default shortlist of five, unexamined by the source [S10 Figure 3, `n11`]. See
+[`context-engineering.md`](context-engineering.md) for the budget half and [`rag.md`](rag.md) for the
+retrieval half.
+
+**One second-order effect worth carrying into any agent design:** the moment tools are retrieved, a
+tool's **description stops being documentation and becomes an index entry** [S10 §Tuning the search
+space, `n19`]. Adding a tool then asks a question it never asked before - *what words will a user
+reach for?* - and the answer is written in the user's vocabulary, not the implementer's.
+
 ### Two counterweights worth keeping
 
 - **Not every problem needs an agent.** S2's DevOps agent got Makefile build steps in the wrong
@@ -268,6 +301,8 @@ instruction to keep re-asking which ones you still do.**
 | **A harness is an inventory**: Common Tools (file system, code/shell execution), Context (prompts, skills, memory), Planning (todo, subagents), Middleware (compaction, tool selection, permissions), plus presets per task archetype. | S9 `fig_AgentHarness` (skills, todo, tool selection and presets are **figure-only**) | emerging / needs-check on the figure-only items |
 | **Environment quality bounds agent quality regardless of model strength** - a strong model with poor tools, weak context and no controls still produces a poor result. | S9 §Harnesses + `fig_AgentHarness` (the model is in none of the boxes) | emerging |
 | An **agent provider** slot can accept a whole third-party agent product (Claude Code, GitHub Copilot CLI) as a peer of a first-party agent and of A2A - the unit of composition moves from *model* to *finished agent*. | S9 `fig_AgentLoop` | needs-check (**single-leg** - one diagram tile; the prose says only "interact with") |
+| **Past roughly 10-15 tools, what the agent can *see* becomes a separate design decision from what it can *do*.** The shape: **pin the head** (core-contract tools it must never rediscover), **retrieve the long tail** - which is where the rare, high-stakes tools live, so it is also where a miss costs most. | S10 §Search is for the long tail + §When we would use tool search (`n16`, `n18`) | emerging (T2 vendor threshold, no derivation; the head/tail argument itself is sound) |
+| **Once tools are retrieved rather than enumerated, a tool description becomes an index entry** - written in the vocabulary of whoever is searching, not of whoever built it. Adding a tool becomes an information-retrieval question. | S10 §Tuning the search space + §intro (`n13`, `n19`) | emerging (single-leg experience report) |
 
 ## Key visuals
 
@@ -363,4 +398,11 @@ instruction to keep re-asking which ones you still do.**
   purchases, five named orchestration patterns, and the only enumerated harness inventory in this
   brain. Its figures are richer than its prose, which is unusual and is why it gated as a genuine
   two-leg source. **Contradicts claim 12 head-on (`d1`), and is silent on claim 31's subtraction.**
+- **S10** - [Tool search: Finding the right tool at the right time](../../sources/260801_tool-search-toolboxes/LEARNING.md)
+  (Microsoft, 2026-07-29). Feeds this note for **tool-catalog design**: the pin-the-head /
+  retrieve-the-tail split, the 10-15 tool crossover, and descriptions becoming index entries. **T2
+  vendor post on a preview product**, but its token measurement runs on a public benchmark, which puts
+  it above S9 evidentially even though both are Microsoft. Full synthesis split across
+  [`rag.md`](rag.md) (retrieval), [`context-engineering.md`](context-engineering.md) (budget) and
+  [`mcp.md`](mcp.md) (protocol).
 - **R1** - [deep-research pass on S2](../../sources/260725_12-factor-agents/context/01_context-limits-and-decomposition.md) (2026-07-25) - external evidence, tiered with independence calls.

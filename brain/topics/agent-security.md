@@ -106,7 +106,20 @@ with a parenthetical clarifying *which* password. Keep it as the canonical pictu
   user entirely - but that discards the delegation guarantee that made OAuth worth having. Open.
 - **How does MCP's authorization actually build on this?** Believed to rest on OAuth 2.1, but **no
   source in this brain establishes it** - the connection is currently agent commentary, not a cited
-  claim. Resolve before promoting anything into `mcp.md`.
+  claim. Resolve before promoting anything into `mcp.md`. *(Note: `mcp.md` is no longer empty as of
+  S10, but it says nothing about auth beyond a bearer token in a screenshot, so this stands.)*
+- **Retrieved tool catalogs create an invisible steering surface, and no source discusses it.** When a
+  tool catalog is searched rather than enumerated (S10, [`mcp.md`](mcp.md)), two new facts hold at
+  once: the model sees **only a shortlist** it did not choose, and the field that decides that
+  shortlist can be **invisible to it**. Foundry's `additional_search_text` is indexed for retrieval
+  but explicitly "not visible to models in MCP responses" [S10 §Tuning the search space, `n14`]. So
+  whoever writes that field steers which capability the agent is offered, with **no trace in the
+  context the model or a reviewer can inspect** - and on an aggregating server, that writer may be
+  neither the tool's author nor the agent's owner. Two shapes worth naming: **starvation** (tuning a
+  safe tool's aliases so a risky one wins the query) and **substitution** (making an attacker-supplied
+  tool the best match for common intents). **Labelled commentary** - S10 never mentions security, and
+  no source in this brain measures retrieval-time influence. It is cheap to record now because the
+  pattern is new and spreading; it is not yet a claim.
 - **Temporal conflict on flow selection (S3 `n17`) - stale, superseded.** The source recommends the
   implicit flow for browser apps; the field has since moved to authorization code + PKCE. Recorded as
   a divergence in the source's `nodes.md`, flagged `do not apply`, and **not promoted as guidance**.

@@ -1,8 +1,9 @@
 # Topic: Context engineering
 
-**Status:** established (4 sources - S2 12-factor agents, S4 Anthropic harness design, **S8 LLM Wiki
-(a partial feeder, 2 claims)**, **S9 Agent Framework (a partial feeder, 1 claim)**; plus the R1
-research pass). **Basis for the promotion:** S4
+**Status:** established (5 sources - S2 12-factor agents, S4 Anthropic harness design, **S8 LLM Wiki
+(a partial feeder, 2 claims)**, **S9 Agent Framework (a partial feeder, 1 claim)**, **S10 Tool search
+(a partial feeder, 2 claims - and the first *measurement* of a claim S9 could only place)**; plus the
+R1 research pass). **Basis for the promotion:** S4
 independently arrives at S2's serialisation claim from the opposite direction - S2 argues you should
 own the thread format so you *can* pause and resume; S4 needs exactly that artifact to make context
 resets work [S4 §2]. Most of S4's other context claims are new and `single-leg`, not corroborating.
@@ -143,15 +144,60 @@ the same thing in prose about the loop generally: making the loop explicit gives
 place to apply controls** - limit which tools an agent may call, require approval for certain
 actions, compact context when conversations grow, log every step [S9 §Agent loops].
 
-`tool selection` is the item worth noticing, because this note has no other source on it: choosing
-*which subset of the available tools reaches the model on this call* is treated as a context-window
-decision, which is exactly the framing claim 20 argues for - prompt, memory, RAG and history are one
-problem, and so, it turns out, is the tool list. **Figure-only in S9 and `needs-check`** - the prose
-never mentions tool selection, and no source in this brain measures it.
+`tool selection` is the item worth noticing: choosing *which subset of the available tools reaches the
+model on this call* is treated as a context-window decision, which is exactly the framing claim 20
+argues for - prompt, memory, RAG and history are one problem, and so, it turns out, is the tool list.
+**Figure-only in S9** - its prose never mentions tool selection.
 
 > **Do not read the placement as a recommendation to adopt a middleware stack.** S9 is an SDK vendor
 > and this is its product's shape. The transferable part is the *distinction* - authored per call vs
 > applied as policy - not the packaging.
+
+### The tool list is a context-budget line item, and it is now measured
+
+~~No source in this brain measures tool selection.~~ **Closed by S10 (2026-08-01)**, which is about
+nothing else. Two things it settles, and one it opens.
+
+**Settled: the tool manifest is resident context whose size tracks the catalog, not the task.** A
+hundred tools makes every turn open with "thousands of tokens of names, descriptions, JSON schemas,
+argument definitions, and nested parameters before you've asked anything useful" [S10 §intro, `n1`].
+Measured on ToolRet (44,000+ tools): **541k tokens of manifest at 1,180 tools** [S10
+`fig_tokens-chart`, `n9`].
+
+**Settled: deferring the manifest and retrieving into it decouples context cost from catalog size.**
+Replacing `tools/list` with two meta-tools - a search and a dispatcher - cut that 541k to **15k, a 36x
+reduction**, and the chart shows the shape the prose undersells: the tool-search series is roughly
+**flat** across a 24x increase in catalog size while the baseline climbs [S10 `fig_tokens-chart`,
+`n10`]. The transferable claim is not "tools got cheaper" but **catalog size stops being a
+context-budget decision**.
+
+**The distinction this note already cared about, restated in tokens:**
+
+| | Cost per turn | Attention cost |
+|---|---|---|
+| Full manifest, no caching | full price | full |
+| Full manifest, **prompt caching on** | ~90% cheaper | **unchanged** |
+| Manifest deferred behind search | ~3% of baseline at scale | ~3% |
+
+**The middle row is the one that matters here.** "Caching isn't the same as not loading... cached
+context **still competes for the model's attention**" [S10 §The default agent tax, `n2`]. That is this
+note's central measured finding stated by an independent vendor: degradation tracks what is **in** the
+window, not what it cost to put there. A cached manifest is a fully-priced attention liability at a
+90% discount on the invoice.
+
+> 💡 **Prompt caching** - reusing an unchanged prompt prefix so the provider charges a fraction of the
+> input price for it. It buys money and latency, never attention.
+
+**Opened: what the tail of the distribution costs.** S10's own retrieval numbers are Recall@10 of
+39-46% against a default shortlist of five [S10 Figure 3, `n11`]. Deferring the manifest is a token
+win of a size nothing else in this brain matches; whether it is a **reliability** win depends on a
+retrieval quality the source measures and then does not discuss. See [`rag.md`](rag.md), which owns
+the retrieval half, and the open question below.
+
+**And the corollary for the head of the distribution:** what must never be missed does not get
+retrieved at all, it gets **pinned** - which is also what keeps the prompt prefix stable enough for
+caching to work [S10 §Search is for the long tail, `n16`, `n17`]. **Prefix stability is a context
+design constraint, not a billing detail**: it decides where in the window a dynamic list may sit.
 
 ### The prompt you own for one call has a persistent counterpart: the contract document
 
@@ -212,7 +258,9 @@ pass a **budget decision**, not a completeness one: you choose which images are 
 | **The persistent counterpart to owning the prompt is the contract document** (`AGENTS.md` / `CLAUDE.md`) - "the key configuration file", and the load-bearing engineering artifact of an LLM knowledge system rather than the retrieval stack. It is also **the only layer both human and model write**, so it is where a correction to *behaviour* can persist. | S8 §Architecture (`n5`, `n4`) | needs-check (single-leg, T4, unmeasured, self-descriptive) |
 | **Ship an agent-oriented design as deliberately underspecified prose sized for a context window**, to be instantiated by the reader's own agent - the unit distributed is a context document, not a library or a spec. | S8 §Note (`n16`) | needs-check (single-leg) |
 | **Text and its inline images cannot be read in one pass** - read the text, then view selected images. A mechanical constraint that forces a two-pass shape on any document with figures, and makes the second pass a token-budget decision ("some or all"). | S8 §Tips and tricks (`n12`) | needs-check (single-leg) |
-| **Some context management belongs in middleware, not in per-call authoring** - compaction, tool selection and permissions applied uniformly by the loop rather than reasoned about each pass. The explicit loop is what gives controls a consistent place to live. | S9 `fig_AgentHarness` + §Agent loops | emerging (T2 vendor; `tool selection` is figure-only) |
+| **Some context management belongs in middleware, not in per-call authoring** - compaction, tool selection and permissions applied uniformly by the loop rather than reasoned about each pass. The explicit loop is what gives controls a consistent place to live. | S9 `fig_AgentHarness` + §Agent loops; **S10 is the same placement built and measured** (`n3`, `n9`) | emerging (two T2 vendors, independent of each other; still nothing comparing middleware to per-call authoring) |
+| **The tool manifest is resident context that scales with the catalog, not the task** - 541k tokens at 1,180 tools - and **prompt caching makes it ~90% cheaper without making it cost less attention**. | S10 §intro + §The default agent tax + `fig_tokens-chart` (`n1`, `n2`, `n9`) | **measured** on the token counts (ToolRet); needs-check on the attention argument (single-leg, though it agrees with claim 27) |
+| **Deferring the manifest behind a search tool decouples context cost from catalog size** - 36x fewer tokens at 1,180 tools, and roughly flat across a 24x catalog increase. The head of the distribution is **pinned** rather than retrieved, which is also what keeps the prompt prefix cacheable. | S10 `fig_tokens-chart` + §Search is for the long tail (`n9`, `n10`, `n16`, `n17`) | **measured** on tokens; the reliability half is unresolved - see `rag.md` and claim 87 |
 
 ## Key visuals
 
@@ -262,9 +310,20 @@ pass a **budget decision**, not a completeness one: you choose which images are 
   log and replaying it is **Event Sourcing** (Fowler, 2005). Worth mining that literature for the
   three sharp edges it already names - replay determinism, snapshotting, event versioning - none of
   which S2 mentions.
-- **Overlap with `rag.md` needs watching.** As RAG sources arrive, retrieval strategy claims belong
-  there; only the "which tokens win the budget" framing belongs here. Revisit the split if the two
-  notes start duplicating (see ADR-0001).
+- **New, from S10: the token win on tool selection is huge and its reliability cost is unmeasured.**
+  36x fewer tokens is the largest measured context saving in this note. But the same source reports
+  Recall@10 of 39-46% with a default shortlist of five, and never asks what happens on a miss
+  [S10 Figure 3, `n11`]. **Every technique in this note that removes tokens has this shape** - error
+  compaction can summarise away the detail that would have fixed the bug, a context reset can drop
+  state the handoff artifact failed to carry - and S10 is the first source that measures one side of
+  the trade precisely while leaving the other side blank. Treat that as the pattern to watch, not as a
+  fault unique to tool search.
+- **Overlap with `rag.md` needs watching, and S10 is the first source to actually straddle the line.**
+  Its retrieval mechanics (sparse vs neural reranking, Recall@k, index tuning) live in
+  [`rag.md`](rag.md); its budget framing (the manifest as resident context, prefix stability) lives
+  here. The two notes cite the same nodes for different purposes, which is the intended shape under
+  [ADR-0001](../decisions/0001-context-engineering-topic.md) - revisit if they start restating each
+  other rather than dividing the source.
 - **Boundary with [`memory.md`](memory.md), set by [ADR-0007](../decisions/0007-memory-topic.md).**
   Claim 20 ("prompt, memory, RAG and history are one problem") absorbs memory into this note, and that
   remains true *as a framing*. The split is by question: **a claim about which tokens win a budget
@@ -279,4 +338,11 @@ pass a **budget decision**, not a completeness one: you choose which images are 
 - **S4** - [Harness Design for Long-Running Application Development](../../sources/260725_harness-design-long-running-apps/LEARNING.md) (Prithvi Rajasekaran, Anthropic Labs, 2026) - the serialisation artifact that makes context resets work, **context anxiety**, and compaction-vs-reset. **T2 vendor, n=1 self-reported runs, visual leg skipped** - mechanisms transfer, numbers are not replicated. *(Row added 2026-07-31: S4 was named in this note's status line and cited by two claims but had no row here - an orphan of exactly the class [ADR-0009](../decisions/0009-dreaming-reconciliation-pass.md) exists to catch, found incidentally while ingesting S8.)*
 - **S8** - [LLM Wiki](../../sources/260731_llm-wiki/LEARNING.md) (Andrej Karpathy, 2026-04-04) - **a partial feeder**, contributing two claims only: the schema document as the load-bearing artifact, and the mechanical two-pass constraint on markdown with inline images. **T4, unmeasured, no figures** - read it for the framing, never as evidence.
 - **S9** - [Inside the Microsoft Agent Framework](../../sources/260801_agent-framework-layered-sdk/LEARNING.md) (2026-05-28) - **a partial feeder, contributing one placement claim**: compaction, tool selection and permissions as **middleware** applied by the loop rather than authored per call. Also the only mention of *tool selection* anywhere in this brain, and it is figure-only. **T2 vendor design post, nothing measured** - take the authored-vs-policy distinction, not the packaging.
+- **S10** - [Tool search: Finding the right tool at the right time](../../sources/260801_tool-search-toolboxes/LEARNING.md)
+  (Microsoft, 2026-07-29) - **a partial feeder, contributing two claims**, and the source that turns
+  S9's figure-only `tool selection` box into a measured technique: the manifest as resident context
+  (541k tokens at 1,180 tools), 36x reduction by deferral, caching as a price cut that is not an
+  attention cut, and pinning as prefix-stability control. **T2 vendor post on its own preview
+  product**, but the token result runs on a public benchmark (ToolRet). Its retrieval half belongs to
+  [`rag.md`](rag.md).
 - **R1** - [deep-research pass on S2](../../sources/260725_12-factor-agents/context/01_context-limits-and-decomposition.md) (2026-07-25) - external evidence: Lost in the Middle (T1), Context Rot (T2), Anthropic context engineering (T2), Beyond pass@1 (T3), Event Sourcing (T1). Each citation carries a tier and an independence call.
