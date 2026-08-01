@@ -146,6 +146,61 @@ agrees with S4 rather than cutting across it: a strong model with poor tools, we
 controls still produces a poor result (`n8`). The figure makes the same point structurally - **the
 model appears in none of the boxes.** Every element of a harness is something the developer supplies.
 
+## Commentary: the three layers as a Formula 1 team
+
+> ⚠️ **This section is commentary, not evidence.** None of it is in the source, nothing here is
+> cited, and no claim below was promoted to `brain/`. It is a teaching aid worked out in session
+> (2026-08-01) because the three-way split is easy to state and hard to feel. **Do not cite this
+> section as if it were sourced.** Its value is in the last part - where the analogy *breaks* - which
+> is what shows you the edges of the real thing.
+
+| Layer | In F1 | Why it fits |
+|---|---|---|
+| **Loop** | The driver's corner-by-corner cycle - read the situation, brake, turn in, feel the grip, adjust, next corner - repeated for the whole race. | Nobody else can make those decisions at that speed, and they are made fresh each time rather than planned. |
+| **Harness** | The car and everything in reach: chassis, tyres, DRS, engine modes, wheel dials, the radio to the pit wall. | It is what the driver acts *with*. Fixed before the race and only partly adjustable during it. |
+| **Workflow** | The strategy set before lights out: two-stop, box on lap 18 and 38, soft-medium-hard, hold position. | Authored in advance by people who are not driving, and it constrains what the driver may choose. |
+
+**Only the loop is mandatory (`n9`), and F1 shows why.** You can run a sprint race with essentially
+no strategy - just drive. You cannot run any race without a driver making decisions.
+
+**`n8` stops being an abstraction.** "A strong model with poor tools, weak context and no controls
+will still produce a poor result" is simply: a world-champion driver in a backmarker car finishes
+fourteenth. Nobody argues about this in motorsport, which is a hint that the claim is uncontroversial
+rather than insightful.
+
+**`n4` gets a name it does not have in the article.** An agent-provider slot that accepts a whole
+third-party agent is a **customer team** - rather than building your own power unit and gearbox, you
+buy the package and run it. You are not composing parts; you are delegating the whole car. That also
+makes the trust question obvious in a way the source never raises: you inherit someone else's
+engineering decisions wholesale.
+
+**The `d1` conflict already happened in this sport.** Traction control, launch control and ABS were
+**banned** - not because they failed, but because they worked, and moved decisions from the driver to
+the system. That is `d1` exactly: own the loop, or let the machinery own it. The useful lesson is
+that F1 did not settle it by measuring which was faster. It settled it by **deciding where the skill
+was supposed to live** - which suggests `d1` may be a values question wearing an engineering costume,
+and may never be settled by evidence.
+
+### Where the analogy breaks, which is the part worth keeping
+
+- **The lap count is fixed; an agent's is not.** A Grand Prix is 50 laps, known before lights out. An
+  agent loops until the model judges itself done - 3 iterations or 40, decided at runtime. **This is
+  the single biggest divergence**, and it is where runaway agents come from: there is no chequered
+  flag unless you fit one, which is why an iteration cap is standard harness. A closer fit is a
+  **qualifying session** - keep going out until the lap is good enough, then stop.
+- **The driver's loop is continuous and reflexive**, not discrete calls with results returning. A
+  corner is not a tool call, and treating it as one hides that an agent *waits* between actions.
+- **Strategy adapts live.** A safety car destroys the two-stop plan, and the pit wall re-plans mid
+  race. So a workflow is less fixed than the table implies - and the pit wall reacting to a safety
+  car **is a second loop running above the driver's loop**, which is precisely the overlap this
+  source's clean three-box diagram does not admit to (see the note under "Feeds these topics").
+- **The car is essentially fixed at lights-out.** An agent's harness can change mid-run; an F1 team
+  can change wing angle and tyres and nothing else.
+
+> **The honest summary of the analogy: it is good for the *layers* and bad for the *dynamics*.** It
+> makes the three-way split concrete, and it misleads about termination, latency and how much a
+> workflow really binds. Use it to explain the shape to someone once, then drop it.
+
 ## Diagram (mental model)
 
 ```mermaid
