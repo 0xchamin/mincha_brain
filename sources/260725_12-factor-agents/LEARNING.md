@@ -1,18 +1,36 @@
 # Learning - 12-Factor Agents: Patterns of reliable LLM applications
 
-> Persona: **curator** + **mentor** - + **architect** for the topic mapping. Re-adopt when working this file.
+> Persona: **curator** + **mentor, always** - + **architect** for the topic mapping. Re-adopt when
+> working this file.
 
 > The distilled document you learn from - text anchored by a few curated visuals. Built from the
 > corroborated nodes in `nodes.md`. Every claim is cited. Signal, not archive. See `SOURCE.md`.
 
+> **Voice: an AI architect ramping up a new senior engineer** who has never met this subject.
+> Fundamentals in dependency order, judgement over topology, and **evidence labelled where the claim
+> is made** rather than deferred to the end.
+>
+> ⚠️ **Read the evidence class before the content.** This is a **conference talk (T4)** by the founder
+> of a company selling agent tooling. Its own basis - "I talked to 100+ founders, builders,
+> engineers" - is **uncheckable from the source**, and **the talk contains no benchmark, ablation or
+> failure rate of any kind**. Everything below is a practitioner's pattern language, and it is a good
+> one; none of it is measured *by this source*. Where a claim has since been measured, the measurement
+> came from [R1](context/01_context-limits-and-decomposition.md) and is marked inline.
+
 ## TL;DR
 
-Dex Horthy interviewed 100+ people building agents and found that **the ones that work in production
-are barely agentic** - they are ordinary deterministic software with small, tightly-scoped LLM steps
-inside. From that he distilled 12 factors (named after Heroku's 12-factor app). The through-line:
-**an agent is just a prompt, a switch statement, a context-window builder, and a loop** - and every
-reliability problem you have comes from letting a framework own one of those four instead of you.
-`https://www.youtube.com/watch?v=8kMaTybvDUw`
+Dex Horthy reports interviewing 100+ people building agents and found that **the ones that work in
+production are barely agentic** - they are ordinary deterministic software with small, tightly-scoped
+LLM steps inside. From that he distilled 12 factors (named after Heroku's 12-factor app). The
+through-line: **an agent is just a prompt, a switch statement, a context-window builder, and a loop** -
+and every reliability problem you have comes from letting a framework own one of those four instead of
+you. `https://www.youtube.com/watch?v=8kMaTybvDUw`
+
+> **What that first sentence is worth.** The 100+ interviews are the entire empirical basis of the
+> talk and **you cannot check them** - no names, no method, no counts by category (`n1`). Take the
+> factors as a well-argued pattern language from someone who has clearly built this, and **not** as a
+> survey result. The one claim here that has since been *measured* is the micro-agent one, and the
+> measurement is external (R1, below).
 
 ## Key claims
 
@@ -156,6 +174,16 @@ get a valid tool call, **clear the pending errors**; summarise rather than pasti
 Note the dashed **"deterministic code"** labels at both ends of the diagram. That boundary is the
 actual design artefact - deciding where it sits is the job.
 
+> **Evidence, since this is the claim the whole talk rests on.** The slide is **HumanLayer's own
+> deploy bot** and "100 tools, 20 steps, easy" is the speaker describing his own product with no
+> baseline, no failure rate and no comparison against the big-loop design he is arguing against.
+> Internally corroborated only (slide ↔ narration).
+> **It is nonetheless the best-supported claim in this brain**, because two independent things landed
+> on it later: S1 reached the same shape from Uber's production practice, and R1 measured
+> decomposition at **+13.1 to +41.5 pp** reliability across 10 models
+> ([`brain/claims.md`](../../brain/claims.md) claim 11). **Believe the shape; the "easy" is a
+> founder's word, not a result.**
+
 ### Fundamental 7: humans are a tool call
 
 ![Trace showing slack_message from @alex, then request_human_input with intent/question/context/options{urgency high, format yes_no}, then human_response approved true with timestamp and user, then deploy_backend with tag v1.2.3 and environment production](visuals/frame_712.jpg)
@@ -185,6 +213,12 @@ Discord, SMS. "People don't want to have seven tabs open of different ChatGPT st
 - Why this belongs in a fundamentals doc: it is the answer to "won't better models make all this
   obsolete?" No - a better model moves the boundary, and the engineering work moves with it. The
   factors are how you operate *at* the boundary rather than safely behind it.
+
+> **Note what this one is.** A quoted slide of **one practitioner describing a feeling** about where
+> good work comes from - not a finding, and the weakest evidence in the note. It earns its place
+> because S4 later arrives at the same boundary-relative framing from an entirely different direction
+> (a harness rebuilt when the boundary moved), which is why claim 18 is `corroborated (2 sources)`
+> while this slide alone would not carry it.
 
 ### The counterweight: not every problem needs an agent
 
