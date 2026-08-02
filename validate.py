@@ -183,26 +183,26 @@ def check_source_metadata() -> None:
 
 
 def check_frames_are_cited() -> None:
-    """AGENTS.md: visuals/ keeps ONLY frames a node or report actually cites.
+    """AGENTS.md: a kept frame must be cited by its own source's LEARNING.md.
 
-    Signal, not archive. An uncited frame is dead weight that survived the prune step.
+    Signal, not archive - and the bar is *taught*, not merely *gated*. This check used to
+    accept a citation from nodes.md or a topic note, and the 2026-08-02 retrofit programme
+    found **16 frames across four sources** that were extracted, deduped, viewed, gated and
+    kept, and that no reader ever saw, because the prose never used them - among them an
+    opening hook, two core evidence slides, and the frame memory.md calls the best single
+    visual on its topic. A frame only a nodes.md row cites is an archive entry.
+
+    Cheap to check and it caught a class no human noticed across eleven sources.
     """
-    citing_text = ""
-    for p in list(topic_files()) + sorted((ROOT / "reports").glob("*.md")):
-        citing_text += read(p)
-
     for d in source_dirs():
         vis = d / "visuals"
-        if not vis.is_dir():
+        learning = d / "LEARNING.md"
+        if not vis.is_dir() or not learning.exists():
             continue
-        local = ""
-        for name in ("nodes.md", "LEARNING.md"):
-            f = d / name
-            if f.exists():
-                local += read(f)
+        text = read(learning)
         for img in sorted(vis.glob("*.jpg")) + sorted(vis.glob("*.png")):
-            if img.name not in local and img.name not in citing_text:
-                err(img, 0, "frame is cited nowhere - prune it or cite it")
+            if img.name not in text:
+                err(img, 0, f"frame is not cited in {d.name}/LEARNING.md - teach it or prune it")
 
 
 def check_topic_notes() -> None:
@@ -443,12 +443,44 @@ def check_diagram_walkthroughs() -> None:
             i = close + 1
 
 
+# Non-ASCII that earns its place, all already load-bearing somewhere in the kit:
+# section signs in citations, the two callout markers, box-drawing for directory trees,
+# arrows and comparison operators in prose and tables.
+ALLOWED_NON_ASCII = set(
+    "§💡⚠️"          # citations, the two callout markers (+ variation selector)
+    "─│├└┌┐┘┤┬┴┼"        # box drawing, for directory trees
+    "→←↔⇔↑↓"              # arrows
+    "≤≥≠±×÷"              # comparison and arithmetic
+    "²³·…"                # superscripts, middot, ellipsis
+    "⭐"                   # used in a couple of tables
+)
+
+
 def check_style() -> None:
-    """AGENTS.md: never use the em dash."""
+    """AGENTS.md: never use the em dash - and no unexpected non-ASCII generally.
+
+    The em dash rule is explicit in AGENTS.md. The wider check exists because an agent
+    writing 5,000-word notes will occasionally emit a stray character from another script:
+    a CJK glyph appeared mid-rewrite on 2026-08-02 and was caught only because someone
+    thought to look. Smart quotes and non-breaking spaces are the more common version and
+    are equally invisible in review.
+
+    The allowlist is deliberately explicit rather than a category test - every character in
+    it is one the kit actually uses, so adding to it is a decision rather than a default.
+    """
     for md in markdown_files():
         for i, line in enumerate(read(md).splitlines(), 1):
             if "—" in line:
                 err(md, i, "em dash (U+2014) - AGENTS.md requires a plain dash '-'")
+            for ch in line:
+                if ord(ch) > 127 and ch not in ALLOWED_NON_ASCII and not _is_emoji(ch):
+                    err(md, i, f"unexpected non-ASCII {ch!r} (U+{ord(ch):04X}) - "
+                               f"if intended, add it to ALLOWED_NON_ASCII")
+
+
+def _is_emoji(ch: str) -> bool:
+    """Emoji are legal (favicons, section markers); other scripts are the thing being caught."""
+    return ord(ch) >= 0x1F000
 
 
 CHECKS = [

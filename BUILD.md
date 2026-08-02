@@ -1,6 +1,6 @@
 # BUILD.md - build Brain from scratch, from this file alone
 
-> **Generated 2026-08-02 from commit `92eb6c9`** by `tools/make_build_doc.py`. Do not hand-edit: edit the
+> **Generated 2026-08-02 from commit `9e5f9d6`** by `tools/make_build_doc.py`. Do not hand-edit: edit the
 > source files in the reference clone and regenerate, or your copy silently diverges from the kit
 > it claims to build.
 
@@ -226,17 +226,29 @@ being asked**:
    - **Run `python3 validate.py` before you show the `git diff`.** It is the type checker for this
      contract (see "Validating the contract" below) and it is **not optional** - a compound pass
      that leaves the validator failing is not finished.
+   - **If you touched `AGENTS.md`, `personas/`, `sources/_TEMPLATE/` or a frozen script, run
+     `python3 tools/make_build_doc.py` in the same pass.** `BUILD.md` embeds all of them verbatim,
+     and the staleness check fires *after* the commit exists - so a miss turns `main` red rather
+     than blocking the mistake. This has happened twice.
 
 > **Pre-filter before you look, never eyeball hundreds.** For video, `ffmpeg` scene-detect +
 > `imagehash` dedup MUST reduce candidates to a handful *before* you `view` them (viewing is
 > token-heavy). For code, **orient then trace** - use the module map + code-intel tools to reach
 > the relevant lines; never attempt to read a whole large repo.
 
-> **Prune uncited frames after distilling (signal, not archive).** `visuals/` keeps **only frames a
-> knowledge node or the report actually cites** - not every extracted/deduped candidate. As the last
-> step of the distill/compound pass, grep each `visuals/*.jpg` name across `nodes.md`, `LEARNING.md`,
-> and `brain/topics/*.md`; **delete the zero-hit frames** and update the `SOURCE.md` frame count. Raw
-> video/captions stay git-ignored in `raw/` and are discardable.
+> **A kept frame must be taught, not merely gated (signal, not archive).** `visuals/` keeps **only
+> frames the source's own `LEARNING.md` cites** - not every extracted/deduped candidate, and **not
+> frames cited only in `nodes.md`.** As the last step of the distill/compound pass, grep each
+> `visuals/*` name across that source's `LEARNING.md`; **delete the zero-hit frames** and update the
+> `SOURCE.md` frame count. Raw video/captions stay git-ignored in `raw/` and are discardable.
+>
+> **Why the rule tightened (2026-08-02).** It previously accepted a citation from `nodes.md` or a
+> topic note, and the retrofit programme found **16 frames across four sources that were extracted,
+> deduped, `view`ed, gated and kept - and that no reader ever saw**, because the prose never used
+> them. Among them were an opening hook, two core evidence slides, and the frame `memory.md` itself
+> calls the best single visual on its topic. **The gate was working; the prose was not spending what
+> the gate produced.** A frame that only a `nodes.md` row cites is an archive entry, which is the
+> thing this rule exists to prevent. `validate.py` enforces the tightened version.
 
 > **The shell steps are reference, not a fixed script.** This kit is a convention: the `yt-dlp` /
 > `ffmpeg` / `imagehash` / `pdftotext` commands named here and in `prd.md` §5 are the *approach* you
@@ -788,8 +800,16 @@ claim verdicts.
 ### How a pass runs
 
 1. **Read the whole brain first.** `INDEX.md`, every `brain/topics/*.md`, `claims.md`, `glossary.md`,
-   `brain/decisions/`, and the tail of `log.md`. **Do not sample.** The entire value of being out of
-   band is that you can afford to read everything, which is the one thing an ingest cannot.
+   `brain/decisions/`, **every prior note in `brain/dreams/`**, and the tail of `log.md`. **Do not
+   sample.** The entire value of being out of band is that you can afford to read everything, which
+   is the one thing an ingest cannot.
+
+   > **Prior dream notes are not history, they are the backlog.** Each one ends in "Proposed, not
+   > applied (needs a human call)" and "Notes for the next pass" - proposals with their reasoning,
+   > written by the only pass that reads everything. **Omitting them from this list meant a pass
+   > wrote proposals that the next pass was never told to read**, which is the same defect the stage
+   > exists to catch, aimed at the stage itself. Re-reading them is also what makes a fourth backlog
+   > file unnecessary: the mechanism already exists and only lacked a guaranteed reader.
 2. **Collect findings before changing anything**, each naming the files and claim IDs involved.
 3. **Write the pass note** to `brain/dreams/<NNNN>-<YYMMDD>.md`, numbered in order. One note per
    pass, permanent. **Ephemeral output not captured into a kit file did not happen.**
@@ -1432,26 +1452,26 @@ def check_source_metadata() -> None:
 
 
 def check_frames_are_cited() -> None:
-    """AGENTS.md: visuals/ keeps ONLY frames a node or report actually cites.
+    """AGENTS.md: a kept frame must be cited by its own source's LEARNING.md.
 
-    Signal, not archive. An uncited frame is dead weight that survived the prune step.
+    Signal, not archive - and the bar is *taught*, not merely *gated*. This check used to
+    accept a citation from nodes.md or a topic note, and the 2026-08-02 retrofit programme
+    found **16 frames across four sources** that were extracted, deduped, viewed, gated and
+    kept, and that no reader ever saw, because the prose never used them - among them an
+    opening hook, two core evidence slides, and the frame memory.md calls the best single
+    visual on its topic. A frame only a nodes.md row cites is an archive entry.
+
+    Cheap to check and it caught a class no human noticed across eleven sources.
     """
-    citing_text = ""
-    for p in list(topic_files()) + sorted((ROOT / "reports").glob("*.md")):
-        citing_text += read(p)
-
     for d in source_dirs():
         vis = d / "visuals"
-        if not vis.is_dir():
+        learning = d / "LEARNING.md"
+        if not vis.is_dir() or not learning.exists():
             continue
-        local = ""
-        for name in ("nodes.md", "LEARNING.md"):
-            f = d / name
-            if f.exists():
-                local += read(f)
+        text = read(learning)
         for img in sorted(vis.glob("*.jpg")) + sorted(vis.glob("*.png")):
-            if img.name not in local and img.name not in citing_text:
-                err(img, 0, "frame is cited nowhere - prune it or cite it")
+            if img.name not in text:
+                err(img, 0, f"frame is not cited in {d.name}/LEARNING.md - teach it or prune it")
 
 
 def check_topic_notes() -> None:
@@ -1692,12 +1712,44 @@ def check_diagram_walkthroughs() -> None:
             i = close + 1
 
 
+# Non-ASCII that earns its place, all already load-bearing somewhere in the kit:
+# section signs in citations, the two callout markers, box-drawing for directory trees,
+# arrows and comparison operators in prose and tables.
+ALLOWED_NON_ASCII = set(
+    "§💡⚠️"          # citations, the two callout markers (+ variation selector)
+    "─│├└┌┐┘┤┬┴┼"        # box drawing, for directory trees
+    "→←↔⇔↑↓"              # arrows
+    "≤≥≠±×÷"              # comparison and arithmetic
+    "²³·…"                # superscripts, middot, ellipsis
+    "⭐"                   # used in a couple of tables
+)
+
+
 def check_style() -> None:
-    """AGENTS.md: never use the em dash."""
+    """AGENTS.md: never use the em dash - and no unexpected non-ASCII generally.
+
+    The em dash rule is explicit in AGENTS.md. The wider check exists because an agent
+    writing 5,000-word notes will occasionally emit a stray character from another script:
+    a CJK glyph appeared mid-rewrite on 2026-08-02 and was caught only because someone
+    thought to look. Smart quotes and non-breaking spaces are the more common version and
+    are equally invisible in review.
+
+    The allowlist is deliberately explicit rather than a category test - every character in
+    it is one the kit actually uses, so adding to it is a decision rather than a default.
+    """
     for md in markdown_files():
         for i, line in enumerate(read(md).splitlines(), 1):
             if "—" in line:
                 err(md, i, "em dash (U+2014) - AGENTS.md requires a plain dash '-'")
+            for ch in line:
+                if ord(ch) > 127 and ch not in ALLOWED_NON_ASCII and not _is_emoji(ch):
+                    err(md, i, f"unexpected non-ASCII {ch!r} (U+{ord(ch):04X}) - "
+                               f"if intended, add it to ALLOWED_NON_ASCII")
+
+
+def _is_emoji(ch: str) -> bool:
+    """Emoji are legal (favicons, section markers); other scripts are the thing being caught."""
+    return ord(ch) >= 0x1F000
 
 
 CHECKS = [

@@ -105,17 +105,29 @@ being asked**:
    - **Run `python3 validate.py` before you show the `git diff`.** It is the type checker for this
      contract (see "Validating the contract" below) and it is **not optional** - a compound pass
      that leaves the validator failing is not finished.
+   - **If you touched `AGENTS.md`, `personas/`, `sources/_TEMPLATE/` or a frozen script, run
+     `python3 tools/make_build_doc.py` in the same pass.** `BUILD.md` embeds all of them verbatim,
+     and the staleness check fires *after* the commit exists - so a miss turns `main` red rather
+     than blocking the mistake. This has happened twice.
 
 > **Pre-filter before you look, never eyeball hundreds.** For video, `ffmpeg` scene-detect +
 > `imagehash` dedup MUST reduce candidates to a handful *before* you `view` them (viewing is
 > token-heavy). For code, **orient then trace** - use the module map + code-intel tools to reach
 > the relevant lines; never attempt to read a whole large repo.
 
-> **Prune uncited frames after distilling (signal, not archive).** `visuals/` keeps **only frames a
-> knowledge node or the report actually cites** - not every extracted/deduped candidate. As the last
-> step of the distill/compound pass, grep each `visuals/*.jpg` name across `nodes.md`, `LEARNING.md`,
-> and `brain/topics/*.md`; **delete the zero-hit frames** and update the `SOURCE.md` frame count. Raw
-> video/captions stay git-ignored in `raw/` and are discardable.
+> **A kept frame must be taught, not merely gated (signal, not archive).** `visuals/` keeps **only
+> frames the source's own `LEARNING.md` cites** - not every extracted/deduped candidate, and **not
+> frames cited only in `nodes.md`.** As the last step of the distill/compound pass, grep each
+> `visuals/*` name across that source's `LEARNING.md`; **delete the zero-hit frames** and update the
+> `SOURCE.md` frame count. Raw video/captions stay git-ignored in `raw/` and are discardable.
+>
+> **Why the rule tightened (2026-08-02).** It previously accepted a citation from `nodes.md` or a
+> topic note, and the retrofit programme found **16 frames across four sources that were extracted,
+> deduped, `view`ed, gated and kept - and that no reader ever saw**, because the prose never used
+> them. Among them were an opening hook, two core evidence slides, and the frame `memory.md` itself
+> calls the best single visual on its topic. **The gate was working; the prose was not spending what
+> the gate produced.** A frame that only a `nodes.md` row cites is an archive entry, which is the
+> thing this rule exists to prevent. `validate.py` enforces the tightened version.
 
 > **The shell steps are reference, not a fixed script.** This kit is a convention: the `yt-dlp` /
 > `ffmpeg` / `imagehash` / `pdftotext` commands named here and in `prd.md` §5 are the *approach* you
@@ -667,8 +679,16 @@ claim verdicts.
 ### How a pass runs
 
 1. **Read the whole brain first.** `INDEX.md`, every `brain/topics/*.md`, `claims.md`, `glossary.md`,
-   `brain/decisions/`, and the tail of `log.md`. **Do not sample.** The entire value of being out of
-   band is that you can afford to read everything, which is the one thing an ingest cannot.
+   `brain/decisions/`, **every prior note in `brain/dreams/`**, and the tail of `log.md`. **Do not
+   sample.** The entire value of being out of band is that you can afford to read everything, which
+   is the one thing an ingest cannot.
+
+   > **Prior dream notes are not history, they are the backlog.** Each one ends in "Proposed, not
+   > applied (needs a human call)" and "Notes for the next pass" - proposals with their reasoning,
+   > written by the only pass that reads everything. **Omitting them from this list meant a pass
+   > wrote proposals that the next pass was never told to read**, which is the same defect the stage
+   > exists to catch, aimed at the stage itself. Re-reading them is also what makes a fourth backlog
+   > file unnecessary: the mechanism already exists and only lacked a guaranteed reader.
 2. **Collect findings before changing anything**, each naming the files and claim IDs involved.
 3. **Write the pass note** to `brain/dreams/<NNNN>-<YYMMDD>.md`, numbered in order. One note per
    pass, permanent. **Ephemeral output not captured into a kit file did not happen.**
