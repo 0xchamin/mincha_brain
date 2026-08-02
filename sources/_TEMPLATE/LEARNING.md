@@ -37,47 +37,62 @@
 - <Claim 2.> `<citation>`
 - <Claim 3.> `<citation>`
 
+## What you will learn, and in what order
+
+```mermaid
+flowchart TB
+    subgraph A["A. <why the subject is harder than it looks>"]
+        S1["1 - <section>"]
+    end
+    subgraph B["B. <the thing itself, taught once>"]
+        S2["2 - <section>"]
+    end
+    subgraph C["C. <the variations, as deletions from B>"]
+        S3["3 - <section>"]
+    end
+    A --> B --> C
+
+    style B fill:#e8f0fc
+```
+
+<!-- A roadmap of the walkthrough, grouped into movements, with a colour on the movement carrying the
+     core technique. It exists so the reader knows the shape before committing - and writing it is
+     the cheapest check that the walkthrough HAS a shape. Carries a walkthrough like any diagram:
+     say which movements may be skimmed and which is the payload. Mark it synthesized. -->
+
 ## Walkthrough
 
 <The distilled narrative - the mental model and the crux, in order. Anchor the key moments to
 their visuals below. Use `> 💡 <term>` explainers for new concepts (mentor persona).>
 
-<!-- Order it as a RAMP, not as the source's running order. The source's order optimises for its own
-     talk or article; yours optimises for a senior engineer holding the subject at the end.
+<!-- NUMBERED SECTIONS, TITLED BY WHAT YOU LEARN. Their shape follows the SOURCE's own logic - do
+     not force every source into one fixed outline. What is required is the six properties, from
+     AGENTS.md "Writing a LEARNING.md (the required shape)". In brief:
 
-     The REQUIRED skeleton - see AGENTS.md "Writing a LEARNING.md (the required shape)". Deviate only
-     where the source genuinely lacks the material, and say so in one line rather than dropping a
-     section silently. Fullest worked example: 260802_agent-data-stack.
+       1. IT FLOWS. Each section ends by raising the question the next one answers; each opens by
+          picking up what the last established. This is the one that separates a ramp from a wiki.
+       2. IT IS VISUAL-LED. Built around the curated frames, one teaching step each, in order, with
+          their "what it teaches" / "corroborated by" pair.
+       3. IT PLANTS FORWARD AND PAYS OFF. Name a detail early, tell the reader to hold it, discharge
+          it later.
+       4. IT DERIVES RATHER THAN LISTS. Ask what the previous components structurally cannot answer
+          and let each residual question name the next.
+       5. FUNDAMENTALS GO INLINE WHERE NEEDED, marked "> **Background, supplied.**" and uncited by
+          construction. NOT one Foundations block at the front.
+       6. WEAK EVIDENCE IS LABELLED AT THE POINT OF USE (single-leg, vendor self-report,
+          figure-only), never deferred to the end.
 
-       1. Why you should care - the problem or failure that makes this subject worth an hour.
-          Concrete and personal beats abstract: "you will hit a 70-80% wall" beats "reliability
-          matters".
-       2. Foundations, in DEPENDENCY order - only the ones the subject actually requires.
-          MARK THIS SECTION AS SCAFFOLDING and say it is uncited by construction: it is background
-          you are supplying, not knowledge from the source. Add a "skip if you already..." line.
-       3. The naive attempt, and precisely how it fails - why the obvious thing is wrong. Required
-          wherever the source has a "before" state. Land on the failure that is hardest to notice.
-       4. The crux, DERIVED - do not enumerate N components. Ask what the previous ones structurally
-          cannot answer and let each residual question name the next one. A derived list feels
-          inevitable; an enumerated one feels arbitrary.
-       5. One instance traced end to end - a single realistic request through every component, with
-          what breaks at each step if that component is missing.
-       6. Second-order problems - what breaks once it is actually running (who maintains it, what
-          goes stale, what saturates, what self-reinforces).
-       7. How would you know it works? - what is measured, what is not, and what eval you would
-          build first. Required even when the answer is "the source measured nothing".
-       8. Where this sits - how the idea connects to what the reader already knows: what it
-          depends on, what it supersedes, what it contradicts, the older name it has in another
-          discipline. Comprehension, NOT an action plan - this document is a comprehensive
-          onboarding read, and it does not close by telling the reader what to do next.
+     Order for the reader who does not know it yet: open on why the subject is hard or what it
+     costs, teach the thing once and properly, then let the variations become deletions from it.
+     The anti-pattern is the PUNCHLINE OPENING - right for a TL;DR, wrong for everything after.
 
-     Then "The evidence, weighed" (source-level trust: tier, commercial conflict, sample size) and
-     "Open questions". Claim-level caveats stay INLINE next to the claim - the end table is not a
-     place to park them.
+     Worked examples: 260725_closed-loop-evals-multimodal-agent (flow, three eval shapes),
+     260725_oauth2-oidc-plain-english (forward planting, "What has aged"),
+     260802_agent-data-stack (deriving a design one residual question at a time).
 
-     Delete this comment; keep the shape. -->
+     Delete this comment; keep the properties. -->
 
-### Why you should care: <the failure or cost this subject exists to prevent>
+### 1. <What the reader learns first - usually why this is harder than it looks, or what it costs>
 
 <The concrete problem a senior engineer will recognise or soon hit. This section is why they keep
 reading; it is not optional and it is not a restatement of the TL;DR.>
@@ -124,9 +139,24 @@ what breaks at scale.>
 |---|---|
 | <term> | <1-2 sentence 💡 definition> |
 
-## Open questions / confidence
+## What has aged (read before applying)
 
-- <Anything flagged needs-check or open-question, with why.>
+<ONLY for dated sources. A per-recommendation table: what the source says, its status now, what to
+do. State the generalisation: when a source ages the MECHANICS usually survive and the
+RECOMMENDATIONS usually do not, because a recommendation encodes a trade-off against the
+alternatives available at the time. Mark verdicts as commentary if they rest on background knowledge
+rather than a cited source. Delete this section if the source is current.>
+
+## What to distrust in this note
+
+<Source-level trust, NOT claim-level caveats (those stay inline where used): tier and commercial
+interest, sample size, what the figures do and do not measure, which of the note's most REUSABLE
+claims are the least corroborated, and a line naming the "Background, supplied" blocks as yours and
+uncited.>
+
+## Open questions
+
+- <Anything flagged needs-check or open-question, with why. This is the deep-research backlog.>
 
 ## Feeds these topics
 

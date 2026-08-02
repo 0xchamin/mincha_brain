@@ -138,23 +138,68 @@ does not end by telling the reader what to do next. *(This was a deliberate corr
 originally closed on "what you would build first - what do I do on Monday?", which is consultant
 framing. Understanding is the deliverable.)*
 
-**The required sections, in this order.** Deviate when a source genuinely lacks the material, and say
-so in one line rather than silently dropping the section.
+> **Correction, 2026-08-02, from writing three of these.** The first version of this section listed
+> ten fixed sections by name. **That was too rigid and it was the wrong axis.** A source's own logic
+> decides what its sections are - S1's argument runs through three eval shapes, S3's through one
+> protocol and its variations - and forcing both into "naive attempt / crux / second-order" produced
+> headings that fit neither. What actually transfers is a set of **properties** plus a **flow
+> requirement**. The fixed list is replaced by the two tables below.
 
-| Section | The reader's question | Required? |
-|---|---|---|
-| `## TL;DR` | What did this teach, and why should I care? | **Hard** - `build_site.py` lifts it onto the landing page |
-| `## Key claims` | What may I now cite, and how strongly? | **Hard** - also lifted onto the landing page |
-| **Why you should care** | What failure makes this worth an hour? | **Hard.** Concrete and personal beats abstract |
-| **Foundations** | What must I already know? | When the subject needs it - see the scaffolding rule below |
-| **The naive attempt, and how it fails** | Why is the obvious thing wrong? | **Hard** wherever the source has a "before" state |
-| **The crux, *derived*** | Why is this design inevitable rather than arbitrary? | **Hard** |
-| **One instance traced end to end** | What does it look like in motion? | Strongly preferred |
-| **Second-order problems** | What breaks once it is actually running? | When the source covers it |
-| **How would you know it works?** | What is measured here, and what is not? | **Hard** |
-| **Where this sits** | How does this connect to what I already know? | Strongly preferred |
-| **The evidence, weighed** | How much should I trust all of this? | **Hard** |
-| `## Open questions` | What is still unknown? | **Hard** - it is the deep-research backlog |
+### The fixed frame (these sections, by name)
+
+| Section | Required? |
+|---|---|
+| `## TL;DR` | **Hard** - the executive summary, and `build_site.py` lifts it onto the landing page |
+| `## Key claims` | **Hard** - also lifted onto the landing page |
+| `## What you will learn, and in what order` | **Hard** - a mermaid roadmap of the walkthrough, grouped into movements. See below |
+| The walkthrough - **numbered sections, titled by what you learn** | **Hard** - the body; its shape follows the source |
+| `## Diagram (mental model)` | **Hard** wherever the subject has structure |
+| `## 💡 Terms` | **Hard** |
+| `## What has aged (read before applying)` | **When the source is dated.** See below |
+| `## What to distrust in this note` | **Hard** - source-level trust, not claim-level caveats |
+| `## Open questions` | **Hard** - the deep-research backlog |
+| `## Feeds these topics` | **Hard** |
+
+### The six properties the walkthrough must have
+
+1. **It flows. Sections hand off.** This is the one that separates a ramp from a wiki. **Each section
+   ends by raising the question the next one answers, and each opens by picking up what the last
+   established.** A reader should be carried, never stepped between boxes. *(Worked example: S1, where
+   section 5 ends "routing was tractable because a human could write down the right answer - the next
+   stage is where that stops being true".)*
+2. **It is visual-led.** The walkthrough is built **around the curated frames**, one teaching step
+   each, in order, with their `what it teaches` / `corroborated by` pair. This kit's premise is
+   multimodal ingest; prose that demotes the frames to illustrations has thrown that away.
+3. **It plants forward and pays off.** Name a detail early and tell the reader to hold it, then
+   discharge it later. Stronger than a transition, because it makes the reader carry something.
+   *(S3: "hold onto that `(???)` beside mobile login" in §3, paid off in §8. S1: the golden dataset
+   introduced in §5, revealed as the control setpoint in §9.)*
+4. **It derives rather than lists.** Ask what the previous components structurally cannot answer and
+   let each residual question name the next. A derived list feels inevitable; an enumerated one feels
+   arbitrary and hides which items are load-bearing.
+5. **It brings the fundamentals in where they are needed** - inline, at the point of use, marked
+   `> **Background, supplied.**` and uncited by construction. **Not one Foundations block at the
+   front:** a fundamental is useful where the reader hits it. This is the scaffolding rule below,
+   applied throughout rather than once.
+6. **It labels weak evidence at the point of use.** `single-leg`, vendor self-report, figure-only -
+   in the sentence that leans on it. "What to distrust" is a source-level summary and is **not** a
+   place to park claim-level caveats.
+
+### The roadmap diagram
+
+A mermaid flowchart at the top, grouping the numbered sections into **movements** (typically: why the
+problem is hard -> the thing itself -> the variations -> what breaks in production), with a colour on
+the movement carrying the core technique. Its walkthrough says which movements a reader may skim and
+which is the payload. **It exists so a reader knows the shape before committing** - and writing it is
+also the cheapest check that the walkthrough *has* a shape.
+
+### `What has aged`, for dated sources
+
+When a source is old enough that some of it has been overtaken, give that its own section with a
+per-recommendation table, and **state the generalisation**: when a source ages, **the mechanics
+usually survive and the recommendations usually do not** - mechanics describe how something works,
+recommendations encode a trade-off against the alternatives available *at the time*. Mark the
+verdicts as commentary if they rest on the agent's background knowledge rather than a cited source.
 
 ### The scaffolding rule (the honesty carve-out)
 
@@ -194,10 +239,11 @@ never by blurring:
 ### Where the caveats go
 
 **Inline labelling stays mandatory** - weak evidence is labelled *where it is used*, in the sentence
-that leans on it, never deferred. **"The evidence, weighed" is not a place to park claim-level
-caveats**; it is a source-level trust summary (tier, commercial conflict, sample size, what the
-figures do and do not measure) for a reader deciding whether to cite the note at all. If a caveat
-belongs to one claim, it belongs next to that claim.
+that leans on it, never deferred. **"What to distrust in this note" is not a place to park
+claim-level caveats**; it is a source-level trust summary (tier, commercial conflict, sample size,
+what the figures do and do not measure, and which of the note's most *reusable* claims turn out to be
+the least corroborated) for a reader deciding whether to cite the note at all. If a caveat belongs to
+one claim, it belongs next to that claim.
 
 > **Reference implementation:** [`sources/260802_agent-data-stack/LEARNING.md`](sources/260802_agent-data-stack/LEARNING.md)
 > - the source that forced this section, and the fullest instance of the shape.
