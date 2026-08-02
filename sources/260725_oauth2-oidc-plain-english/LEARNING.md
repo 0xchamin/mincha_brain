@@ -22,6 +22,18 @@ top because the industry started using OAuth for login, which it was never built
 no way to say *who you are*. Learn the authorization code flow and you have learned the protocol
 [&t=1323s](https://www.youtube.com/watch?v=996OiexHze0&t=1323s).
 
+## The 1-minute version
+
+| | |
+|---|---|
+| **The problem** | To let an app act on your behalf you handed it **your password** - an all-or-nothing, non-scopable, non-revocable credential on the account that is the recovery path for every other account you own (`n1`). |
+| **Why the obvious answer fails** | You cannot fix it by trusting the app more. A password is **ambient authority**; what is needed is a **capability** - narrow, expiring, revocable independently of the identity. |
+| **The idea** | **Delegated authorization**: a token bound to named permissions (**scopes**), issued after the human approves a consent screen **generated from the request** (`n7`). |
+| **The crux** | **The browser can talk to a human but cannot hold a secret.** That single fact dictates the whole shape: the **front channel** carries the human interaction, the **back channel** carries anything secret (`n6`). |
+| **How it works** | The authorization code is **deliberately useless** - it crosses the browser in the open precisely because redeeming it needs a `client_secret` that never does (`n5`). Learn that one flow and the other three are it with a channel removed (`n8`). |
+| **Where OIDC fits** | OAuth has **no standard way to say who the user is**, so the industry bolted on proprietary login and broke interoperability. OIDC closes that gap and costs **one extra scope** on the wire (`n12`, `n14`). |
+| **How far to trust it** | Mechanics are current and unusually clear. **One recommendation has been reversed** - implicit flow for SPAs; see "What has aged". And note the asymmetry: **the mechanics corroborate easily and travel poorly; the judgement corroborates poorly and travels well.** |
+
 ## Key claims
 
 - **The original sin OAuth kills: password sharing.** Pre-2010, "let this app see my contacts" meant

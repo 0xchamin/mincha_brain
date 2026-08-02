@@ -24,6 +24,18 @@ and reliability problems trace back to letting a framework own one of those four
 > well-argued pattern language from someone who has clearly built this, **not** as a survey result.
 > Full accounting in "The evidence, weighed".
 
+## The 1-minute version
+
+| | |
+|---|---|
+| **The problem** | You pick a framework, reach **70-80% quality** fast, then need the last 20% and find yourself **seven layers deep in a call stack** reverse-engineering how your own prompt was built (`n18`). |
+| **Why the obvious answer fails** | The naive loop - prompt, pick next step, append result, repeat - materialises a DAG at runtime and breaks on long workflows, because **context grows without bound** and quality degrades continuously long before any limit (`n4`). |
+| **The idea** | An agent is **four parts you should own**, and they are derivable rather than memorable: something must instruct the choice (**prompt**), turn text into action (**switch on structured JSON**), decide what the stateless model sees next (**context builder**), and decide when to stop (**loop**) (`n5`). |
+| **How it works** | The enabling capability is narrower than it looks - a sentence becoming **JSON matching a schema you defined**. "Tool use" adds nothing magical on top (`n2`, `n3`). Own the serialisation and pause/resume becomes possible; own the loop and mid-run intervention becomes possible. |
+| **What ships** | **Micro agents**: 3-10 step loops at the genuinely ambiguous points of an otherwise deterministic pipeline, with humans contacted as a **tool call** rather than a structural branch (`n13`, `n11`). |
+| **The counterweight** | **Not every problem needs an agent.** Two hours of prompt engineering versus a 90-second bash script (`n17`). |
+| **How far to trust it** | **T4 talk by a founder selling agent tooling. Nothing is measured** - no benchmark, ablation or failure rate anywhere. Its "corroborated (external)" nodes gate against a companion repo that **shares the same author**. Every real number here came from a later research pass. |
+
 ## Key claims
 
 - **An agent = prompt + switch statement + context builder + loop.** Own all four. `n5` `&t=406s`

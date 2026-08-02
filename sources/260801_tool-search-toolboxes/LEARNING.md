@@ -1,305 +1,426 @@
 # Learning - Tool search: Finding the right tool at the right time
 
-> Persona: **curator** (+ **fact-checker** at the gate) - re-adopt when working this file.
-> Source facts in [`SOURCE.md`](SOURCE.md); gated evidence in [`nodes.md`](nodes.md).
+> Persona: **curator** + **mentor, always** (+ **fact-checker** at the gate) - re-adopt when working
+> this file. Source facts in [`SOURCE.md`](SOURCE.md); gated evidence in [`nodes.md`](nodes.md).
+
+> **Two kinds of material, kept visually distinct.** Claims from the article carry a node ID (`n9`)
+> and a section. Blocks marked **"Background, supplied"** are context *I* am adding - established
+> prior art the article assumes or never names. They are uncited by construction.
 
 ## TL;DR
 
 **A tool catalog stops being a schema-management problem and becomes a search problem, and the
 crossover is around ten to fifteen tools.** Microsoft Foundry's Toolbox replaces the full `tools/list`
 manifest with exactly two meta-tools - `tool_search(query, limit)` and `call_tool(name, arguments)` -
-and keeps the rest of the catalog indexed but never listed (`n3`, `n6`). On ToolRet (44,000+ tools),
-that cuts context from **541k tokens to 15k at 1,180 tools, a 36x reduction**, and the figure shows the
-thing the prose does not say: **the tool-search cost is roughly flat in catalog size** (`n9`, `n10`).
+and keeps the rest of the catalog indexed but never listed (`n3`, `n6`). On ToolRet (44,000+ tools)
+that cuts context from **541k tokens to 15k at 1,180 tools, a 36x reduction**, and the figure shows
+something the prose undersells: the tool-search curve is roughly **flat** as the catalog grows 24x
+(`n9`, `n10`). The reframing is the real payload - **tool names and descriptions become ranking
+features**, so the first tuning pass is **editorial, not algorithmic** (`n19`, `n13`).
 
-The part worth stealing is not the mechanism, which is small on purpose. It is the **reframing**: once
-the catalog is retrieved rather than enumerated, **tool names and descriptions become ranking
-features** (`n19`), and the first useful tuning pass is **editorial, not algorithmic** - fix the
-descriptions, add search-only aliases, pin what must never be missed (`n13`, `n14`, `n16`).
+## The 1-minute version
 
-**Read the numbers with two hands.** The token measurement is on a public benchmark and is solid. The
-retrieval comparison is **not one experiment** - the baselines are lifted from another paper while the
-tool-search column is a self-run under an admittedly different protocol (`d2`). And the source never
-confronts its own headline retrieval figure: **Recall@10 of 39-46% means the needed tool is outside
-the top ten more than half the time**, while the default shortlist is five.
+| | |
+|---|---|
+| **The problem** | Every tool is "both a capability and a distraction". The `tools/list` manifest is **resident in context on every turn**, and its size tracks **what is connected**, not what the task needs - 541k tokens at 1,180 tools (`n1`, `n9`). |
+| **Why the obvious answer fails** | Prompt caching does not fix it. Cached tokens are ~90% cheaper and **still compete for the model's attention** (`n2`). **You paid less to poison the well.** |
+| **The idea** | Stop listing the catalog. Expose **two meta-tools** - `tool_search(query, limit)` and `call_tool(name, arguments)` - and keep everything else **indexed but never listed** (`n3`). |
+| **Why two and not one** | Because runtimes **refuse to call a tool absent from `tools/list`**. A retrieved tool cannot be invoked directly, so a *registered* proxy must carry the dispatch (`n4`) - which conveniently gives the platform one place to apply policy. |
+| **What it costs** | **541k -> 15k tokens, and roughly flat as the catalog grows 24x** (`n9`, `n10`). The reliability side is the unexamined half: **Recall@10 of 39-46% against a default shortlist of five** (`n11`). |
+| **The real finding** | A tool's description **stops being documentation and becomes an index entry.** The dominant failure is implementer vocabulary - "get", "create", "manage" - so **the first useful tuning pass is editorial, not algorithmic** (`n13`, `n19`). |
+| **The shape to keep** | **Pin the head, retrieve the tail.** The tail is where the rare, high-stakes tools live, so it is also where a miss costs most - you are choosing **which capabilities the agent may forget it has** (`n16`). |
+| **How far to trust it** | **T2 vendor post on its own preview product - but better evidenced than that class usually is**: a public benchmark, an honest baseline, a category where it loses. Three caveats: the head-to-head **mixes borrowed baselines with a self-run** (`d2`), the metadata-tuning percentages are method-free (`n15`), and the source never confronts its own recall number. |
 
 ## Key claims
 
-| # | Claim | Evidence | Confidence |
-|---|---|---|---|
-| 1 | The tool manifest is **resident per-turn context that scales with the catalog, not the task**. Prompt caching makes it ~90% cheaper, not free, and cached context still competes for attention. | `n1` corroborated, `n2` single-leg | OK / needs-check |
-| 2 | **Two meta-tools replace the manifest**, inside today's tool-calling contract - no new MCP primitive, no model-specific feature. The second proxy (`call_tool`) exists because runtimes reject tools absent from `tools/list`. | `n3`, `n4`, `n5` corroborated | OK |
-| 3 | **Putting the index at the aggregator layer** is what lets one mechanism cover remote MCP servers, OpenAPI, A2A and native tools alike. The toolbox is itself an MCP server fronting other MCP servers. | `n6` corroborated, `n7` figure-only | OK / needs-check |
-| 4 | **Measured: 36x fewer tokens at 1,180 tools** (541k to 15k), >97% at 1,000, >60% at 50 - and the tool-search curve is **flat** across the sweep. | `n9`, `n10` corroborated (ToolRet) | OK |
-| 5 | **Enhanced sparse lexical retrieval was competitive with a GPU cross-encoder reranker in two of three categories**, without serving-time GPU cost. | `n11`, `n12`; weakened by `d2` | needs-check |
-| 6 | **Tool curation becomes an information-retrieval discipline.** Descriptions written for implementers ("get", "manage", "REST API") are the dominant failure; the first tuning pass is editorial. | `n13`, `n19` single-leg | needs-check |
-| 7 | **`additional_search_text`: an index-only field**, invisible to the model, leaving the upstream schema untouched - so retrieval vocabulary and model-facing schema can be tuned independently. | `n14` corroborated (prose vs code) | OK |
-| 8 | **Retrieve the long tail, pin the head.** Search is a bad default for tools the model constantly needs; pinning is also what keeps the prompt prefix stable for caching. | `n16` corroborated, `n17` mixed | OK / needs-check |
+- **The tool manifest is resident per-turn context scaling with the catalog, not the task.** `n1`
+- **Prompt caching is a price cut, not an attention cut.** `n2` ⚠️ `single-leg`
+- **Two meta-tools replace the manifest**; the catalog stays indexed and never listed. `n3` `n6`
+- **`call_tool` exists because runtimes reject unlisted tools.** `n4`
+- **541k -> 15k at 1,180 tools (36x), roughly flat across a 24x catalog increase.** `n9` `n10`
+- **Recall@10 of 45.99 / 39.56 / 41.36** - a tuned sparse pipeline competitive with a GPU
+  cross-encoder in two of three categories. `n11` `n12`
+- **Descriptions become ranking features; the first tuning pass is editorial.** `n13` `n19`
+- **An index-only field** separates the searchable surface from the model-facing one. `n14`
+- **Pin the head, retrieve the tail.** `n16` `n17`
 
-## The argument, in order
+## What you will learn, and in what order
 
-### The tax is attention, not only money
+```mermaid
+flowchart TB
+    subgraph A["A. The tax you are already paying"]
+        S1["1 - The manifest is<br/>resident context"]
+        S2["2 - Caching cuts the price,<br/>not the attention"]
+    end
+    subgraph B["B. The mechanism, deliberately small"]
+        S3["3 - Two tools instead<br/>of a hundred"]
+        S4["4 - Why it needs no<br/>new protocol"]
+    end
+    subgraph C["C. Does it work? Two different questions"]
+        S5["5 - Tokens: measured,<br/>and the figure leads"]
+        S6["6 - Retrieval: where the<br/>source is weakest"]
+    end
+    subgraph D["D. The finding that outlives the product"]
+        S7["7 - Tool curation is<br/>an IR problem"]
+        S8["8 - Pin the head,<br/>retrieve the tail"]
+    end
+    A --> B --> C --> D
+    S1 --- S2
+    S3 --- S4
+    S5 --- S6
+    S7 --- S8
 
-The article opens on cost and then immediately refuses to let cost be the whole story. The baseline
-had to include prompt caching, because caching is the Azure OpenAI default and any honest comparison
-must beat the default rather than a strawman. But **"caching isn't the same as not loading"**: cached
-tokens are roughly 90% cheaper, "not free, and cached context **still competes for the model's
-attention**" (`n2`).
+    style C fill:#e8f0fc
+    style D fill:#fbf1dc
+```
 
-That sentence is the one that connects this source to the rest of this brain. A manifest that is cheap
-but resident is exactly the shape [`context-engineering.md`](../../brain/topics/context-engineering.md)
-already has measurements for: degradation is a function of **what is in the window**, not of what it
-cost to put there (claim 27, the n² attention budget). Tool definitions are not exempt.
+**How to read it:** top to bottom is the order of the argument, in four movements. The **blue block is
+where the evidence lives** - and it splits into a question the source answers well and one it answers
+badly, which is the single most important thing to carry out of this note. The **amber block is what
+survives even if the product does not**: a reframing about metadata that generalises far past tool
+catalogs.
 
-> 💡 **Prompt caching** - reusing a previously processed, unchanged prompt prefix so the provider
-> charges a fraction of the input-token price for it. It reduces the bill and the latency; it does not
-> reduce the number of tokens the model must attend to.
+**The crux: deferring the manifest converts catalog size from a per-turn cost into an indexing cost -
+and buys a retrieval risk the source measures and then never discusses.**
 
-### The mechanism is deliberately small
+**Why it is grouped this way:** A and B are short because the mechanism genuinely is small - that
+smallness is itself a claim (`n5`). C is deliberately split, because the token result and the
+retrieval result have very different evidential quality and reading them as one number is the mistake
+this source invites. D is separated because it is the part you would still want after switching
+vendors.
 
-![Two tools instead of a hundred: tools/list exposing 100 tool schemas resident in model context, versus tool_search(query, limit) into a toolbox index of name, args and descriptions, returning the top 5 definitions, then call_tool(name, arguments), with the rest of the catalog indexed but never listed](visuals/fig_tool-search-figure.png)
+*Synthesized roadmap of this note - not from the source.*
 
-**Orientation.** Two rows, both read left to right, showing the same job done twice. Row 01 is today's
-default: `tools/list` hands over every definition up front and the model picks from all of them. Row 02
-is tool search: the two black boxes are the only tools the model ever sees, the grey boxes are work
-Foundry does on the model's behalf, and the dashed box at the bottom is the rest of the catalog -
-present and indexed, but never in the model's context.
+## 1. The tax you are already paying, and it is charged per turn
 
-**The crux: the model stops receiving the catalog and starts querying it.**
+> "Every tool you give an agent is both a **capability** and a **distraction**." (§intro)
 
-**Why it is shaped this way.** Two boxes look like an odd unit - why not one search tool that also
-dispatches? Because of the constraint in the small print: "if a tool wasn't registered in the original
-`tools/list`, many runtimes will guard against the model calling it directly as an unknown tool"
-(`n4`). A retrieved tool is, by construction, not in the manifest, so **something registered has to
-carry the call**, and that something is `call_tool`. The shape is dictated by an existing safety check
-rather than chosen for elegance - and the same constraint hands the platform a **policy-aware dispatch
-point**, since every call now passes through one place it controls. The other deliberate choice is
-where the index sits: at the **toolbox**, above the individual servers, which is why one mechanism
-covers remote MCP, OpenAPI, A2A and native tools without any of them knowing about it (`n6`).
+The mechanism is unglamorous. `tools/list` hands the client every tool definition up front, and those
+definitions are then **resident in the model's context on every turn**: "thousands of tokens of names,
+descriptions, JSON schemas, argument definitions, and nested parameters **before you've asked anything
+useful**" (`n1`, §intro).
 
-**Provenance.** Figure 1 from the source, cited at `n3`, `n4`, `n6`, `n8`.
+**The property that matters is what the cost is a function of.** It tracks **what is connected**, not
+what the task needs. Attach a hundred-tool MCP server for the one tool you occasionally want, and you
+pay for the ninety-nine on every request forever.
 
-**What the figure does not tell you, and the portal screenshot does.** The prose never says how the
-toolbox is reached. The Foundry screenshot does: *"Connect to this toolbox using MCP and call it from
-your agent code"*, over `MCPStreamableHTTPTool` with a bearer token, with four ordinary MCP servers
-attached inside it (`n7`). **The toolbox is an MCP server that fronts other MCP servers**, which is
-what makes the whole design unremarkable in the good sense: an aggregator is free to expose whatever
-two tools it likes, so no protocol change was ever required (`n5`). This is the source's most useful
-contribution to [`mcp.md`](../../brain/topics/mcp.md), and it is **figure-only** - treat it as
-`needs-check`.
+Which raises the objection any engineer reaches for first.
 
-### The savings are real, and the figure is better than the sentence
+## 2. Caching lowers the price, not the cost
 
-![Tokens saved using tool search: baseline context rising to 541k tokens at 1,180 tools while the tool-search series stays flat around 15k, annotated 36x fewer tokens at 1,180 tools](visuals/fig_tokens-chart.png)
+Prompt caching was already on in the baseline - it is the Azure OpenAI default - and cached tokens are
+roughly **90% cheaper**. The article is careful, and this is the sentence to keep:
 
-**Orientation.** X-axis is catalog size, from 0 to 1,200 tools; Y-axis is tokens consumed. The solid
-series with square markers is the baseline (every tool sent up front); the dashed series with hollow
-markers is tool search. Run on ToolRet, a public benchmark of 44,000+ tools and 7,000 queries.
+> Cached tokens are "**not free**, and cached context **still competes for the model's attention**."
+> (`n2`, §The default agent tax) ⚠️ `single-leg` - prose only.
 
-**The crux: the baseline's context cost is a function of the catalog, and tool search's is not.**
+> **Background, supplied - and this is exactly where the brain's own measured evidence lands.**
+> Prompt caching works by reusing an unchanged prompt *prefix*, so the provider skips recomputing it
+> and bills a fraction. **Nothing about that changes what the model attends over.** The tokens are
+> still in the window, still consuming the n² attention budget, still positioned where "lost in the
+> middle" effects apply. This brain records degradation tracking **what is in the window, not what it
+> cost to put there** ([`brain/claims.md`](../../brain/claims.md) claims 22 and 27, measured across
+> 18 models). **A cached manifest is a fully-priced attention liability at a 90% discount on the
+> invoice.**
 
-**Why that framing beats the prose.** The article says "the savings scaled with toolbox size" and
-quotes 60% at 50 tools, 97% at 1,000 - true, and it undersells the result. A percentage saving invites
-you to imagine a fixed discount. What the picture shows is a **change of slope**: the solid line
-climbs to 541k while the dashed line never leaves a 15-50k band across a 24x increase in catalog size
-(`n10`). The practical consequence is not "tools are cheaper" but **"catalog size stops being a
-context-budget decision"**, which is what makes a 44,000-tool toolbox thinkable at all.
+So the manifest has to not be there at all. But you cannot simply delete it - the model has to find
+out somehow.
 
-**One thing to notice that the prose does not mention.** The baseline jumps from roughly 160k to
-roughly 360k between about 500 and 550 tools: **more than 2x for a ~10% catalog increase**. A clean
-single-variable ablation should not step like that, so something else changed at that point in the
-sweep. It does not threaten the headline, which is measured at the far right, but the curve is not the
-smooth sweep the text implies. Recorded in [`nodes.md`](nodes.md).
+## 3. Two tools instead of a hundred
 
-**Provenance.** Figure 2 from the source, cited at `n9`, `n10`.
+![Figure: tools/list putting 100 resident tool schemas in context, versus tool_search and call_tool over a toolbox index with the rest of the catalog indexed but never listed](visuals/fig_tool-search-figure.png)
 
-### Retrieval quality is where the source is weakest, and it half admits it
+- What it teaches: the whole mechanism in two rows. **Row 01** is the baseline - every definition, up
+  front, resident. **Row 02** is the replacement - `tool_search(query, limit)` hits a toolbox index and
+  returns "top 5 definitions returned in full", then `call_tool(name, arguments)` dispatches. `n3`
+  §Two tools instead of a hundred
+- Corroborated by: the prose describing the model "describing the capability it needs" and receiving a
+  small set of matching definitions.
 
-The authors correctly call this "the harder question" and report Recall@10 on three ToolRet slices
-(`n11`):
+**Now the question the diagram answers without saying so: why *two* tools?** Search alone would seem
+enough - find the tool, then call it.
+
+> Because "if a tool wasn't registered in the original `tools/list`, **many runtimes will guard
+> against the model calling it directly as an unknown tool**. `call_tool` gives the framework a
+> registered, **policy-aware dispatch path**." (`n4`, §Two tools instead of a hundred)
+
+**That is the most reusable protocol fact in the source, and it arrives sideways as an implementation
+constraint.** A tool that was *retrieved* rather than *listed* cannot be invoked directly, so a
+registered proxy has to carry the call. And it hands the platform something it wanted anyway: **one
+dispatch point through which every call passes**, so policy applies in a single place.
+
+⚠️ Note the hedge: **"many runtimes", not "the protocol"**. No runtime is named and no spec version is
+cited. Treat it as a portability constraint you will probably hit, not a rule you can cite.
+
+Look at the dashed box in that figure too: remote MCP servers, OpenAPI, A2A and native tools all sit
+behind one index - **"indexed, never listed"** (`n6`). Which explains why this needed no protocol
+change at all.
+
+## 4. Why it needs no new protocol primitive
+
+![Foundry portal: a toolbox with tool search as a plain toggle, four attached MCP servers, and connection details showing an MCP endpoint with a bearer token](visuals/fig_image-6.png)
+
+- What it teaches: **the toolbox is itself consumed as an MCP server.** "Connect to this toolbox using
+  MCP and call it from your agent code", at an endpoint of the form
+  `.../toolboxes/{name}/versions/{version}`, via `MCPStreamableHTTPTool` with a bearer token injected
+  per request - with four ordinary MCP servers attached *inside* it. `n7` ⚠️ **figure-only - the prose
+  never states that the toolbox is an MCP server.**
+- And tool search is a **plain toggle** on an otherwise ordinary toolbox, with no protocol
+  configuration anywhere in the pane (`n5`).
+
+**This is what makes the mechanism unremarkable, in the good sense.** An **aggregating MCP server** is
+free to expose whatever tools it likes and service them however it wants - so replacing a hundred-tool
+catalog with a search index needed **no new protocol primitive, no model-specific feature, and no
+shared ranking semantics across providers** (`n5`).
+
+> 💡 **Aggregating (or proxying) MCP server** - a server whose tools are drawn from *other* servers
+> rather than implemented locally. Because a client sees only the aggregator's `tools/list`, the
+> aggregator can add, hide, rename or index what is behind it **without any client or downstream
+> server changing**.
+
+> **Composition is the leverage point, and it is the transferable lesson here.** Everything this
+> product achieves comes from sitting *between* client and servers. Any protocol with a proxy layer
+> has this affordance available, and it is worth asking of any integration standard you adopt: **can
+> something sit in the middle and change the shape of what I see?**
+
+Two questions remain, and they have very different answers.
+
+## 5. Does it save tokens? Yes, and the figure says more than the prose
+
+![Chart: baseline context climbing to 541k tokens at 1,180 tools while the tool-search series stays roughly flat near 15k](visuals/fig_tokens-chart.png)
+
+- What it teaches: measured on ToolRet (44,000+ tools, 7,000 queries) - **"more than 60%" saved at 50
+  tools, "above 97%" at 1,000**, with the endpoint **541k baseline versus 15k with tool search at
+  1,180 tools, a 36x reduction.** `n9` §The savings were real
+- Corroborated by: the prose stating the same trend directionally.
+
+**And the figure carries something the prose never says** (`n10`): the tool-search series is roughly
+**flat** - a ~15-50k band - across the whole sweep, while the baseline climbs from ~40k to 541k.
+"Savings scale with size" understates it.
+
+> **The transferable claim is not "tools got cheaper". It is that catalog size stops being a
+> context-budget decision at all** - it becomes an indexing cost, paid once, off the per-turn path.
+> That is a change in the *shape* of the cost function, not a discount on it.
+
+⚠️ One caveat the source never mentions: **the baseline curve has a discontinuity**, jumping from
+~160k to ~360k between roughly 500 and 550 tools - **more than 2x for a ~10% catalog increase** - then
+resuming a gentle climb. A clean single-variable ablation should not produce that. It does not
+threaten the headline, measured at the right-hand end, but **the curve is not the smooth sweep the
+prose implies.**
+
+That is one of the two questions. The other one is where this source is weakest.
+
+## 6. Does it retrieve the right tool? This is the unexamined half
+
+Recall@10 on ToolRet, three slices (`n11`, Figure 3):
 
 | Method | Web | Code | Customized |
 |---|---|---|---|
-| **Tool search** | **45.99%** | **39.56%** | 41.36% |
+| **Tool search** (enhanced sparse, lexical similarity) | **45.99%** | **39.56%** | 41.36% |
 | BM25s | 24.62% | 28.23% | 32.39% |
-| BGE-reranker-v2-gemma | 45.94% | 38.23% | **49.43%** |
+| BGE-reranker-v2-gemma (GPU cross-encoder) | 45.94% | 38.23% | **49.43%** |
 
-> 💡 **Recall@10** - the share of queries where the correct item appears anywhere in the top ten
-> results. It says nothing about rank within those ten, and nothing about the other queries.
+> 💡 **Recall@k** - the share of queries where the correct item appears **anywhere** in the top k.
+> Silent about its rank within those k, and silent about everything below.
 
-The honest reading of their own table is the one they give: comfortably ahead of BM25s everywhere,
-level with the neural reranker on web and code, **8 points behind it on customized**. The claim they
-draw is reasonable - **a sparse lexical pipeline matching a GPU cross-encoder in two of three
-categories, without paying for the GPU at serving time** (`n12`).
+> 💡 **Cross-encoder reranker** - a model scoring query and candidate **together** rather than
+> comparing precomputed vectors. More accurate and far more expensive, because nothing can be indexed
+> ahead of time: every candidate needs a forward pass at query time.
 
-**Two things weaken it, one stated and one not.**
+**The claim the source draws is genuinely useful**: a tuned sparse lexical pipeline matched a GPU
+cross-encoder in two of three categories **without paying for the GPU at serving time** (`n12`). That
+is a real data point against the reflex that quality retrieval requires neural reranking.
 
-1. **It is not one experiment** (`d2`). The caption says the BM25s and BGE numbers are "from [1]" -
-   lifted from another paper - while the tool-search column is a self-run. And that self-run
-   deliberately "used only the user query and left out the benchmark's instruction string", on the
-   sound production argument that generating the instruction would cost another LLM call. Whether the
-   borrowed baselines also omitted it is never said. **The comparison may not be like-for-like, and
-   the direction of the bias is unknown.**
-2. **Nobody addresses the absolute level.** Recall@10 in the low forties means **the right tool is
-   outside the top ten for more than half of queries**, and the default `limit` is **five**. The
-   article's own closing paragraph says "Smaller is not better if the right capability disappears...
-   The shortlist has to be good" - and never puts that sentence next to its own table.
+**Two things weaken it, and the source states the first itself.**
 
-The implicit rebuttal is in the next section: after metadata tuning, end-to-end accuracy recovers "to
-within about 4% of the full-catalog baseline" (`n15`). If that holds it largely answers the objection.
-But it is a **different metric on a different, unnamed eval with no absolute baselines**, reported as
-two bare percentages. **Two evaluation regimes are being blended in one argument**, and only the first
-one is on a public benchmark.
+⚠️ **It is not one experiment** (`d2`). The BM25s and BGE columns are "**from [1]**" - lifted from
+another paper - while the tool-search column is a self-run that deliberately "left out the benchmark's
+instruction string" to avoid an extra LLM call at serving time. **Whether [1] also omitted it is never
+stated**, so the columns may not be like-for-like, and **the direction of the bias is unknown.**
 
-### The real finding: tool curation is an IR problem
+⚠️ **And the absolute level goes undiscussed, which is the bigger problem.** Recall@10 in the low
+forties means **the right tool is outside the top ten for more than half of queries** - while the
+`limit` default is **five**. The article closes with *"Smaller is not better if the right capability
+disappears. The shortlist has to be good"* and **never places that sentence beside its own table.**
 
-This is the part the authors seem genuinely surprised by, and it is the most transferable thing here
-(`n19`):
+> **This brain's reading, not the source's claim:** when the retrieved items are **capabilities**, a
+> miss does not return a worse answer - it **removes an option**, and the model may never learn the
+> option existed. That is a different failure mode from a bad search result, and it is unmeasured
+> here.
 
-> "We thought we were solving a token-cost problem; we were also building a search product... At
-> larger scale, **tool names and descriptions become ranking features**."
+So why does retrieval fail? The answer is the best thing in the article.
 
-Benchmarking showed the failures were **editorial, not algorithmic**: descriptions capturing
-implementation detail instead of user vocabulary, and generic verbs - "get", "create", "manage",
-"REST API" - that cannot distinguish one tool from its neighbours (`n13`). The fix is a search-only
-alias field, `additional_search_text`, and its design is the neat bit (`n14`):
+## 7. The real finding: tool curation is an information-retrieval problem
 
-- it **is** indexed, so it steers retrieval;
-- it is **not** visible to the model in MCP responses, so it costs no tokens;
-- it does **not** change the upstream server's schema, so a third-party MCP server can be tuned for
-  your users' vocabulary without forking it.
+What broke was not the ranker.
 
-Their example: `execute_query`, described accurately as "runs a query against the configured
-database", needs to be found when a user says "analytics", "dashboard", "SQL", "reporting" or
-"warehouse". **Accurate and unsearchable are compatible.**
+> Benchmarking "revealed that tool search failed when tool descriptions were uneven, sometimes
+> capturing **implementation detail instead of user intent vocabulary**" - "get", "create", "manage",
+> "REST API". (`n13`, §Tuning the search space) ⚠️ `single-leg`.
 
-> **The generalisation worth carrying:** the moment any capability is *retrieved* rather than
-> *enumerated*, its description stops being documentation and becomes an index entry, and it must be
-> written in the vocabulary of the person searching rather than the person who built it. Nothing about
-> that is specific to tools, or to Foundry.
+Their example is exact. `execute_query`, described truthfully as "runs a query against the configured
+database", must be found by users typing **"analytics", "dashboard", "SQL", "reporting",
+"warehouse"**. **Accurate and unsearchable are perfectly compatible.**
 
-### Search the tail, pin the head
+The fix is an **index-only alias field** (`n14`, corroborated prose-versus-code):
 
-The closing design rule is a Pareto argument (`n16`). A few tools do most of the work, but the long
-tail matters precisely because rare tools are the high-stakes ones: "rotate a credential, recover a
-failed deployment, apply a compliance exception, inspect an audit trail". Search is a good default
-**there**, and a bad default for anything in the agent's core contract - policy tools, frequent data
-access, "capabilities the model should never have to rediscover".
+> `"execute_query": {"pin": True, "additional_search_text": "SQL database analytics reporting
+> dashboard queries"}` - indexed for retrieval, "**isn't visible to models in MCP responses**", and
+> "**no changes are made to the original tool schema of the source MCP server**".
 
-Two mechanisms: manual pins, and automatic pinning by per-user usage after a warmup, with stale
-entries aging out (`n17`). **And here the article contradicts itself in consecutive sentences**
-(`d3`): a pin set that is per-user, usage-derived and aging cannot also be what "keeps the prompt
-prefix stable, which preserves prompt-cache behavior". Per-user pins fragment the cache across users;
-aging pins invalidate it over time. Both statements are true only if "deterministic" silently means
-*manual* pins, which the text never says.
+**Three consequences, and the third is the one nobody in the source mentions:** retrieval vocabulary
+can be tuned **without spending model tokens**; a **third-party** server can be tuned for your users'
+vocabulary **without forking it**; and **an invisible field steers which capability the agent is
+offered**, with no trace in the context the model or a reviewer can inspect.
+
+⚠️ The self-reported gains here - hit rate "+about 56%", end-to-end accuracy "+about 55%", "within
+about 4% of the full-catalog baseline" (`n15`) - are **the weakest evidence in the source**: no
+dataset, no absolute baselines, no statement of relative-versus-points, and **it is not the ToolRet
+run above.** Two evaluation regimes are blended in one section. Do not quote them.
+
+But the generalisation survives all of that, and it is what the authors say surprised them:
+
+> "We thought we were solving a token-cost problem; we were also **building a search product**"
+> (`n19`, §intro). At small scale a catalog looks like schema management; at larger scale **tool names
+> and descriptions become ranking features**.
+
+> **This is the third instance of one pattern this brain now holds** (claim 93). A **skill's**
+> description is its **trigger** and causes 50%+ of failures (S5). A **column's** description becomes
+> a **default policy** the agent applies (S11). A **tool's** description becomes a **ranking feature**.
+> **Metadata written for a human to skim gets promoted to a control surface the moment a model reads
+> it - and the incumbent human-facing vocabulary is the dominant failure mode every time.**
+
+## 8. Pin the head, retrieve the tail
+
+The last piece is a distribution argument, and it is the shape worth keeping (`n16`, §Search is for
+the long tail).
+
+| | What it holds | How it reaches the model |
+|---|---|---|
+| **The head** | the agent's core contract - policy tools, frequent data access, "capabilities the model should never have to rediscover" | **pinned**, always present, never retrieved |
+| **The long tail** | rare but high-stakes tools: "rotate a credential, recover a failed deployment, apply a compliance exception, inspect an audit trail" | **retrieved on demand** |
+
+**Why the tail is the interesting half, and it is not the obvious argument.** The reflex reading is
+that rare tools matter less, so hiding them is cheap. **The reverse is true**: rare tools are
+disproportionately the **emergency** ones, so the tail is exactly where a retrieval miss is most
+expensive. That is what makes this a design decision rather than an optimisation - **you are choosing
+which capabilities the agent is allowed to forget it has.**
+
+> **Background, supplied.** This is a **Pareto** split, and the useful part of naming it is that
+> Pareto shapes tell you where to spend *differently*, not where to spend *less*. The head justifies
+> hand-curation because it is small and always paid for. The tail justifies machinery because it is
+> large and rarely paid for. Applying one strategy to both is the mistake.
+
+**And pinning turns out to be the cache-control lever too** (`n17`): "Deterministic pinning keeps the
+prompt prefix stable, which preserves prompt-cache behavior." **Prefix stability is a context design
+constraint, not a billing detail** - it decides where in the window a dynamic list may sit.
+
+⚠️ Though there is a tension inside that paragraph (`d3`): the toolbox **auto-pins** frequently used
+tools **per user** after a warmup, with stale entries aging out. A pin set that is per-user,
+warmed-up and aged is by construction **neither identical across users nor stable across days**, which
+sits badly beside "deterministic". Both hold only if "deterministic" means *manual* pins alone, and
+the text does not say so.
+
+The adoption heuristic, finally: worth testing **above 10-15 tools**, or when different tasks need
+different subsets, or when one agent serves many workflows (`n18`, ⚠️ `single-leg`, and a vendor's own
+adoption guidance for its preview product).
 
 ## Diagram (mental model)
 
 ```mermaid
-flowchart TD
-    Q["a task arrives"]
+flowchart LR
+    M["Model"] -->|"tool_search(query, limit)"| IDX[("Toolbox index<br/>name / args / descriptions<br/>+ additional_search_text")]
+    IDX -->|"top-k definitions<br/>default k = 5"| M
+    M -->|"call_tool(name, args)"| DISP{{"Registered dispatcher<br/>policy applies here"}}
+    DISP --> CAT[("The catalog<br/>MCP / OpenAPI / A2A / native<br/>INDEXED, NEVER LISTED")]
+    PIN["Pinned head<br/>always in the manifest"] -->|"resident, never retrieved"| M
+    CAT -.->|"a miss removes a<br/>CAPABILITY, silently"| GAP(("Recall@10<br/>39-46%"))
 
-    subgraph head["the head - pinned"]
-        P["core-contract tools<br/>policy, frequent data access<br/><b>always in tools/list</b>"]
-    end
-
-    subgraph tail["the long tail - retrieved"]
-        S["tool_search(query, limit)"]
-        IDX["toolbox index<br/>name, args, descriptions<br/>+ index-only alias text"]
-        SL["shortlist<br/><i>limit = 5 by default</i>"]
-    end
-
-    Q --> P
-    Q --> S
-    S --> IDX
-    IDX --> SL
-    P --> OK["capability available"]
-    SL -->|"hit"| OK
-    SL -->|"miss"| GONE["capability<br/><b>invisibly absent</b>"]
-
-    ED["the editorial lever<br/>rewrite descriptions,<br/>add search-only aliases"] -.->|"the only tuning<br/>that moved the number"| IDX
-
-    style P fill:#cfe8fc,stroke:#1a73e8,stroke-width:2px
-    style SL fill:#ffe0b2,stroke:#f57c00,stroke-width:2px
-    style GONE fill:#ffcdd2,stroke:#c62828,stroke-width:2px,stroke-dasharray: 4 4
-    style ED fill:#dcedc8,stroke:#689f38
+    style IDX fill:#e8f0fc
+    style PIN fill:#cfe8cf
+    style GAP fill:#fbf1dc
 ```
 
-**Orientation.** Flow is top-down, from one task to one of two outcomes. A tool sits in exactly one
-lane: **blue** is pinned and always present, **amber** is the shortlist that retrieval produces on
-demand. **Green** is the tuning input, dotted because it acts on the index rather than on any request.
-**Red, dashed** is a terminal state, not an error path - nothing routes out of it.
+**How to read it:** solid arrows are one turn. **Green is what is always in context** (the pinned
+head); **blue is what is fetched on demand**; the amber circle is **not a component** - it is the
+measured risk the source reports and does not discuss.
 
-**The crux: retrieval does not make the catalog cheaper, it converts a guaranteed token cost into a
-probability that the capability is not there at all.**
+**The crux: two arrows leave the model instead of one, and that second arrow exists only because a
+retrieved tool is not a callable tool.**
 
-**Why it is shaped this way.** The two lanes leave a single entry point rather than forming a
-pipeline, because **which lane a tool lives in is a design-time decision made per tool**, not a
-runtime routing decision - that is the whole content of "pin the head, retrieve the tail" (`n16`).
-The red box is drawn as terminal because that is the failure's defining property: **the model gets no
-signal that it missed.** A withheld tool leaves nothing in context to notice, so the agent does not
-retry, it concludes the capability does not exist - which is why the article's own line "smaller is
-not better if the right capability disappears" is the correct worry and its Recall@10 of 39-46% is the
-uncomfortable number (`n11`). Draw this as a retry loop instead and you would be asserting a recovery
-path the source never demonstrates. The green arrow points at the **index** rather than at the search
-box because that is where S10's numbers actually moved: rewriting descriptions and adding aliases,
-not changing the ranker (`n13`). And **the expensive box is the amber one** - `limit` is the single
-knob trading tokens against the red branch, shipped at 5 while the measured recall is quoted at 10.
+**Why it is shaped this way:** note that `call_tool` is drawn as a **dispatcher** rather than a
+passthrough - the registered-proxy requirement (`n4`) is a constraint, but it hands you a single
+policy point you would otherwise have to build. Note that the pinned box bypasses the index entirely
+and reaches the model directly: pinning is not "high-ranked", it is *not retrieved at all*, which is
+what makes prefix caching work. And the dotted arrow is drawn to the gap rather than back to the model
+deliberately - **on a retrieval miss nothing arrives, and nothing is what the model sees.** A diagram
+that routed the miss back into the loop would be claiming a recovery path the source does not
+describe.
 
-*Synthesized from `n9`, `n11`, `n13`, `n14`, `n16`. Not a figure from the source - S10 draws the
-mechanism (Figure 1) and never draws its failure mode.*
+*Synthesized from `n3`, `n4`, `n6`, `n11`, `n14`, `n16` - a redrawing of `fig_tool-search-figure.png`
+with the measured recall gap added, which the source's own figure does not show.*
 
 ## 💡 Terms
 
 | Term | Explanation |
 |---|---|
-| Tool search | Replacing the full `tools/list` manifest with two meta-tools - a search over an index of the catalog, and a registered dispatcher to call what it returns - so definitions enter context on demand instead of up front. `article, §Two tools instead of a hundred` |
-| Tool manifest | Every tool definition handed to the model up front via `tools/list`. Resident in context on every turn, so its size tracks what is **connected** rather than what the task needs. `article, §intro` |
-| Aggregating MCP server | A server whose tools come from other servers rather than local implementations. Because the client sees only the aggregator's `tools/list`, it can index, hide, rename or add capability with nothing else changing. `article, fig_image-6.png` |
-| Prompt caching | Reusing an unchanged prompt prefix so the provider charges a fraction of the input price (~90% less on Azure OpenAI). Buys money and latency, never attention. `article, §The default agent tax` |
-| Recall@k | The share of queries where the correct item appears anywhere in the top k. Silent about rank within those k, and about every query it missed. `article, §Retrieval quality was the real test` |
-| Cross-encoder reranker | A model scoring query and candidate **together** rather than comparing precomputed vectors. More accurate, far more expensive: nothing can be indexed ahead of time, so every candidate needs a forward pass at query time. `article, §Retrieval quality was the real test` |
-| Index-only field | Metadata indexed for retrieval but never shown to the consumer (`additional_search_text`), so search vocabulary and exposed schema are independently tunable. Also an invisible steering surface. `article, §Tuning the search space` |
-| Pinning (tools) | Keeping chosen tools permanently in the manifest instead of subjecting them to retrieval - the head of the distribution, plus anything the agent must never have to rediscover. Also what keeps the prompt prefix cacheable. `article, §Search is for the long tail` |
-| Tool relevance-maxxing | The source's own name for the shift it describes: from adding as many tools as possible to making the right ones findable. `article, §intro` |
+| Tool manifest | Every tool definition handed to the model up front via `tools/list`. **Resident in context on every turn**, so its size tracks what is connected rather than what the task needs. |
+| Tool search | Replacing the manifest with two meta-tools - a search over an index of the catalog, and a registered dispatcher to call what it returns - so definitions enter context on demand. |
+| Aggregating MCP server | A server whose tools come from other servers. Because the client sees only the aggregator's `tools/list`, it can index, hide, rename or add capability with no client or downstream change. |
+| Prompt caching | Reusing an unchanged prompt prefix so the provider charges a fraction (~90% less). **Buys money and latency, never attention** - cached tokens still compete for it. |
+| Recall@k | The share of queries where the correct item appears anywhere in the top k. Silent about rank within k, and about everything below. |
+| Cross-encoder reranker | A model scoring query and candidate together rather than comparing precomputed vectors. More accurate, far more expensive - nothing can be indexed ahead of time. |
+| Index-only field | Metadata indexed for retrieval but never shown to the consumer (`additional_search_text`), so search vocabulary and consumer-facing schema tune independently. **Also an invisible steering surface.** |
+| Pinning | Keeping chosen tools permanently in the manifest instead of subjecting them to retrieval - the head of the distribution, plus whatever must never be rediscovered. Also what keeps the prompt prefix cacheable. |
 
-## Feeds these topics
+## What to distrust in this note
 
-- [`mcp.md`](../../brain/topics/mcp.md) - **the topic's first real source** (see
-  [ADR-0013](../../brain/decisions/0013-secondary-but-substantial.md) for why this counts and S9 did
-  not): the cost model of `tools/list`, the unregistered-tool guard, aggregator servers, and a
-  capability added with no new primitive.
-- [`context-engineering.md`](../../brain/topics/context-engineering.md) - **the second source on tool
-  selection**, and the first to measure it. Closes that note's "figure-only and unmeasured" caveat on
-  claim 79.
-- [`rag.md`](../../brain/topics/rag.md) - the topic's first retrieval **mechanics** and first
-  measurements: sparse vs neural reranking, Recall@k, index-field tuning.
-- [`agents.md`](../../brain/topics/agents.md) - tool-catalog design as an agent-design decision, and
-  the head/tail split.
+- **T2 vendor post about its own preview product** - but **better evidenced than that class usually
+  is**, which is worth saying plainly: it runs a **public benchmark** (ToolRet, 44,000+ tools),
+  states an honest baseline, and **reports a category where it loses** to the neural reranker.
+- **The head-to-head is not one experiment** (`d2`). Two of the three rows are **lifted from another
+  paper**, and the self-run deliberately omitted the benchmark's instruction string. Whether the
+  borrowed baselines did too is never stated, so **the direction of the bias is unknown.**
+- **The metadata-tuning percentages are method-free** (`n15`): no dataset, no absolute baselines, no
+  relative-versus-points, and not the ToolRet run. **The weakest evidence in the source, and it sits
+  next to the strongest.**
+- **The source never confronts its own headline recall number.** Recall@10 of 39-46% against a default
+  shortlist of five is the central unexamined gap, and combining it with the closing "the shortlist
+  has to be good" is **this brain's reading, not a claim the article makes.**
+- **`fig_image-6.png` carries `n7` alone** - the prose never says the toolbox is itself an MCP server,
+  so that fact is **figure-only**.
+- **A printed code sample that cannot run** (`d1`): four different names for one API inside one
+  section, raising `NameError` as printed. A useful reminder that **a vendor code sample is evidence
+  of intent, not of a working API.**
+- **The "Background, supplied" blocks are mine** - caching versus attention, Pareto strategy, Recall@k
+  and cross-encoder semantics. Uncited by construction.
 
 ## Open questions
 
-- **What is the end-to-end task-success cost of a missed retrieval?** Recall@10 of ~40% with a
-  shortlist of 5 should be catastrophic, and the source implies it is not (`n15`). Nothing here
-  explains why - whether the model re-queries `tool_search` after a miss, whether ToolRet's
-  "correct tool" is stricter than task success, or whether the tuned eval was simply easier. **The
-  single highest-value deep-research target in this source.**
-- **Who writes `additional_search_text`, and what stops it from being adversarial?** An index-only
-  field that is invisible to the model steers which capability the agent is offered, with no trace in
-  the context the model can inspect. The article treats it purely as a tuning convenience and never
-  mentions security. *(This brain's observation, not the source's - commentary, not a claim.)*
-- **Does auto-pinning actually preserve the cache?** `d3` records the contradiction; nobody measures
-  it either way.
-- **Is the crossover really 10-15 tools?** (`n18`) A vendor's adoption threshold for its own preview
-  product, with no derivation. Plausible, unevidenced.
+- **What happens on a retrieval miss?** The measured Recall@10 says it happens for more than half of
+  queries at k=10, and the default shortlist is 5. **No recovery path is described** - does the model
+  re-search, widen, or simply proceed without the capability? **The highest-value question here.**
+- **Is the unregistered-tool guard a spec rule or a client convention?** `n4` says "many runtimes" and
+  names none. The answer decides whether the two-proxy pattern is a workaround or the intended shape,
+  and it is cheap to research.
+- **How much of this survives leaving the tool-catalog setting?** The corpus is short, structured,
+  curated and **writable** - the friendliest possible conditions for sparse retrieval, and the reason
+  the editorial fix works at all. **You cannot rewrite someone else's documents to be more
+  searchable.**
+- **What does an aggregating server owe the servers behind it?** Error and auth propagation, version
+  skew, downstream schema changes under the index, and who is accountable for a call the aggregator
+  dispatched - all ignored.
+- **`additional_search_text` is an unexamined trust surface.** An index-only field invisible to the
+  model decides which capability the agent is offered, and on an aggregating server its author may be
+  neither the tool's author nor the agent's owner. See
+  [`agent-security.md`](../../brain/topics/agent-security.md).
 
-## Confidence assessment
+## Feeds these topics
 
-**T2 vendor engineering post about its own preview product**, so every design choice is also a sales
-argument. That said, it is a better-evidenced source than most of this class: it runs a **public
-benchmark** rather than an internal one, reports a category where it **loses** (customized, by 8
-points), names its baseline honestly (caching on, full catalog), and states a protocol deviation that
-works against it. The token result (`n9`, `n10`) is the strongest thing here and can be relied on. The
-retrieval comparison (`n12`) is real but weaker than presented (`d2`). The metadata-tuning figures
-(`n15`) are self-report with no method and should not be quoted as results. No external corroboration
-has been sought - no deep-research pass was requested.
+- `../../brain/topics/mcp.md` - the cost model of `tools/list`, the unregistered-tool guard, and
+  aggregation.
+- `../../brain/topics/rag.md` - the retrieval numbers, sparse versus neural, and
+  editorial-before-algorithmic.
+- `../../brain/topics/context-engineering.md` - the manifest as a measured budget line item, and
+  caching as a price cut that is not an attention cut.
+- `../../brain/topics/agents.md` - pin the head, retrieve the tail; descriptions as index entries.

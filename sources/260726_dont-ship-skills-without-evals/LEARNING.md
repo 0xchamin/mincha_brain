@@ -24,6 +24,19 @@ not a document; its **description is the trigger and causes 50%+ of all failures
 retire one by **ablation** - then keep the eval afterwards as a regression detector on the bare model.
 `https://www.youtube.com/watch?v=0vphxNt4wyk`
 
+## The 1-minute version
+
+| | |
+|---|---|
+| **The problem** | **47,000+ skills across 6,300 repos, almost none with tests** (`n1`). And bad skills do not crash - they **quietly corrupt outputs**, so nothing raises a hand. |
+| **Why the obvious answer fails** | Trying the skill is not evidence. Non-determinism makes the result **unattributable**: you cannot tell whether it failed because the skill is bad or the task was too hard (`n2`). Separating those needs a **control**, not a closer look. |
+| **The idea** | Evaluate the skill as an **intervention** and measure its **marginal contribution** - which is the same procedure whether you are asking "is this good?" or "should I delete it?" |
+| **What a skill actually is** | A **three-layer cost ladder**, not a document: frontmatter is paid on **every call whether it fires or not**, body on trigger, references free until read (`n5`, `n6`). That makes the description the most expensive real estate in the artifact. |
+| **What the benchmark says** | **+16.6 pts** across models and harnesses (`n9`). Two surprises in the same data: **AI-written skills are a negative intervention** (-8 to -11 pts), and **length is an inverted U peaking at 200-500 lines** - shorter is measurably worse (`n10`, `n11`). |
+| **What to write** | The **description is the trigger and causes 50%+ of all failures** (`n12`). Directives not prose, declare negative cases, give goals not procedures - **and if the path is fully determined, write a script instead** (`n15`). |
+| **When to delete it** | **Ablation** - run the eval with and without. 94% vs 32% means keep; 96% vs 95% means the model absorbed it (`n20`). Then **keep the eval**: it becomes a regression detector on the bare model (`n21`). |
+| **How far to trust it** | **Two credibility classes, never quote them as one.** SkillsBench is a public third-party benchmark and travels. The DeepMind-internal figures are a vendor reporting on itself, single-case and unreplicated. |
+
 ## Key claims
 
 - **A skill is a three-layer cost ladder**, not a document: frontmatter every turn, body on trigger,

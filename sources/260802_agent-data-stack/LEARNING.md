@@ -31,6 +31,18 @@ more on real warehouses (+16pp) than on public benchmarks (+2pp), and the enterp
 setting closest to this stack tops out around **65.6%**. **The mechanism is well corroborated; the
 result is not.**
 
+## The 1-minute version
+
+| | |
+|---|---|
+| **The problem** | An agent querying a company's own warehouse gives a **technically correct answer based on the wrong business interpretation** - the failure that looks exactly like success. Three people held the context that would have prevented it. |
+| **Why the obvious answer fails** | Not by re-plumbing the data. The architecture figure captioned as the "big architectural shift" is a **stock ELT pipeline with no agent in it** (`d1`). What changed is the reporting tool and the English written around the warehouse. |
+| **The idea** | **Make implicit context explicit**, in a layer decomposed by **the question each store answers** - what the data is, what a metric means, how the business works, which source to trust, how a number is computed (`n2`). A layer that cannot name a question only it answers is a duplicate. |
+| **The transferable move** | **A column definition stops being a description and becomes an instruction.** `account_status: The status of the account.` becomes a paragraph naming each value's business meaning and then an imperative: *"For customer reporting, filter to Active unless the analysis explicitly includes churned or prospective accounts"* (`n3`). |
+| **How it stays alive** | Agent conversations are **the demand signal for what to document**, with a symptom-to-layer triage rule - and **the loop's output is a write back to the store, never an answer to a user** (`n7`, `n8`). Trust flags need a **writer restriction**, because "if everything is endorsed, the signal stops being useful" (`n6`). |
+| **What it costs** | **Three permanent people.** The LLM collapsed the *encoding* cost of expert knowledge and left the *elicitation* cost untouched - somebody still has to sit with the GTM team and find out what they mean by "pipeline" (F5, Feigenbaum 1977). |
+| **How far to trust it** | **Every number measures adoption; the thesis is about trustworthiness, which is measured nowhere** - and the authors concede it (`d4`, `n10`). Its weight comes from the research pass, not the article: the mechanism is externally corroborated, the result is not. |
+
 ## Key claims
 
 | # | Claim | Evidence | Confidence |

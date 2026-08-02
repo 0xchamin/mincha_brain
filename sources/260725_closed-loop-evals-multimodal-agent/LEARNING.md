@@ -21,6 +21,18 @@ judged by comparison against its own input. Stack the gates so their holes do no
 close the loop - sample production traffic, re-label it, and let the system rewrite its own configs
 as the world drifts. `https://www.youtube.com/watch?v=31GUkCBD-Uc`
 
+## The 1-minute version
+
+| | |
+|---|---|
+| **The problem** | The system is non-deterministic, its output is an image with no correct answer, the quality bar is partly subjective, and what you are defending against is **drift in the world** rather than a regression in your code. A test suite cannot express any of that. |
+| **Why the obvious answer fails** | One end-to-end "is it good?" score tells you quality dropped and never *where*. That is the difference between an eval you can act on and a number you watch. |
+| **The idea** | **Attach metrics to decision points, not to the system.** The pipeline has three places where it commits to something it could have done differently, and each fails differently (`n2`). |
+| **How it works** | A router is a **classifier** - confusion matrix, and **recall** is the guardrail because a recall miss is unrecoverable (`n3`-`n5`). Generation has no correct answer, so make the QA gate **explain itself** and measure the **retry curve**, pass@k (`n9`). An edit has a free reference - **compare against the input**, and ask "did anything regress?" (`n10`). |
+| **What it costs** | A flat end-to-end trace before anything else, or none of it is possible (`n1`). Then ongoing human re-labelling of sampled production traffic on a cadence - the one part of the design with no automation story. |
+| **What breaks in production** | The world drifts, so the loop re-labels and auto-tunes, anchored by a golden set as its setpoint (`n7`). And the loop optimises what it measures: the agent learns that **blandness passes a faithfulness gate** (`n15`). |
+| **How far to trust it** | **One team, one domain, nothing measured.** The talk describes a system; it never reports its performance. The eval *shapes* generalise; the thresholds and ordering are one team's practice. |
+
 ## Key claims
 
 - Log the full flat trace **before** anything else - "if you don't start with it, you have nothing to
