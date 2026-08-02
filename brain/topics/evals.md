@@ -1,7 +1,8 @@
 # Topic: Evals
 
-**Status:** established (3 sources - S1 Uber closed-loop evals, S4 Anthropic harness design, S5
-Google DeepMind skill evals).
+**Status:** established (4 sources - S1 Uber closed-loop evals, S4 Anthropic harness design, S5
+Google DeepMind skill evals, **S11 agent-first data stack - a *counter*-example, a production
+deployment with no evals whose authors concede the gap**).
 **Basis:** all three independently arrive at *an independent checking stage that can fail the work* -
 S1's Swiss-cheese QA gates on a production pipeline, S4's evaluator agent with hard thresholds on a
 build loop, and S5's CI gate that blocks a skill diff from merging without proof of lift. **S5 is the
@@ -52,12 +53,51 @@ self-learning loop to build [S1 `&t=418s`]. From there:
 > **internally consistent**, not that these practices are externally validated. Needs a second
 > source.
 
+### The counter-example, and it is a friendly one
+
+**S11 is this note's first source that shipped without evals, at scale, and appears to be fine** -
+which is worth confronting rather than filing away. LangChain's data team put five layers of
+instruction artifacts in front of their whole company, ran them for a year, and measured correctness
+**nowhere**; every reported figure is adoption (conversations, users, migration speed) [S11 §Key
+results, `n9`, `d4`]. Its workspace guides *are* skills - the author says so herself - so this is S5's
+thesis (claim 46: an instruction artifact without an eval is an unfalsifiable change) contradicted in
+practice by a team that has not noticed.
+
+Except they have. **The source concedes the point itself**, filing evals under "where we're going
+next" with a rationale that is claim 46 restated: evals "will help us understand whether context
+changes are improving agent responses... **This will make context management feel more like software
+development. We can make a change, test it, and build more confidence before rolling it out
+broadly**" [S11 §Evaluating context changes, `n10`]. **A source declaring its own missing measurement
+is the strongest form of single-leg evidence, because the incentive runs the other way.**
+
+Two things this note should take from it:
+
+**Throughput is cheap to count and correctness is not, so reported agent ROI is composed almost
+entirely of the measurable half** (claim 100). S11's headline **40x** also compares mismatched units -
+agent *conversations* against a data team's estimated capacity to field *requests* [`d3`]. This is not
+dishonesty; it is a structural bias in what instrumentation makes easy. **When an agent deployment
+reports only volume, read the missing correctness number as expensive, not as good.** How expensive
+is now bounded: on Spider 2.0 - 632 enterprise text-to-SQL problems over 1,000+ column warehouses -
+the setting closest to S11's stack tops out at **65.6%** among tuned public systems, and the best
+model scored **17.0%** at publication ([R2
+F3](../../sources/260802_agent-data-stack/context/01_data-agent-accuracy-and-prior-art.md), T1/T3).
+
+**Benchmark-measured context interventions systematically understate their production effect**
+(claim 94), which is a warning about how this note's own evidence generalises. The *same* schema
+descriptions bought **+2.0pp on BIRD-Dev (34.8 -> 36.8%)** and **+16pp on a real warehouse (36 ->
+52%)**; the cause is that benchmark schemas have "distinct column names" while real ones do not (R2
+F1, MotherDuck, T2). **An intervention that looks marginal on a public benchmark may be decisive in
+your own system - and neither number transfers.** That cuts both ways for everything in this note
+that cites a benchmark result.
+
 ## Key claims
 
 | Claim | Sources (cited) | Confidence |
 |---|---|---|
 | Log the full flat trace first - it is the precondition for evals and any self-learning loop. | S1 `&t=418s` (slide `frame_1058` + narration) | emerging |
 | Eval a router as a classifier (confusion matrix, precision/recall); guardrail metric = recall. | S1 `&t=459s`, `&t=578s` | emerging |
+| **Agent throughput is cheap to measure and correctness is not, so reported agent ROI is composed of the measurable half.** A deployment reporting only volume is missing the correctness number because it is expensive, not because it is good. | S11 §Key results (`n9`, `n10`, `d3`, `d4`) | emerging - and the source concedes it itself |
+| **Context interventions measured on public benchmarks understate their production effect**: the same schema descriptions gave **+2.0pp on BIRD-Dev and +16pp on a real warehouse**, because benchmark schemas are unambiguous and real ones are not. | MotherDuck (**T2**, private benchmark) via R2 F1 | needs-check - one team, one warehouse, not reproducible |
 | Two router failure modes: precision miss (over-process good input) and recall miss (approve bad input -> hallucination risk). | S1 `&t=588s` (slide `frame_583` + narration) | emerging |
 | Generation evals are iterative: QA feedback -> prompt rewrite -> retry; measure pass@k. | S1 `&t=850s` (slide `frame_850` + narration) | emerging |
 | Editing tasks: eval by pairwise comparison (better than input? faithful/complete/natural? regressions?). | S1 `&t=896s` (slide `frame_890` + narration) | emerging |
@@ -140,3 +180,10 @@ self-learning loop to build [S1 `&t=418s`]. From there:
   (Philipp Schmid, Google DeepMind, AI Engineer WF 2026). **T4 talk by a T2 vendor employee.**
   Strongest here for **ablation as an eval method** and for the **CI merge gate**. See
   [`skills.md`](skills.md) for the full skill-side synthesis.
+- **S11** - [How we built LangChain's agent-first data stack](../../sources/260802_agent-data-stack/LEARNING.md)
+  (Emily Hawkins, LangChain, 2026-07-27) - **the counter-example**: five layers of instruction
+  artifacts shipped company-wide with no eval on any of them, and the authors say so. Contributes the
+  measurement-bias claim (100) rather than a method. **T4 on a T2 vendor blog, n = 1.**
+- **R2** - [deep-research pass on S11](../../sources/260802_agent-data-stack/context/01_data-agent-accuracy-and-prior-art.md)
+  (2026-08-02) - Spider 2.0 (T1/T3) for the accuracy ceiling on enterprise text-to-SQL, and
+  MotherDuck (T2) for the benchmark-vs-production gap (claim 94).

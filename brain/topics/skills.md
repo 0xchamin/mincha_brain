@@ -1,12 +1,20 @@
 # Topic: Skills
 
-**Status:** emerging (1 source - S5 "Don't Ship Skills Without Evals", Philipp Schmid / Google
-DeepMind, AI Engineer WF 2026).
-**Basis:** first source on this topic. Unusually well-evidenced for a `seed -> emerging` promotion
-because its central numbers come from **SkillsBench**, a public third-party benchmark, rather than
-from the speaker's assertions. **Note the independence limit:** a benchmark quoted *inside* the talk
-is still the talk's leg, not a second ingested source. `established` needs a genuinely separate
-source.
+**Status:** emerging (4 sources, but **only one of them is about skills** - S5 "Don't Ship Skills
+Without Evals", Philipp Schmid / Google DeepMind, AI Engineer WF 2026; plus S7, S9 and S11, each
+contributing a single peripheral observation).
+**Basis:** S5 remains the only source that studies skills. It is unusually well-evidenced for a
+`seed -> emerging` promotion because its central numbers come from **SkillsBench**, a public
+third-party benchmark, rather than from the speaker's assertions. **Note the independence limit:** a
+benchmark quoted *inside* the talk is still the talk's leg, not a second ingested source.
+**`established` still needs a genuinely separate source that studies skills**, and none of S7, S9 or
+S11 does: S7 supplies the category name (procedural memory), S9 files `skills` in one box of one
+diagram, and S11 calls its business-context documents "like skills" in passing. Three corroborations
+of the *family*, none of S5's claims.
+
+*(Status line corrected 2026-08-02: it read "1 source" while three were listed below and `INDEX.md`
+said three - stale since S7 was added. The count is fixed; the `emerging` judgement is unchanged, and
+the sentence above now says explicitly why a rising count is not rising evidence.)*
 
 > Living, cross-source synthesis on agent skills. Many sources feed this note; **merge and
 > de-duplicate** as they arrive (architect persona). Every claim cited.
@@ -212,3 +220,18 @@ what S4 does not have: **keep the meter after you remove the part.**
   never defines a skill, never discusses writing or evaluating one, and does not mention skills in
   its prose at all. **This does not move the topic off `emerging`**; a box position is not a second
   source on the claims that matter here ([ADR-0012](../decisions/0012-a-mention-is-not-a-source.md)).
+- **S11** - [How we built LangChain's agent-first data stack](../../sources/260802_agent-data-stack/LEARNING.md)
+  (Emily Hawkins, LangChain, 2026-07-27). Contributes **one sentence and one instance**, and both are
+  the same kind of weak-but-independent evidence as S9. Describing the prose documents that carry
+  business rules with no schema slot - company processes, reporting conventions, which filters apply
+  to customer health - the author writes: "**These would be like skills for the data agent**" [S11
+  §Capturing business context, `n5`]. She is not citing S5, S7 or anyone else; she reaches for the
+  word because it fits. The artifact matches this note's description exactly: markdown, versioned in
+  a GitHub repo, reviewed on change, synced into the agent's context, steering *how* to do something
+  rather than stating a fact. **This is the first instance in this brain of the pattern outside a
+  coding or agent-tooling context** - the domain is go-to-market reporting - which is mild evidence
+  that claim 64's family is real rather than an artifact of who writes about agents.
+  **It moves nothing.** S11 does not define, size, trigger, evaluate or retire a skill, and it ships
+  its guides with **no evals at all** - which makes it a live counter-example to S5's central claim
+  rather than a corroboration of it (see [`evals.md`](evals.md), claim 100). Recorded under
+  [ADR-0012](../decisions/0012-a-mention-is-not-a-source.md): a mention is not a source.

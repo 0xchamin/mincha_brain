@@ -79,6 +79,11 @@
 | Cross-encoder reranker | A model that scores a query and a candidate **together** rather than comparing precomputed vectors. More accurate and far more expensive, because nothing can be indexed ahead of time: every candidate needs a forward pass at query time. | S10 (article, §Retrieval quality was the real test) |
 | Index-only field | Metadata indexed for retrieval but never shown to the consumer (`additional_search_text`), so search vocabulary and consumer-facing schema can be tuned independently - and a third-party corpus can be tuned without forking it. Also an invisible steering surface. | S10 (article, §Tuning the search space) |
 | Pinning (tools) | Keeping chosen tools permanently in the manifest instead of subjecting them to retrieval - the head of the Pareto distribution, plus whatever the agent must never have to rediscover. Also what keeps the prompt prefix stable enough to cache. | S10 (article, §Search is for the long tail) |
+| Semantic layer | A declarative definition of metrics and entity relationships (ARR, pipeline, active usage) sitting above the physical tables, so "revenue" resolves to one agreed calculation instead of being re-derived per query. Long-standing BI infrastructure (LookML, 2012) repurposed as agent context. | S11 (article, §The semantic model defines metrics and relationships) |
+| ELT | Extract, load, transform - land raw data in the warehouse first, then transform in place with SQL (typically dbt), as opposed to older ETL which transformed before loading. The default shape of a modern data stack. | S11 (`visuals/fig2`) |
+| Endorsement (data asset) | A flag marking an asset as trusted, so an agent or a human prefers it among several that touch the same concept. Only informative while scarce, so it needs a writer restriction; Power BI ships two tiers (open Promotion, restricted Certification). | S11 (article, §Endorsements) + [Microsoft Learn](https://learn.microsoft.com/en-us/power-bi/collaborate-share/service-endorsement-overview) (T1) |
+| Knowledge acquisition bottleneck | The limiting factor in a knowledge-based system is the human labour of extracting expert knowledge and encoding it usably, not the system's reasoning power. Identified by Feigenbaum in 1977 and never solved, only made cheaper - LLMs collapse the *encoding* half and leave *elicitation* untouched. | R2 F5 (Feigenbaum 1982, Stanford archive, **T1**) |
+| Execution accuracy (EX) | The standard text-to-SQL metric: the fraction of generated queries whose **result set** matches the gold query's, rather than whose SQL text matches. Measures the answer, not the phrasing. | R2 F1 (BIRD / Spider 2.0) |
 
 > **S1** = `sources/260725_closed-loop-evals-multimodal-agent/` (Uber, AI Engineer World's Fair 2026).
 > **S2** = `sources/260725_12-factor-agents/` (Dex Horthy / HumanLayer, AI Engineer World's Fair 2025).
@@ -90,4 +95,6 @@
 > **S8** = `sources/260731_llm-wiki/` (Andrej Karpathy, gist `ac46de1`, 2026-04-04).
 > **S9** = `sources/260801_agent-framework-layered-sdk/` (Shawn Henry, 2026-05-28).
 > **S10** = `sources/260801_tool-search-toolboxes/` (Lisa Brown Jaloza, Microsoft, 2026-07-29).
+> **S11** = `sources/260802_agent-data-stack/` (Emily Hawkins, LangChain, 2026-07-27).
 > **R1** = deep-research pass on S2, `sources/260725_12-factor-agents/context/01_context-limits-and-decomposition.md`.
+> **R2** = deep-research pass on S11, `sources/260802_agent-data-stack/context/01_data-agent-accuracy-and-prior-art.md`.

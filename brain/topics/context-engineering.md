@@ -1,9 +1,11 @@
 # Topic: Context engineering
 
-**Status:** established (5 sources - S2 12-factor agents, S4 Anthropic harness design, **S8 LLM Wiki
+**Status:** established (6 sources - S2 12-factor agents, S4 Anthropic harness design, **S8 LLM Wiki
 (a partial feeder, 2 claims)**, **S9 Agent Framework (a partial feeder, 1 claim)**, **S10 Tool search
-(a partial feeder, 2 claims - and the first *measurement* of a claim S9 could only place)**; plus the
-R1 research pass). **Basis for the promotion:** S4
+(a partial feeder, 2 claims - and the first *measurement* of a claim S9 could only place)**, **S11
+agent-first data stack (4 claims - the first source here where the context is written for a
+*proprietary business domain* rather than for a codebase or a tool catalog)**; plus the
+R1 research passes). **Basis for the promotion:** S4
 independently arrives at S2's serialisation claim from the opposite direction - S2 argues you should
 own the thread format so you *can* pause and resume; S4 needs exactly that artifact to make context
 resets work [S4 §2]. Most of S4's other context claims are new and `single-leg`, not corroborating.
@@ -239,6 +241,94 @@ pass a **budget decision**, not a completeness one: you choose which images are 
 > costed the same way (`AGENTS.md`, "The visual leg"). S8 states the constraint that makes it
 > necessary; it does not corroborate any claim about how well the two-pass split works.
 
+### Metadata becomes a control surface the moment an agent reads it
+
+**This note's most robust claim now rests on three unrelated sources, and none of them set out to make
+it** (claim 93). Each found the same thing in a different domain:
+
+| Source | The field | What it turned out to be |
+|---|---|---|
+| S5 | a **skill's** description | the **trigger** - and the cause of 50%+ of all skill failures (claim 44) |
+| S10 | a **tool's** name and description | **ranking features** in a retrieval index, so the first tuning pass is editorial (claim 88) |
+| S11 | a **column's** description | a **default policy** the agent applies |
+
+S11's before-and-after is the clearest illustration in this brain. `account_status: The status of the
+account.` becomes a paragraph naming the system of record, enumerating each value's *business*
+meaning, and then issuing an imperative: "**For customer reporting, filter to Active unless the
+analysis explicitly includes churned or prospective accounts**" [S11 §How we define the data models,
+`n3`]. The stated purpose is to prevent "a technically correct answer based on the wrong business
+interpretation" - the failure that looks exactly like success.
+
+**The generalisation: a metadata field written for a human to skim is being promoted to a control
+surface, and nobody notices until an agent reads it.** In all three cases the incumbent vocabulary is
+the failure - implementer shorthand ("get", "manage", "REST API") in S10, "the status of the account"
+in S11 - because it was written for a reader who already knows the answer.
+
+> **This is the first claim in this note with external measurement behind it that is not about token
+> budgets.** Documented columns are worth **+20% accuracy on completely uninformative column names**
+> ([arXiv:2408.04691](https://arxiv.org/abs/2408.04691), T3, BIRD-Bench), and - the finding worth
+> keeping - descriptions annotators judged **"superfluous" outperformed manually curated gold ones**.
+> Write more than feels necessary. See [S11 R1 F1](../../sources/260802_agent-data-stack/context/01_data-agent-accuracy-and-prior-art.md).
+
+### Sort context by the question it answers, not by the tool that stores it
+
+S11 supplies this note's first **decomposition of a context layer into stores** (claim 92), and its
+value is that the split is by *question*, not by technology [S11 §How we think about context,
+`visuals/fig3`, `n2`]: what is this data (column definitions), what does this metric mean (semantic
+model), how does this business work (prose guides), which source do I trust (endorsements), how is
+this number computed (the transformation repo).
+
+The discipline is in the negative form. **A layer that cannot name a question only it can answer is a
+duplicate - and duplicated context is worse than missing context, because the two copies drift.** A
+column description structurally cannot say which of three ARR dashboards is canonical: that is a fact
+about the *relationship* between assets, not about any one of them.
+
+Two connections back into this note. First, S11's "workspace guides" - versioned prose in a git repo,
+carrying business rules that fit no schema field - are the **contract document** of claim 68 applied
+to a business domain instead of a codebase, and the author independently calls them "like skills for
+the data agent" [`n5`]. Second, and less comfortably, **all five stores are prose**. The layer that
+made a 3-person team's knowledge reachable by everyone in the company contains no new machinery at
+all.
+
+### The head/tail split is universal; its treatment inverts with whichever resource is scarce
+
+S10 and S11 give **opposite** prescriptions on the same distribution, and both are right (claim 99):
+
+- **S10: retrieve the tail, pin the head.** The binding cost is **tokens**. Indexing the tail is
+  nearly free once the index exists, so the tail gets retrieved and the head gets pinned - pinning
+  protects what must never be missed, and keeps the prefix cacheable [S10 `n16`].
+- **S11: curate the head, defer the tail.** The binding cost is **human authorship**. Every tail item
+  is a definition a person writes, reviews and maintains forever, so covering "roughly 80% of the
+  questions people ask" first is the only affordable order [S11 §Start with the questions that matter
+  most, `n11`].
+
+**The question is never "head or tail". It is "what runs out first - context window or people".**
+
+And when the answer is people, the constraint is softer than it looks: MotherDuck generated schema
+descriptions **from the query log** for roughly **$0.50 per warehouse**, and those generated
+descriptions produced a **+16pp** accuracy gain on a real warehouse (T2, [S11 R1
+F2](../../sources/260802_agent-data-stack/context/01_data-agent-accuracy-and-prior-art.md)). **The
+first draft of the long tail can be machine-written from usage; only the genuinely ambiguous cases
+need the expert** - which is precisely where the same study found LLM generation falls down.
+
+### The loop that maintains context writes context, not answers
+
+S11 is the first source here to describe the **maintenance** side of a context layer as an operating
+routine rather than an aspiration (claim 97). Observability over agent conversations yields a
+symptom-to-layer triage rule, and the loop's output is a write back into the store - never an answer
+to a user [S11 §How we improve the system, `visuals/fig3`, `n7`, `n8`].
+
+> ⚠️ **The source's own architecture figure omits the human, and the omission matters.** The prose
+> insists that only the data team may set trust flags and that endorsed assets need review before
+> changes ship; in the figure, the feedback arrow runs from usage trends straight back into the store
+> with no review step [`d2`]. Build it as drawn and you get a loop with no ground truth: usage
+> promotes a source, promotion increases usage. **The one control that makes the design safe is the
+> one the diagram leaves out.**
+
+This is claim 59's shape (a loop holding two objectives trades them off silently) arriving in a new
+place - and note that S11 resolves it the way [`memory.md`](memory.md) predicts, by putting the
+curation in a separate loop run by different people on a different cadence.
+
 ## Key claims
 
 | Claim | Sources (cited) | Confidence |
@@ -261,6 +351,11 @@ pass a **budget decision**, not a completeness one: you choose which images are 
 | **Some context management belongs in middleware, not in per-call authoring** - compaction, tool selection and permissions applied uniformly by the loop rather than reasoned about each pass. The explicit loop is what gives controls a consistent place to live. | S9 `fig_AgentHarness` + §Agent loops; **S10 is the same placement built and measured** (`n3`, `n9`) | emerging (two T2 vendors, independent of each other; still nothing comparing middleware to per-call authoring) |
 | **The tool manifest is resident context that scales with the catalog, not the task** - 541k tokens at 1,180 tools - and **prompt caching makes it ~90% cheaper without making it cost less attention**. | S10 §intro + §The default agent tax + `fig_tokens-chart` (`n1`, `n2`, `n9`) | **measured** on the token counts (ToolRet); needs-check on the attention argument (single-leg, though it agrees with claim 27) |
 | **Deferring the manifest behind a search tool decouples context cost from catalog size** - 36x fewer tokens at 1,180 tools, and roughly flat across a 24x catalog increase. The head of the distribution is **pinned** rather than retrieved, which is also what keeps the prompt prefix cacheable. | S10 `fig_tokens-chart` + §Search is for the long tail (`n9`, `n10`, `n16`, `n17`) | **measured** on tokens; the reliability half is unresolved - see `rag.md` and claim 87 |
+| **Metadata written for humans becomes a control surface the moment an agent reads it**, and the incumbent human-facing vocabulary is the dominant failure. A skill's description is its trigger; a tool's description is a ranking feature; a column's description is a default policy the agent applies. | **S5 (claim 44) + S10 (claim 88) + S11 §How we define the data models (`n3`)**, measured by [arXiv:2408.04691](https://arxiv.org/abs/2408.04691) (T3) via S11 R1 F1 | **corroborated (3 sources + external measurement)** - the best-supported claim in this note |
+| **Sort context by the question it answers, not by the tool that stores it.** Five stores, five questions no other store can answer. A layer that cannot name a question only it can answer is a duplicate, and duplicated context drifts. | S11 §How we think about context + `visuals/fig3` (`n2`) | emerging (single-leg on one company's design; the *decomposition* is corroborated by `fig3`, its *sufficiency* is not) |
+| **The head/tail split is universal but its treatment inverts with whichever resource is scarce** - retrieve the tail when tokens bind (S10), defer the tail when human authorship binds (S11). | **S10 (`n16`) + S11 §Start with the questions that matter most (`n11`)** | **corroborated as a pattern across 2 sources reaching opposite prescriptions**; each prescription is single-leg in its own source |
+| **The output of a working context loop is a write to the context store, not an answer** - which converts a service team into maintainers. Remove the human from that loop and it self-reinforces with no ground truth. | S11 Key Takeaways + `visuals/fig3` (`n8`, `d2`) | emerging - mechanism corroborated, organisational consequence prose-only, self-reinforcement risk is this brain's reading of `d2` |
+| **An "agent-first" data layer turned out to be a documentation layer over an unchanged pipeline.** Check whether any box moved or only the documentation did. | S11 §Closing + `visuals/fig2` (`n1`, `d1`) | emerging (single company, and the reading is the figure's, not the prose's) |
 
 ## Key visuals
 
@@ -345,4 +440,17 @@ pass a **budget decision**, not a completeness one: you choose which images are 
   attention cut, and pinning as prefix-stability control. **T2 vendor post on its own preview
   product**, but the token result runs on a public benchmark (ToolRet). Its retrieval half belongs to
   [`rag.md`](rag.md).
+- **S11** - [How we built LangChain's agent-first data stack](../../sources/260802_agent-data-stack/LEARNING.md)
+  (Emily Hawkins, LangChain, 2026-07-27) - **contributing four claims**, and the first source here
+  where the context is written for a **proprietary business domain** rather than a codebase or a tool
+  catalog: the five-store decomposition by question, a column definition carrying a default policy,
+  the head/tail inversion against S10, and the maintenance loop whose output is context rather than
+  answers. **T4 practitioner experience on a T2 vendor blog, n = 1 company, nothing measured** - but
+  its central mechanism is measured externally by parties with no stake in it (R2).
 - **R1** - [deep-research pass on S2](../../sources/260725_12-factor-agents/context/01_context-limits-and-decomposition.md) (2026-07-25) - external evidence: Lost in the Middle (T1), Context Rot (T2), Anthropic context engineering (T2), Beyond pass@1 (T3), Event Sourcing (T1). Each citation carries a tier and an independence call.
+- **R2** - [deep-research pass on S11](../../sources/260802_agent-data-stack/context/01_data-agent-accuracy-and-prior-art.md)
+  (2026-08-02) - external evidence for the metadata-as-control-surface claim: MotherDuck
+  query-log-informed schema descriptions (T2, +2pp on a benchmark vs +16pp on a real warehouse),
+  [arXiv:2408.04691](https://arxiv.org/abs/2408.04691) (T3, +20% on uninformative column names),
+  Spider 2.0 (T1/T3, the accuracy ceiling), Power BI endorsement (T1, prior art), Feigenbaum's
+  knowledge acquisition bottleneck (T1, 1977). Tiers and independence calls recorded in the note.

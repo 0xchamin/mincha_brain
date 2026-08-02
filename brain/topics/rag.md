@@ -1,14 +1,24 @@
 # Topic: RAG (Retrieval-Augmented Generation)
 
-**Status:** **emerging** (2 sources - S8 "LLM Wiki", Andrej Karpathy, 2026-04-04; S10 "Tool search",
-Microsoft, 2026-07-29).
+**Status:** **emerging** (3 sources - S8 "LLM Wiki", Andrej Karpathy, 2026-04-04; S10 "Tool search",
+Microsoft, 2026-07-29; S11 "agent-first data stack", LangChain, 2026-07-27).
 **Basis:** the topic's first source arrived from an unexpected direction - **it is an argument against
 query-time retrieval**, not a description of how to do it. That is still the right home for it: a
 claim about what to build *instead* of RAG belongs in the note that owns RAG, and splitting it into a
 `knowledge-bases` note would put two halves of one argument in two places (architect call, see "Scope"
 below).
 
-**Why a second source does not make this `established`.** S10 brings what S8 could not - real
+**Why a third source still does not make this `established`.** The three sources describe a maintained
+knowledge layer, a tool-schema index, and a hand-written business-context layer - and **no two of them
+corroborate each other on the topic's core machinery.** S11 in particular is silent on S8's central
+question (can an LLM maintain its own store?), having chosen the opposite answer - **every write in
+S11's loop is a human's** - without arguing for it. Chunking, embeddings, vector stores and grounding
+evaluation remain at **zero sources**. What S11 does add is the topic's **first production deployment
+of the compiled-layer pattern**, and its first **externally corroborated** claims (95, 96, 98).
+Coverage improved; corroboration did not. That is `emerging` with better coverage, per
+[ADR-0012](../decisions/0012-a-mention-is-not-a-source.md) run in the honest direction.
+
+**The original two-source reasoning, retained.** S10 brings what S8 could not - real
 retrieval mechanics, on a public benchmark, with numbers - but it retrieves over **tool schemas**, not
 over a document corpus. Chunking, embeddings, vector stores and grounding evaluation still have
 **zero** sources. The two sources also barely touch: they agree only that heavyweight retrieval
@@ -285,6 +295,70 @@ corpus answering repeated synthesis questions, S8's compile-once wins. For a too
 agent across many workflows, nothing can be compiled and the per-query cost is unavoidable. That is a
 sharper boundary than either source states alone.
 
+### S11: the maintained layer, built and staffed - and the trust signal nobody has measured
+
+S8 argued for a compiled knowledge layer and shipped no implementation. S10 built a retrieval index
+over tool schemas. **S11 is the first source here that is a maintained knowledge layer in production
+for a year, over a business domain, with named people paying for it** - which makes it the closest
+thing this note has to evidence that the pattern is livable, and no evidence at all that it works.
+
+**The layer is five stores split by the question each answers** (claim 92, and the detail lives in
+[`context-engineering.md`](context-engineering.md)). Two of them belong to this note specifically:
+
+**Endorsements are a retrieval-ranking signal wearing an organisational hat** (claim 95). The problem
+is `rag`'s oldest: a company has four tables, two dashboards and a graveyard of ad-hoc queries all
+touching "ARR", and nothing tells the retriever which to prefer - "without a trust signal, the agent
+may choose an asset that looks relevant but is not the best source" [S11 §Endorsements, `n6`]. The
+answer is a flag, and the design rule attached to it is the transferable part:
+
+> **"If everything is endorsed, the signal stops being useful."** A trust signal carries information
+> only in proportion to what it excludes, so it needs a **writer restriction** - here, only the data
+> team may set it, and endorsed assets need review before changes ship.
+
+**This is prior art, and the prior art is better** ([S11 R1
+F4](../../sources/260802_agent-data-stack/context/01_data-agent-accuracy-and-prior-art.md)). Power BI
+has shipped **endorsement** for years - labels, attribution, and *priority in search results* - with
+**two tiers where S11 has one**: *Promotion*, applicable by anyone with workspace write access, and
+*Certification*, restricted to an admin-defined reviewer group and disabled by default (T1, Microsoft
+Learn). The two-tier split is the better answer to S11's own saturation worry, because the cheap tier
+absorbs the volume of "this is good, use it" and keeps the scarce tier scarce **without making its
+gatekeepers a bottleneck**. That a hyperscaler's governance feature and a three-person data team
+arrived at the same primitive independently, years apart, is a better argument for trust signals
+being structurally necessary than either instance alone.
+
+> ⚠️ **The open question underneath it is embarrassing and cheap to answer.** Power BI documents
+> endorsement's effects on **human** discovery - badges, sort order, search priority. **Nobody has
+> measured whether a trust flag changes an *agent's* source selection.** The transfer is assumed by
+> everyone and demonstrated by no one, and the experiment is an ablation: remove the flags, hold
+> everything else fixed, measure source choice. See "Open questions" below.
+
+**The query log is the demand signal for what to document** (claim 96). S11 runs it as an operational
+routine with a symptom-to-layer triage rule [S11 §How we improve the system, `n7`]; independently,
+MotherDuck **mined** descriptions from query history - "how frequently an identifier appears, in which
+SQL clauses, with which other identifiers" - for **~$0.50 per warehouse**, and a third group found
+"Common Queries" the highest-yield metadata component of all (T2 / T4, R1 F2). **Two unrelated teams
+found usage to be the highest-yield context source.** This is claim 69 (queries are an input to a
+knowledge base, not just a load on it) arriving with a price tag attached.
+
+**And the labour claim finally has a second precedent.** Claim 72 held that the binding constraint on
+a maintained knowledge base is maintenance labour, on S8 and Bush's **Memex (1945)**. S11 adds a
+second, from a different literature: Feigenbaum's **knowledge acquisition bottleneck** (1977) found
+expert systems limited not by inference but by eliciting and encoding expertise from humans (R1 F5).
+Claim 98 refines *which half* the LLM removed: **prose is a far cheaper target formalism than
+production rules, so the encoding cost collapsed - and the elicitation cost did not move at all.**
+Someone still has to sit with the GTM team and find out what they mean by "pipeline". That is why
+S11's layer costs three permanent people rather than one project.
+
+> 💡 **Knowledge acquisition bottleneck** - the limiting factor in a knowledge-based system is the
+> human labour of extracting expert knowledge and encoding it usably, not the system's reasoning
+> power. Identified by Feigenbaum in 1977 and never solved, only made cheaper.
+
+**What S11 does not do is corroborate S8.** Both describe a maintained layer, but S8's is
+LLM-*written* and self-maintaining by design, while S11's is **human-written throughout** - the agent
+consumes the layer and never edits it, and every write in the loop is a person's. On the question S8
+actually raises (can an LLM maintain its own knowledge store?) S11 is silent, having chosen the other
+answer without arguing for it. **That is why this note stays `emerging`** - see the status line.
+
 ## Key claims
 
 | Claim | Sources (cited) | Confidence |
@@ -301,6 +375,10 @@ sharper boundary than either source states alone.
 | **Retrieval quality is an editorial problem before it is an algorithmic one.** The dominant failure is descriptions written in implementer vocabulary; the first useful tuning pass is rewriting them, not changing the ranker. | S10 §Tuning the search space + §Try it (`n13`, `n19`) | emerging (single-leg, but it is an experience report about their own benchmark run) |
 | **Separate the indexed surface from the consumer-facing one.** An index-only alias field makes retrieval vocabulary and exposed schema independently tunable, and lets a third-party corpus be tuned for local vocabulary without forking it. | S10 §Tuning the search space (`n14`, prose vs code) | emerging |
 | **When the retrieved items are *capabilities*, a miss removes an option rather than degrading an answer** - and the consumer may never learn the option existed. Recall@10 of 39-46% against a default shortlist of 5 is the unexamined half of S10's result. | S10 Figure 3 (`n11`) + §When we would use tool search | **needs-check - this brain's reading of the source's own numbers**, not a claim S10 makes |
+| **A trust signal carries information only in proportion to what it excludes, so it needs a writer restriction** - "if everything is endorsed, the signal stops being useful". **Two tiers beat one**: a cheap self-serve tier absorbs volume so the restricted tier stays scarce without becoming a bottleneck. | **S11 §Endorsements (`n6`) + [Power BI endorsement](https://learn.microsoft.com/en-us/power-bi/collaborate-share/service-endorsement-overview) (T1, independent prior art)** via R2 F4 | **corroborated (independent re-derivation)** on the design; **`no-evidence` on whether it changes an *agent's* choices** |
+| **The query log is the demand signal for what to document, and the first draft can be mined from it** for ~$0.50 per warehouse. Two unrelated teams found usage the highest-yield context source. | **S11 §How we improve the system (`n7`) + MotherDuck (T2) + CorralData (T4/T5)** via R2 F2 | **corroborated (2 independent sources)** on the signal; needs-check on the automation |
+| **The LLM collapsed the *encoding* cost of expert knowledge and left the *elicitation* cost untouched.** Prose is a cheaper target formalism than production rules; sitting with the domain expert still is not. Second historical precedent for the labour claim, after Memex. | Feigenbaum, *Knowledge Acquisition: The Bottleneck* (1977/1982, **T1**) via R2 F5; applied to S11 (`n8`) | emerging - the historical claim is solid, the application to S11 is this brain's synthesis |
+| **Context interventions measured on public benchmarks systematically understate their production effect**, because benchmark schemas are unambiguous and real ones are not: the same intervention bought **+2.0pp on BIRD-Dev and +16pp on a real warehouse**. | MotherDuck, *Query-Log-Informed Schema Descriptions* (**T2**, private benchmark) via R2 F1 | needs-check - one team, one warehouse, not reproducible |
 
 ## Key visuals
 
@@ -320,6 +398,15 @@ sourced._
 
 ## Open questions / conflicts
 
+- **Does a trust signal change an *agent's* source selection?** `no-evidence` after a deep-research
+  pass (R2 F6). Endorsement-style flags are widely shipped and independently re-derived (claim 95),
+  and every documented effect is on **human** discovery - badges, sort order, search priority. The
+  transfer to model behaviour is assumed by everyone and demonstrated by no one. **The cheapest
+  high-value experiment this brain has surfaced**: ablate the flags, hold everything else fixed,
+  measure source choice. It is also exactly the eval S11 admits it has not built.
+- **How many context stores earn their maintenance?** One study found metadata gains flattening past
+  three or four components (R2 F2, weak T4/T5 evidence, method not published); S11 runs five. Whether
+  the fifth pays for itself is unknown, and ablation is the method that answers it (claim 47).
 - **Where does index-file navigation actually break?** [`n10`] claims ~100 sources / hundreds of pages
   with no derivation and no account of the failure past it. **The highest-value deep-research target
   in this topic**, and unlike most claims in this brain it is the sort of thing someone may genuinely
@@ -355,6 +442,17 @@ sourced._
 
 ## Sources feeding this topic
 
+- **S11** - [How we built LangChain's agent-first data stack](../../sources/260802_agent-data-stack/LEARNING.md)
+  (Emily Hawkins, LangChain, 2026-07-27) - **the topic's first production deployment of a maintained
+  knowledge layer**, and the source of its trust-signal and query-log-as-demand-signal claims. Note
+  what it is not: every write in its loop is a human's, so it does not test S8's self-maintaining
+  premise. **T4 on a T2 vendor blog, n = 1, nothing measured internally** - its weight here comes from
+  R2's external corroboration, not from the article.
+- **R2** - [deep-research pass on S11](../../sources/260802_agent-data-stack/context/01_data-agent-accuracy-and-prior-art.md)
+  (2026-08-02) - Power BI endorsement (T1, prior art for claim 95), MotherDuck query-log-informed
+  schema descriptions (T2, claims 94 and 96), [arXiv:2408.04691](https://arxiv.org/abs/2408.04691)
+  (T3), Spider 2.0 (T1/T3, the accuracy ceiling on enterprise text-to-SQL), Feigenbaum's knowledge
+  acquisition bottleneck (T1, claim 98). Tiers and independence calls in the note.
 - **S8** - [LLM Wiki](../../sources/260731_llm-wiki/LEARNING.md) (Andrej Karpathy, 2026-04-04).
   **T4 practitioner essay, ~1,960 words, no figures and no implementation.** Read it for the design
   argument, which stands on its own logic: you can follow "retrieval re-derives" to "so compile once
