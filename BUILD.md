@@ -1,6 +1,6 @@
 # BUILD.md - build Brain from scratch, from this file alone
 
-> **Generated 2026-08-02 from commit `6e0bb31`** by `tools/make_build_doc.py`. Do not hand-edit: edit the
+> **Generated 2026-08-02 from commit `4e69f1f`** by `tools/make_build_doc.py`. Do not hand-edit: edit the
 > source files in the reference clone and regenerate, or your copy silently diverges from the kit
 > it claims to build.
 
@@ -271,6 +271,7 @@ framing. Understanding is the deliverable.)*
 | Section | Required? |
 |---|---|
 | `## TL;DR` | **Hard** - the executive summary, and `build_site.py` lifts it onto the landing page |
+| `## The 1-minute version` | **Hard** - the whole article compressed to a scannable table. See below |
 | `## Key claims` | **Hard** - also lifted onto the landing page |
 | `## What you will learn, and in what order` | **Hard** - a mermaid roadmap of the walkthrough, grouped into movements. See below |
 | The walkthrough - **numbered sections, titled by what you learn** | **Hard** - the body; its shape follows the source |
@@ -305,6 +306,28 @@ framing. Understanding is the deliverable.)*
 6. **It labels weak evidence at the point of use.** `single-leg`, vendor self-report, figure-only -
    in the sentence that leans on it. "What to distrust" is a source-level summary and is **not** a
    place to park claim-level caveats.
+
+### The 1-minute version
+
+A table directly under the `TL;DR`, giving **the whole argument in about sixty seconds of reading**.
+It is not a third summary competing with its neighbours - the three do different jobs, and keeping
+them distinct is the point:
+
+| | Answers | Shape |
+|---|---|---|
+| `TL;DR` | *what is this and should I read it?* | 4-6 sentences of prose, lifted to the landing page |
+| **`The 1-minute version`** | *what does it actually say?* | **a table - the narrative arc compressed** |
+| `Key claims` | *what may I cite, and how strongly?* | bullets with node IDs and citations |
+
+Standard rows, adapted to the source: **the problem** / **why the obvious answer fails** / **the
+idea** / **how it works** / **what it costs** / **how far to trust it**. Keep each cell to a sentence
+or two. **A reader who stops here should have the argument, not a teaser for it** - if a row cannot be
+filled without the walkthrough, the row is wrong, not the reader.
+
+> **Why it earns its space.** The notes now run 5,000+ words, which is right for a ramp and wrong for
+> the moment you are deciding whether to spend twenty minutes, or re-checking one thing you half
+> remember. It also functions as a design check on the author: **an argument you cannot compress into
+> six rows is usually an argument you have not finished deriving.**
 
 ### The roadmap diagram
 
@@ -3199,6 +3222,22 @@ if __name__ == "__main__":
 ## TL;DR
 
 <2-4 sentences: what this source teaches and why it is worth knowing.>
+
+## The 1-minute version
+
+| | |
+|---|---|
+| **The problem** | <what is actually hard, in one or two sentences> |
+| **Why the obvious answer fails** | <the naive approach and the specific way it breaks> |
+| **The idea** | <the crux, stated plainly> |
+| **How it works** | <the mechanism, compressed> |
+| **What it costs** | <the trade the design makes, and what it rules out> |
+| **How far to trust it** | <evidence class in one line: measured? third-party? vendor self-report?> |
+
+<!-- The whole argument in ~60 seconds. NOT a teaser - a reader who stops here should have the
+     argument. Rows are adaptable to the source; keep each to a sentence or two. If a row cannot be
+     filled without the walkthrough, the row is wrong. It is also a design check on you: an argument
+     you cannot compress into six rows is usually one you have not finished deriving. -->
 
 ## Key claims
 

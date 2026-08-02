@@ -31,6 +31,22 @@
 
 <2-4 sentences: what this source teaches and why it is worth knowing.>
 
+## The 1-minute version
+
+| | |
+|---|---|
+| **The problem** | <what is actually hard, in one or two sentences> |
+| **Why the obvious answer fails** | <the naive approach and the specific way it breaks> |
+| **The idea** | <the crux, stated plainly> |
+| **How it works** | <the mechanism, compressed> |
+| **What it costs** | <the trade the design makes, and what it rules out> |
+| **How far to trust it** | <evidence class in one line: measured? third-party? vendor self-report?> |
+
+<!-- The whole argument in ~60 seconds. NOT a teaser - a reader who stops here should have the
+     argument. Rows are adaptable to the source; keep each to a sentence or two. If a row cannot be
+     filled without the walkthrough, the row is wrong. It is also a design check on you: an argument
+     you cannot compress into six rows is usually one you have not finished deriving. -->
+
 ## Key claims
 
 - <Claim 1.> `<citation>`
