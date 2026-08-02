@@ -442,6 +442,82 @@ unreadable at source resolution, degrades to text-only with the same `single-leg
 sources are unaffected - their visual leg is *generated* from the code, and generating a diagram is
 cheap.
 
+## Verifying one source on request (`/verify`)
+
+> **Why this exists.** This kit violates its own best-supported eval claim. **Claim 34: do not let
+> the producer grade its own work** - an agent asked to judge its own output confidently praises it,
+> and that is not promptable-away, because the generator has no independent vantage point on itself.
+> Yet the agent that distils a source is also the agent that runs its corroboration gate, decides
+> whether a node is really two-leg, and writes the prose built on those decisions. **One invocation,
+> two objectives - finish the source, and gate it honestly - which is claim 59's untunable trade.**
+>
+> `validate.py` does not close this: it checks **form**. Whether a cited node actually supports the
+> sentence citing it is a **reading judgement**, and the one time that failed in this repo it took a
+> human asking "where did that come from" to find it.
+>
+> Note the asymmetry this fixes. The **`brain/` layer has a reconciler** - the dream pass, decoupled,
+> one objective. The **`sources/<id>/` layer had none**: the gate fired once, at ingest, by the agent
+> doing the ingest, and was never revisited.
+
+**Trigger (never automatic).** The user says **"verify \<source>"** or runs `/verify`. Adopt
+**fact-checker**, alone - this stage has exactly one objective and composing it with `curator` would
+reintroduce the conflict it exists to remove.
+
+**Scope: one source's distilled layer against its own gated evidence.** Read that source's
+`nodes.md`, `LEARNING.md` and `SOURCE.md`, and nothing else. Do not read the topic notes - what was
+*promoted* is the dream pass's business, and mixing the two gives this stage two objectives again.
+
+> **This is the one pass that MAY re-open the gate**, and the only one. Dreaming is explicitly
+> forbidden from re-opening source-local judgements or editing a `nodes.md` (see below); that rule
+> stands, because this stage exists to do it instead.
+
+### What it checks, exactly
+
+**Stating this precisely is not pedantry, it is the point.** This brain's sharpest criticism of S7 is
+`d4`: the vendor says dreaming produces "a **verified**, better organized snapshot" and never says
+what verification means, who performs it, or what happens on failure - **the load-bearing step with
+no mechanism behind it.** A stage of this kit called `/verify` that did the same thing would be
+reproducing the defect it was built from.
+
+| # | The question | Failure it catches |
+|---|---|---|
+| 1 | Does each cited node **actually support the sentence citing it**? | Citation drift - the `claim 33` class, at source level |
+| 2 | Is anything the prose presents as settled gated `single-leg` or `needs-check` in `nodes.md`? | **Label drift between the gate and the prose** |
+| 3 | Is anything outside a `Background, supplied` block **uncited**? | The scaffolding rule leaking - supplied context laundered as evidence |
+| 4 | Are weak-evidence labels **at the point of use**, or deferred to the end? | Caveats parked where nobody reading the claim will meet them |
+| 5 | Does "What to distrust" carry the **gate note's** trust facts, or a softer version? | The source-level caveat quietly improving in translation |
+| 6 | Does a kept frame's `what it teaches` **match what the frame shows**? | A frame embedded rather than taught |
+
+**Nothing else.** Not prose quality, not structure, not whether the ramp works - those are the
+curator's and the human's. **A stage that grades everything grades nothing**, and its verdicts stop
+being trustworthy the moment they include taste.
+
+### Verdicts, and what happens on failure
+
+Each finding is one of:
+
+| Verdict | Meaning | Action |
+|---|---|---|
+| `defect` | Unambiguous - the citation does not support the sentence, an uncited claim sits outside scaffolding | **Fix it in the same pass** |
+| `judgement` | Arguable - a label that may be too strong, a caveat that may belong closer | **Propose with reasoning and ask.** The human adopts |
+| `gate-reopen` | The evidence itself looks mis-gated | **Never fix silently.** Record it, state the reasoning, ask. Re-gating changes what the brain believes |
+
+**Output goes to `sources/<id>/verify.md`** - one file per source, **appended** per pass with a date,
+never rewritten. It is a log, not an index: the point is that a later reader can see what was checked
+and when. **Ephemeral output not captured into a kit file did not happen.**
+
+Then run `python3 validate.py` and show the `git diff`, as with every other stage.
+
+> **What this stage cannot do.** It reads a source against *itself*, so it inherits the gate's own
+> ceiling: **two legs agreeing proves internal consistency, never truth** (Global rules). It cannot
+> tell you a source is wrong about the world - only that this brain has represented it honestly.
+> External evidence is deep research's job; cross-source coherence is dreaming's.
+
+> **Do not run it on a source you just wrote in the same session.** The whole point is an independent
+> vantage point, and an agent that has been holding the source's argument for an hour does not have
+> one. **A different session, or at minimum a different invocation, is the mechanism** - not a
+> promise to be objective.
+
 ## Deep research on request (external evidence)
 
 > **Why this exists.** The corroboration gate buys *internal* consistency - a slide agrees with the
