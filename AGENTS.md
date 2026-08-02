@@ -150,8 +150,9 @@ close-the-loop pass.** Stdlib only - no venv needed. CI runs it on every push an
 
 What it enforces (all of it already required above): INDEX integrity both ways; legal `SOURCE.md`
 Status / Visual leg, and Topics that name real notes; every kept frame cited somewhere; legal topic
-Status; `log.md` chronology; every claim carrying a citation and naming a real topic; unique ADR
-numbers with Status + Date; resolving relative links; balanced mermaid fences; no em dashes.
+Status; `log.md` chronology; every claim carrying a citation and naming a real topic; **prose citing
+`claim N` naming a claim that exists**; unique ADR numbers with Status + Date; resolving relative
+links; balanced mermaid fences; no em dashes.
 
 > **The validator is subordinate to this file.** If a check and `AGENTS.md` disagree, `AGENTS.md`
 > wins and the check is the bug. It enforces the contract; it does not define it.
@@ -160,8 +161,11 @@ numbers with Status + Date; resolving relative links; balanced mermaid fences; n
 > corroborated, whether a frame earns its place, whether a topic should split, or whether an
 > external source is genuinely independent. Those stay with the fact-checker and architect personas.
 > It also cannot catch a `log.md` entry misordered *within a single day* - the ordering that has
-> actually gone wrong in practice. A green validator means the shape is right, not that the thinking
-> is.
+> actually gone wrong in practice, nor whether prose citing `claim N` names the **right** claim: the
+> number must exist, but only a reader can tell whether that claim supports the sentence citing it.
+> **That one has already gone wrong** - this file cited claim 33 for "the generator and the evaluator
+> are separate processes" when 33 is about ablation and the claim meant was 34. A green validator
+> means the shape is right, not that the thinking is.
 
 ## Reading the brain on a phone (`tools/build_site.py`)
 

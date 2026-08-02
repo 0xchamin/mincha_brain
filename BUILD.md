@@ -1,6 +1,6 @@
 # BUILD.md - build Brain from scratch, from this file alone
 
-> **Generated 2026-08-02 from commit `b8ab71a`** by `tools/make_build_doc.py`. Do not hand-edit: edit the
+> **Generated 2026-08-02 from commit `e33c188`** by `tools/make_build_doc.py`. Do not hand-edit: edit the
 > source files in the reference clone and regenerate, or your copy silently diverges from the kit
 > it claims to build.
 
@@ -271,8 +271,9 @@ close-the-loop pass.** Stdlib only - no venv needed. CI runs it on every push an
 
 What it enforces (all of it already required above): INDEX integrity both ways; legal `SOURCE.md`
 Status / Visual leg, and Topics that name real notes; every kept frame cited somewhere; legal topic
-Status; `log.md` chronology; every claim carrying a citation and naming a real topic; unique ADR
-numbers with Status + Date; resolving relative links; balanced mermaid fences; no em dashes.
+Status; `log.md` chronology; every claim carrying a citation and naming a real topic; **prose citing
+`claim N` naming a claim that exists**; unique ADR numbers with Status + Date; resolving relative
+links; balanced mermaid fences; no em dashes.
 
 > **The validator is subordinate to this file.** If a check and `AGENTS.md` disagree, `AGENTS.md`
 > wins and the check is the bug. It enforces the contract; it does not define it.
@@ -281,8 +282,11 @@ numbers with Status + Date; resolving relative links; balanced mermaid fences; n
 > corroborated, whether a frame earns its place, whether a topic should split, or whether an
 > external source is genuinely independent. Those stay with the fact-checker and architect personas.
 > It also cannot catch a `log.md` entry misordered *within a single day* - the ordering that has
-> actually gone wrong in practice. A green validator means the shape is right, not that the thinking
-> is.
+> actually gone wrong in practice, nor whether prose citing `claim N` names the **right** claim: the
+> number must exist, but only a reader can tell whether that claim supports the sentence citing it.
+> **That one has already gone wrong** - this file cited claim 33 for "the generator and the evaluator
+> are separate processes" when 33 is about ablation and the claim meant was 34. A green validator
+> means the shape is right, not that the thinking is.
 
 ## Reading the brain on a phone (`tools/build_site.py`)
 
@@ -1341,6 +1345,67 @@ def check_claims() -> None:
         warn(claims, 0, "claim numbers are not a gapless 1..N sequence")
 
 
+CLAIM_REF = re.compile(r"\bclaims?\s+(\d+(?:\s*[-,]\s*\d+)*)", re.I)
+
+
+def _cited_numbers(blob: str) -> list[int]:
+    """'48-55' -> [48, 55] (endpoints only); '11, 14, 17' -> [11, 14, 17].
+
+    Interior members of a range are not checked: dreaming may drop a claim, leaving a
+    legal gap inside an otherwise valid span.
+    """
+    out: list[int] = []
+    for part in (p.strip() for p in blob.split(",")):
+        if not part:
+            continue
+        if "-" in part:
+            lo, _, hi = part.partition("-")
+            out += [int(lo), int(hi)]
+        else:
+            out.append(int(part))
+    return out
+
+
+def check_claim_references() -> None:
+    """Prose citing 'claim N' must name a claim that exists.
+
+    Claim numbers are quoted all over the brain - AGENTS.md, topic notes, ADRs, log.md,
+    LEARNING.md, context notes. Every one of those is a *copy* of a fact that lives in
+    brain/claims.md, and copies drift. check_claims() verifies the table; this verifies
+    everything pointing at it. It is the same idea as check_local_links(), for a cross-link
+    that happens to be written as a number instead of a path.
+
+    Catches: a typo, a reference past the end of the table, and a claim dropped by a
+    dreaming pass that left danglers behind.
+
+    KNOWN LIMITATION, and it is the important one: this cannot catch a reference to a claim
+    that EXISTS but says something else. That is exactly the bug that prompted the check -
+    AGENTS.md cited claim 33 for "the generator and the evaluator are separate processes"
+    when 33 is about ablation and the right claim was 34. Claim 33 existed, so this check
+    would have passed it. Deciding whether a cited claim actually supports the sentence
+    citing it is a reading judgement, and judgement stays with the fact-checker; a validator
+    that scored it would be laundering taste as a green check.
+    """
+    claims_file = ROOT / "brain" / "claims.md"
+    if not claims_file.exists():
+        return  # check_claims already reported this
+    known = {
+        int(m.group(1))
+        for m in re.finditer(r"^\|\s*\**(\d+)\**\s*\|", read(claims_file), re.M)
+    }
+    if not known:
+        return
+    ceiling = max(known)
+
+    for md in markdown_files():
+        for i, line in enumerate(read(md).splitlines(), 1):
+            for m in CLAIM_REF.finditer(line):
+                for n in _cited_numbers(m.group(1)):
+                    if n not in known:
+                        err(md, i, f"cites claim {n}, which does not exist "
+                                   f"(brain/claims.md holds 1..{ceiling})")
+
+
 def check_adrs() -> None:
     """ADRs are numbered uniquely and carry Status + Date."""
     adr_dir = ROOT / "brain" / "decisions"
@@ -1465,6 +1530,7 @@ CHECKS = [
     ("topic notes", check_topic_notes),
     ("log chronology", check_log_chronology),
     ("claims", check_claims),
+    ("claim references", check_claim_references),
     ("ADRs", check_adrs),
     ("local links", check_local_links),
     ("mermaid", check_mermaid),
