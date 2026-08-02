@@ -521,7 +521,8 @@ BUILD.md is a fork of the kit wearing the kit's name.
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--check", action="store_true",
-                    help="exit 1 if BUILD.md is missing or stale (ignores the generated header)")
+                    help="exit 1 if BUILD.md is missing or stale "
+                         "(ignores the lines carrying a generation stamp)")
     args = ap.parse_args()
 
     text = build()
@@ -529,9 +530,26 @@ def main() -> int:
         if not OUT.exists():
             print("BUILD.md missing - run: python3 tools/make_build_doc.py")
             return 1
-        def strip_header(s: str) -> str:
-            return "\n".join(l for l in s.splitlines() if not l.startswith("> **Generated "))
-        if strip_header(OUT.read_text(encoding="utf-8")) != strip_header(text):
+        def strip_generated(s: str) -> str:
+            """Drop the lines that carry a generation stamp rather than content.
+
+            `--check` must compare what the bundle *says*, never *when it was made*. Two
+            lines vary per run: the header stamp, and the seeded `brain/log.md` bootstrap
+            row, which gets `today` substituted so a freshly built kit starts with a valid,
+            chronological log that `validate.py` accepts.
+
+            Missing the second one made this check **wall-clock dependent**, and it fired:
+            BUILD.md generated locally just after midnight on 2026-08-03, CI regenerating at
+            23:07 UTC on 2026-08-02, different date, bundle reported stale on a tree that was
+            byte-identical. A staleness check that fails because a clock rolled over teaches
+            people to ignore it, which is worse than not having it.
+            """
+            return "\n".join(
+                l for l in s.splitlines()
+                if not l.startswith("> **Generated ")
+                and "Kit built from `BUILD.md`" not in l
+            )
+        if strip_generated(OUT.read_text(encoding="utf-8")) != strip_generated(text):
             print("BUILD.md is STALE - run: python3 tools/make_build_doc.py")
             return 1
         print("BUILD.md is current.")
