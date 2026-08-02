@@ -1,8 +1,8 @@
 # Topic: Agents
 
-**Status:** established (7 sources - S1 Uber closed-loop evals, S2 12-factor agents, S4 Anthropic
+**Status:** established (8 sources - S1 Uber closed-loop evals, S2 12-factor agents, S4 Anthropic
 harness design, S5 skills evals, S7 Anthropic memory and dreaming, S9 Microsoft Agent Framework,
-S10 tool search)
+S10 tool search, S12 Google Cloud multi-tenant reference architecture)
 
 > Living, cross-source synthesis on autonomous LLM agents. Many sources feed this note; **merge
 > and de-duplicate** as they arrive (architect persona) - this should read as one coherent view,
@@ -260,6 +260,38 @@ tool's **description stops being documentation and becomes an index entry** [S10
 space, `n19`]. Adding a tool then asks a question it never asked before - *what words will a user
 reach for?* - and the answer is written in the user's vocabulary, not the implementer's.
 
+### Deploying agents for many teams: one boundary bought once, paid out three times
+
+Every source above reasons about *an* agent. S12 is the brain's first source about running agents for a
+whole organisation, where the binding question is not the loop but the tenancy: twelve business units
+each wanting their own agent, their own tools and their own sensitive data. The document's answer is a
+project per business unit, and the reason it is affordable is that **one boundary yields three
+different properties**
+([S12](../../sources/260802_gcp-multi-tenant-agentic-ai/LEARNING.md) `n13`, claim 107):
+
+| The property | What the source says |
+|---|---|
+| **Confidentiality isolation** | cross-tenant access is structurally impossible; the architecture figure has no edge between tenants |
+| **Blast-radius isolation** | "operational issues or security incidents stay within a single business unit" |
+| **Noisy-neighbour isolation** | "a sudden spike in usage in one tenant doesn't exhaust the compute resources or affect the availability of an agent in another tenant" |
+
+**The three statements are the source's, spread across three pillars; reading them as one decision is
+this brain's synthesis** - and it is the reading that makes the cost defensible, because none of the
+three would have been cheap to build separately. The corollary is the trap worth carrying: **a
+deletion made for cost reasons sells all three at once, while the cost section proposing it mentions
+only the one it is optimising.** The isolation mechanics belong in
+[`agent-security.md`](agent-security.md); what belongs here is the shape - **this architecture is *n*
+independent agents behind one door, not a multi-agent system.** There is no cross-tenant path, no
+supervisor, no shared conversational state, and the document never asks how to serve a request
+spanning two units.
+
+**A smaller but sharper contribution: agent workloads need agent-shaped failure semantics.** On a
+blown context deadline the agent "performs a graceful shutdown and it reports **partial progress**
+back to the user" (S12 `n16`, claim 108). That is a meaningful answer for a multi-step agent and a
+meaningless one for a request/response service - the smallest concrete instance in this brain of
+agent operations differing from ordinary service operations in *semantics* rather than in components.
+Single-leg, asserted, no operational data behind it.
+
 ### Two counterweights worth keeping
 
 - **Not every problem needs an agent.** S2's DevOps agent got Makefile build steps in the wrong
@@ -303,6 +335,8 @@ reach for?* - and the answer is written in the user's vocabulary, not the implem
 | An **agent provider** slot can accept a whole third-party agent product (Claude Code, GitHub Copilot CLI) as a peer of a first-party agent and of A2A - the unit of composition moves from *model* to *finished agent*. | S9 `fig_AgentLoop` | needs-check (**single-leg** - one diagram tile; the prose says only "interact with") |
 | **Past roughly 10-15 tools, what the agent can *see* becomes a separate design decision from what it can *do*.** The shape: **pin the head** (core-contract tools it must never rediscover), **retrieve the long tail** - which is where the rare, high-stakes tools live, so it is also where a miss costs most. | S10 §Search is for the long tail + §When we would use tool search (`n16`, `n18`) | emerging (T2 vendor threshold, no derivation; the head/tail argument itself is sound) |
 | **Once tools are retrieved rather than enumerated, a tool description becomes an index entry** - written in the vocabulary of whoever is searching, not of whoever built it. Adding a tool becomes an information-retrieval question. | S10 §Tuning the search space + §intro (`n13`, `n19`) | emerging (single-leg experience report) |
+| **Deploying agents across an organisation, one tenancy boundary buys three properties at once** - confidentiality isolation, blast-radius isolation and noisy-neighbour isolation. The corollary: a deletion made for cost sells all three, while the cost argument names only one. | S12 `n13` (claim 107); the source states each separately, the unification is this brain's | emerging (T2 vendor, unmeasured) |
+| **Agent workloads need agent-shaped failure semantics:** on a blown context deadline, graceful shutdown reporting **partial progress** - meaningful for a multi-step agent, meaningless for a request/response service. | S12 `n16` (claim 108) | needs-check (single-leg, asserted) |
 
 ## Key visuals
 
@@ -406,4 +440,13 @@ reach for?* - and the answer is written in the user's vocabulary, not the implem
   it above S9 evidentially even though both are Microsoft. Full synthesis split across
   [`rag.md`](rag.md) (retrieval), [`context-engineering.md`](context-engineering.md) (budget) and
   [`mcp.md`](mcp.md) (protocol).
+- **S12** - [Multi-tenant agentic AI system](../../sources/260802_gcp-multi-tenant-agentic-ai/LEARNING.md)
+  (Google Cloud Architecture Center, reviewed 2026-06-18). **The brain's first source about running
+  agents for a whole organisation rather than building one**, and it moves the question from the loop
+  to the tenancy boundary. Feeds this note with claim 107 (one boundary, three properties) and
+  claim 108 (partial progress as an agent-shaped failure semantic). **T2 vendor reference architecture
+  with no measurement of any kind**; both its corroboration legs are the same team's. Note what it is
+  *not*: **n independent agents behind one door, with no cross-tenant path and no supervisor** - do not
+  read it as a multi-agent deployment pattern. Isolation mechanics live in
+  [`agent-security.md`](agent-security.md).
 - **R1** - [deep-research pass on S2](../../sources/260725_12-factor-agents/context/01_context-limits-and-decomposition.md) (2026-07-25) - external evidence, tiered with independence calls.

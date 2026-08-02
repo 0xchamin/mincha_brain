@@ -85,6 +85,15 @@
 | Knowledge acquisition bottleneck | The limiting factor in a knowledge-based system is the human labour of extracting expert knowledge and encoding it usably, not the system's reasoning power. Identified by Feigenbaum in 1977 and never solved, only made cheaper - LLMs collapse the *encoding* half and leave *elicitation* untouched. | R2 F5 (Feigenbaum 1982, Stanford archive, **T1**) |
 | Execution accuracy (EX) | The standard text-to-SQL metric: the fraction of generated queries whose **result set** matches the gold query's, rather than whose SQL text matches. Measures the answer, not the phrasing. | R2 F1 (BIRD / Spider 2.0) |
 
+| Hub-and-spoke (multi-tenant) | A central shared environment (the hub) connected to multiple isolated environments (the spokes), where spokes never connect to each other. In S12: shared routing and governance hubs, one cloud project per business unit. | S12 (§Architecture) |
+| Principal Access Boundary (PAB) Policy | A policy attached to a set of **principals** capping which resources they may reach at all, whatever IAM otherwise grants them. IAM is additive and distributed; a principal boundary is subtractive and central, and it wins. The mechanism S12 points at a compromised agent identity. | S12 (§Architecture, `n4`) |
+| VPC Service Controls perimeter | An organisation-scope boundary around cloud services that blocks data crossing it - an **exfiltration** control, distinct from an access control. | S12 (§Architecture) |
+| Identity-Aware Proxy (IAP) | A reverse proxy that authenticates the caller and evaluates access policy **before** the request reaches the application, so the application never sees an unauthenticated request and implements no login of its own. | S12 (§Architecture, `n5`) |
+| Prompt injection | Text arriving through **data** - a message, a document, a tool result - that the model treats as instructions. The defining property: the attacker needs no access to your systems, they write English and the agent, which does have access, carries it out. | S12 (§Agentic flow, `n5`) - the brain's first source to place a filter for it |
+| Identity propagation | Carrying the **original caller's** identity across a service hop so the far end authorizes as that user rather than as the calling service. Without it the calling service is a confused deputy: broad access, acting on requests it cannot fully vet. Required, and unspecified, for S12's shared MCP server. | S12 (§Design alternatives, MCP servers, `n11`) |
+| Noisy neighbour | One tenant degrading another's service by exhausting a shared finite resource - in S12, a shared model endpoint's quota pool. A multi-tenancy failure with nothing to do with security, removed for free by a per-tenant boundary bought for security reasons. | S12 (§Reliability + §Cost, `n13`) |
+| Structural vs enforced isolation | Whether an isolation guarantee is a property of **where a component sits** (holds even if the component is carelessly written) or of **code someone wrote** (holds only if identity is attached, propagated unforgeably and authorized correctly on every call). Sharing a component converts the first into the second. | S12 - **this brain's framing** of `n10`/`n11`, not a term the source uses (claim 106) |
+
 > **S1** = `sources/260725_closed-loop-evals-multimodal-agent/` (Uber, AI Engineer World's Fair 2026).
 > **S2** = `sources/260725_12-factor-agents/` (Dex Horthy / HumanLayer, AI Engineer World's Fair 2025).
 > **S3** = `sources/260725_oauth2-oidc-plain-english/` (Nate Barbettini / Okta, 2018).
@@ -96,5 +105,6 @@
 > **S9** = `sources/260801_agent-framework-layered-sdk/` (Shawn Henry, 2026-05-28).
 > **S10** = `sources/260801_tool-search-toolboxes/` (Lisa Brown Jaloza, Microsoft, 2026-07-29).
 > **S11** = `sources/260802_agent-data-stack/` (Emily Hawkins, LangChain, 2026-07-27).
+> **S12** = `sources/260802_gcp-multi-tenant-agentic-ai/` (Google Cloud Architecture Center, reviewed 2026-06-18).
 > **R1** = deep-research pass on S2, `sources/260725_12-factor-agents/context/01_context-limits-and-decomposition.md`.
 > **R2** = deep-research pass on S11, `sources/260802_agent-data-stack/context/01_data-agent-accuracy-and-prior-art.md`.

@@ -1,11 +1,12 @@
 # Topic: Context engineering
 
-**Status:** established (6 sources - S2 12-factor agents, S4 Anthropic harness design, **S8 LLM Wiki
+**Status:** established (7 sources - S2 12-factor agents, S4 Anthropic harness design, **S8 LLM Wiki
 (a partial feeder, 2 claims)**, **S9 Agent Framework (a partial feeder, 1 claim)**, **S10 Tool search
 (a partial feeder, 2 claims - and the first *measurement* of a claim S9 could only place)**, **S11
 agent-first data stack (4 claims - the first source here where the context is written for a
-*proprietary business domain* rather than for a codebase or a tool catalog)**; plus the
-R1 research passes). **Basis for the promotion:** S4
+*proprietary business domain* rather than for a codebase or a tool catalog)**, **S12 multi-tenant
+reference architecture (a partial feeder, 1 claim - the token cap read as a loop guard rather than a
+budget)**; plus the R1 research passes). **Basis for the promotion:** S4
 independently arrives at S2's serialisation claim from the opposite direction - S2 argues you should
 own the thread format so you *can* pause and resume; S4 needs exactly that artifact to make context
 resets work [S4 §2]. Most of S4's other context claims are new and `single-leg`, not corroborating.
@@ -89,6 +90,17 @@ gentle slope you trade off against convenience - it is **non-uniform and adversa
 
 > 💡 **Context rot** - the measurable decline in output quality as input length grows, independent of
 > task difficulty. Not a capacity limit being hit; a gradient you are already on.
+
+**And there is a third reason to cap the budget that has nothing to do with quality: a token limit is
+the cheapest available loop guard.** S12 files a "session maximum token limit" under cost optimisation
+and states its purpose as "to help prevent **infinite loops** and to help control costs"
+([S12](../../sources/260802_gcp-multi-tenant-agentic-ai/LEARNING.md) `n17`, claim 109). That is a
+different argument from either of the two above: it terminates a runaway **without having to detect
+that the runaway is a loop**, which is the hard part. Worth keeping as the crude backstop underneath
+whatever loop detection you build, never as a substitute for it. S12's neighbouring levers - summarise
+older turns with a model, prune tool outputs down to the fields actually needed - restate claims 85 and
+90 from a third vendor with a **cost** motive rather than a quality one: mild independent support for
+the practice, and none at all for the rationale. `single-leg`, T2, unmeasured.
 
 **The corollary S2 misses: decompose, don't remember.** The measured win is splitting long tasks into
 short segments and restarting at each boundary (**+13.1 to +41.5 pp** reliability across 10 models);
@@ -356,6 +368,7 @@ curation in a separate loop run by different people on a different cadence.
 | **The head/tail split is universal but its treatment inverts with whichever resource is scarce** - retrieve the tail when tokens bind (S10), defer the tail when human authorship binds (S11). | **S10 (`n16`) + S11 §Start with the questions that matter most (`n11`)** | **corroborated as a pattern across 2 sources reaching opposite prescriptions**; each prescription is single-leg in its own source |
 | **The output of a working context loop is a write to the context store, not an answer** - which converts a service team into maintainers. Remove the human from that loop and it self-reinforces with no ground truth. | S11 Key Takeaways + `visuals/fig3` (`n8`, `d2`) | emerging - mechanism corroborated, organisational consequence prose-only, self-reinforcement risk is this brain's reading of `d2` |
 | **An "agent-first" data layer turned out to be a documentation layer over an unchanged pipeline.** Check whether any box moved or only the documentation did. | S11 §Closing + `visuals/fig2` (`n1`, `d1`) | emerging (single company, and the reading is the figure's, not the prose's) |
+| **A session token cap is a loop guard filed under cost** - it terminates a runaway without having to detect that the runaway is a loop, which is the hard part. The crude backstop under whatever loop detection you build. | S12 `n17` (claim 109) | needs-check (single-leg, T2, unmeasured) |
 
 ## Key visuals
 
@@ -447,6 +460,13 @@ curation in a separate loop run by different people on a different cadence.
   the head/tail inversion against S10, and the maintenance loop whose output is context rather than
   answers. **T4 practitioner experience on a T2 vendor blog, n = 1 company, nothing measured** - but
   its central mechanism is measured externally by parties with no stake in it (R2).
+- **S12** - [Multi-tenant agentic AI system](../../sources/260802_gcp-multi-tenant-agentic-ai/LEARNING.md)
+  (Google Cloud Architecture Center, reviewed 2026-06-18) - **a partial feeder, one claim.** Its
+  context-management advice sits in a **cost** section, which is the interesting part: summarisation and
+  tool-output pruning arrive here from a vendor with a billing motive rather than a quality one, and the
+  session token cap turns out to be a loop guard wearing a budget label (claim 109). **T2, unmeasured,
+  and it corroborates the practice of claims 85 and 90 without touching their rationale.** Full synthesis
+  in [`agent-security.md`](agent-security.md), which is where most of that source lives.
 - **R1** - [deep-research pass on S2](../../sources/260725_12-factor-agents/context/01_context-limits-and-decomposition.md) (2026-07-25) - external evidence: Lost in the Middle (T1), Context Rot (T2), Anthropic context engineering (T2), Beyond pass@1 (T3), Event Sourcing (T1). Each citation carries a tier and an independence call.
 - **R2** - [deep-research pass on S11](../../sources/260802_agent-data-stack/context/01_data-agent-accuracy-and-prior-art.md)
   (2026-08-02) - external evidence for the metadata-as-control-surface claim: MotherDuck
