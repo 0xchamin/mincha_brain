@@ -1,6 +1,6 @@
 # BUILD.md - build Brain from scratch, from this file alone
 
-> **Generated 2026-08-02 from commit `4e69f1f`** by `tools/make_build_doc.py`. Do not hand-edit: edit the
+> **Generated 2026-08-02 from commit `7cfaf9b`** by `tools/make_build_doc.py`. Do not hand-edit: edit the
 > source files in the reference clone and regenerate, or your copy silently diverges from the kit
 > it claims to build.
 
