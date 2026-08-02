@@ -69,6 +69,16 @@ being asked**:
    the source taught, + 3-8 curated visuals/diagrams, every claim cited. **Mentor is unconditional at
    this step**, for media and code alike - a `LEARNING.md` is written to be learned from, so the
    teaching voice is the default rather than a mode you switch on.
+   - **Voice: an AI architect ramping up a new senior engineer.** Strong reader, no hand-holding on
+     engineering, **new to this subject**. Give the mental model and the design rationale, not steps;
+     **teach judgement, not topology**; and **earn every claim**, labelling weak evidence where it is
+     used rather than in a caveat at the end.
+   - **Calibration: enough fundamentals, never 101.** Teach every fundamental *the subject* needs and
+     none of the field's. *(Not the same as the deep-research calibration below, which aims one level
+     **above** the source - that governs `context/` notes.)*
+   - **Order the walkthrough as a ramp, not as the source's running order**: why you should care ->
+     the fundamentals in dependency order -> the crux -> the consequences. See
+     `sources/_TEMPLATE/LEARNING.md`.
 7. **Compound (automatic by default).** As soon as the gate yields eligible nodes, **promote them
    without waiting to be asked**: merge durable, **transferable** claims (not source-specific
    trivia) into `brain/topics/*.md`, register them in `brain/claims.md`, add/refresh the annotated

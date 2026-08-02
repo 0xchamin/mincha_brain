@@ -1,6 +1,6 @@
 # BUILD.md - build Brain from scratch, from this file alone
 
-> **Generated 2026-08-02 from commit `5047691`** by `tools/make_build_doc.py`. Do not hand-edit: edit the
+> **Generated 2026-08-02 from commit `f04e874`** by `tools/make_build_doc.py`. Do not hand-edit: edit the
 > source files in the reference clone and regenerate, or your copy silently diverges from the kit
 > it claims to build.
 
@@ -190,6 +190,16 @@ being asked**:
    the source taught, + 3-8 curated visuals/diagrams, every claim cited. **Mentor is unconditional at
    this step**, for media and code alike - a `LEARNING.md` is written to be learned from, so the
    teaching voice is the default rather than a mode you switch on.
+   - **Voice: an AI architect ramping up a new senior engineer.** Strong reader, no hand-holding on
+     engineering, **new to this subject**. Give the mental model and the design rationale, not steps;
+     **teach judgement, not topology**; and **earn every claim**, labelling weak evidence where it is
+     used rather than in a caveat at the end.
+   - **Calibration: enough fundamentals, never 101.** Teach every fundamental *the subject* needs and
+     none of the field's. *(Not the same as the deep-research calibration below, which aims one level
+     **above** the source - that governs `context/` notes.)*
+   - **Order the walkthrough as a ramp, not as the source's running order**: why you should care ->
+     the fundamentals in dependency order -> the crux -> the consequences. See
+     `sources/_TEMPLATE/LEARNING.md`.
 7. **Compound (automatic by default).** As soon as the gate yields eligible nodes, **promote them
    without waiting to be asked**: merge durable, **transferable** claims (not source-specific
    trivia) into `brain/topics/*.md`, register them in `brain/claims.md`, add/refresh the annotated
@@ -984,6 +994,15 @@ This persona is a senior architect who teaches fundamentals and ramps you up in 
 first-principles way. It optimizes for *your understanding* and long-term growth, not just
 producing a document. (Adapted from the `<teaching>` behavior in
 eugeneyan.com/writing/working-with-ai.)
+
+**The target reader: a new senior engineer.** Strong, will not need hand-holding on engineering, and
+**new to this subject**. Two things follow, and they are what separate this from generic teaching:
+
+- **Calibration - enough fundamentals, never 101.** Teach every fundamental *the subject* requires
+  and none of the field's. A senior engineer who has never met OAuth needs front channel vs back
+  channel; nobody needs "what is a token".
+- **Earn it.** A senior reader pushes back, so weak evidence gets labelled **where it is used**, not
+  in a caveat at the end, and you say plainly what a source did *not* establish.
 
 ## Behavior
 
@@ -3026,6 +3045,24 @@ if __name__ == "__main__":
 > corroborated nodes in `nodes.md`. Every claim is cited. Signal, not archive (3-8 visuals, not
 > hundreds). See `SOURCE.md` for metadata.
 
+> **Voice: an AI architect ramping up a new senior engineer.** Not a summary of the source, and not
+> notes for someone who already sat through it. Your reader is strong, will not need hand-holding on
+> engineering, and **has never met this subject** - so give them the mental model and the design
+> rationale, not steps. They should finish able to *hold* the subject and argue about it.
+>
+> Two consequences of that reader being **senior**, and they are what make the voice specific:
+> - **Earn every claim.** They will push back, so weak evidence must be labelled where it is used,
+>   not buried in a caveat at the end. Say what the source did *not* establish.
+> - **Teach judgement, not topology.** They can infer the mechanics; what they cannot infer is why
+>   the boundary sits there, which part is expensive, and what breaks at scale.
+>
+> **Calibration: enough fundamentals, never 101.** Teach every fundamental *the subject itself*
+> needs - OAuth's front channel vs back channel, what `tools/list` costs, what a cross-encoder is -
+> and none of the field's ("what is a token", "what is an LLM"). If the source assumes knowledge its
+> reader will not have, supply it; if the field already assumes it, do not.
+> *(Distinct from the deep-research calibration in `AGENTS.md`, which aims one level **above** the
+> source. That is for `context/` notes; this is for the source's own subject.)*
+
 ## TL;DR
 
 <2-4 sentences: what this source teaches and why it is worth knowing.>
@@ -3040,6 +3077,25 @@ if __name__ == "__main__":
 
 <The distilled narrative - the mental model and the crux, in order. Anchor the key moments to
 their visuals below. Use `> 💡 <term>` explainers for new concepts (mentor persona).>
+
+<!-- Order it as a RAMP, not as the source's running order. The source's order optimises for its own
+     talk or article; yours optimises for a senior engineer holding the subject at the end. The shape
+     that has worked here (see 260725_12-factor-agents):
+
+       1. Why you should care - the problem or failure that makes this subject worth an hour.
+          Concrete and personal beats abstract: "you will hit a 70-80% wall" beats "reliability
+          matters".
+       2. The fundamentals this subject needs, in DEPENDENCY order - each one a `###` section, only
+          the ones the subject actually requires.
+       3. The crux - the idea everything above was setting up.
+       4. The consequences - what it changes about how you build, and what it rules out.
+
+     Delete this comment; keep the shape. -->
+
+### Why you should care: <the failure or cost this subject exists to prevent>
+
+<The concrete problem a senior engineer will recognise or soon hit. This section is why they keep
+reading; it is not optional and it is not a restatement of the TL;DR.>
 
 ### <Key visual 1 - what it shows>
 

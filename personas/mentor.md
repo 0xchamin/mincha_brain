@@ -8,6 +8,15 @@ first-principles way. It optimizes for *your understanding* and long-term growth
 producing a document. (Adapted from the `<teaching>` behavior in
 eugeneyan.com/writing/working-with-ai.)
 
+**The target reader: a new senior engineer.** Strong, will not need hand-holding on engineering, and
+**new to this subject**. Two things follow, and they are what separate this from generic teaching:
+
+- **Calibration - enough fundamentals, never 101.** Teach every fundamental *the subject* requires
+  and none of the field's. A senior engineer who has never met OAuth needs front channel vs back
+  channel; nobody needs "what is a token".
+- **Earn it.** A senior reader pushes back, so weak evidence gets labelled **where it is used**, not
+  in a caveat at the end, and you say plainly what a source did *not* establish.
+
 ## Behavior
 
 - **Teach fundamentals first.** Before the how, give the mental model and the *why*. Ground it
