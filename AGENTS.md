@@ -79,6 +79,12 @@ being asked**:
    - **Order the walkthrough as a ramp, not as the source's running order**: why you should care ->
      the fundamentals in dependency order -> the crux -> the consequences. See
      `sources/_TEMPLATE/LEARNING.md`.
+   - **The section skeleton is required, not suggested** - see
+     ["Writing a `LEARNING.md`"](#writing-a-learningmd-the-required-shape) below for the ordered
+     sections, the **scaffolding rule** that keeps supplied background distinct from source evidence,
+     and the three techniques (derive don't list; trace one instance; ask before revealing).
+     **Discharging the `💡` asides and the diagram walkthrough is not sufficient** - that has already
+     produced a document that met every stated obligation and still taught nobody new.
 7. **Compound (automatic by default).** As soon as the gate yields eligible nodes, **promote them
    without waiting to be asked**: merge durable, **transferable** claims (not source-specific
    trivia) into `brain/topics/*.md`, register them in `brain/claims.md`, add/refresh the annotated
@@ -115,6 +121,80 @@ being asked**:
 > `ffmpeg` / `imagehash` / `pdftotext` commands named here and in `prd.md` §5 are the *approach* you
 > assemble for the source at hand and your OS - not a checked-in pipeline. Keep frame filenames
 > timestamped (`frame_<seconds>.jpg`) so citations can deep-link.
+
+## Writing a `LEARNING.md` (the required shape)
+
+> **Why this exists.** "Adopt mentor" is a voice instruction, and a voice instruction is easy to
+> discharge without obeying. The first pass at `260802_agent-data-stack` did exactly that: it carried
+> the three `💡` asides and the four-part diagram walkthrough the contract demands, and was still a
+> peer-level evidence brief that opened at the punchline and assumed the reader already held the
+> domain. **Everything mandatory was present and the document still taught nobody new.** The fix is a
+> skeleton, because the obligations were never the problem - the *order* was.
+
+**The required sections, in this order.** Deviate when a source genuinely lacks the material, and say
+so in one line rather than silently dropping the section.
+
+| Section | The reader's question | Required? |
+|---|---|---|
+| `## TL;DR` | What did this teach, and why should I care? | **Hard** - `build_site.py` lifts it onto the landing page |
+| `## Key claims` | What may I now cite, and how strongly? | **Hard** - also lifted onto the landing page |
+| **Why you should care** | What failure makes this worth an hour? | **Hard.** Concrete and personal beats abstract |
+| **Foundations** | What must I already know? | When the subject needs it - see the scaffolding rule below |
+| **The naive attempt, and how it fails** | Why is the obvious thing wrong? | **Hard** wherever the source has a "before" state |
+| **The crux, *derived*** | Why is this design inevitable rather than arbitrary? | **Hard** |
+| **One instance traced end to end** | What does it look like in motion? | Strongly preferred |
+| **Second-order problems** | What breaks once it is actually running? | When the source covers it |
+| **How would you know it works?** | What is measured here, and what is not? | **Hard** |
+| **What you would build first** | What do I do on Monday? | Strongly preferred |
+| **The evidence, weighed** | How much should I trust all of this? | **Hard** |
+| `## Open questions` | What is still unknown? | **Hard** - it is the deep-research backlog |
+
+### The scaffolding rule (the honesty carve-out)
+
+A foundations section supplies knowledge **the source never taught**, which collides head-on with
+"`LEARNING.md` answers exactly one question - *what did this source teach?*". Resolve it in the open,
+never by blurring:
+
+- **Mark the foundations section explicitly as scaffolding, and state that it is uncited by
+  construction.** It is background *you* are supplying so the rest reads.
+- **Everything outside it carries a node ID (`n3`, `d1`) or an external reference (`F1`).** Where a
+  conclusion is the brain's reading rather than the source's, say so in the sentence that makes it.
+- **Add a one-line "skip this part if..." for the reader who already has it.**
+
+> The line being protected is the one this whole kit exists for: **"the author claims this" must stay
+> visually distinct from "this is background" and from "this is my inference".** A ramp that quietly
+> mixes the three is worse than no ramp, because it launders supplied context as evidence.
+
+### Three techniques that do the actual teaching
+
+- **Derive, do not list.** When a source presents N components, do not enumerate them - **ask what
+  the previous ones structurally cannot answer, and let each residual question name the next
+  component.** A derived list feels inevitable; an enumerated one feels arbitrary, and the reader
+  cannot tell which items are load-bearing. *(Worked example: `260802_agent-data-stack` Part 3, five
+  residual questions producing five context stores, each with a note on why the earlier stores could
+  not have answered it.)*
+- **Trace one concrete instance end to end**, immediately after the abstract design. One realistic
+  request walked through every component, with **what breaks at each step if that component is
+  missing**. This is where a design stops being a diagram.
+- **Ask before revealing.** Where the source hands you a before/after pair, print the "before", tell
+  the reader to name what is missing, *then* reveal. Costs one sentence and converts a quotation into
+  a lesson.
+
+> **The anti-pattern to watch for is subtler than a missing section: the punchline opening.** Leading
+> with the finding is right for a `TL;DR` and wrong for everything after it, because the finding is
+> the thing the reader has not yet earned. **Order for the reader who does not know it yet.**
+
+### Where the caveats go
+
+**Inline labelling stays mandatory** - weak evidence is labelled *where it is used*, in the sentence
+that leans on it, never deferred. **"The evidence, weighed" is not a place to park claim-level
+caveats**; it is a source-level trust summary (tier, commercial conflict, sample size, what the
+figures do and do not measure) for a reader deciding whether to cite the note at all. If a caveat
+belongs to one claim, it belongs next to that claim.
+
+> **Reference implementation:** [`sources/260802_agent-data-stack/LEARNING.md`](sources/260802_agent-data-stack/LEARNING.md)
+> - the source that forced this section, and the fullest instance of the shape.
+> `sources/_TEMPLATE/LEARNING.md` carries the skeleton to copy.
 
 ## The mechanical toolbox (`tools/ingest.py`)
 

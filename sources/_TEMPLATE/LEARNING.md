@@ -43,16 +43,34 @@
 their visuals below. Use `> 💡 <term>` explainers for new concepts (mentor persona).>
 
 <!-- Order it as a RAMP, not as the source's running order. The source's order optimises for its own
-     talk or article; yours optimises for a senior engineer holding the subject at the end. The shape
-     that has worked here (see 260725_12-factor-agents):
+     talk or article; yours optimises for a senior engineer holding the subject at the end.
+
+     The REQUIRED skeleton - see AGENTS.md "Writing a LEARNING.md (the required shape)". Deviate only
+     where the source genuinely lacks the material, and say so in one line rather than dropping a
+     section silently. Fullest worked example: 260802_agent-data-stack.
 
        1. Why you should care - the problem or failure that makes this subject worth an hour.
           Concrete and personal beats abstract: "you will hit a 70-80% wall" beats "reliability
           matters".
-       2. The fundamentals this subject needs, in DEPENDENCY order - each one a `###` section, only
-          the ones the subject actually requires.
-       3. The crux - the idea everything above was setting up.
-       4. The consequences - what it changes about how you build, and what it rules out.
+       2. Foundations, in DEPENDENCY order - only the ones the subject actually requires.
+          MARK THIS SECTION AS SCAFFOLDING and say it is uncited by construction: it is background
+          you are supplying, not knowledge from the source. Add a "skip if you already..." line.
+       3. The naive attempt, and precisely how it fails - why the obvious thing is wrong. Required
+          wherever the source has a "before" state. Land on the failure that is hardest to notice.
+       4. The crux, DERIVED - do not enumerate N components. Ask what the previous ones structurally
+          cannot answer and let each residual question name the next one. A derived list feels
+          inevitable; an enumerated one feels arbitrary.
+       5. One instance traced end to end - a single realistic request through every component, with
+          what breaks at each step if that component is missing.
+       6. Second-order problems - what breaks once it is actually running (who maintains it, what
+          goes stale, what saturates, what self-reinforces).
+       7. How would you know it works? - what is measured, what is not, and what eval you would
+          build first. Required even when the answer is "the source measured nothing".
+       8. What you would build first - sequencing, so understanding becomes action.
+
+     Then "The evidence, weighed" (source-level trust: tier, commercial conflict, sample size) and
+     "Open questions". Claim-level caveats stay INLINE next to the claim - the end table is not a
+     place to park them.
 
      Delete this comment; keep the shape. -->
 
