@@ -477,7 +477,7 @@ claim verdicts.
 > finishing a source is holding two objectives - land this source, and keep the brain coherent - and
 > it will trade the second against the first silently, because the first is the one with a visible
 > finish line (claim 59). Curation gets its own invocation and its own objective, or it gets a token
-> effort. **Same reason the generator and the evaluator are separate processes (claim 33).**
+> effort. **Same reason the generator and the evaluator are separate processes (claim 34).**
 
 ### What a pass looks for
 

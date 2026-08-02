@@ -1,6 +1,6 @@
 # BUILD.md - build Brain from scratch, from this file alone
 
-> **Generated 2026-07-31 from commit `5272935`** by `tools/make_build_doc.py`. Do not hand-edit: edit the
+> **Generated 2026-08-02 from commit `b8ab71a`** by `tools/make_build_doc.py`. Do not hand-edit: edit the
 > source files in the reference clone and regenerate, or your copy silently diverges from the kit
 > it claims to build.
 
@@ -598,7 +598,7 @@ claim verdicts.
 > finishing a source is holding two objectives - land this source, and keep the brain coherent - and
 > it will trade the second against the first silently, because the first is the one with a visible
 > finish line (claim 59). Curation gets its own invocation and its own objective, or it gets a token
-> effort. **Same reason the generator and the evaluator are separate processes (claim 33).**
+> effort. **Same reason the generator and the evaluator are separate processes (claim 34).**
 
 ### What a pass looks for
 
@@ -5466,7 +5466,7 @@ _(Diagrams/slides across sources, embedded with caption + citation.)_
 
 | Date | Source | Entry |
 |---|---|---|
-| 2026-07-31 | brain (kit) | Kit built from `BUILD.md` (a generated bundle of the reference clone). Empty brain: 6 seed topics, no sources, no claims. |
+| 2026-08-02 | brain (kit) | Kit built from `BUILD.md` (a generated bundle of the reference clone). Empty brain: 6 seed topics, no sources, no claims. |
 ``````
 
 #### `reports/README.md`
