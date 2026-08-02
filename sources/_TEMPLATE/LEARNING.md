@@ -1,6 +1,9 @@
 # Learning - <TITLE>
 
-> Persona: **curator** (media) / **code-explorer** (code) - + mentor when teaching. Re-adopt when working this file.
+> Persona: **curator** (media) / **code-explorer** (code) **+ mentor, always**. Re-adopt when working
+> this file. Mentor is not conditional here: this document exists to be *learned from*, so the
+> teaching voice is the default and not a mode you switch on. Add **fact-checker** at the gate and
+> **architect** when mapping which topics this feeds.
 
 > The distilled document you learn from - text anchored by a few curated visuals. Built from the
 > corroborated nodes in `nodes.md`. Every claim is cited. Signal, not archive (3-8 visuals, not

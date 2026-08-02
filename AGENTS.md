@@ -65,8 +65,10 @@ being asked**:
    alongside the URL (or invokes the harness's research command), run an external-evidence pass
    **after the gate and before distilling** - see "Deep research on request" below. **Never
    automatic:** most sources do not earn it, and it is slow and token-heavy.
-6. **Distill** (adopt **curator**): write `LEARNING.md` - the distilled, transferable concept the
-   source taught, + 3-8 curated visuals/diagrams, every claim cited.
+6. **Distill** (adopt **curator + mentor**): write `LEARNING.md` - the distilled, transferable concept
+   the source taught, + 3-8 curated visuals/diagrams, every claim cited. **Mentor is unconditional at
+   this step**, for media and code alike - a `LEARNING.md` is written to be learned from, so the
+   teaching voice is the default rather than a mode you switch on.
 7. **Compound (automatic by default).** As soon as the gate yields eligible nodes, **promote them
    without waiting to be asked**: merge durable, **transferable** claims (not source-specific
    trivia) into `brain/topics/*.md`, register them in `brain/claims.md`, add/refresh the annotated
@@ -372,8 +374,8 @@ rather than arbitrary.
 
    | You do / stage | Auto-adopt | Compose with |
    |---|---|---|
-   | Paste **media** URL -> capture + `view` + write `LEARNING.md` | **curator** | + fact-checker at the gate |
-   | Paste **GitHub** URL -> clone / orient (`MAP.md`) / trace | **code-explorer** | + fact-checker (docs↔code); + architect if mapping topics |
+   | Paste **media** URL -> capture + `view` + write `LEARNING.md` | **curator + mentor** | + fact-checker at the gate |
+   | Paste **GitHub** URL -> clone / orient (`MAP.md`) / trace | **code-explorer** | + mentor once distilling; + fact-checker (docs↔code); + architect if mapping topics |
    | Decide keep/drop + enforce citations (the gate) | **fact-checker** | - |
    | "Deep research" -> external evidence for gated nodes (`context/`) | **fact-checker + synthesizer** | + mentor when the goal is teaching the concept |
    | "Explain / teach me this" | **mentor** | + curator or code-explorer |
