@@ -370,7 +370,7 @@ be defused cheaply.
 
 **This brain has now seen the same move three times in three unrelated domains:**
 
-- A **skill's** description is the **trigger**, and causes 50%+ of skill failures (S5, claim 44).
+- A **skill's** description is the **trigger**, and causes 50%+ of skill failures (S5, claim 43).
 - A **tool's** name and description are **ranking features**, so the first tuning pass is editorial
   rather than algorithmic (S10, claim 88).
 - A **column's** description is a **default policy** the agent applies (S11, `n3`).
