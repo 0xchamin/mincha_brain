@@ -284,21 +284,30 @@ across 10 models, T3 preprint) - and note the **boundary the same paper draws an
 naive memory scaffold "never improves long-horizon reliability, and hurts 6 of 10 models" (`en4`).
 **Decompose and keep segments short; do not bolt memory onto a long loop.**
 
-## What you would build first
+## Where this sits
 
-Sequenced by what pays back soonest, not by factor number:
+Three connections worth holding, because each one tells you something the talk cannot tell you about
+itself.
 
-1. **Factor 1, today, in your existing codebase.** Take one place where you parse model prose and
-   replace it with a JSON schema you defined. No rewrite, no framework, immediate debuggability
-   (`n2`).
-2. **Factor 3 next: own the context window.** Model the thread as typed events with your own
-   serialisation (`n8`). Do this before you need it, because factors 5, 6 and 12 are impossible
-   without it - resumption works only if the thread was serialisable in the first place.
-3. **Factor 9 the first time an agent spins out.** Clear pending errors after a valid call (`n10`).
-   Cheapest fix in the talk.
-4. **Factor 10 when scope creeps.** When a loop starts running past ten steps, split it: deterministic
-   code either side, 3-10 agent steps in the middle (`n13`).
-5. **Factor 7 before you ship to anyone.** Make human contact an intent, not a branch (`n11`).
+**The factors have a dependency order, and it is not the numbering.** Factor 3 (own the context
+window) is load-bearing for factors 5, 6 and 12: resumption works only if the thread was serialisable
+in the first place, so a design that skips factor 3 cannot later add pause/resume without a rewrite
+(`n6`, `n8`). Factor 1 sits at the other extreme - it is adoptable inside an existing codebase with
+no rewrite at all, because structured output changes one function, not an architecture (`n2`). **The
+numbering is presentational; the dependencies are real.**
+
+**This design already has an older name, and the talk never says it.** Factors 3, 5, 6 and 12 - an
+append-only typed event log, state reconstructed by replay, a stateless processor - are **Event
+Sourcing**, named by Fowler in 2005 (`d3`, T1). That matters in both directions: it is mild evidence
+the shape is right, since a different field converged on it decades earlier under different pressures;
+and it means three failure modes are already documented that S2 never mentions - **replay determinism,
+snapshotting, event versioning**. If you build this, read that literature rather than rediscovering
+them.
+
+**It is not an anti-framework talk**, despite how the repo is usually read. Horthy explicitly reframes
+the twelve as "a wish list, a list of feature requests" for framework authors (`d1`, `&t=178s`). The
+argument is about *which* seams stay yours, not about writing everything from scratch - a framework
+whose loop is inspectable and overridable satisfies him completely.
 
 And the counterweight, kept deliberately last: **not every problem needs an agent.** Horthy's first
 DevOps agent was handed a Makefile and ran the steps in the wrong order; two hours of increasingly
@@ -435,8 +444,6 @@ Read this before citing anything above.
   this note that means anything came from [R1](context/01_context-limits-and-decomposition.md).
 - **`n17`, `n18` are `single-leg`** (anecdote, no slide); **`n12`, `n16` are `needs-check`**
   (mentioned in passing, no worked example).
-- **It is not an anti-framework talk**, despite how the repo is usually read - Horthy explicitly calls
-  the factors "a wish list, a list of feature requests" for framework authors (`d1`, `&t=178s`).
 
 ## Open questions
 
@@ -452,9 +459,10 @@ Read this before citing anything above.
   talk's framing (`en2`).
 - **The boundary S2 misses.** Decomposition helps; *naive memory scaffolding* hurts 6 of 10 models
   (`en4`). "Own your context window" must not drift into "accumulate a richer thread".
-- **This design has an older name.** Factors 3/5/6/12 are **Event Sourcing** (Fowler, 2005), which
-  already names three sharp edges the talk never mentions: replay determinism, snapshotting, event
-  versioning (`d3`).
+- **Whether the Event Sourcing inheritance actually bites.** "Where this sits" records that factors
+  3/5/6/12 are Event Sourcing (`d3`) and that the pattern already names replay determinism,
+  snapshotting and event versioning. Nobody has checked which of the three a real agent thread hits
+  first, or whether an LLM thread's replay is deterministic enough for the pattern to apply cleanly.
 - **`d2` - open**: the proposed `create-12-factor-agent` is scaffold-not-wrapper, modelled on
   shadcn/ui. Whether generated-code-you-own beats an abstraction is the old
   duplication-vs-abstraction argument, unresolved in the talk. `&t=882s`

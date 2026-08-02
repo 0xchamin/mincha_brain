@@ -1,6 +1,6 @@
 # BUILD.md - build Brain from scratch, from this file alone
 
-> **Generated 2026-08-02 from commit `91a2383`** by `tools/make_build_doc.py`. Do not hand-edit: edit the
+> **Generated 2026-08-02 from commit `2e76ffa`** by `tools/make_build_doc.py`. Do not hand-edit: edit the
 > source files in the reference clone and regenerate, or your copy silently diverges from the kit
 > it claims to build.
 
@@ -252,6 +252,13 @@ being asked**:
 > domain. **Everything mandatory was present and the document still taught nobody new.** The fix is a
 > skeleton, because the obligations were never the problem - the *order* was.
 
+**The document is a comprehensive onboarding read, not a playbook.** The goal is that a senior
+engineer new to the subject **understands it deeply from foundations** - the problem, why it is a
+problem, what was tried, why the answer takes the shape it does. It is **not** an action plan, and it
+does not end by telling the reader what to do next. *(This was a deliberate correction: the skeleton
+originally closed on "what you would build first - what do I do on Monday?", which is consultant
+framing. Understanding is the deliverable.)*
+
 **The required sections, in this order.** Deviate when a source genuinely lacks the material, and say
 so in one line rather than silently dropping the section.
 
@@ -266,7 +273,7 @@ so in one line rather than silently dropping the section.
 | **One instance traced end to end** | What does it look like in motion? | Strongly preferred |
 | **Second-order problems** | What breaks once it is actually running? | When the source covers it |
 | **How would you know it works?** | What is measured here, and what is not? | **Hard** |
-| **What you would build first** | What do I do on Monday? | Strongly preferred |
+| **Where this sits** | How does this connect to what I already know? | Strongly preferred |
 | **The evidence, weighed** | How much should I trust all of this? | **Hard** |
 | `## Open questions` | What is still unknown? | **Hard** - it is the deep-research backlog |
 
@@ -3182,7 +3189,10 @@ their visuals below. Use `> 💡 <term>` explainers for new concepts (mentor per
           goes stale, what saturates, what self-reinforces).
        7. How would you know it works? - what is measured, what is not, and what eval you would
           build first. Required even when the answer is "the source measured nothing".
-       8. What you would build first - sequencing, so understanding becomes action.
+       8. Where this sits - how the idea connects to what the reader already knows: what it
+          depends on, what it supersedes, what it contradicts, the older name it has in another
+          discipline. Comprehension, NOT an action plan - this document is a comprehensive
+          onboarding read, and it does not close by telling the reader what to do next.
 
      Then "The evidence, weighed" (source-level trust: tier, commercial conflict, sample size) and
      "Open questions". Claim-level caveats stay INLINE next to the claim - the end table is not a

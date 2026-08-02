@@ -66,7 +66,10 @@ their visuals below. Use `> 💡 <term>` explainers for new concepts (mentor per
           goes stale, what saturates, what self-reinforces).
        7. How would you know it works? - what is measured, what is not, and what eval you would
           build first. Required even when the answer is "the source measured nothing".
-       8. What you would build first - sequencing, so understanding becomes action.
+       8. Where this sits - how the idea connects to what the reader already knows: what it
+          depends on, what it supersedes, what it contradicts, the older name it has in another
+          discipline. Comprehension, NOT an action plan - this document is a comprehensive
+          onboarding read, and it does not close by telling the reader what to do next.
 
      Then "The evidence, weighed" (source-level trust: tier, commercial conflict, sample size) and
      "Open questions". Claim-level caveats stay INLINE next to the claim - the end table is not a

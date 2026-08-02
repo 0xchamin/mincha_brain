@@ -131,6 +131,13 @@ being asked**:
 > domain. **Everything mandatory was present and the document still taught nobody new.** The fix is a
 > skeleton, because the obligations were never the problem - the *order* was.
 
+**The document is a comprehensive onboarding read, not a playbook.** The goal is that a senior
+engineer new to the subject **understands it deeply from foundations** - the problem, why it is a
+problem, what was tried, why the answer takes the shape it does. It is **not** an action plan, and it
+does not end by telling the reader what to do next. *(This was a deliberate correction: the skeleton
+originally closed on "what you would build first - what do I do on Monday?", which is consultant
+framing. Understanding is the deliverable.)*
+
 **The required sections, in this order.** Deviate when a source genuinely lacks the material, and say
 so in one line rather than silently dropping the section.
 
@@ -145,7 +152,7 @@ so in one line rather than silently dropping the section.
 | **One instance traced end to end** | What does it look like in motion? | Strongly preferred |
 | **Second-order problems** | What breaks once it is actually running? | When the source covers it |
 | **How would you know it works?** | What is measured here, and what is not? | **Hard** |
-| **What you would build first** | What do I do on Monday? | Strongly preferred |
+| **Where this sits** | How does this connect to what I already know? | Strongly preferred |
 | **The evidence, weighed** | How much should I trust all of this? | **Hard** |
 | `## Open questions` | What is still unknown? | **Hard** - it is the deep-research backlog |
 
