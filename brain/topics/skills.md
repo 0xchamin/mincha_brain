@@ -195,7 +195,8 @@ what S4 does not have: **keep the meter after you remove the part.**
   trigger the *model* chooses - which is a prompt-injection and tool-poisoning question this source
   never raises. See [`agent-security.md`](agent-security.md).
 - **Unconnected to MCP.** No source in this brain yet relates skills to MCP servers or tools. See
-  [`mcp.md`](mcp.md), still a seed.
+  [`mcp.md`](mcp.md) - `emerging` since S10, but scoped entirely to tool cost and retrieval, so it
+  says nothing about skills either.
 
 ## Sources feeding this topic
 

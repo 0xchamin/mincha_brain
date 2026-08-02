@@ -373,7 +373,8 @@ reach for?* - and the answer is written in the user's vocabulary, not the implem
   second source.
 - **Gap: nothing here yet on agent security.** Both sources treat tool calls as trusted; neither
   discusses prompt injection into the context window or tool poisoning. See
-  [`agent-security.md`](agent-security.md) (still a seed).
+  [`agent-security.md`](agent-security.md) (`emerging`, and still with no source that studies agent
+  threats - S3 covers the authorization substrate, S7 only makes memory poisoning concrete).
 
 ## Sources feeding this topic
 

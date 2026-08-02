@@ -143,7 +143,7 @@ reason that is sharper and generalises further** [S7 `n12`, `IGo225tfF2I&t=764s`
 
 **The middle row is the durable idea and it is not really about memory:** whenever one loop is asked
 to optimise two things, you have created a trade-off you can neither observe nor tune. This is the
-same shape [`evals.md`](evals.md) records for the generator/evaluator split (claim 33) - separation
+same shape [`evals.md`](evals.md) records for the generator/evaluator split (claim 34) - separation
 introduced to defeat a conflict of interest, not to add capability.
 
 #### The economics: curation as test-time compute

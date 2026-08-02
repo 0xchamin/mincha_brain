@@ -43,7 +43,8 @@ The compounding synthesis layer - many sources feed each note. See [`brain/topic
 > **Topics are open** - new ones are added as sources introduce a recognizable new area (the
 > **architect** persona owns the create-vs-merge call). **Status** advances `seed` (created, no
 > source yet) -> `emerging` (one source, needs-check) -> `established` (two or more corroborating
-> sources). The six below are seeds, not a whitelist.
+> sources). Six of the notes below (agents, mcp, skills, rag, agent-security, inferencing) were the
+> original seeds; the rest were created by ADR as sources arrived. The set is open, not a whitelist.
 
 | Topic | Status | What it covers | Sources feeding it | Note |
 |---|---|---|---|---|

@@ -413,7 +413,7 @@ sourced._
   have measured (index-based vs embedding retrieval at that scale).
 - **This brain is a live instance of the pattern and currently proves nothing.** It runs exactly the
   described design - immutable `raw/`, an agent-written `brain/`, `AGENTS.md` as the schema,
-  `INDEX.md` read first, an append-only `log.md` - at **8 sources**, an order of magnitude below the
+  `INDEX.md` read first, an append-only `log.md` - at **11 sources**, an order of magnitude below the
   claimed ceiling. **n=1, well inside the easy regime**: no evidence either way, and worth saying so
   before the coincidence gets mistaken for corroboration.
 - ~~**Nothing here addresses retrieval mechanics at all.**~~ **Partially closed by S10

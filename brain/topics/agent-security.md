@@ -1,6 +1,13 @@
 # Topic: Agent security
 
-**Status:** emerging (1 source -> established at 2+ corroborating sources)
+**Status:** emerging (2 sources - S3 OAuth/OIDC, the only one that studies security; **S7 memory and
+dreaming, which does not discuss security at all** and feeds this note only by making memory
+poisoning concrete). **A rising source count is not rising evidence:** S7 corroborates none of S3's
+claims, so the bar for `established` is unchanged - a second source that actually studies agent
+security.
+
+*(Status line corrected in [dream 0001](../dreams/0001-260802.md): it read "1 source" while two were
+listed below and `INDEX.md` said two - the same defect `skills.md` recorded fixing on 2026-08-02.)*
 
 > Living, cross-source synthesis on agent security. Many sources feed this note; **merge and
 > de-duplicate** as they arrive (architect persona). Every claim cited. Note: "valid" here means
