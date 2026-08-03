@@ -1,8 +1,10 @@
 # Topic: Evals
 
-**Status:** established (4 sources - S1 Uber closed-loop evals, S4 Anthropic harness design, S5
+**Status:** established (5 sources - S1 Uber closed-loop evals, S4 Anthropic harness design, S5
 Google DeepMind skill evals, **S11 agent-first data stack - a *counter*-example, a production
-deployment with no evals whose authors concede the gap**).
+deployment with no evals whose authors concede the gap**, and **S13 `karpathy/autoresearch`, which
+supplies the half this note was missing: how to *design* a metric that an optimizer cannot game, and
+what an accept rule does with noise**).
 **Basis:** all three independently arrive at *an independent checking stage that can fail the work* -
 S1's Swiss-cheese QA gates on a production pipeline, S4's evaluator agent with hard thresholds on a
 build loop, and S5's CI gate that blocks a skill diff from merging without proof of lift. **S5 is the
@@ -90,11 +92,77 @@ F1, MotherDuck, T2). **An intervention that looks marginal on a public benchmark
 your own system - and neither number transfers.** That cuts both ways for everything in this note
 that cites a benchmark result.
 
+### Designing the metric, not just running it (S13)
+
+Every source above takes the metric as given and asks how to *use* it. **S13 is the first here to
+ask how to build one an optimizer cannot game**, and it answers in an unexpected place: not in the
+prompt, in the **code layout**.
+
+The setting is an agent editing a training script unattended, judged by a single scalar. Three
+defences, and none of them is an instruction to the agent - all three are properties of a module the
+agent is told not to open [S13 `n2`, `n4`]:
+
+1. **Normalise by a unit the optimizer cannot redefine.** Score bits per **byte** of text, not per
+   token, so enlarging the vocabulary cannot flatter the number.
+2. **Evaluate under fixed conditions whatever the artifact does.** Evaluation always runs at the
+   fixed sequence length even when the model trained on shorter ones - a model trained on easy
+   sequences does not get an easier exam.
+3. **Pin the holdout inside read-only code**, excluded from both the training data and the
+   tokenizer's corpus - the one invariant in S13 that is structurally enforced rather than merely
+   declared.
+
+**Generalised past ML (claim 111): if you point an agent at a scored artifact, the score's
+definition, its input data and its units belong in a module the agent has no reason to import.** The
+mechanical form of Goodhart's law is that any degree of freedom changing the metric's *units*
+improves the number without improving the thing, and an optimizer finds it with no intent to cheat.
+
+**Two things S13 gets wrong are more useful than the three it gets right**, because both are on the
+**decision** path rather than the computation path, and both generalise.
+
+**The producer prints its own grade [S13 `n5`, claim 113].** The scoring function is frozen; the
+editable file imports it, calls it, formats the number and prints it, and the agent reads its score
+by grepping that print. Nothing compares the logged number to what the function returned. **This is
+claim 34 arriving as plumbing rather than prompting** - and that is the sharper version of it, since
+you can separate generator from evaluator perfectly at the level of functions and still route the
+evaluator's output through the generator's hands on the way to the decision. Worth checking against
+S4's evaluator, which is a separate *agent* and therefore does not have this shape, and against any
+CI eval gate whose score is emitted by the code under test.
+
+**The accept rule has no notion of variance [S13 `n11`, claim 114], and this is the most transferable
+finding in S13.** The rule is "if the metric improved, keep; if not, roll back" - no repetition, no
+seed averaging, no threshold, no error bar. In the author's own published run of 83 experiments, **the
+fifteenth and final kept improvement is a change of random seed.** The rule executed correctly; it
+simply cannot recognise an input that changed nothing.
+
+That failed experiment also **measures the loop's noise floor for free** - reseeding changes nothing
+real, so whatever it "improved" bounds how much the score moves for no reason - and by that bound at
+least three other accepted changes in the same run are unresolved [S13 `n12`, claim 115,
+**needs-check: read off a rendered chart, n=1**].
+
+The consequence compounds and is the part to carry into any automated gate: **every accept
+permanently moves the baseline later candidates are judged against, and nothing re-tests a kept
+change** [S13 `g3`]. A lucky accept does not merely add a spurious row - it raises the bar for every
+subsequent real improvement. **The cheapest possible probe (run the same configuration twice) tells
+you the size of effect you are entitled to believe in**, and no source in this note had said so
+before.
+
+> **Connects to S5, which already had the discipline S13 lacks.** S5 runs **up to six trials per
+> case and reports reliability rather than a single pass/fail, because the system is
+> non-deterministic**. That is the same problem answered properly. S13 is the counter-example
+> showing what the omission costs when the loop is autonomous and nobody is reading the results
+> until morning. **These two are the closest thing this note has to a corroborated pair on
+> variance**, arrived at from opposite ends - one prescribing repetition, one demonstrating its
+> absence.
+
 ## Key claims
 
 | Claim | Sources (cited) | Confidence |
 |---|---|---|
 | Log the full flat trace first - it is the precondition for evals and any self-learning loop. | S1 `&t=418s` (slide `frame_1058` + narration) | emerging |
+| **Anti-Goodhart is a code-layout problem, not a prompt problem** - normalise by a unit the optimizer cannot redefine, evaluate under fixed conditions, and pin the holdout in read-only code (claim 111). | S13 (`prepare.py:343-365`, `:350`, `:42-44` @ `228791f`, `n2`, `n4`) | corroborated (docs+code, internal to one repo) |
+| **A protected metric can still reach the decision through producer-editable code** - separating generator from evaluator at the function level does not separate them on the *reporting* path (claim 113). Extends claim 34 as plumbing rather than prompting. | S13 (`train.py:26`,`:613`,`:621-630` @ `228791f`, `n5`) | corroborated (code). No observed exploitation - structural, not an incident |
+| **An accept rule with no variance handling banks noise** - S13's own run kept a change of random seed as one of fifteen "improvements" (claim 114). Every accept then permanently raises the bar for the next one. | S13 (`program.md:103-104` + `visuals/progress_endgame.png`, `n11`, `g3`) | corroborated (stated rule + the source's own figure) |
+| **Re-running one configuration with a different seed measures the noise floor for free**; any accepted improvement smaller than it is unresolved (claim 115). | S13 (`visuals/progress_full.png`, `n12`) | **needs-check** - magnitudes read off a rendered PNG, floor rests on n=1. Cite the mechanism, not the numbers |
 | Eval a router as a classifier (confusion matrix, precision/recall); guardrail metric = recall. | S1 `&t=459s`, `&t=578s` | emerging |
 | **Agent throughput is cheap to measure and correctness is not, so reported agent ROI is composed of the measurable half.** A deployment reporting only volume is missing the correctness number because it is expensive, not because it is good. | S11 §Key results (`n9`, `n10`, `d3`, `d4`) | emerging - and the source concedes it itself |
 | **Context interventions measured on public benchmarks understate their production effect**: the same schema descriptions gave **+2.0pp on BIRD-Dev and +16pp on a real warehouse**, because benchmark schemas are unambiguous and real ones are not. | MotherDuck (**T2**, private benchmark) via R2 F1 | needs-check - one team, one warehouse, not reproducible |
@@ -184,6 +252,15 @@ that cites a benchmark result.
   (Emily Hawkins, LangChain, 2026-07-27) - **the counter-example**: five layers of instruction
   artifacts shipped company-wide with no eval on any of them, and the authors say so. Contributes the
   measurement-bias claim (100) rather than a method. **T4 on a T2 vendor blog, n = 1.**
+- **S13** - [`karpathy/autoresearch`](../../sources/260803_autoresearch/LEARNING.md) (Andrej
+  Karpathy, code, snapshot `228791f`, 2026-03-26). **The first source here about *designing* the
+  metric rather than running it**, and the only one that shows an accept rule failing in the wild.
+  Contributes claims 111, 113, 114, 115. Its full argument lives in
+  [`autonomous-research-loops.md`](autonomous-research-loops.md) - only the measurement half is
+  synthesized here. **⚠️ T4 personal repository. The design claims are read off inspectable code and
+  pass the docs-vs-code gate; the results are one PNG whose underlying ledger is untracked by design
+  and absent from the repo, so nothing empirical is reproducible and no code was executed by this
+  brain.**
 - **R2** - [deep-research pass on S11](../../sources/260802_agent-data-stack/context/01_data-agent-accuracy-and-prior-art.md)
   (2026-08-02) - Spider 2.0 (T1/T3) for the accuracy ceiling on enterprise text-to-SQL, and
   MotherDuck (T2) for the benchmark-vs-production gap (claim 94).

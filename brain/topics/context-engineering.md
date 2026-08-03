@@ -1,12 +1,14 @@
 # Topic: Context engineering
 
-**Status:** established (7 sources - S2 12-factor agents, S4 Anthropic harness design, **S8 LLM Wiki
+**Status:** established (8 sources - S2 12-factor agents, S4 Anthropic harness design, **S8 LLM Wiki
 (a partial feeder, 2 claims)**, **S9 Agent Framework (a partial feeder, 1 claim)**, **S10 Tool search
 (a partial feeder, 2 claims - and the first *measurement* of a claim S9 could only place)**, **S11
 agent-first data stack (4 claims - the first source here where the context is written for a
 *proprietary business domain* rather than for a codebase or a tool catalog)**, **S12 multi-tenant
 reference architecture (a partial feeder, 1 claim - the token cap read as a loop guard rather than a
-budget)**; plus the R1 research passes). **Basis for the promotion:** S4
+budget)**, **S13 `karpathy/autoresearch` (a partial feeder, 1 claim - the *per-iteration* budget of
+an unattended loop, which is the first time this note has had to think about a multiplier)**; plus
+the R1 research passes). **Basis for the promotion:** S4
 independently arrives at S2's serialisation claim from the opposite direction - S2 argues you should
 own the thread format so you *can* pause and resume; S4 needs exactly that artifact to make context
 resets work [S4 §2]. Most of S4's other context claims are new and `single-leg`, not corroborating.
@@ -341,11 +343,51 @@ This is claim 59's shape (a loop holding two objectives trades them off silently
 place - and note that S11 resolves it the way [`memory.md`](memory.md) predicts, by putting the
 curation in a separate loop run by different people on a different cadence.
 
+### In a loop, the budget is per-iteration and the cost is multiplied
+
+Everything above treats context as a budget for **a** call, or for a session. S13 is the first source
+here where the same tokens are spent **once per iteration of a loop that runs about a hundred times
+unattended**, and that changes which number you design against.
+
+Its answer is aggressive and worth copying wholesale [S13 `n8`, claim 118]. A five-minute training
+run is compressed to roughly **two lines** before it re-enters the agent's context, by three
+mechanisms that all push the same way:
+
+- **The artifact's log is one line.** Progress is printed with a carriage return and no newline, so
+  a run of ~950 steps collapses to a single rewritten line rather than 950 of them
+  [`train.py:590`].
+- **Streaming is forbidden.** "redirect everything - do NOT use tee or let output flood your context"
+  [`program.md:99`] - an instruction against a *convenience*, since `tee` is exactly what you would
+  reach for to watch a job while capturing it.
+- **The result is grepped, not read.** Two fields out of a nine-field summary block, with the full
+  log opened only on failure and only its last fifty lines [`program.md:100-101`].
+
+The enabling design is that the artifact was given a **machine-readable reporting interface** - nine
+`key: value` lines with stable prefixes, existing to be grepped [`train.py:621-630`]. The thing being
+driven was modified so the driver never has to parse prose.
+
+**Two transfers.** First, **the per-iteration figure is the one to design against, because the
+multiplier is the iteration count**: 500 wasted tokens per experiment is 50,000 across a night, and
+unlike a one-off cost it competes directly with the thing you actually want resident, which is the
+history of what has already been tried. This specialises claim 22 (limiting context beats filling it)
+to the loop case. Second, **absence of output is a zero-cost error signal** - "if the grep output is
+empty, the run crashed" is the entire exception handler, with no exit-code check and no structured
+error, paired with a fast-fail inside the artifact that kills a diverged run rather than spending the
+remaining budget [S13 `n17`].
+
+> **Note what S13 does *not* do, because it is the gap this note would flag.** Nothing is carried
+> between iterations except a five-column TSV. There is no compaction strategy, no summarisation, no
+> retrieval over past experiments - the agent's accumulated reasoning simply lives in its context
+> until the session ends and is then gone [S13 `g1`]. S13 solves the per-iteration *input* cost and
+> ignores the cross-iteration *memory* problem entirely. See [`memory.md`](memory.md) for the half
+> it leaves out.
+
 ## Key claims
 
 | Claim | Sources (cited) | Confidence |
 |---|---|---|
 | LLMs are stateless pure functions; input-token quality is the only lever on output quality short of retraining. | S2 `&t=547s` | emerging |
+| **In an unattended loop the context budget is per-iteration and its cost is multiplied by the iteration count** (claim 118). S13 compresses a 5-minute run to ~2 grepped lines via a single-line log, a prohibition on `tee`, and a greppable summary block. Corollary: **empty output is the error signal**, costing zero tokens in the common case. | S13 (`program.md:99-101` + `train.py:590`,`:621-630`,`:570-572` @ `228791f`, `n8`, `n17`) | corroborated (docs+code). Specialises claim 22 to the loop case |
 | Prompt, memory, RAG and history are one problem - which tokens reach the model. | S2 `&t=616s` | emerging |
 | Past a quality bar you write every prompt token by hand; framework prompt-builders get you there fast but not past it. | S2 `&t=531s` | emerging |
 | You need not use the standard messages format - model the thread as typed events and serialise for density and clarity. | S2 `&t=563s` | emerging |
@@ -467,6 +509,13 @@ curation in a separate loop run by different people on a different cadence.
   session token cap turns out to be a loop guard wearing a budget label (claim 109). **T2, unmeasured,
   and it corroborates the practice of claims 85 and 90 without touching their rationale.** Full synthesis
   in [`agent-security.md`](agent-security.md), which is where most of that source lives.
+- **S13** - [`karpathy/autoresearch`](../../sources/260803_autoresearch/LEARNING.md) (Andrej
+  Karpathy, code, snapshot `228791f`, 2026-03-26) - **a partial feeder, contributing one claim**: the
+  per-iteration context budget of an unattended loop (claim 118), which is the first time this note
+  has had a *multiplier* to reason about rather than a single window. Unusually for this note, the
+  claim is read off code rather than asserted in prose. Full synthesis in
+  [`autonomous-research-loops.md`](autonomous-research-loops.md). **⚠️ T4 personal repository; the
+  design claims pass the docs-vs-code gate, the results are one unreproducible PNG.**
 - **R1** - [deep-research pass on S2](../../sources/260725_12-factor-agents/context/01_context-limits-and-decomposition.md) (2026-07-25) - external evidence: Lost in the Middle (T1), Context Rot (T2), Anthropic context engineering (T2), Beyond pass@1 (T3), Event Sourcing (T1). Each citation carries a tier and an independence call.
 - **R2** - [deep-research pass on S11](../../sources/260802_agent-data-stack/context/01_data-agent-accuracy-and-prior-art.md)
   (2026-08-02) - external evidence for the metadata-as-control-surface claim: MotherDuck

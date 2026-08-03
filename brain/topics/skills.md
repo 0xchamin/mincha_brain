@@ -1,7 +1,7 @@
 # Topic: Skills
 
-**Status:** emerging (4 sources, but **only one of them is about skills** - S5 "Don't Ship Skills
-Without Evals", Philipp Schmid / Google DeepMind, AI Engineer WF 2026; plus S7, S9 and S11, each
+**Status:** emerging (5 sources, but **only one of them is about skills** - S5 "Don't Ship Skills
+Without Evals", Philipp Schmid / Google DeepMind, AI Engineer WF 2026; plus S7, S9, S11 and S13, each
 contributing a single peripheral observation).
 **Basis:** S5 remains the only source that studies skills. It is unusually well-evidenced for a
 `seed -> emerging` promotion because its central numbers come from **SkillsBench**, a public
@@ -236,3 +236,24 @@ what S4 does not have: **keep the meter after you remove the part.**
   its guides with **no evals at all** - which makes it a live counter-example to S5's central claim
   rather than a corroboration of it (see [`evals.md`](evals.md), claim 100). Recorded under
   [ADR-0012](../decisions/0012-a-mention-is-not-a-source.md): a mention is not a source.
+- **S13** - [`karpathy/autoresearch`](../../sources/260803_autoresearch/LEARNING.md) (Andrej
+  Karpathy, code, snapshot `228791f`, 2026-03-26). Contributes **one sentence and one artifact**, and
+  the artifact is the more interesting half. The sentence: "The `program.md` file is essentially a
+  super lightweight 'skill'" [S13 `README.md:50`, `n16`]. The artifact: **115 lines of markdown
+  holding an entire research organisation** - a setup ritual, the rules of what may and may not be
+  changed, an output contract, a five-column ledger schema, a nine-step `LOOP FOREVER`, and an
+  autonomy policy. It matches this note's description of a skill exactly (markdown, versioned beside
+  the code, steering *how* to do something rather than stating a fact) and stretches it in one
+  direction nothing else here does: **it is not a capability the agent invokes when relevant, it is
+  the agent's entire operating procedure for a session.** S5's cost-ladder and description-as-trigger
+  analysis simply does not apply to an artifact that is loaded once, deliberately, by a human saying
+  "have a look at program.md".
+  **The second instance in this brain of the pattern outside a coding-assistant context** (after
+  S11's business-context documents), and the first where the author reaches for the word while
+  building something that is not a skill product.
+  **It moves nothing.** S13 does not define, size, trigger, evaluate or retire a skill, and it ships
+  `program.md` with **no evals** - a second live counter-example beside S11. Recorded under
+  [ADR-0012](../decisions/0012-a-mention-is-not-a-source.md): a mention is not a source. **The trap
+  named in the status line now has a fifth data point** - the count rose 1 -> 5 while the evidence
+  did not move at all. Full synthesis in
+  [`autonomous-research-loops.md`](autonomous-research-loops.md).

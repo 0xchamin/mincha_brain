@@ -1,8 +1,8 @@
 # Topic: Agents
 
-**Status:** established (8 sources - S1 Uber closed-loop evals, S2 12-factor agents, S4 Anthropic
+**Status:** established (9 sources - S1 Uber closed-loop evals, S2 12-factor agents, S4 Anthropic
 harness design, S5 skills evals, S7 Anthropic memory and dreaming, S9 Microsoft Agent Framework,
-S10 tool search, S12 Google Cloud multi-tenant reference architecture)
+S10 tool search, S12 Google Cloud multi-tenant reference architecture, S13 `karpathy/autoresearch`)
 
 > Living, cross-source synthesis on autonomous LLM agents. Many sources feed this note; **merge
 > and de-duplicate** as they arrive (architect persona) - this should read as one coherent view,
@@ -15,7 +15,11 @@ planning strategies, multi-agent patterns, control flow and state, and failure m
 
 > Context-window ownership - how you decide which tokens reach the model - has grown into its own
 > note: see [`context-engineering.md`](context-engineering.md). Evaluation of these pipelines is
-> also its own topic: see [`evals.md`](evals.md).
+> also its own topic: see [`evals.md`](evals.md). **Agents that run an unattended experiment loop
+> over an artifact** now have their own note too:
+> [`autonomous-research-loops.md`](autonomous-research-loops.md)
+> ([ADR-0017](../decisions/0017-autonomous-research-loops-topic.md)) - which is where claims 7 and 10
+> below (closed-loop auto-tuning, self-tuning agents) find the rest of their family.
 
 ## Synthesis
 
@@ -94,6 +98,34 @@ understands rather than a branch it was never trained on [S2 `&t=687s`]. Trigger
 already are (email, Slack, Discord, SMS) instead of a dedicated chat tab [S2 `&t=723s`]. In S2's
 worked deploy-bot example the human approval and the rejection feedback ("can you deploy the backend
 API first") are just more events in the same thread [S2 `&t=776s`].
+
+#### The other direction: when contacting the human is the thing to suppress
+
+S13 is this brain's first source pointing the opposite way, and the tension is worth holding rather
+than resolving. Its instruction to the agent is in capitals: **"do NOT pause to ask the human if you
+should continue... The human might be asleep"** [S13 `n9`, `program.md:112`]. That is not a
+capability being added - it is the default S2 works to install, deliberately removed.
+
+**Two conditions make it defensible, and they are the test to apply elsewhere** (claim 119; the
+conditions are this brain's reading, the source states the instruction and one reason):
+
+- **The check-in has no information to offer.** S13's per-iteration decision is a scalar comparison
+  against a metric computed by frozen code. A human woken at 3am to be asked "the score went from
+  0.9834 to 0.9821, keep it?" adds nothing the rule does not already encode. **Contrast S2's case,
+  where the accept decision is a judgement** ("deploy the backend?") - there, stopping to ask *is*
+  the value, which is why the two sources are compatible rather than contradictory.
+- **The blast radius is bounded.** The worst outcome of a hundred bad experiments is a git branch on
+  a machine you own, with the holdout structurally out of reach. Nothing is deployed, sent or
+  irreversible. **The containment design is what earns the autonomy** - which is why S13's
+  "disable all permissions" is defensible there and would be alarming almost anywhere else.
+
+The instruction carries a second half that is load-bearing and easy to skim: an **idea-generation
+fallback ladder** for when the agent runs out of ideas (think harder, read the papers cited in the
+code, re-read the in-scope files, combine previous near-misses, try radical changes). Without it
+"never stop" degrades into re-trying variations of the last success. Whether it works is not
+answerable from S13, which never records *why* an experiment was tried.
+
+Full argument in [`autonomous-research-loops.md`](autonomous-research-loops.md).
 
 ### Agents that improve themselves
 
@@ -307,6 +339,7 @@ Single-leg, asserted, no operational data behind it.
 | Claim | Sources (cited) | Confidence |
 |---|---|---|
 | An agent = prompt + switch statement + context builder + loop; own all four. | S2 `&t=406s` | emerging |
+| **Autonomy requires explicitly suppressing the agent's check-in default, and two conditions earn it**: the check-in has no information to offer, and the blast radius is bounded (claim 119). **Sits against claim 16** and is reconcilable through those conditions - but the reconciliation is this brain's, not either source's. | S13 (`program.md:112`,`:114`, `n9`) | needs-check (single-leg; the conditions are this brain's reading) |
 | The enabling capability is structured output (sentence -> JSON); "tool use" is just JSON plus deterministic code. | S2 `&t=229s`, `&t=264s` | emerging |
 | **What ships in production is small, scoped LLM steps inside deterministic software - not one big autonomous loop.** | **S2 `&t=741s` + S1 `&t=376s` (two sources, converging from theory and practice)** | **established** |
 | A production agent is often a routed pipeline of small single-purpose agents, each independently evaluable, all logged to one flat trace. | S1 `&t=376s` | emerging |
@@ -412,6 +445,15 @@ Single-leg, asserted, no operational data behind it.
 
 ## Sources feeding this topic
 
+- **S13** - [`karpathy/autoresearch`](../../sources/260803_autoresearch/LEARNING.md) (Andrej
+  Karpathy, code, snapshot `228791f`, 2026-03-26). Feeds this note **only** on autonomy as a
+  suppressed default and the conditions that earn it (claim 119). Everything else it teaches - the
+  four freezes, git as the experiment database, the noise finding - lives in
+  [`autonomous-research-loops.md`](autonomous-research-loops.md), created for it by
+  [ADR-0017](../decisions/0017-autonomous-research-loops-topic.md). Notable for what it *is not*:
+  the repository contains **no agent code at all**, because the agent is whatever coding harness you
+  point at a markdown file. **⚠️ T4 personal repository, results unreproducible, no code executed by
+  this brain.**
 - **S1** - [Building Closed-Loop Evals for a Multimodal Agent at Scale](../../sources/260725_closed-loop-evals-multimodal-agent/LEARNING.md) (Uber, AI Engineer 2026).
 - **S2** - [12-Factor Agents: Patterns of reliable LLM applications](../../sources/260725_12-factor-agents/LEARNING.md) (Dex Horthy, HumanLayer, AI Engineer WF 2025).
 - **S4** - [Harness Design for Long-Running Application Development](../../sources/260725_harness-design-long-running-apps/LEARNING.md)
