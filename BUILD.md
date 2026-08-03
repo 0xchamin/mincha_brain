@@ -1,6 +1,6 @@
 # BUILD.md - build Brain from scratch, from this file alone
 
-> **Generated 2026-08-03 from commit `e27cb92`** by `tools/make_build_doc.py`. Do not hand-edit: edit the
+> **Generated 2026-08-03 from commit `53b74d4`** by `tools/make_build_doc.py`. Do not hand-edit: edit the
 > source files in the reference clone and regenerate, or your copy silently diverges from the kit
 > it claims to build.
 
@@ -798,8 +798,62 @@ Specifically:
 - **A superseded duplicate capture goes to git-ignored `staging/`, never `rm -rf`.** Deleting is the
   human's call.
 
+### The collision surface, measured
+
+Six real ingest commits touch these, in this order of frequency. **Note what tops the list** - it is
+not a `brain/` file:
+
+| Files | Owner |
+|---|---|
+| `sources/<id>/**` | **The ingesting session, exclusively. Always safe.** |
+| **`AGENTS.md` + `BUILD.md`** | **Shared, and touched more often than any single brain file** - an ingest that clarifies the contract drags `BUILD.md` with it |
+| `INDEX.md`, `brain/claims.md`, `brain/log.md`, `brain/glossary.md` | Shared - every compound writes them |
+| `brain/topics/*.md`, `brain/decisions/`, `brain/conjectures.md` | Shared |
+| `validate.py`, `tools/*`, `personas/`, `sources/_TEMPLATE/` | Shared - contract layer |
+
+**So parallelism is safe exactly up to the compound step, and not past it.** Capture, gate and
+distil are source-local and are most of the wall clock; compounding is minutes and touches
+everything. **Parallelise the expensive half; serialise the cheap one.**
+
+### The compound gate
+
+**Git is the gate, and it is not advisory.** Two sessions that compound simultaneously produce a
+second push that the remote **rejects** (`! [rejected] main -> main (fetch first)`). No lockfile can
+match that, because a lock is a convention an agent can forget and a rejected push is a failure it
+cannot.
+
+**Before compounding, run the preflight:**
+
+1. `git fetch` and check whether `origin/main` moved since this session started.
+2. `git status` - check for uncommitted changes to anything in the shared rows above.
+3. **If either fires, stop and say so explicitly**, in these terms: *"a compound has landed (or is in
+   flight) since I started; this one waits, and resumes once it lands."* Then re-read the shared
+   files from disk, **take every number again** (next claim, next `S<n>`, next ADR), and proceed.
+4. **Push immediately after compounding.** The exposure window is exactly the time your compound sits
+   unpushed, and keeping it to seconds is what makes overlap rare rather than routine.
+
+> **Stage explicit paths. Never `git add -A`.** This is the one hazard here that can silently destroy
+> work rather than merely conflict: on 2026-08-02 a session staged everything while another's
+> in-flight edits sat in the same tree, swept them into its commit, and had to reset. Nothing was
+> lost **because it happened to notice**. Name the files you changed.
+
+> **The contract layer is single-writer.** `AGENTS.md`, `validate.py`, `personas/` and the templates
+> take one editor at a time - not for git reasons but because **a specification needs one author to
+> stay coherent.** Two sessions editing *different sections* of `AGENTS.md` merge cleanly and can
+> still produce two competing definitions of the same thing; that happened on 2026-08-02 with the
+> `LEARNING.md` shape. **A clean merge is the dangerous case here, not the conflicting one** - git
+> detects textual overlap, and the hazard is semantic overlap in non-overlapping text.
+
+> **You do not need git worktrees at this scale.** They eliminate the `git add -A` hazard
+> structurally, and they turn a silent claim-number collision into a visible merge conflict - but at
+> two or three concurrent sessions the rule above costs nothing and a worktree costs branch
+> discipline every day. **And they do not help with the failure that actually cost the most**, which
+> was two sessions deciding the same design question independently. Revisit at five or more.
+
 > **Do not build a locking scheme for this.** Scaffolding encodes an assumption that expires
-> (claim 31), and this one has fired once. Re-reading before writing is the whole mitigation.
+> (claim 31), and this one has fired once. A lock also cannot see across worktrees when git-ignored,
+> races when committed, and deadlocks when a session dies holding it. **Re-reading before writing,
+> plus the push rejection above, is the whole mitigation.**
 
 ## Leverage your harness's built-in commands (then capture into the kit)
 
