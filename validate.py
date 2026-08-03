@@ -334,6 +334,28 @@ def check_claim_references() -> None:
                                    f"(brain/claims.md holds 1..{ceiling})")
 
 
+def check_foundations() -> None:
+    """AGENTS.md: every foundation declares that it is supplied background, uncited.
+
+    The whole value of `brain/` is that a claim carries a citation and a gate verdict.
+    `foundations/` holds material that has neither and never will, so the one thing that
+    keeps it from corrupting the brain is that **its status is declared rather than
+    assumed** - a reader meeting the file must be told before they read it.
+
+    Cheap to check, and it is the only rule this layer has that a machine can enforce.
+    Whether a file really is a fundamental rather than a smuggled claim stays a judgement.
+    """
+    d = ROOT / "foundations"
+    if not d.is_dir():
+        return
+    for f in sorted(d.glob("*.md")):
+        if f.name == "README.md":
+            continue
+        if "uncited by construction" not in read(f):
+            err(f, 0, "foundation is missing its status header - it must declare itself "
+                      "supplied background, uncited by construction (see foundations/README.md)")
+
+
 def check_adrs() -> None:
     """ADRs are numbered uniquely and carry Status + Date."""
     adr_dir = ROOT / "brain" / "decisions"
@@ -491,6 +513,7 @@ CHECKS = [
     ("log chronology", check_log_chronology),
     ("claims", check_claims),
     ("claim references", check_claim_references),
+    ("foundations", check_foundations),
     ("ADRs", check_adrs),
     ("local links", check_local_links),
     ("mermaid", check_mermaid),

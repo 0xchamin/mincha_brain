@@ -1,6 +1,6 @@
 # BUILD.md - build Brain from scratch, from this file alone
 
-> **Generated 2026-08-03 from commit `ed104ec`** by `tools/make_build_doc.py`. Do not hand-edit: edit the
+> **Generated 2026-08-03 from commit `722a40f`** by `tools/make_build_doc.py`. Do not hand-edit: edit the
 > source files in the reference clone and regenerate, or your copy silently diverges from the kit
 > it claims to build.
 
@@ -404,6 +404,52 @@ one claim, it belongs next to that claim.
 > **Reference implementation:** [`sources/260802_agent-data-stack/LEARNING.md`](sources/260802_agent-data-stack/LEARNING.md)
 > - the source that forced this section, and the fullest instance of the shape.
 > `sources/_TEMPLATE/LEARNING.md` carries the skeleton to copy.
+
+## `foundations/` - supplied background, uncited by construction
+
+> **Why this exists.** Every `Background, supplied` block in every `LEARNING.md` is currently the
+> writing agent explaining a fundamental **from its own knowledge**. That is honest - the blocks say
+> so - but it is inconsistent between notes, unreviewable, and it evaporates when the session ends.
+> `foundations/` is the repo-level home for that material: written once, kept, and reused.
+
+**It is a third category, deliberately not a fourth kind of source.**
+
+| Layer | What it holds | Evidence status |
+|---|---|---|
+| `sources/<id>/` | external artifacts someone else made | **gated** - two legs, cited, promoted to `brain/` |
+| `foundations/` | **background the reader needs and no source taught** | **uncited by construction** - never promoted |
+| `reports/` | synthesis written *out* of the brain | cited to the nodes it draws on |
+
+### The hard rules
+
+- **A foundation never reaches `brain/claims.md`.** It is not a claim, it produces no nodes, and it
+  is not counted as a source anywhere. If a foundation turns out to be load-bearing for something the
+  brain wants to assert, **ingest the primary it points at** and let the claim come from there.
+- **Every file declares its status in its own header** - that it is supplied background, uncited by
+  construction, and not evidence about anything. `validate.py` checks this.
+- **A `LEARNING.md` may cite a foundation, as background and never as evidence** - exactly as a
+  `Background, supplied` block is cited today. Prose leaning on one says so in the sentence.
+- **Preserve whatever citations the material already carries.** A foundation that points at an
+  Anthropic post or an arXiv paper is strictly more useful than one that does not, and the pointer is
+  what makes a later proper ingest cheap. **Those citations do not upgrade its status** - it is still
+  background until the primary is gated.
+
+> **The tier rule still applies and is the thing to stay honest about.** An agent-generated research
+> note is roughly **T5** by this kit's own scale, and the T5 rule is *"use for discovery; cite the
+> primary source they point to, not them."* Filing one under `foundations/` does not launder it -
+> it puts it where its status is declared rather than assumed.
+
+### Bringing material in
+
+1. Drop the markdown into git-ignored **`staging/`**. There is no `_inputs/` - `staging/` already
+   exists for exactly this, and the rule is the same: **material becomes part of the kit when it is
+   filed, not when it is copied in.**
+2. Read it and make the call: **is it teaching a fundamental, or is it making claims about the
+   world?** Fundamentals become foundations. Claims about the world mean the *primary it cites* is
+   the thing to ingest - add it to the reading list, not to `foundations/`.
+3. File to `foundations/<slug>.md` with the status header, keeping its citations.
+4. Promote genuinely reusable terms to [`brain/glossary.md`](brain/glossary.md), which is the
+   one-or-two-sentence version of the same material.
 
 ## The mechanical toolbox (`tools/ingest.py`)
 
@@ -1841,6 +1887,28 @@ def check_claim_references() -> None:
                                    f"(brain/claims.md holds 1..{ceiling})")
 
 
+def check_foundations() -> None:
+    """AGENTS.md: every foundation declares that it is supplied background, uncited.
+
+    The whole value of `brain/` is that a claim carries a citation and a gate verdict.
+    `foundations/` holds material that has neither and never will, so the one thing that
+    keeps it from corrupting the brain is that **its status is declared rather than
+    assumed** - a reader meeting the file must be told before they read it.
+
+    Cheap to check, and it is the only rule this layer has that a machine can enforce.
+    Whether a file really is a fundamental rather than a smuggled claim stays a judgement.
+    """
+    d = ROOT / "foundations"
+    if not d.is_dir():
+        return
+    for f in sorted(d.glob("*.md")):
+        if f.name == "README.md":
+            continue
+        if "uncited by construction" not in read(f):
+            err(f, 0, "foundation is missing its status header - it must declare itself "
+                      "supplied background, uncited by construction (see foundations/README.md)")
+
+
 def check_adrs() -> None:
     """ADRs are numbered uniquely and carry Status + Date."""
     adr_dir = ROOT / "brain" / "decisions"
@@ -1998,6 +2066,7 @@ CHECKS = [
     ("log chronology", check_log_chronology),
     ("claims", check_claims),
     ("claim references", check_claim_references),
+    ("foundations", check_foundations),
     ("ADRs", check_adrs),
     ("local links", check_local_links),
     ("mermaid", check_mermaid),

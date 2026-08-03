@@ -67,6 +67,7 @@ The compounding synthesis layer - many sources feed each note. See [`brain/topic
 - [`brain/decisions/`](brain/decisions/) - **ADRs** for durable structural decisions (architect persona).
 - [`brain/dreams/`](brain/dreams/README.md) - **reconciliation passes**: the brain checked against *itself* for contradictions, duplication, stale confidence and superseded framings ([ADR-0009](brain/decisions/0009-dreaming-reconciliation-pass.md)). Run on request with `/dream`; `validate.py` checks form, this checks drift.
 - [`reports/`](reports/README.md) - **synthesized cross-source study material** (synthesizer persona). Start with [agent fundamentals ramp-up](reports/260725_agent-fundamentals-ramp-up.md).
+- [`foundations/`](foundations/README.md) - **supplied background, uncited by construction**: the fundamentals a reader needs that no source taught. **Not evidence, never promoted to `claims.md`** - the repo-level home for the `Background, supplied` blocks inside each `LEARNING.md`.
 
 ## Config (taste + workflow)
 
