@@ -1,6 +1,6 @@
 # BUILD.md - build Brain from scratch, from this file alone
 
-> **Generated 2026-08-03 from commit `24d25b2`** by `tools/make_build_doc.py`. Do not hand-edit: edit the
+> **Generated 2026-08-03 from commit `83327e4`** by `tools/make_build_doc.py`. Do not hand-edit: edit the
 > source files in the reference clone and regenerate, or your copy silently diverges from the kit
 > it claims to build.
 
@@ -1665,8 +1665,17 @@ def markdown_files() -> list[Path]:
     relative links resolve from the wrong directory - personas/README.md's `](architect.md)`
     would resolve to <root>/architect.md. Regenerate it rather than lint it; the generator
     fails loudly if a source file is missing, and `--check` catches staleness.
+
+    staging/ and site/ are excluded for a third reason: they are git-ignored and hold material
+    the kit has not adopted. AGENTS.md is explicit that "material becomes part of the kit when
+    it is filed, not when it is copied in" - so linting the inbox inverts that rule and turns
+    the build red for the crime of having received something. This was not theoretical: six
+    staged research modules produced 1,485 style errors on 2026-08-03, not one of them about a
+    kit file. site/ is generated, disposable output, checked at its source like BUILD.md.
+    raw/ and repo/ are the same class one level down, inside a source.
     """
-    skip = {".git", ".venv", "__pycache__", "node_modules", "raw", "repo"}
+    skip = {".git", ".venv", "__pycache__", "node_modules",
+            "raw", "repo", "staging", "site"}
     return sorted(
         p for p in ROOT.rglob("*.md")
         if not any(part in skip for part in p.parts)

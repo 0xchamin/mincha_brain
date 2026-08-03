@@ -54,7 +54,16 @@ Then read it and make the call:
 
 ## Contents
 
-_(none yet - add a row per file as they arrive.)_
+| File | Covers | Notable citations | Gap it backfills |
+|---|---|---|---|
+| [`tool-use-and-mcp.md`](tool-use-and-mcp.md) | Why a model needs tools; function calling; MCP primitives, transports and handshake; the reason-act-observe loop; orchestrator plus sub-agents; intent to execution; the agent-computer interface | ReAct (Yao 2022), Reflexion, Tree of Thoughts, MRKL, Toolformer, Anthropic *Building Effective Agents* | `mcp.md` holds nothing on primitives, transports or the handshake |
+| [`memory-taxonomy-and-lifecycle.md`](memory-taxonomy-and-lifecycle.md) | Statelessness; episodic / semantic / procedural and where the distinction comes from; the capture-distil-store-retrieve lifecycle; why memory retrieval is harder than document retrieval; tiering | Tulving (1972/85), CoALA, *Generative Agents*, MemGPT | `memory.md` and `skills.md` use "procedural memory" as a borrowed label with no primary |
+| [`grounding-and-retrieval.md`](grounding-and-retrieval.md) | Why grounding changes the task from recall to reading; retrieve / rerank / compress / position / assemble; dense vs sparse vs hybrid; chunking; position effects; retrieval as a decision | Lewis et al. (2020), Liu et al. *Lost in the Middle*, LLMLingua, Self-RAG | `rag.md` records chunking, embeddings, vector stores and hybrid search as **at zero** |
+| [`agent-threat-model.md`](agent-threat-model.md) | Why LLM reliability differs from software reliability; direct and indirect prompt injection and why neither is patchable at the model layer; memory poisoning; excessive agency; the operator/user/environment trust hierarchy; audit logging | Greshake et al. (2023), Zou et al. (GCG), Constitutional AI | `agent-security.md` is `emerging` on three sources of which **only one studies threats** |
 
-| File | Covers | Notable citations |
-|---|---|---|
+> **Where the rest of that material went.** Each staged module also carried prescriptive "best
+> practices", "common pitfalls", exercises, and a bibliography. **Only the definitional half becomes
+> a foundation.** Prescriptions are claims about the world and do not belong in an uncited file; the
+> bibliography becomes ingest candidates in [`brain/reading-list.md`](../brain/reading-list.md). Each
+> foundation ends with a table stating exactly what was dropped, so the omission is visible rather
+> than silent.
