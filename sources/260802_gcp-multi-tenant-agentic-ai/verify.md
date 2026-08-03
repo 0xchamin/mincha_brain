@@ -94,3 +94,31 @@ one on its first run - against itself.
 The source's own highest-value open question - *what actually propagates identity to a shared MCP
 server* - is unresolved by design, not by omission, and is flagged as a research target rather than a
 defect. Nothing for this stage to do with it.
+
+---
+
+## 2026-08-03 - contract resolution (not a verification pass)
+
+**Finding 2 above is closed.** The `/verify` contract was changed rather than this source
+re-verified, so this entry records the resolution and adds no verdicts.
+
+**Decision: check 6 runs by default, and the read list gains the source's `visuals/` frames**
+([ADR-0016](../../brain/decisions/0016-verify-reads-the-frames.md)). A skipped check 6 is now
+**recorded rather than discovered**, in a `Frames` field on every pass entry - the same shape as
+`SOURCE.md`'s `Visual leg` row.
+
+The two options this log offered alongside it were both rejected, and the reasons are worth keeping
+next to the finding that raised them:
+
+| Option | Rejected because |
+|---|---|
+| Drop check 6 | The `what it teaches` line is written by the ingesting **curator**, and after ingest nobody looks at that image and that sentence together again. Dropping it leaves the visual half of every source with no independent reader - the exact asymmetry this stage closes (claim 34) |
+| Run it only when a caption "looks unusually load-bearing" | **Partly circular.** The text cannot tell you which captions are *wrong*; that is what needs the image. It risk-weights, it does not detect |
+
+The cost objection that motivated all three options was **measured and did not survive**: 81 kept
+frames across 12 sources, **median 4, maximum 15**.
+
+**Retroactively, the pass above ran `Frames: not checked`** - it could not have been otherwise, since
+the contract forbade opening them. This source has **4 frames**, so a future pass closes the gap
+cheaply. **The pass is not re-run here**: the agent writing this has now read the source's `verify.md`
+and its argument, and no longer has the independent vantage point the stage requires.

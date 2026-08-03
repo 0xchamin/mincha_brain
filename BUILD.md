@@ -1,6 +1,6 @@
 # BUILD.md - build Brain from scratch, from this file alone
 
-> **Generated 2026-08-03 from commit `722a40f`** by `tools/make_build_doc.py`. Do not hand-edit: edit the
+> **Generated 2026-08-03 from commit `24d25b2`** by `tools/make_build_doc.py`. Do not hand-edit: edit the
 > source files in the reference clone and regenerate, or your copy silently diverges from the kit
 > it claims to build.
 
@@ -631,8 +631,16 @@ cheap.
 reintroduce the conflict it exists to remove.
 
 **Scope: one source's distilled layer against its own gated evidence.** Read that source's
-`nodes.md`, `LEARNING.md` and `SOURCE.md`, and nothing else. Do not read the topic notes - what was
-*promoted* is the dream pass's business, and mixing the two gives this stage two objectives again.
+`nodes.md`, `LEARNING.md`, `SOURCE.md` **and its `visuals/` frames** - and nothing else. Do not read
+the topic notes - what was *promoted* is the dream pass's business, and mixing the two gives this
+stage two objectives again.
+
+> **The frames are in the read list because check 6 cannot run without them**
+> ([ADR-0016](brain/decisions/0016-verify-reads-the-frames.md)). The stage's first run found this
+> against itself: it asked whether a caption matches the image while being forbidden from opening the
+> image. **The set needs no selecting** - `validate.py` already pins `visuals/` to exactly the frames
+> that source's own `LEARNING.md` cites. It is a bounded cost: **median 4 frames per source, maximum
+> 15**, and zero on a source whose visual leg was skipped.
 
 > **This is the one pass that MAY re-open the gate**, and the only one. Dreaming is explicitly
 > forbidden from re-opening source-local judgements or editing a `nodes.md` (see below); that rule
@@ -659,6 +667,20 @@ reproducing the defect it was built from.
 curator's and the human's. **A stage that grades everything grades nothing**, and its verdicts stop
 being trustworthy the moment they include taste.
 
+**Check 6 runs by default, and a skip is recorded rather than discovered.** Record it in the pass
+entry's `Frames` field: `checked (N)` / `n/a (visual leg skipped)` / `skipped (user)`. This is
+deliberately the same shape as `SOURCE.md`'s `Visual leg` row - the kit already knows how to make an
+expensive visual step optional without letting the omission go quiet, and a second mechanism for the
+same problem would be machinery.
+
+> **Why it is not opt-in, having been proposed as opt-in and withdrawn.** A default-off check is a
+> check that never runs, because **nobody asks about frames they have not seen.** And note who wrote
+> the caption: the `what it teaches` line comes from the ingesting **curator** - same agent, same
+> session, same argument - after which **nobody ever looks at that image and that sentence together
+> again.** `validate.py` proves a frame is *cited*; only a reader with the image open can tell
+> whether the citation is *true*. Dropping the check would leave the visual half of every source with
+> no independent reader at all, which is the exact asymmetry this stage exists to close (claim 34).
+
 ### Verdicts, and what happens on failure
 
 Each finding is one of:
@@ -671,7 +693,8 @@ Each finding is one of:
 
 **Output goes to `sources/<id>/verify.md`** - one file per source, **appended** per pass with a date,
 never rewritten. It is a log, not an index: the point is that a later reader can see what was checked
-and when. **Ephemeral output not captured into a kit file did not happen.**
+and when. Each entry opens with a field table carrying **`Read`**, **`Frames`**, **`Independence`**
+and **`Findings`**. **Ephemeral output not captured into a kit file did not happen.**
 
 Then run `python3 validate.py` and show the `git diff`, as with every other stage.
 
