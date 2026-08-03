@@ -1,6 +1,6 @@
 # BUILD.md - build Brain from scratch, from this file alone
 
-> **Generated 2026-08-03 from commit `53b74d4`** by `tools/make_build_doc.py`. Do not hand-edit: edit the
+> **Generated 2026-08-03 from commit `ed104ec`** by `tools/make_build_doc.py`. Do not hand-edit: edit the
 > source files in the reference clone and regenerate, or your copy silently diverges from the kit
 > it claims to build.
 
@@ -926,7 +926,16 @@ productive pairs, in rough order of yield:
 | A `corroborated` claim against a `needs-check` one **on the same subject** | The gap between what is measured and what is believed |
 | A claim plus an **open question from a different topic** | The question may already be half-answered elsewhere in the brain |
 | Claims in **quiet tension** that nobody flagged as a contradiction | Dreaming catches flagged conflicts; this catches unflagged ones |
+| **A structural gap in the brain's own shape** | Not "the source did not say X" - that is an Open question, inherited. This is *"we hold three claims about identity propagation and none about revocation"*: an absence no source flagged, visible only from above |
+| **Cross-domain transfer: import a shape from a dense topic into a thin one** | Does claim 59's objective-conflict argument apply to security review? Does claim 34's producer/grader split? **This generator needs the *other* topics established, not the target one** - so it works best exactly when coverage is uneven |
 | A claim plus a **structural feature of this kit** | The brain is a live instance of several of its own claims |
+
+> **Do not wait for coverage to run this.** An earlier version of this section implied the pass gets
+> better as the brain broadens, which is breadth-biased and wrong for anyone going *deep* in one
+> area. **Depth feeds the last three patterns above harder than breadth does** - two sources that
+> disagree about the same thing generate sharper conjectures than two unrelated ones, a thin topic
+> beside a dense one is where a structural gap is most visible, and cross-domain transfer needs the
+> *source* topic established rather than the target. There is no threshold to wait for.
 
 **Do not enumerate pairs.** At 100+ claims that is 5,000+ combinations and the pass drowns. Follow
 the patterns above, follow curiosity, and stop when the yield drops.
