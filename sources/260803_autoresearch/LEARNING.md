@@ -31,6 +31,39 @@ what such a loop will confidently bank.
 | **What it costs** | The freeze is a **declaration, not an enforcement** - no sandbox, no checksum (`n1`). The protected metric is printed by editable code (`n5`). Results are not comparable across machines, which the author states plainly. And the accept rule has no variance handling, so the loop banks noise (`n11`, `n12`). |
 | **How far to trust it** | The mechanism is fully inspectable and the docs-versus-code check passes almost everywhere, so **the design is trustworthy**. The **results are one unreproducible PNG** from one author on one H100, with the underlying ledger untracked by design (`n12`, `n14`). Trust the shape; do not cite the numbers. |
 
+<details markdown="1">
+<summary><strong>The same minute, as a video script</strong> - eight beats, ~230 words, Fireship pace. Click to open.</summary>
+
+The table above is the argument. This is the *same* minute delivered as narration, for when you want
+to hold it in your head rather than look it up. **It adds nothing and cites everything** - the
+`Anchor` column maps every spoken line back to a gated node, so the pace is the only thing that is
+loose.
+
+| Time | Voiceover | On screen | Anchor |
+|---|---|---|---|
+| **0:00** | "Karpathy gave an AI agent one Python file and went to sleep. Eighty-three experiments later, fifteen improvements. The last one it kept was pure noise. That is the good part." | Cold open on the results chart. Slow push into the final green dot, label still hidden. | `n11`, `n14` |
+| **0:08** | "The setup. One editable file. Five minutes of GPU per run. One number: bits per byte, lower is better. A hundred experiments while you sleep." | Three-file repo tree. `train.py` flashes red, `prepare.py` green, `program.md` blue. | `n1`, `n3` |
+| **0:15** | "But the agent can change the model's size, so two runs are not comparable. Freeze a resource. Not steps, that rewards a smaller model. Not tokens, that hides efficiency." | Two options typed then struck through. | `n3`, claim 110 |
+| **0:23** | "Freeze time. Five minutes, wall clock. A faster kernel, a better optimizer and a longer schedule are now the same move: spend the budget better. Efficiency is in the objective, not the metric." | Stopwatch. Three arrows converge onto one axis. | `n3`, claim 110 |
+| **0:31** | "Freeze the units. Bits per byte, not per token, so a bigger vocabulary cannot flatter the score. Pin the validation set inside the file the agent may not edit." | `prepare.py` turns green, padlock snaps shut over the val shard. | `n2`, `n4`, claim 111 |
+| **0:38** | "State? No experiment tracker. Git. Branch per run, commit per experiment, git reset is discard. The results log stays untracked, because reset would delete the record of what just failed." | Branch graph growing, one commit popping off and vanishing. `results.tsv` sits outside the box. | `n6`, `n7`, claim 116 |
+| **0:46** | "Beautiful. Except the frozen scorer hands its number to the file the agent rewrites, which prints it. The agent greps its own grade." | The green-to-red chain from section 5, red box pulsing. | `n5`, claim 113 |
+| **0:52** | "The accept rule is one comparison. No repeats, no error bar. So the agent changed the random seed, 42 to 137, the score dipped, and it kept it. Measure your noise floor first." | Back to the opening dot. The label `random seed 42->137` finally appears. Cut to black. | `n11`, `n12`, claims 114, 115 |
+
+**Why the shape is what it is.** The first half is the design and the second half is the hole in it,
+which is the same order as the walkthrough and the opposite of a conference talk. **The cold open
+spoils the ending on purpose** - the reseed is the hook, and the middle forty seconds exist to make
+you understand why a design this careful lost to it anyway. It is the one summary here that is
+allowed to withhold, because a reader who stops at the table above has already got the argument.
+
+> **Read it as a mnemonic, not as evidence.** Sixty seconds cannot carry the qualifications that
+> make these claims honest - above all that `n12`'s noise floor is **n=1, read off a chart by eye**
+> (see [What to distrust](#what-to-distrust-in-this-note)). The script says "measure your noise
+> floor first" because that is the transferable instruction; it deliberately does not say how big
+> Karpathy's was, because this brain does not reliably know.
+
+</details>
+
 ## Key claims
 
 - **The editable surface is exactly one file, and everything defining the experiment is read-only - as a declaration, not an enforced boundary.** No sandbox, import hook or checksum exists; the separation lives in a banner comment and a markdown instruction (`n1`).
