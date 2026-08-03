@@ -22,6 +22,63 @@ what such a loop will confidently bank.
 
 ## The 1-minute version
 
+This article covers a ten-file repository that lets a coding agent run its own research programme
+overnight. The agent edits a training script, runs it, keeps the change if the score improved, and
+repeats about a hundred times before you wake up. The interesting object here is not the training
+code, which is ordinary. It is the **containment design** built around it, and the first question
+worth asking is why an overnight loop needs containment at all.
+
+The answer is that unattended work removes the only check most systems actually rely on. When nobody
+is watching the loop, nobody is asking whether any individual result is meaningful, and there is no
+point later at which someone will. Every guarantee you want therefore has to be built into the setup
+before the loop starts. That would still be manageable if the agent were merely running experiments,
+but it is doing something more awkward than that.
+
+The agent is allowed to change the very thing being measured. It rewrites the code that trains the
+model, times the run, computes the score and then prints it. In an ordinary review loop a human sits
+between getting a good number and putting that number into the record, and here nothing does. Given
+that, the obvious first attempt looks reasonable enough.
+
+That attempt is simply to let the agent edit the code and keep whatever scores better, and it
+collapses in three separate ways. Results stop being comparable, because an agent free to shrink the
+model will win by shrinking the model rather than by improving it. The scorer sits inside the
+editable surface, which means the thing being protected is also being rewritten. And a hundred
+iterations is a long time, so the loop has to survive on a couple of hundred tokens per experiment
+rather than a full training log. Each of those three failures points at something that was never
+held still, which is exactly what the design fixes.
+
+It freezes four things and lets everything else move. The first is the editable surface, which is a
+single file called `train.py`. The second is the resource budget, which is wall-clock time rather
+than a fixed number of steps or tokens, so that a faster kernel and a better optimizer compete on one
+axis. The third is the metric's units, which are bytes rather than tokens, evaluated always at a
+fixed sequence length so a larger vocabulary cannot flatter the score. The fourth is the holdout,
+which is a validation shard pinned inside a file the agent has been told not to edit (`n1`-`n4`).
+Freezing is only half the problem, though, because something still has to remember what each of the
+hundred experiments did.
+
+That job is handled far more plainly than you would expect. A 115-line markdown file written by the
+human, `program.md`, is the entire research organisation, holding the setup ritual, the rules, the
+ledger schema and a nine-step instruction to loop forever. Git serves as the experiment database,
+with one branch per run, one commit per experiment, and `git reset` standing in for discard (`n6`).
+The results ledger deliberately lives outside git, because the loop rewinds the tree and would
+otherwise erase the record of what just failed (`n7`). Each five-minute run is then compressed to
+roughly two grepped lines before it re-enters the agent's context (`n8`). All of this is elegant,
+which makes it worth being precise about where it does not hold.
+
+The freeze is a declaration rather than an enforcement, because there is no sandbox and no checksum
+anywhere in the repository (`n1`). The protected metric still reaches the scoreboard through code the
+agent is allowed to rewrite (`n5`). Results do not transfer between machines, which the author states
+openly. Most consequentially, the accept rule carries no notion of run-to-run variance, so the loop
+banks noise (`n11`, `n12`). Those limits fall into two very different categories, and the distinction
+decides how you should read the repository.
+
+The mechanism is fully inspectable and the documentation matches the code almost everywhere, so the
+design itself is trustworthy and worth borrowing. The results are a single unreproducible chart from
+one author on one GPU, with the underlying ledger untracked by design (`n12`, `n14`). **Trust the
+shape, and do not cite the numbers.**
+
+The same argument, compressed for reference rather than for reading:
+
 | | |
 |---|---|
 | **The problem** | You want an agent to do real experimental work unattended for hours. Unattended means no one is checking whether each result is meaningful, so every guarantee has to be built into the setup before the loop starts. |
@@ -30,39 +87,6 @@ what such a loop will confidently bank.
 | **How it works** | `program.md` - 115 lines of markdown, edited by the human - is the entire research organisation: setup ritual, the rules, the ledger schema, and a nine-step `LOOP FOREVER`. Git is the experiment database: branch per run, commit per experiment, `git reset` as discard (`n6`). The ledger sits **outside** git because the loop rewinds the tree (`n7`). Each 5-minute run is compressed to roughly two grepped lines before it re-enters the agent's context (`n8`). |
 | **What it costs** | The freeze is a **declaration, not an enforcement** - no sandbox, no checksum (`n1`). The protected metric is printed by editable code (`n5`). Results are not comparable across machines, which the author states plainly. And the accept rule has no variance handling, so the loop banks noise (`n11`, `n12`). |
 | **How far to trust it** | The mechanism is fully inspectable and the docs-versus-code check passes almost everywhere, so **the design is trustworthy**. The **results are one unreproducible PNG** from one author on one H100, with the underlying ledger untracked by design (`n12`, `n14`). Trust the shape; do not cite the numbers. |
-
-<details markdown="1">
-<summary><strong>The same minute, as a video script</strong> - eight beats, ~230 words, Fireship pace. Click to open.</summary>
-
-The table above is the argument. This is the *same* minute delivered as narration, for when you want
-to hold it in your head rather than look it up. **It adds nothing and cites everything** - the
-`Anchor` column maps every spoken line back to a gated node, so the pace is the only thing that is
-loose.
-
-| Time | Voiceover | On screen | Anchor |
-|---|---|---|---|
-| **0:00** | "Karpathy gave an AI agent one Python file and went to sleep. Eighty-three experiments later, fifteen improvements. The last one it kept was pure noise. That is the good part." | Cold open on the results chart. Slow push into the final green dot, label still hidden. | `n11`, `n14` |
-| **0:08** | "The setup. One editable file. Five minutes of GPU per run. One number: bits per byte, lower is better. A hundred experiments while you sleep." | Three-file repo tree. `train.py` flashes red, `prepare.py` green, `program.md` blue. | `n1`, `n3` |
-| **0:15** | "But the agent can change the model's size, so two runs are not comparable. Freeze a resource. Not steps, that rewards a smaller model. Not tokens, that hides efficiency." | Two options typed then struck through. | `n3`, claim 110 |
-| **0:23** | "Freeze time. Five minutes, wall clock. A faster kernel, a better optimizer and a longer schedule are now the same move: spend the budget better. Efficiency is in the objective, not the metric." | Stopwatch. Three arrows converge onto one axis. | `n3`, claim 110 |
-| **0:31** | "Freeze the units. Bits per byte, not per token, so a bigger vocabulary cannot flatter the score. Pin the validation set inside the file the agent may not edit." | `prepare.py` turns green, padlock snaps shut over the val shard. | `n2`, `n4`, claim 111 |
-| **0:38** | "State? No experiment tracker. Git. Branch per run, commit per experiment, git reset is discard. The results log stays untracked, because reset would delete the record of what just failed." | Branch graph growing, one commit popping off and vanishing. `results.tsv` sits outside the box. | `n6`, `n7`, claim 116 |
-| **0:46** | "Beautiful. Except the frozen scorer hands its number to the file the agent rewrites, which prints it. The agent greps its own grade." | The green-to-red chain from section 5, red box pulsing. | `n5`, claim 113 |
-| **0:52** | "The accept rule is one comparison. No repeats, no error bar. So the agent changed the random seed, 42 to 137, the score dipped, and it kept it. Measure your noise floor first." | Back to the opening dot. The label `random seed 42->137` finally appears. Cut to black. | `n11`, `n12`, claims 114, 115 |
-
-**Why the shape is what it is.** The first half is the design and the second half is the hole in it,
-which is the same order as the walkthrough and the opposite of a conference talk. **The cold open
-spoils the ending on purpose** - the reseed is the hook, and the middle forty seconds exist to make
-you understand why a design this careful lost to it anyway. It is the one summary here that is
-allowed to withhold, because a reader who stops at the table above has already got the argument.
-
-> **Read it as a mnemonic, not as evidence.** Sixty seconds cannot carry the qualifications that
-> make these claims honest - above all that `n12`'s noise floor is **n=1, read off a chart by eye**
-> (see [What to distrust](#what-to-distrust-in-this-note)). The script says "measure your noise
-> floor first" because that is the transferable instruction; it deliberately does not say how big
-> Karpathy's was, because this brain does not reliably know.
-
-</details>
 
 ## Key claims
 
@@ -108,20 +132,35 @@ flowchart TD
     style MD fill:#fdeaea,stroke:#dc3545,stroke-width:2px
 ```
 
-**How to read it:** top to bottom is reading order; the boxes are the numbered sections below,
-grouped into four movements. Green marks the movement carrying the core technique. Red marks the
-movement that undercuts it.
+The diagram runs top to bottom in reading order, and every box is a numbered section below. The boxes
+are gathered into four movements. Green marks the movement carrying the core technique, and red marks
+the movement that undercuts it. **The crux is that sections 2 to 5 are the reusable design, and
+section 9 is the reason to stay sceptical of anything that design produces.**
 
-**The crux: sections 2 to 5 are the reusable design, and section 9 is the reason to stay sceptical
-of anything it produces.**
+The note opens with a single section that does no design work at all. Its only job is to show that
+running experiments unattended hides three systems problems rather than one machine-learning problem,
+because that framing is what makes everything after it feel necessary rather than arbitrary. If you
+already believe an overnight loop is harder than a for-loop, you can move straight on.
 
-**Why it is shaped this way:** the four freezes are derived rather than listed - each one exists
-because of a question the previous one leaves open - so skimming them out of order costs you the
-derivation, which is the transferable part. Movement C is the most skimmable if you have built
-unattended jobs before; §7 is the exception, because the resource it protects is not one that
-batch-job experience teaches you to think about. **If you read only two sections, read §5 and §9**:
-they are the two places where a design that looks airtight is not, and both were found by reading
-the source's own code and figure against its own prose.
+Movement B is the payload, and it is written as a derivation rather than a list. Section 2 fixes what
+the agent may edit, which immediately forces section 3 to ask what is being held constant. Answering
+that forces section 4 to ask what a comparable measurement even is once the model itself keeps
+changing. Section 5 then turns back on the three freezes that came before it and finds the seam they
+left open. Skimming these four out of order will still tell you what the design is, but it costs you
+the derivation, and the derivation is the part that transfers to a problem that is not this one.
+
+Movement C stops asking whether the design is sound and starts asking how a loop like this survives a
+hundred iterations without a human. If you have built unattended batch jobs before, this is the most
+skimmable stretch of the note. Section 7 is the exception worth slowing down for, because the
+resource it protects is context rather than compute, and batch-job experience does not teach you to
+budget it.
+
+Movement D is where the note stops describing and starts judging. It reads the author's own published
+run against the design that produced it, which is the only place a claim here is tested by anything
+other than the repository's own consistency. **If you read only two sections, read section 5 and
+section 9.** They are the two places where a design that looks airtight turns out not to be, and both
+were found by reading the source's own code and figure against its own prose rather than by taking
+its word.
 
 *Generated from the structure of this note - a diagram the repo does not contain.*
 

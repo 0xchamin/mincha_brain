@@ -198,16 +198,75 @@ framing. Understanding is the deliverable.)*
    in the sentence that leans on it. "What to distrust" is a source-level summary and is **not** a
    place to park claim-level caveats.
 
+### The register (how the sentences read)
+
+> **Why this exists.** The six properties above govern the **architecture** of a note and say nothing
+> about its **prose**, so every note drifted to the same voice: dense, assertion-first, uniformly
+> long sentences that a reader has to assemble into an argument themselves. Measured on S13's
+> walkthrough on 2026-08-03 - `For example`, `In other words`, `However` and `Notice that` appeared
+> **zero times** across 9,000 words; median sentence 21 words with a 94-word longest. Everything
+> mandatory was present and it still read as a rich set of facts rather than an expert explaining.
+> **The target voice is an AI architect who is also a subject-matter expert, teaching.**
+
+**Four rules. They are cheap to check and they are not optional.**
+
+1. **Signpost, and raise the objection before answering it.** Use the connective vocabulary that
+   carries a reader through an argument they do not yet hold: *at first glance*, *to see why,
+   consider*, *suppose instead*, *the reason is*, *for example*, *in other words*, *first / second /
+   finally*, *in short*. **The strongest single move is to state the obvious objection to your own
+   claim and then answer it** - "this looks like the least principled of the three options, so why
+   choose it?" A reader who has felt the objection understands the answer; a reader handed only the
+   answer has memorised it.
+2. **Complete sentences, always.** A sentence ends fully, then the next one starts. **No colon-led
+   lists mid-sentence** ("...run its own programme overnight: edit a script, run it, keep the
+   change"), **no semicolon chains**, no fragments standing in for clauses. Where you were about to
+   write a colon and three items, write three sentences - and you will usually find each sentence
+   now has room to say what the item is *for*, which the list never did.
+3. **Paragraphs must hand off, exactly as sections do.** Each paragraph **ends on the question the
+   next one answers**, and opens by picking that question up. **Bold lead-in labels
+   (`**What it costs.**`) do not count and are worse than nothing** - they segment the text into
+   blocks and let the writer skip the connective work entirely.
+4. **Walk the alternatives in prose, then tabulate as a recap.** A table alone makes the reader
+   reconstruct the reasoning. Walk each option and say what goes wrong with it, then keep a compressed
+   table underneath for the reader who is returning rather than arriving.
+
+**The budget.** Applying this costs roughly **+25 to +30% words** on a rewritten section. That is the
+right trade for a note whose job is teaching, and it is why the compressed forms exist beside it.
+
+> **Sentence length is a symptom worth watching, not a target to hit.** Aim for a median near 16-18
+> words with genuine variation - a short sentence landing a point after a complex one is the rhythm
+> that dense technical prose loses first. If your median is above 21, you are almost certainly
+> stacking subordinate clauses where a handoff belonged.
+
+> **Reference implementation:** [`sources/260803_autoresearch/LEARNING.md`](sources/260803_autoresearch/LEARNING.md)
+> - the source that forced this section. Its `1-minute version` and roadmap walkthrough are the two
+> shapes to copy.
+
 ### The 1-minute version
 
-A table directly under the `TL;DR`, giving **the whole argument in about sixty seconds of reading**.
+**Narrative first, then the table.** The two are not alternatives and they answer different needs: the
+narrative is read once by someone arriving, the table is scanned repeatedly by someone returning or
+checking one row. Introduce the table with a line that says so, rather than letting it look like a
+restatement.
+
+The narrative runs **six to eight flowing paragraphs** following the reader's own questions, not the
+source's running order: *what this article covers* -> *the problem it works on* -> *why that problem
+is hard* -> *the naive approach and the ways it collapses* -> *the idea* -> *how it works* -> *what it
+costs* -> *how far to trust it*. Every paragraph obeys the register rules above, and it carries the
+same node IDs the table does.
+
+> **Note what the narrative can hold that the table cannot.** The six standard rows have **no slot for
+> why the problem is hard**, so every note built on the table alone silently skipped the beat that
+> makes the design feel necessary rather than arbitrary. That gap is the reason this section changed.
+
+The table stays directly beneath it, giving **the whole argument in about sixty seconds of scanning**.
 It is not a third summary competing with its neighbours - the three do different jobs, and keeping
 them distinct is the point:
 
 | | Answers | Shape |
 |---|---|---|
 | `TL;DR` | *what is this and should I read it?* | 4-6 sentences of prose, lifted to the landing page |
-| **`The 1-minute version`** | *what does it actually say?* | **a table - the narrative arc compressed** |
+| **`The 1-minute version`** | *what does it actually say?* | **flowing narrative, then the same arc compressed to a table** |
 | `Key claims` | *what may I cite, and how strongly?* | bullets with node IDs and citations |
 
 Standard rows, adapted to the source: **the problem** / **why the obvious answer fails** / **the
@@ -227,6 +286,12 @@ problem is hard -> the thing itself -> the variations -> what breaks in producti
 the movement carrying the core technique. Its walkthrough says which movements a reader may skim and
 which is the payload. **It exists so a reader knows the shape before committing** - and writing it is
 also the cheapest check that the walkthrough *has* a shape.
+
+**Its walkthrough is narrative, not four labelled blocks.** The diagram rule's four elements
+(orientation, crux, why-this-shape, provenance) are requirements about *content*, never a template of
+headings - and writing them as `**How to read it:**` / `**The crux:**` / `**Why it is shaped this
+way:**` is the block-labelling the register rules forbid. Walk the reader through the movements in
+connected prose, saying for each what it does, who may skim it and what it costs them to skim.
 
 ### `What has aged`, for dated sources
 
