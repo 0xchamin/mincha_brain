@@ -1,12 +1,12 @@
 # Topic: Agent security
 
-**Status:** **established** (**5 sources, of which exactly one *pair* corroborates** - S16 and S17,
+**Status:** **established** (**6 sources, of which exactly one *pair* corroborates** - S16 and S17,
 on agent memory as a persistence surface). Advanced 2026-08-04 by
-[ADR-0019](../decisions/0019-agent-security-established.md). The other three remain non-corroborating
-and are listed for what they are: **S3** OAuth/OIDC, the delegated-authorization substrate; **S7**
-memory and dreaming, which does not discuss security at all and feeds this note only through this
-brain's commentary; **S12** a cloud reference architecture, entirely about isolation and entirely
-unmeasured.
+[ADR-0019](../decisions/0019-agent-security-established.md). **S18 (CaMeL) is the note's first gated
+defence** and corroborates nothing here, because nothing else here proposes one. The remaining three
+are listed for what they are: **S3** OAuth/OIDC, the delegated-authorization substrate; **S7** memory
+and dreaming, which does not discuss security at all and feeds this note only through this brain's
+commentary; **S12** a cloud reference architecture, entirely about isolation and entirely unmeasured.
 
 > **The pair is the reason, not the count**, and that distinction is the whole point of this line.
 > This note held the bar "a second source that studies the *same* material as an existing one" through
@@ -17,11 +17,15 @@ unmeasured.
 > independence was checked rather than assumed: no author, institution or country in common, seventeen
 > months apart, neither a vendor (claim 145).
 >
-> ⚠️ **`established` describes evidential coverage of what this note asserts, and this note asserts
-> attacks.** Everything gated here is an attack; **nothing here is a gated defence.** S17's mitigation
-> survey is `single-leg`, three years old, and names no working solution by its authors' own
-> admission. The entire defensive literature between 2023 and 2026 is ungated. **Do not read this
-> status as "the topic is handled".** Keep this warning on any future edit.
+> ⚠️ **`established` describes evidential coverage of what this note asserts. It asserts attacks
+> well, and defence only since S18.** ~~Nothing here is a gated defence.~~ **S18 (2026-08-05) is the
+> first**, and it changes the warning rather than removing it. Three things remain true. Its efficacy
+> numbers are **self-report on the authors' own benchmark** (claim 153, `d1`). It **explicitly cannot
+> cover fraud or manipulated content** - half of S17's taxonomy by class, and its largest by instance
+> count (claim 155). And **its own authors demonstrate a bypass and predict the next one** (claim
+> 156). So the position is now "one structural defence exists, it covers the action half, it is
+> unvalidated externally, and its authors say prompt injection is not solved" - which is progress and
+> is not "the topic is handled". Keep this warning on any future edit.
 
 > **S16 changes what this note is, without changing its status, and the distinction is worth stating.**
 > Until 2026-08-04 every source here described a **design** - a protocol, an isolation topology, a
@@ -325,6 +329,14 @@ through what looks to the user like independent retrieval.
 | Worms, command-and-control and multi-stage payloads all demonstrated on real deployed products | threat: malware playbook | S17 `n5`, `n7`, `n9` (claim 146) | OK as demonstrations; **unquantified** (`d1`) |
 | The attacker states the goal and the model supplies the method, so attack quality scales with model capability for free | threat: economics | S17 `n10`, `n11` (claim 147) | OK (corroborated) |
 | **Input filtering fails by sitting on the wrong channel** - Bing Chat filtered chat and not retrieval, because retrieval was classified as plumbing rather than input | mitigation: **placement** | S17 `n12` (claim 148) | OK (corroborated). **The most actionable defensive claim here**, and it confirms this note's own prior commentary on claim 103 |
+| **Secure the system, not the model**: a layer around an untrusted LLM such that an unsafe model cannot cause an unsafe action | **mitigation: the note's first gated defence** | S18 `n1` (claim 149) | OK (corroborated as a design claim) |
+| Dual LLM protects control flow and leaves data flow exposed - SQL injection against the parameters, not the structure | threat: why isolation alone fails | S18 `n2` (claim 150) | OK (corroborated) |
+| The parameterised-query fix applied to **the program** rather than the prompt: a planner that never sees tool output, and a parser that can only return schema-conforming values | mitigation: architecture | S18 `n3`, `n4` (claim 151) | OK (corroborated) |
+| **Authority travels with the data**: capabilities carrying provenance and permitted readers, propagated through a data-flow graph, checked by policy at every tool call | mitigation: information flow control | S18 `n5`-`n7` (claim 152) | OK (corroborated) |
+| Structural defence beats heuristic defence - attacks 100-300 down to 0-1, against a tool filter's 8 and an instruction hierarchy's 276 | mitigation: efficacy | S18 `n9`-`n11` (claim 153) | **needs-check - the benchmark is the authors' own** (`d1`, `d3`) |
+| The cost is ~3x tokens, against a near-free probabilistic alternative | mitigation: cost | S18 `n12` (claim 154) | OK (corroborated) |
+| **An information-flow defence protects actions, not assertions** - fraud and manipulated content are explicit non-goals | **coverage limit** | S18 `n14` (claim 155) laid against S17 `n3` | OK on the non-goals; **the taxonomy mapping is this brain's synthesis** |
+| The defence's own authors demonstrate its bypass and predict a return-oriented-programming analogue | limit: known-incomplete | S18 `n15`, `n16`, `n18` (claim 156) | OK (corroborated) |
 
 ## Key visuals
 
@@ -418,8 +430,17 @@ being a contest. Keep this as the canonical picture of why a retrieval store nee
   detection, embedder privacy and perplexity filtering are each independently defeated (claims 138-140),
   and the one purpose-built defence is argued broken rather than shown broken (claim 141). **That
   residue is now the most actionable open question in this note**, restated below.
-- **What defends against any of this, in 2026? The largest gap in this note, and it is a gap in the
-  brain rather than in the sources.** S17 walks four candidate defences to their failure points and
+- **~~What defends against any of this, in 2026?~~ Partly answered by S18 on 2026-08-05, and the
+  residue is sharper than the original question.** CaMeL is a real structural defence and it changes
+  what remains open in three specific ways. **First, it needs independent evaluation** - every
+  efficacy number is on its own authors' benchmark (claim 153), and ingesting AgentDojo will *not*
+  fix this because it shares authors. **Second, it covers the action half only** - fraud and
+  manipulated content are explicit non-goals (claim 155), and **nothing in this brain addresses
+  them**, which is now the largest untouched surface here. **Third, its own authors predict a
+  return-oriented-programming analogue against it** (claim 156) and nobody has built one. The
+  remaining literature - spotlighting, delimiter schemes, dual-model variants, provenance tracking -
+  is still ungated, though S18 measures Spotlighting's cost at 1.06x tokens in passing.
+- **The original framing, kept because it is what the pre-S18 state looked like:** S17 walks four candidate defences to their failure points and
   declines to name a solution - alignment training is "Whack-A-Mole" with impossibility results cited,
   filtering retrieved input faces a dilemma where a filter capable enough to decode obfuscation is
   itself injectable, an LLM supervisor must read the untrusted source to judge faithfulness and lands
@@ -473,6 +494,97 @@ protocol details:
 | Consent is **per-flow and interactive** | Workload identity is **continuous and automatic**; agent auth has to answer what consent means for a long-running process |
 | The client is **fixed software** that requests scopes its author chose | An agent chooses actions at **run time** - the open question below |
 
+### The first defence that does not ask the model to behave
+
+**Everything above is an attack, and this note carried no gated defence until S18.** Its thesis is a
+single reversal: stop trying to make the model safe, and build a system in which **an unsafe model
+cannot cause an unsafe action**
+([S18](../../sources/260804_camel-prompt-injection-defense/LEARNING.md) `n1`, claim 149).
+
+Start with why the previous generation could not deliver that. Instruction hierarchies, input filters
+and delimiter schemes all leave the security decision **inside the model**, which is where the
+adversary already is, and S18's verdict on the family is that none of them "provide any guarantee of
+security and regularly fall short to new attacks in practice". They are probabilistic, so their
+failure rate against a *new* attack is unknown, and a defence with an unknown failure rate cannot be
+reasoned about at design time.
+
+The obvious structural fix does better and still leaks. Willison's **Dual LLM** pattern splits the
+agent so a privileged model plans while a quarantined model touches untrusted data with no tools, and
+that genuinely protects the **plan**. It does not protect the **arguments**: an injection can leave
+the action sequence exactly as the user asked for it while the fetched document becomes
+`confidential.txt` and the recipient becomes the attacker (claim 150). S18's analogy is the sentence
+worth carrying, because it also names the fix - **this is SQL injection against the query parameters
+rather than the query structure**, and parameterisation was the answer there.
+
+**S17 said no parameterised prompt is possible, and it was right. S18 applies the constraint one level
+down, to the program instead.** A Privileged LLM sees only the trusted user query and emits code,
+never seeing tool output at all - it manipulates variables, not their contents - so the plan is
+written before any untrusted byte exists. A Quarantined LLM parses the dirty data with no tool access,
+and may return **only schema-conforming structured output plus one boolean**, because a free-text
+reply would carry the injection straight back into planning (claim 151).
+
+That leaves the gap Dual LLM could not close, and closing it is what makes this more than isolation
+done carefully. Every value carries a **capability** recording its provenance and its permitted
+readers; a custom interpreter propagates these through a data-flow graph as the program executes; and
+an arbitrary Python **security policy** is consulted at every tool call (claim 152). Trace the original
+attack through it and the block is mechanical. The plan is unchanged, the extracted values are still
+attacker-chosen, and at `send_email` the policy asks whether the document's readers include
+`attacker@gmail.com`. They do not, and the call is refused. **Nothing in that chain required the model
+to notice the attack.**
+
+> **This is claim 12 arriving from adversarial robustness rather than from reliability**, and the
+> convergence is worth noticing. S2 found that what ships in production is small LLM steps inside
+> deterministic code. S18 is the security argument for the identical shape. Two unrelated pressures
+> push toward the model sitting **inside** a deterministic harness rather than around one.
+>
+> **It is also claim 106's enforcement obligation, finally specified.** S12 recorded that sharing a
+> component converts a structural guarantee into an obligation nobody has named. S18 names it: it is a
+> Python policy file, and somebody owns it. The obligation did not disappear, it acquired a location.
+
+**What it costs is measured, and the honest framing is a comparison rather than a number.** CaMeL
+needs **2.82x input and 2.73x output tokens** for the median task, the highest of the defences
+compared, against Spotlighting's 1.06x which is close to free (claim 154). Utility falls from 84% to
+77% while successful attacks fall from 100-300 to 0-1 (claim 153). So the choice is not "secure or
+insecure" but **"nearly free and probabilistic, or roughly 3x and structural"** - and most of the
+overhead is re-prompting the planner to fix invalid code, which should shrink as models improve.
+
+> ⚠️ **The efficacy numbers are measured on the authors' own benchmark**, and this is the governing
+> caveat. Debenedetti first-authors both CaMeL and **AgentDojo**; Tramèr co-authors both; and the
+> baseline defences were implemented by CaMeL's authors (S18 `d1`, `d3`). Nothing is concealed and it
+> is normal practice. Under the independence rule it is **self-report, not validation**, so claim 153
+> is `needs-check` despite large effect sizes. **The design claims are unaffected** - an architecture
+> is checkable against its own figures regardless of who ran the benchmark - which is why claims
+> 149-152 are `corroborated` and 153 is not.
+
+**And the coverage gap is where this note should be most careful, because it is not where you would
+guess.** Laid against S17's six threat classes, S18 structurally covers information gathering,
+intrusion and malware, since each requires a tool call and every tool call meets a policy. It
+**explicitly cannot** cover **fraud** or **manipulated content**, because an injection whose entire
+payoff is text shown to the user violates no capability and fires no policy, and it does not address
+**availability** at all (claim 155).
+
+| S17 threat class | Covered by S18? |
+|---|---|
+| Information gathering (exfiltration) | **Yes** - the design's primary target |
+| Intrusion (API calls, persistence, C2) | **Yes** - every tool call passes a policy |
+| Malware (worms, spreading injections) | **Yes** - the worm needs `read_address_book` then `send_email` |
+| Fraud (phishing, scams) | **No - explicit non-goal** |
+| Manipulated content (wrong summaries, disinformation) | **No - explicit non-goal**, and S17's largest class by instance count |
+| Availability (DoS, muting) | **Not addressed**, and 2.82x tokens arguably worsens the economics |
+
+**The pattern is that an information-flow defence protects actions and not assertions.** That is what
+a system built on information flow control should be expected to do, and it means half of S17's
+taxonomy is untouched by the best structural defence this brain holds. *(The mapping is this brain's
+synthesis; neither paper draws it.)*
+
+Finally, and it is the reason to trust this source more than its numbers: **the authors demonstrate
+their own bypass.** §6.4 shows that when the *user's own query* asks an agent to follow instructions
+found in data, the planner faithfully writes a program that dispatches on untrusted content, turning
+data flow back into control flow. They then draw the analogy against themselves - Control Flow
+Integrity was bypassed by return-oriented programming, chaining individually-valid fragments, and they
+expect an analogue (claim 156). §9.3 is titled "So, Are Prompt Injections Solved Now?" and answers
+"No".
+
 ![The indirect prompt injection threat taxonomy: four injection methods, six threat classes, and four affected parties including the LLM itself](../../sources/260804_indirect-prompt-injection/visuals/fig2_taxonomy.png)
 
 **The threat map for this whole topic, on one page.** Injection methods on the left are how the
@@ -486,6 +598,18 @@ enumeration of the surface (S17 `n3`, claim 144; full walkthrough in the
 
 ## Sources feeding this topic
 
+- **S18** - [CaMeL: Defeating Prompt Injections by Design](../../sources/260804_camel-prompt-injection-defense/LEARNING.md)
+  (Debenedetti, Shumailov, Fan, Hayes, Carlini, Fabian, Kern, Shi, Terzis, Tramèr; Google + Google
+  DeepMind + ETH Zurich, arXiv 2025-03-24). **The note's first gated defence.** Secure the system
+  rather than the model: a planner that never sees tool output, a parser that returns only
+  schema-conforming values, capabilities carrying provenance and permitted readers, and a Python
+  policy consulted at every tool call (claims 149-156). **T3 preprint.** **⚠️ Its efficacy numbers are
+  measured on AgentDojo, whose first author is CaMeL's first author** (`d1`) - self-report, not
+  validation, which is why claim 153 is `needs-check` while the design claims are not. Note also the
+  vendor position: the thesis that scaffolding beats model-hardening favours a platform provider.
+  **Read it for the shape, which is excellent, rather than for the score.** Unusually honest -
+  explicit non-goals, a demonstrated bypass of its own isolation, and a section titled "So, Are
+  Prompt Injections Solved Now?" that answers "No".
 - **S17** - [Indirect prompt injection](../../sources/260804_indirect-prompt-injection/LEARNING.md)
   (Greshake, Abdelnabi, Mishra, Endres, Holz, Fritz; Saarland / CISPA / sequire technology, arXiv
   2023-02-23, v2 2023-05-05). **The source that moved this topic to `established`, and the paper that

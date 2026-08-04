@@ -1,13 +1,15 @@
 # Topic: Context engineering
 
-**Status:** established (8 sources - S2 12-factor agents, S4 Anthropic harness design, **S8 LLM Wiki
+**Status:** established (9 sources - S2 12-factor agents, S4 Anthropic harness design, **S8 LLM Wiki
 (a partial feeder, 2 claims)**, **S9 Agent Framework (a partial feeder, 1 claim)**, **S10 Tool search
 (a partial feeder, 2 claims - and the first *measurement* of a claim S9 could only place)**, **S11
 agent-first data stack (4 claims - the first source here where the context is written for a
 *proprietary business domain* rather than for a codebase or a tool catalog)**, **S12 multi-tenant
 reference architecture (a partial feeder, 1 claim - the token cap read as a loop guard rather than a
 budget)**, **S13 `karpathy/autoresearch` (a partial feeder, 1 claim - the *per-iteration* budget of
-an unattended loop, which is the first time this note has had to think about a multiplier)**; plus
+an unattended loop, which is the first time this note has had to think about a multiplier)**, **S18
+CaMeL (a partial feeder, 1 claim - the strictest statement here of *who may write into the context
+window*, and the first arguing it from authority rather than from attention)**; plus
 the R1 research passes). **Basis for the promotion:** S4
 independently arrives at S2's serialisation claim from the opposite direction - S2 argues you should
 own the thread format so you *can* pause and resume; S4 needs exactly that artifact to make context
@@ -381,6 +383,38 @@ remaining budget [S13 `n17`].
 > until the session ends and is then gone [S13 `g1`]. S13 solves the per-iteration *input* cost and
 > ignores the cross-iteration *memory* problem entirely. See [`memory.md`](memory.md) for the half
 > it leaves out.
+
+### The strictest possible answer to "who may write into the context window"
+
+This note's premise is that context engineering is one problem - deciding which tokens reach the
+model. **S18 is the first source here to answer it as a security property rather than a quality one**,
+and its answer is more restrictive than anything else in this note
+([S18](../../sources/260804_camel-prompt-injection-defense/LEARNING.md) `n3`, `n4`, claim 151).
+
+Two rules do the work. The planning model **never sees tool output at all** - values returned by tools
+go into variables, and the planner manipulates the variable while never reading its contents. And the
+model that *does* read untrusted data may return **only schema-conforming structured output plus one
+boolean**, with no free-text channel back, because a natural-language reply would carry an injection
+straight into the planning context.
+
+Sit with the second rule, because it is the one a working engineer would delete first. Letting the
+parser say "I could not find the address, try searching the archive" is an obvious usability
+improvement and CaMeL forbids it explicitly, on the grounds that it "could be a vector for prompt
+injections" (S18 `n4`). **The convenience feature and the vulnerability are the same feature**, which
+is the sharpest instance in this note of context admission being a decision with consequences rather
+than a plumbing detail.
+
+> **Read against claim 22, and notice they are different arguments for the same discipline.** Claim 22
+> says limiting context beats filling it, for *attention* reasons - the model degrades as the window
+> fills. S18 says limiting context beats filling it for *authority* reasons - text in the window is
+> indistinguishable from instruction. **Both conclude that what you exclude is the design, and neither
+> needs the other to be true.**
+
+The mechanism generalises past this architecture. Once a value's provenance is tracked, "which tokens
+reach the model" stops being a single decision made at prompt-assembly time and becomes a property
+carried by each value through the whole execution (S18 `n5`, `n7`). That is a stronger form of context
+ownership than anything else this note holds, and its cost is measured: **2.82x input tokens** for the
+median task (claim 154).
 
 ## Key claims
 

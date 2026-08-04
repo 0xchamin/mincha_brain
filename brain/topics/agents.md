@@ -4,7 +4,7 @@
 agents, S4 Anthropic harness design, S5 skills evals, S7 Anthropic memory and dreaming, S9 Microsoft
 Agent Framework, S10 tool search, S12 Google Cloud multi-tenant reference architecture, S13
 `karpathy/autoresearch`, S14 Stanford CS329A, **S15 CS329A lecture 2 - not independent of S14**,
-S17 indirect prompt injection)
+S17 indirect prompt injection, S18 CaMeL)
 
 > **On S17's admission here, since its sibling S16 was declined.** S16 (AgentPoison) attacks a
 > retrieval store, which is a *component*, and was kept out of this note under
@@ -377,6 +377,31 @@ loop performed as designed.
 > hand-written plan is the autonomy that lets an injected sentence become a multi-step attack.
 > **Ablation tests whether a component is still needed; it does not test what removing it hands an
 > adversary.**
+
+### The agent as a program written by one model and executed by a deterministic interpreter
+
+**Claim 12 says what ships is small LLM steps inside deterministic code. S18 is the same architecture
+argued from security**, and the convergence is the interesting part rather than either argument alone.
+
+CaMeL's planner emits a **program** in restricted Python expressing the user's request, and a custom
+interpreter executes it, calling tools and a second model as subroutines
+([S18](../../sources/260804_camel-prompt-injection-defense/LEARNING.md) `n3`, claim 151). The agent
+loop this note describes - model proposes, code disposes, repeat - is replaced by *model writes the
+whole loop once, deterministic code runs it*. The planner never sees tool output at all; it
+manipulates variables and never their contents.
+
+That is a strong position on a question this note has otherwise treated as a reliability trade. Claim
+31 frames scaffolding as an expiring bet on model limits, with ablation as the test for whether the
+bet has expired. **S18 supplies a class of scaffolding that does not expire on capability**, because
+its purpose is not to compensate for what the model cannot do but to bound what an adversary can make
+it do. A better model does not make the interpreter unnecessary; it only makes the interpreter
+cheaper, since most of CaMeL's 2.82x token overhead is re-prompting to fix invalid generated code
+(claim 154).
+
+> **Worth pairing with claim 147.** A more capable agent is a more capable attack payload, so
+> capability growth pushes *up* the value of structural containment at the same time as it pushes
+> *down* the value of compensatory scaffolding. **Those are two different bets and ablation only
+> tests one of them.**
 
 ## Key claims
 
