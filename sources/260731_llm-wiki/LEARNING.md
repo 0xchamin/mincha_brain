@@ -28,6 +28,65 @@ plus three operations: **ingest, query, lint** (`n4`, `n6`). The pattern is Vann
 
 ## The 1-minute version
 
+This article covers a short gist that proposes replacing a retrieval-based knowledge base with a
+markdown wiki an LLM owns, writes and keeps current on your behalf. It is roughly nineteen hundred
+words of prose with no figures, no code, no data and no worked example, which makes it a design
+argument rather than a report of something built and measured. That is worth knowing before you read
+it, because it means the value has to come from the diagnosis rather than from a result. The
+diagnosis is where the gist starts, and it is the strongest part of it.
+
+The problem it works on is that retrieval is stateless across queries. Ask a question that needs five
+documents synthesised, and the model finds and pieces the same fragments together every single time,
+while the user waits, and then the answer is thrown away (`n1`). Nothing accumulates from one
+question to the next, so the hundredth question costs exactly what the first one did. At first glance
+this reads as the familiar complaint about RAG, and the distinction is worth drawing carefully.
+
+The usual complaint is that retrieval returns the wrong chunks, which is a problem about lookup. This
+one holds even when retrieval is perfect. What is being re-paid is not the finding of documents but
+the relating of them to each other, and that relating happens after the right documents are already
+in hand. The reason the problem is hard, in other words, is that the levers everyone reaches for are
+aimed somewhere else entirely.
+
+Suppose instead you attack it the way the field usually does, with better chunking, a stronger
+embedding model and a reranker on top. Each of those genuinely improves which documents come back,
+and none of them changes the moment at which synthesis happens. You end up paying for a more accurate
+set of fragments and then re-deriving the same synthesis over them, question after question, and
+discarding it every time. The naive approach does not fail because it works badly. It fails because
+it is aimed at the cheaper of the two costs.
+
+The idea is to move synthesis from query time to ingest time and then keep the result current
+(`n2`). Compile the knowledge once rather than interpreting it afresh on every question, which is the
+trade a build step makes against an interpreter. The word compiled is worth taking literally, because
+the whole of the rest of the design follows from that one move rather than being proposed alongside
+it.
+
+It works by layering the store according to who may write to it (`n4`). Raw sources are immutable and
+nobody edits them. The wiki is written by the LLM and only read by you. The schema document, which is
+the contract telling the LLM how the wiki is structured, is the one layer both parties co-evolve.
+Three operations then run over those layers. Ingest integrates a new source into the pages that
+already exist rather than indexing it for later, and may weaken the synthesis already written
+(`n3`). Query files good answers back into the wiki as new pages, which makes the questions an input
+of the same standing as the sources (`n7`). Lint is a periodic pass, invoked out of band, that hunts
+six named defect classes (`n8`). That third operation is the one that gives the design away, because
+a store needing no repair would never have earned it.
+
+The cost is a failure mode a retrieval result structurally cannot have, which is that the artifact
+can now be stale. An ingest is a wide write touching ten to fifteen pages at once (`n17`), so fifteen
+unreviewed edits accumulate per source, and that arithmetic is what makes drift possible at all.
+Somebody therefore has to maintain the thing, which is the entire reason the third operation exists.
+That constraint is also the oldest part of the story. The gist places itself as Vannevar Bush's
+Memex from 1945, a design blocked for eighty years not on storage or linking but on who does the
+bookkeeping, which reframes the LLM's contribution as economic rather than intellectual (`n15`).
+
+How far to trust it is the part to be blunt about. This is one practitioner writing about a workflow
+he already prefers, with no eval, no baseline and no comparison against the retrieval systems the
+gist opens by dismissing. Its two efficacy claims are pure assertion, and one of them contradicts the
+document's own operations section (`d1`). Nothing is being sold here, which is rarer in this brain
+than it sounds, and an unmeasured claim from a disinterested expert is still unmeasured. Take the
+pattern, which stands on its own logic, and leave the numbers alone.
+
+The same argument, compressed for reference rather than for reading:
+
 | | |
 |---|---|
 | **The problem** | Retrieval is **stateless across queries**. Ask a question needing five documents synthesised and the model re-finds and re-pieces the same fragments every time, while the user waits, then throws the result away (`n1`). |
@@ -85,18 +144,25 @@ flowchart TB
     style D fill:#fbf1dc
 ```
 
-**How to read it:** top to bottom is the order of the argument, in four movements. The **blue block is
-the payload** - three operations, of which **lint** is the one that overturned a prior claim in this
-brain and earned this source an ADR. The **amber block is where to read most carefully**: it holds the
-source's only quantified claim and its only self-contradiction.
+The diagram runs top to bottom in the order the argument is made, gathered into four movements. Blue
+marks the payload and amber marks the stretch to read most carefully, and it is worth saying at the
+outset why those two are different things. **The crux is that every property of this design falls out
+of a single choice, which is moving synthesis from query time to ingest time, and that includes the
+new failure mode the choice buys.**
 
-**The crux: every property of this design falls out of one choice - moving synthesis from query time
-to ingest time - including the new failure mode it buys.**
+Movement A is the whole argument in miniature, and everything after it is consequence. That is why
+the design in movement B reads as *derived* rather than proposed. If you follow the diagnosis in A,
+the shape of B should feel forced rather than chosen, and if it does not, the fault is in the
+derivation rather than in your reading.
 
-**Why it is grouped this way:** A is the whole argument in miniature and everything after it is
-consequence, which is why the design in B is presented as *derived* rather than proposed. C is the
-payload. D is separated because it is where the document stops describing and starts persuading, and
-the reading posture has to change there.
+Movement C is the payload, and it holds three operations. One of them, `lint`, is the reason this
+source earned an ADR, because it overturned a claim this brain already held. Read that operation
+closely even if you skim the other two.
+
+Movement D is separated from everything before it because the document changes what it is doing
+there. It stops describing a design and starts persuading you of one, and it is also where the
+source's only quantified claim and its only self-contradiction both sit. **Your reading posture has
+to change at that boundary**, which is the reason the roadmap draws it as a boundary at all.
 
 *Synthesized roadmap of this note - not from the source.*
 

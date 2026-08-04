@@ -15,16 +15,87 @@
 
 ## TL;DR
 
-Skills are everywhere and almost never tested: **47,000+ indexed across 6,300 repos, almost none with
-evals** (`n1`). The talk's argument is that this is a measurement problem rather than laziness -
-non-determinism makes a skill's contribution **unattributable** without a control, so "it worked for
-me" is not evidence. From there it is unusually concrete: a skill is a **three-layer cost ladder**,
-not a document; its **description is the trigger and causes 50%+ of all failures**; length follows an
-**inverted U peaking at 200-500 lines**; **AI-written skills are a negative intervention**; and you
-retire one by **ablation** - then keep the eval afterwards as a regression detector on the bare model.
+Skills are everywhere and almost never tested. SkillsBench indexed **47,000+ across 6,300 repos, and
+almost none of them carry evals** (`n1`). The talk's argument is that this is a measurement problem
+rather than laziness, because non-determinism makes a skill's contribution **unattributable** without
+a control, so "it worked for me" is not evidence. From there the talk is unusually concrete. A skill
+is a **three-layer cost ladder** rather than a document, and its **description is the trigger, which
+causes 50%+ of all failures**. Length follows an **inverted U peaking at 200-500 lines**, and
+**AI-written skills are a negative intervention**. You retire a skill by **ablation**, and then you
+keep the eval afterwards as a regression detector on the bare model.
 `https://www.youtube.com/watch?v=0vphxNt4wyk`
 
 ## The 1-minute version
+
+This note covers a conference talk about a gap that is easy to state and much harder to explain away.
+Skills, meaning the folders of instructions people drop into coding agents, are being written and
+shared at enormous scale, and almost nobody tests them. The talk's answer is not that engineers are
+careless. It is that a skill is unusually hard to measure, and every practical recommendation in the
+talk follows from taking that difficulty seriously. The right place to start is the size of the gap.
+
+SkillsBench indexed **47,000+ unique skills across 6,300 repositories, and almost none of them carry
+evals** (`n1`). What makes that absence self-sustaining is the way a bad skill fails. It does not
+crash. It quietly corrupts the output, producing plausible work that is subtly wrong, so there is no
+stack trace, no red build, and nobody raising a hand. The only symptom is a slow drift in quality
+that nobody can attribute to anything in particular. That is precisely the kind of defect a test
+exists to catch, which raises the obvious question of why the test does not get written.
+
+The reason is that measuring a skill is harder than it first appears. Run a task with the skill
+loaded and watch it fail, and you still cannot say what caused what, because you have observed one
+outcome produced by two variables you never separated (`n2`). The task may have been too hard for the
+model. The skill may have been bad. Non-determinism means a second run tells you little more than the
+first did, and no amount of looking harder at a single trace separates the two, because the
+information simply is not in the trace.
+
+At first glance this looks like an academic worry, since people clearly do check their skills by
+trying them. The trouble is that trying is exactly the procedure that cannot resolve the ambiguity
+above, and it fails a second time on the question of who is doing the trying. In agents *we use*, an
+engineer is in the loop, notices a mis-trigger within seconds, and repairs it by reprompting without
+ever counting the failure. In agents *we build*, the end user does not know skills exist, will never
+ask for one by name, and leaves on the first failure (`n3`, `n4`). In other words, the author of a
+skill is the most forgiving possible user of it, and is structurally unable to observe the failure
+rate they are implicitly claiming is low.
+
+The idea that resolves this is to stop treating a skill as a document you inspect and start treating
+it as an **intervention** you measure. What you want is not the absolute quality of the output but
+the skill's **marginal contribution**, which means running the same task with the intervention and
+without it and reading the difference. That single reframing is what makes the rest of the talk
+concrete, and it has the pleasant property that the same procedure answers both "is this skill any
+good?" and "should I delete it?"
+
+How it works begins with what a skill actually is, because the shape decides where the effort goes. A
+skill is a **three-layer cost ladder** rather than a document. Frontmatter is loaded on **every model
+call whether the skill fires or not**, the `SKILL.md` body is paid on trigger, and references and
+scripts cost nothing until the agent reads them (`n5`, `n6`). That makes the description the most
+expensive real estate in the artifact, and it is also the most dangerous, because **the description
+is the trigger mechanism and the trigger causes 50%+ of all skill failures** (`n12`). The writing
+advice follows from those two facts rather than from taste. Write directives rather than passive
+prose, declare the cases that must *not* fire the skill, and give the agent goals rather than a
+procedure. If the path is fully determined, do not write a skill at all, because a script is cheaper,
+faster and correct every time (`n15`). Once the skill exists, the eval that guards it is a file of
+test cases plus a script, run in an isolated workspace, gated in CI, and eventually pointed back at
+the skill itself by **ablation** - 94% with versus 32% without means keep it, while 96% versus 95%
+means the base model has absorbed it and the skill is now pure context cost (`n20`). Then you keep
+the eval after retiring the skill, where it becomes a regression detector on the bare model (`n21`).
+
+What all of that costs is worth stating separately, because two of the measured results contradict
+what a careful engineer would guess. Curated skills raise task resolution by **+16.6 points** across
+models and harnesses (`n9`), which is the headline. The same benchmark run also found that
+**self-generated skills are a negative intervention**, costing 8.1 to 11.5 accuracy points against
+human-written ones (`n10`), and that **length follows an inverted U peaking at 200-500 lines**, so
+that a skill shorter than 200 lines is measurably worse than one in the peak band and a skill over
+1000 lines is a no-op (`n11`). The standing cost underneath all of this is the frontmatter tax, paid
+on every request your agent ever serves, for a skill that may be relevant to one request in a
+hundred.
+
+That leaves the question of how far to trust any of it, and the answer splits sharply in two.
+**SkillsBench is a public third-party benchmark**, which is what makes the +16.6 points, the length
+curve and the self-generation penalty the strongest evidence in this brain's skills material and the
+part that travels to your system. The **DeepMind-internal figures are a vendor reporting on itself**,
+single-case and unreplicated, which is a different evidence class entirely. The two must never be
+quoted as one.
+
+The same argument, compressed for reference rather than for reading:
 
 | | |
 |---|---|
@@ -86,18 +157,34 @@ flowchart TB
     style E fill:#fbf1dc
 ```
 
-**How to read it:** top to bottom is the order of the argument, in five movements. The **blue block is
-the measured evidence** - the only part of this talk backed by a public third-party benchmark, and
-therefore the part that travels. The **amber block is the payoff**: the eval you build in E is what
-makes every claim in C and D checkable in *your* system rather than believed on this speaker's word.
+The diagram runs top to bottom in the order of the argument, gathered into five movements, and every
+box below it is a numbered section. Two of the movements are coloured. Blue marks the measured
+evidence, which is the only part of this talk backed by a public third-party benchmark and therefore
+the only part that travels unchanged into your system. Amber marks the payoff, because the eval you
+build in movement E is what makes every claim in C and D checkable where you work rather than
+believed on the speaker's word. **The crux is that a skill is an intervention, and an intervention
+you cannot measure is one you cannot keep, improve, or retire.**
 
-**The crux: a skill is an intervention, and an intervention you cannot measure is one you cannot
-keep, improve, or retire.**
+Movements A and B are prerequisites rather than payload, and they are short for that reason. A
+establishes why evaluating a skill is genuinely hard rather than merely neglected, and B establishes
+what the object being evaluated actually is. If you already believe that "it worked for me" carries
+no information about a non-deterministic system, movement A costs you little to skim. Movement B is
+harder to skip than it looks, because the three-layer cost ladder is what makes the writing advice in
+D feel forced rather than stylistic.
 
-**Why it is grouped this way:** A and B are prerequisites - you cannot evaluate a thing without
-knowing why evaluating it is hard and what the thing actually is. C is placed deliberately *before*
-the writing advice in D, because the advice earns its authority from those numbers and not from the
-speaker. E closes the loop the talk's title opens.
+Movement C sits deliberately *before* the writing advice rather than after it. The reason is that the
+advice earns its authority from those numbers and not from the speaker, and a reader who meets the
+recommendations first has no way to tell which of them are measured and which are one practitioner's
+taste. It is also the movement where the two most counterintuitive findings live, so it is the last
+place to skim.
+
+Movement D is the writing craft, and it is derived rather than listed. The description comes first
+because movement B has already shown it is the only part of a skill you pay for unconditionally. What
+goes in the body follows, and the boundary case, which is when not to write a skill at all, closes
+it. Movement E then closes the loop the talk's title opens, and it is where the note's most reusable
+idea sits, because the eval turns out to outlive the skill it was built to justify. **If you read
+only two sections, read 5 and 11**, which are respectively the finding that is easiest to get
+backwards and the technique that answers the problem movement A raised.
 
 *Synthesized roadmap of this note - not from the source.*
 
@@ -112,20 +199,25 @@ speaker. E closes the loop the talk's title opens.
   (The speaker rounds 47k to "over 50,000" - speech rounding, recorded in `nodes.md` so nobody
   re-opens it as a conflict.)
 
-Sit with the second sentence, because it explains the first. A skill that **crashes** gets fixed
-within the hour. A skill that **quietly corrupts** produces plausible output that is subtly wrong, and
-nothing raises a hand - no stack trace, no red build, no alert. Only a slow drift in quality that
-nobody can attribute to anything.
+At first glance the second sentence on that slide looks like a rhetorical flourish, but it is the
+part that explains the first. To see why, compare the two ways a skill can go wrong. A skill that
+**crashes** gets fixed within the hour, because the failure announces itself and somebody owns it. A
+skill that **quietly corrupts** produces plausible output that is subtly wrong, and nothing raises a
+hand. There is no stack trace, no red build and no alert. What you get instead is a slow drift in
+quality that nobody can attribute to anything, which is exactly the class of defect that survives
+indefinitely in a codebase.
 
-Which invites an objection worth taking seriously rather than dismissing: *people do check their
-skills - they try them.* So why does trying not count?
+That explains why the gap persists without anyone deciding to leave it open, and it invites an
+objection worth taking seriously rather than dismissing. People do check their skills, in the sense
+that they try them and look at the result. So why does trying not count?
 
 ## 2. Why "it worked for me" is not evidence
 
-Because you cannot tell **what caused what**. Run a task with a skill loaded and it fails: "you might
-not know if your task fails because your skill is bad or ... because it's way too challenging for the
-model" (`n2`, `&t=72s`). ⚠️ `single-leg` - narrated; the slide states the adjacent point about quiet
-corruption rather than the attribution problem itself.
+The reason is that trying tells you an outcome and never tells you what caused it. Run a task with a
+skill loaded and watch it fail, and "you might not know if your task fails because your skill is bad
+or ... because it's way too challenging for the model" (`n2`, `&t=72s`). ⚠️ `single-leg` - narrated;
+the slide states the adjacent point about quiet corruption rather than the attribution problem
+itself.
 
 > **Background, supplied - this is a confounding problem, and it has a standard solution.** You are
 > observing one outcome produced by two variables you never separated: the difficulty of the task and
@@ -135,7 +227,9 @@ corruption rather than the attribution problem itself.
 > is exactly this, under a different name, and the fact that the same procedure answers both "is my
 > skill good?" and "should I delete it?" is the tidiest thing in the talk.
 
-Whether you can live without that control depends entirely on who is downstream of you.
+Suppose for a moment you decide you can live without that control, which is what almost every skill
+author in those 6,300 repositories has implicitly decided. Whether that is defensible turns out to
+depend entirely on who is downstream of you.
 
 ![Slide "Agents We Use vs. Agents We Build": human fallback and recovery on one side, end users who leave on the first failure on the other](visuals/frame_110.jpg)
 
@@ -147,13 +241,15 @@ Whether you can live without that control depends entirely on who is downstream 
 - Corroborated by: "if your agent does not invoke the skill on the first time, you will notice it very
   quickly ... they have no idea about what a skill is."
 
-**The generalisation is worth more than its skills context**, which is why it sits here rather than as
-an aside: *the author is the most forgiving possible user of their own system*, silently repairing
-failures without ever counting them. "It works for me in my editor" is not merely a weak claim - it is
-a claim made by the one person structurally unable to observe the failure rate.
+The generalisation here is worth considerably more than its skills context, which is why it sits in
+the body rather than in an aside. **The author is the most forgiving possible user of their own
+system.** They repair failures silently, in the same second they notice them, and they never count
+one. "It works for me in my editor" is therefore not merely a weak claim. It is a claim about a
+failure rate, made by the one person structurally unable to observe that failure rate.
 
-So you need automated evals. Evals of *what*, though? "Skill" is doing a lot of work as a word, and
-what it names has a shape that turns out to decide everything after it.
+So the conclusion is automated evals rather than closer looking. But evals of *what*, exactly? "Skill"
+is doing a great deal of work as a word, and what it names has a shape that turns out to decide
+everything after it.
 
 ## 3. A skill is a cost ladder, not a document
 
@@ -178,13 +274,16 @@ what it names has a shape that turns out to decide everything after it.
 > **limiting context beats filling it** ([`brain/claims.md`](../../brain/claims.md) claim 22) - at a
 > much smaller granularity than any other source here reaches.
 
-**The ladder is the whole design constraint, and it decides where your effort goes.** Layer 3 is free,
-so references can be as long as you like. Layer 2 is paid on use, which is tolerable. **Layer 1 is
-paid on every call whether the skill fires or not** - a permanent tax on every request your agent ever
-serves, for a skill that may be relevant to one request in a hundred.
+**The ladder is the whole design constraint, and it decides where your effort goes.** Consider each
+rung in turn. Layer 3 is free until something reads it, so references can be as long and as thorough
+as you like without costing anyone anything. Layer 2 is paid only when the skill fires, which is a
+fair price for work you actually wanted. Layer 1 is the one to worry about, because it is **paid on
+every call whether the skill fires or not**. In other words it is a permanent tax on every request
+your agent ever serves, levied on behalf of a skill that may be relevant to one request in a hundred.
 
-That makes the description the most expensive real estate in the artifact, and it is where section 6
-goes. Before optimising it, though, a prior question deserves answering: does any of this work?
+That is what makes the description the most expensive real estate in the artifact, and it is why
+section 6 spends its entire length on a single line of frontmatter. Before optimising that line,
+though, a prior question deserves an answer. Does any of this work at all?
 
 ## 4. Do skills work? The one part backed by a public benchmark
 
@@ -195,13 +294,20 @@ goes. Before optimising it, though, a prior question deserves answering: does an
   rather than on one favourable setup. `n9` `&t=266s`
 - Corroborated by: "skills on average improve the performance by roughly 15%."
 
-**Take the breadth as seriously as the headline.** A single-model result would be a fact about that
-model; a gain surviving model *and* harness changes is evidence about the technique. And this is the
-number here you can most defend citing, because **SkillsBench is a third-party public benchmark**
-rather than the speaker's own measurement - the distinction "What to distrust" turns on below.
+Take the breadth of that result at least as seriously as the headline number, because the two are
+doing different work. A gain on a single model would be a fact about that model, and would tell you
+almost nothing about whether the technique is worth adopting. A gain that survives a change of model
+*and* a change of harness is evidence about the technique itself. That is a much stronger claim, and
+it is the one being made here.
 
-So skills work. But the same benchmark run produced two findings considerably more useful than the
-headline, because both contradict what a reasonable engineer would guess.
+This is also the number on this source you can most defend citing elsewhere, for a reason that has
+nothing to do with its size. **SkillsBench is a third-party public benchmark** rather than the
+speaker's own measurement, which puts it in a different evidence class from the internal case study
+in section 10. That distinction is the one "What to distrust" turns on, and it is worth carrying
+forward now rather than meeting it at the end.
+
+So skills work. The same benchmark run, however, produced two findings considerably more useful than
+the headline, because both of them contradict what a reasonable engineer would guess.
 
 ## 5. Two surprises in the same data
 
@@ -217,10 +323,12 @@ headline, because both contradict what a reasonable engineer would guess.
   files should be below 500 lines". **The curve, the sweet spot and the >1000 collapse exist only on
   the slide.**
 
-That last point is not a footnote; it is why this source's visual leg was worth the tokens. *"As short
-as possible" is the wrong reading of the narration*, and only the slide tells you so: shorter than 200
-lines is measurably **worse** than the 200-500 band. Ingested transcript-only, this note would have
-carried a subtly wrong rule and had no way to notice.
+That last observation is not a footnote, and it is the clearest demonstration in this brain of why
+the visual leg was worth its tokens. Read the narration alone and the natural rule you take away is
+"as short as possible", which is wrong. Only the slide tells you so, because only the slide carries
+the left-hand end of the curve, where shorter than 200 lines is measurably **worse** than the 200-500
+band. Ingested transcript-only, this note would have carried a subtly wrong rule and would have had
+no way to notice it.
 
 > **Background, supplied.** An inverted U is a **non-monotonic dose-response** curve, and it is the
 > shape to *expect* whenever an intervention carries a benefit and a cost that scale differently. More
@@ -229,14 +337,18 @@ carried a subtly wrong rule and had no way to notice.
 > moves with the model's context behaviour, so 200-500 is this year's answer to a question whose form
 > is stable.** Treat the curve as durable and the band as dated.
 
-The first finding deserves a moment too, because it is counterintuitive and the talk offers only a
-partial explanation. Why would a model write a *worse* skill than a human? The proposed reason is
-**no-ops** - instructions that change nothing, like "write clear, high-quality code", which AI-authored
-skills produce in volume; they burn reasoning tokens and bury the real instructions (`n19`, `&t=680s`,
-credited to Matt Pocock). Plausible, and **unmeasured**: nothing tests whether stripping the no-ops
-recovers the lost 8-11 points.
+The first finding deserves its own moment, because it is counterintuitive and because the talk offers
+only a partial explanation for it. Why would a model write a *worse* skill than a human writes? The
+proposed reason is **no-ops**, meaning instructions that change nothing, of which "write clear,
+high-quality code" is the canonical example. AI-authored skills produce them in volume, and they burn
+reasoning tokens while burying the real instructions (`n19`, `&t=680s`, credited to Matt Pocock). The
+mechanism is plausible and it is entirely **unmeasured**. Nothing in the talk tests whether stripping
+the no-ops out recovers the lost 8 to 11 points, so it should be read as a hypothesis attached to a
+measured effect rather than as part of the finding.
 
-So: write it yourself, keep it in the 200-500 band. What actually goes in it?
+Two rules come out of this section, then. Write the skill yourself, and keep it in the 200-500 line
+band. That settles how long it should be and who should write it, and leaves open the more
+interesting question of what actually goes in it.
 
 ## 6. The description is the trigger, and it causes half of all failures
 
@@ -249,16 +361,20 @@ So: write it yourself, keep it in the 200-500 band. What actually goes in it?
 - And a result the narration never speaks: **rewriting the description alone fixed 5 of 7 failures**
   in their evaluation suite. `n13` ⚠️ `single-leg` - visual only.
 
-Put that beside section 3 and the picture sharpens. The description is simultaneously **the thing you
-pay for on every single call** and **the cause of half your failures**. Nothing else in a skill has
-that profile, which is why the advice is so specific:
+Put that beside section 3 and the picture sharpens considerably. The description is simultaneously
+**the thing you pay for on every single call** and **the cause of half your failures**. Nothing else
+in a skill carries that profile, and it explains why the talk's advice about one short line of
+frontmatter is so much more specific than its advice about anything else.
 
-- **Directives, not passive information.** "Use the Interactions API if you are working on a chat
-  application", not "the Interactions API is recommended for multi-chat because it handles session
-  state" (`n14`, `&t=437s`).
-- **Include the *what* and the *when*** - the capability, and the trigger context (`n14`, `&t=420s`).
-- **Declare negative cases.** A broad description ("any web development task") **hijacks the trigger**
-  across unrelated work; say what must *not* fire it (`n17`, `&t=594s`).
+The first move is to write **directives rather than passive information**. "Use the Interactions API
+if you are working on a chat application" is a directive, whereas "the Interactions API is
+recommended for multi-chat because it handles session state" is a description of the world that
+leaves the model to infer what to do with it (`n14`, `&t=437s`). The second move follows from what
+the line is for. Because the description decides *whether* to fire, it must carry both the **what**
+and the **when**, meaning the capability itself and the context that should trigger it (`n14`,
+`&t=420s`). The third move is the one people skip, and it is to **declare the negative cases**. A
+description broad enough to read as "any web development task" will **hijack the trigger** across
+unrelated work, so the description has to say what must *not* fire it (`n17`, `&t=594s`).
 
 > **Background, supplied - and this is where the brain already had the answer waiting.** A description
 > that decides whether a model reaches for a capability is not documentation, it is a **retrieval
@@ -270,8 +386,8 @@ that profile, which is why the advice is so specific:
 > description is the third instance - which tells you the fix generalises: write it in the vocabulary
 > of whatever is doing the looking, not of whoever built the thing.
 
-The description settles *when* to fire. That leaves the body, and how much it should dictate once it
-has fired.
+The description settles *when* the skill fires. That leaves the body, and the question of how much it
+should dictate once firing has already happened.
 
 ## 7. Give goals, not procedures - and know when not to write a skill at all
 
@@ -284,9 +400,17 @@ has fired.
 - Corroborated by: "if the process or the workflow is always the same, you don't need to waste models
   and tokens for that exercise. You can create a script."
 
-**That second line is the sharpest thing in the talk**, and it is a boundary rather than a technique. A
-skill buys adaptability; if the path is fully determined there is no adaptability to buy, and you are
-paying inference prices for something `bash` does deterministically, faster, and correctly every time.
+At first glance the instinct to write down every step looks like diligence, since a more detailed
+instruction ought to produce a more reliable result. The reason it does not is that the steps are the
+only thing the agent can adapt. Strip them out as decisions and you have removed its ability to
+recover from an error, to route around a surprise, or to find a better approach than the one you
+happened to think of while writing.
+
+**That second line on the slide is the sharpest thing in the talk**, and it is a boundary rather than
+a technique. A skill buys adaptability, and adaptability is the entire product you are paying
+inference prices for. If the path is fully determined there is no adaptability left to buy, so you
+are paying those prices for something `bash` does deterministically, faster, and correctly every
+single time.
 
 > **This converges with the brain's claim 17 from a completely different direction.** S2 (12-factor
 > agents) reached "not every problem needs an agent" from a DevOps anecdote - two hours of prompt
@@ -295,8 +419,9 @@ paying inference prices for something `bash` does deterministically, faster, and
 > unknown** - and two independent sources arriving there is why claim 17 is `corroborated` rather than
 > `emerging`.
 
-You now have a well-formed skill. But not every skill is the same kind of object, and the difference
-decides what its eval is *for*.
+You now know how to produce a well-formed skill that fires when it should and leaves the model room
+to work. But not every skill is the same kind of object, and the difference between the two kinds
+decides what its eval is ultimately *for*.
 
 ## 8. Two kinds of skill, opposite lifespans
 
@@ -310,12 +435,15 @@ decides what its eval is *for*.
 - Corroborated by: "capability skills teach models something they cannot do consistently at the moment
   ... those are temporary ... preference skills, those are more durable."
 
-The consequence is that **an eval does two different jobs depending on which kind it guards.** On a
-preference skill it is a **regression detector** - your conventions have not changed, so it protects
-them indefinitely. On a capability skill it is an **expiry sensor** - the model is improving underneath
-you, and the eval is what tells you the skill has stopped earning its permanent frontmatter tax.
+The distinction matters because of what it implies about the eval rather than about the skill. **An
+eval does two entirely different jobs depending on which kind of skill it guards.** On a preference
+skill it is a **regression detector**, because your team's conventions are not going to change
+underneath you, so the eval protects them for as long as they hold. On a capability skill it is an
+**expiry sensor**. The model is improving underneath you whether you are watching or not, and the
+eval is the only thing that will tell you the skill has stopped earning the permanent frontmatter tax
+that section 3 described.
 
-Both jobs need the same machinery, which is what the talk builds next.
+Both jobs need exactly the same machinery, which is what the talk builds next.
 
 ## 9. The eval harness is smaller than you think, and the gate is what has teeth
 
@@ -327,21 +455,38 @@ Both jobs need the same machinery, which is what the talk builds next.
 - Corroborated by: "we basically only needed like two very simple assets ... a JSON file with all of
   our test cases ... and then we have a very basic Python script which runs a coding agent."
 
-The practices, each with the reason that makes it non-negotiable:
+Start with the test cases, because the temptation is to generate them. The recommendation is **10 to
+20 real prompts**, split roughly into five happy-path cases, five negative or near-miss cases, and
+five drawn from production traces, on the grounds that real traces beat synthetic guesses about what
+users will actually type (`n18`, `&t=628s`). What those cases assert matters as much as where they
+came from. **Grade outcomes rather than paths**, which means you do not assert that the skill loaded
+on turn one, you assert that the task succeeded. A skill that loads on turn five and produces the
+right answer has passed (`n22`, `&t=1091s`).
 
-- **Start with 10-20 real prompts** - 5 happy-path, 5 negative or near-miss, 5 from production traces.
-  Real traces beat synthetic guesses (`n18`, `&t=628s`).
-- **Grade outcomes, not paths.** Do not assert the skill loaded on turn one; assert the task
-  succeeded. Loading on turn five is still a pass (`n22`, `&t=1091s`).
-- **Isolate every run, because agents cheat.** They read prior chats and executions to obtain the
-  skill's content **without invoking the skill** - which silently turns your eval green (`n23`,
-  `&t=1109s`).
-- **Most asserts can be cheap regex** - correct SDK, correct model ID, correct methods, no deprecated
-  patterns. LLM-as-judge is reserved for trace-level checks (`n27`, `&t=878s`).
-- **Run multiple trials per case**, up to six, reporting reliability rather than pass/fail, because the
-  system is non-deterministic (`n24`, `&t=1146s`). ⚠️ `single-leg`.
-- **Test across harnesses.** A skill good on Gemini CLI can be bad on Codex, and your users may be on
-  the one you never tested (`n25`, `&t=1163s`). ⚠️ `single-leg`.
+Then comes the practice that sounds like paranoia and is not. **Isolate every run, because agents
+cheat.** They will read prior chats and previous executions to obtain the skill's content **without
+ever invoking the skill**, which silently turns your eval green while measuring nothing (`n23`,
+`&t=1109s`). Once each run is clean, the remaining question is what does the asserting, and the
+answer is deliberately cheap. **Most asserts can be regular expressions** checking for the correct
+SDK, the correct model ID, the correct methods and the absence of deprecated patterns, with
+LLM-as-judge reserved for trace-level checks that nothing simpler can decide (`n27`, `&t=878s`).
+
+Two further practices exist because the system under test is not deterministic. **Run multiple trials
+per case**, up to six, and report reliability rather than pass or fail, because a single pass against
+a non-deterministic system carries almost no information (`n24`, `&t=1146s`). ⚠️ `single-leg`. And
+**test across harnesses**, because a skill that is good on Gemini CLI can be bad on Codex, and your
+users may well be on the one you never tested (`n25`, `&t=1163s`). ⚠️ `single-leg`.
+
+In short, the six practices and what each one is protecting against:
+
+| Practice | What it stops going wrong |
+|---|---|
+| 10-20 real prompts, 5 happy / 5 negative / 5 traces (`n18`) | An eval that tests what you imagined users would type |
+| Grade outcomes, not paths (`n22`) | Failing a run that succeeded, because it took a different route |
+| Isolate every run (`n23`) | Agents reading prior state and passing without the skill |
+| Cheap regex asserts before LLM-as-judge (`n27`) | Paying judge prices for what a pattern match can falsify |
+| Multiple trials, reported as reliability (`n24`) ⚠️ `single-leg` | Reading one non-deterministic pass as a result |
+| Test across harnesses (`n25`) ⚠️ `single-leg` | Shipping a skill validated only where you happen to work |
 
 > **Background, supplied.** Three of those are ordinary software-testing discipline arriving in a new
 > setting, and recognising them tells you they are not optional. **Isolation** is hermeticity - a test
@@ -353,13 +498,15 @@ The practices, each with the reason that makes it non-negotiable:
 > **testing across harnesses**, which has no clean analogue: one artifact behaving differently under
 > different runtimes is closer to browser compatibility than to unit testing.
 
-**The CI gate is the part with real teeth**, and it deserves separating from the practices. Evals sit
-alongside every internal skill, run on every change, and **a change cannot merge unless it improves the
-test cases** (`n26`, `&t=1019s`). That converts "we should test skills" from an intention into a
-constraint **a human cannot wave through** - which is why this brain rates it the strongest instance of
-the independent-checking pattern across all its eval sources.
+**The CI gate is the part with real teeth**, and it deserves separating from the practices above
+because it is a different kind of thing. Evals sit alongside every internal skill, they run on every
+change, and **a change cannot merge unless it improves the test cases** (`n26`, `&t=1019s`). That is
+what converts "we should test skills" from an intention into a constraint **a human cannot wave
+through**, which is why this brain rates it the strongest instance of the independent-checking
+pattern across all its eval sources.
 
-Machinery aside: what does this actually buy? The talk has one worked case.
+The machinery is cheap, then, and the gate is enforceable. What does all of it actually buy? The talk
+offers one worked case.
 
 ## 10. What it bought: the ideal capability skill, measured
 
@@ -373,13 +520,16 @@ Machinery aside: what does this actually buy? The talk has one worked case.
   117 test cases ... we improved the performance up to like almost 90%."
 
 ⚠️ **This is the talk's most dramatic number and its weakest evidence class: a vendor measuring its own
-product, one case, self-reported and unreplicated.** Read the *shape* as instructive - a post-cut-off
-API is the archetypal capability gap, and **4.8%** is what "the model does not know this exists" looks
-like - and treat the magnitude as unverified.
+product, one case, self-reported and unreplicated.** The way to read it is to take the *shape* as
+instructive and leave the magnitude alone. A post-cut-off API is the archetypal capability gap, and
+**4.8%** is what "the model does not know this thing exists" looks like as a number. Neither of those
+observations depends on the exact figures being reproducible, which is fortunate, because nothing
+here establishes that they are.
 
-Note what the case quietly demonstrates about section 8: **this skill is temporary by construction.**
-The next model trained after that API shipped will know it, and 91.6% becomes the baseline. Which
-raises the last question the talk answers, and the best one.
+Notice also what the case quietly demonstrates about section 8. **This skill is temporary by
+construction.** The next model trained after that API shipped will already know it, at which point
+91.6% stops being an achievement and becomes the baseline, and the skill is paying frontmatter tax
+for nothing. Which raises the last question the talk answers, and the best one.
 
 ## 11. Retirement by ablation - the test that is also the control
 
@@ -396,10 +546,11 @@ raises the last question the talk answers, and the best one.
 | Redundant | 96% | 95% | **Retire** - the base model absorbed it; it is now pure context cost |
 
 **This is the control from section 2, arriving as a technique.** The attribution problem that made "it
-worked for me" worthless is solved the way experimental design has always solved it: run it without the
-intervention. That the same procedure answers *"is my skill any good?"* and *"should I delete it?"* is
-not a coincidence - both are questions about the skill's **marginal contribution**, which is the only
-thing an ablation measures and the only thing that matters.
+worked for me" worthless is solved here the way experimental design has always solved it, which is by
+running the thing without the intervention. That the same procedure answers *"is my skill any good?"*
+and *"should I delete it?"* is not a coincidence. Both are questions about the skill's **marginal
+contribution**, which is the only quantity an ablation measures, and it is also the only quantity that
+matters.
 
 > **Background, supplied.** Ablation is standard method in experimental science and in ML research:
 > remove one component, hold everything else fixed, attribute the difference. Its virtue here is
@@ -408,16 +559,17 @@ thing an ablation measures and the only thing that matters.
 > bias the judge carries applies to both arms and cancels. That is why ablation sidesteps a problem the
 > rest of this brain's eval sources run headlong into.
 
-And the last idea, which is the one most worth stealing:
+That leaves one last idea, and it is the one most worth stealing.
 
 > **Keep the eval after you retire the skill.** It becomes a **regression detector on the bare model**,
 > and it is what tells you when to put the scaffolding back (`n21`, `&t=1181s`). ⚠️ `single-leg` -
 > narration only.
 
-That closes something the rest of the field leaves open. A model regression, a provider silently
-swapping a checkpoint, a capability that appears and then degrades - without a retained eval you learn
-about it from users. **The skill was scaffolding; the eval is the instrument, and instruments outlive
-the scaffolding they were built to justify.**
+That closes something the rest of the field leaves open. Consider what happens without the retained
+eval when a model regresses, a provider silently swaps a checkpoint, or a capability appears and then
+degrades. You learn about it from your users, which is the same failure mode section 1 opened with,
+arriving one level higher up. **The skill was scaffolding, the eval is the instrument, and instruments
+outlive the scaffolding they were built to justify.**
 
 ## Diagram (mental model)
 
@@ -441,20 +593,21 @@ flowchart TB
     style AB fill:#e8f0fc
 ```
 
-**How to read it:** top to bottom is the life of one skill, from the decision to write it to the
-decision to delete it. The **blue diamond is ablation**, the single measurement the whole lifecycle
-turns on. The **amber box is retirement** - and note the dotted arrow leaving it, the only cycle in
-the diagram.
+Read this one top to bottom as the life of a single skill, from the decision to write it through to
+the decision to delete it. The blue diamond is ablation, which is the one measurement the entire
+lifecycle turns on, and the amber box is retirement. The dotted arrow leaving that amber box is the
+only cycle in the diagram, and it is there for a reason. **The crux is that the eval outlives the
+skill, and that dotted line is why.**
 
-**The crux: the eval outlives the skill, and that dotted line is the reason.**
-
-**Why it is shaped this way:** the first decision is deliberately *not* "which skill should I write" -
-it is whether to write one at all, because the cheapest skill is the one replaced by a script (`n15`).
-The two kinds then converge on one eval path because the machinery is identical; what differs is what
-the ablation *means* when it returns - expiry for a capability skill, regression for a preference one.
-And the dotted return edge is what makes this a loop rather than a pipeline: retire the skill, keep the
-instrument, and the instrument tells you when the world moved back. Delete the eval alongside the skill
-and you have no way to learn that except from users.
+The shape is unusual in one respect worth pointing at. The first decision is deliberately *not* "which
+skill should I write", it is whether to write one at all, because the cheapest skill is the one a
+script replaces (`n15`). After that the two kinds of skill converge onto a single eval path, since the
+machinery is identical for both. What differs is not the eval but the meaning of its result: on a
+capability skill a shrinking delta signals expiry, while on a preference skill it signals that
+something in your conventions has drifted. Finally, the dotted return edge is what makes this a loop
+rather than a pipeline. Retire the skill, keep the instrument, and the instrument is what tells you
+when the world moved back. Delete the eval alongside the skill and you have no way to learn that
+except from your users.
 
 *Synthesized from `n7`, `n15`, `n18`, `n20`, `n21`, `n26` - not a slide from the talk.*
 

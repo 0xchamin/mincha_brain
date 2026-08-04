@@ -20,18 +20,83 @@ documentation. That is a default policy stored in metadata, where the agent meet
 moment it matters.
 
 **The loop that maintains it inverts what a data team is for.** Observability over agent conversations
-shows where context is missing; the team writes the missing context; the loop's output is never an
-answer to a user but a **write back into the store** (`n7`, `n8`).
+shows where context is missing. The team then writes the missing context. So the loop's output is
+never an answer to a user but a **write back into the store** (`n7`, `n8`).
 
 **Read the results with both hands.** Every number here measures **adoption** - 2,200 conversations,
 40x throughput, 100% migration in six weeks - while the article's thesis is about **trustworthiness**,
 which it never measures (`d4`). The authors concede it and file evals under "next" (`n10`). Deep
-research supplies both halves the source lacks: schema documentation is **measured** to help, and far
-more on real warehouses (+16pp) than on public benchmarks (+2pp), and the enterprise text-to-SQL
-setting closest to this stack tops out around **65.6%**. **The mechanism is well corroborated; the
-result is not.**
+research supplies both halves the source lacks. Schema documentation is **measured** to help, and far
+more on real warehouses (+16pp) than on public benchmarks (+2pp). The enterprise text-to-SQL setting
+closest to this stack tops out around **65.6%**. **The mechanism is well corroborated. The result is
+not.**
 
 ## The 1-minute version
+
+This article covers how a company of roughly 290 people put a data agent in front of its own
+warehouse for the whole staff, and what it had to write down before that could work. The interesting
+object here is not the pipeline underneath, which is entirely ordinary. It is the layer of English
+wrapped around it, and the first question worth asking is what all that English is actually for.
+
+The answer starts with a failure that does not announce itself. An agent pointed at a company's
+warehouse will happily write valid SQL and return **a technically correct answer based on the wrong
+business interpretation**, which is the failure that looks exactly like success. Before the agent
+existed, three people held the context that would have prevented it, and every question queued behind
+them. So the problem is not that nobody can write the query. It is that the knowledge which makes a
+query mean the right thing lives in a small number of heads.
+
+To see why that is hard rather than merely tedious, compare it to a coding agent. When a coding agent
+guesses wrong, a test fails or the process throws, and the wrongness surfaces on its own. When a data
+agent forgets that churned customers are normally excluded, it does not error or hedge. It returns a
+confident number that is wrong by exactly the size of your churn, and hands it to somebody who will
+put it in a board deck. **There is no traceback for a wrong assumption**, which is what makes context
+a safety property here and not just a quality one.
+
+At first glance the fix looks like a plumbing problem, and the naive attempt is to hand a competent
+model warehouse credentials and the schema. It collapses in four separate ways (`n1`). The agent
+queries `accounts_legacy` rather than `accounts`, because both exist and nothing ranks them. It
+computes ARR by a textbook formula rather than yours, because your formula was never written anywhere
+machine-readable. It writes correct SQL that answers a subtly different question, because words like
+"customer" and "active" carry local meaning. And it reaches for an asset that "looks relevant but is
+not the best source", because trust is not a property of any single table (`n6`). Notice that none of
+those four are fixed by re-plumbing. The article calls its migration "a big architectural shift" and
+then publishes an architecture diagram containing no agent, no semantic model and no feedback loop
+(`d1`), which is the strongest evidence in the piece that the plumbing was never the problem.
+
+The idea, then, is to **make implicit context explicit**, and to decompose that context by **the
+question each store answers** rather than by the tool that happens to hold it (`n2`). One store says
+what the data is. A second says what a metric means. A third says how the business works. A fourth
+says which source to trust. A fifth says how a number is actually computed. The rule that falls out
+is the portable part, and it doubles as a stopping condition: a layer that cannot name a question only
+it answers is a duplicate, and duplicated context is worse than missing context because the two copies
+drift.
+
+How it works in practice is less exotic than the framing suggests, because almost all of it is prose.
+A column definition stops being a description and becomes an instruction, so
+`account_status: The status of the account.` becomes a paragraph naming each value's business meaning
+and then issuing an imperative - *"For customer reporting, filter to Active unless the analysis
+explicitly includes churned or prospective accounts"* (`n3`). Context that fits no schema field
+becomes a versioned markdown document, which the author herself calls "like skills for the data agent"
+(`n5`). The whole arrangement then stays alive on a loop whose demand signal is the agent's own
+conversations, triaged from symptom to layer, and whose **output is a write back to the context store
+and never an answer to a user** (`n7`, `n8`). The one guardrail on it is a writer restriction on the
+trust flag, because "if everything is endorsed, the signal stops being useful" (`n6`).
+
+What that costs is **three permanent people**, and the reason is older than the technology. The LLM
+collapsed the *encoding* cost of expert knowledge, since the target formalism is now English prose
+rather than production rules. It left the *elicitation* cost completely untouched, because somebody
+still has to sit with the GTM team and find out what they mean by "pipeline" (F5, Feigenbaum 1977).
+That is a 45-year-old diagnosis arriving on schedule, and it is why this is a standing headcount
+rather than a project.
+
+How far you should trust the result is the part to read most carefully. **Every number the article
+reports measures adoption while its thesis is about trustworthiness, which is measured nowhere**, and
+the authors concede exactly that and file evals under "next" (`d4`, `n10`). The headline 40x compares
+mismatched units and should never be quoted bare (`d3`). What weight this note carries comes from the
+research pass rather than from the article, because the mechanism is externally corroborated and the
+result is not.
+
+The same argument, compressed for reference rather than for reading:
 
 | | |
 |---|---|
@@ -64,9 +129,10 @@ result is not.**
 ## How to read this note
 
 This is written as a **ramp from zero**, in the order an architect would walk a new engineer through
-the problem: what the problem is before any technology, what the machinery underneath actually is,
-how the obvious approach fails, and then the design derived one piece at a time so it feels inevitable
-rather than arbitrary. If you already work with warehouses daily, skip **Part 1**.
+the problem. First comes the problem itself, before any technology. Then the machinery underneath, so
+the vocabulary is not in the way. Then the obvious approach and how it fails. Only then is the design
+derived one piece at a time, so that it feels inevitable rather than arbitrary. If you already work
+with warehouses daily, skip **Part 1**.
 
 > **One honesty rule for this note.** `AGENTS.md` scopes a `LEARNING.md` to a single question - *what
 > did this source teach?* - and a ramp needs foundations the source never taught. So **Part 1 is
@@ -79,12 +145,18 @@ rather than arbitrary. If you already work with warehouses daily, skip **Part 1*
 ## Part 0 - The problem, before any technology
 
 Forget agents for a moment. A company of about three hundred people accumulates data in a dozen
-systems: the billing platform, Salesforce, the product's own database, whatever the marketing team
-signed up for. Someone in GTM asks a perfectly ordinary question:
+systems, which is to say the billing platform, Salesforce, the product's own database, and whatever
+the marketing team signed up for last year. Someone in GTM then asks a perfectly ordinary question:
 
 > *"How is pipeline looking this month?"*
 
-To answer it you must know four separate things:
+To answer it you have to know four separate things, and notice that only one of them is about SQL.
+You have to know where that data physically lives, across those dozen systems. You have to know what
+the fields mean, so that `acct_st = 'A'` reads as an active paid contract rather than an active trial.
+You have to know what this particular person means by "pipeline", which is a company-specific
+definition that differs between the weekly GTM report and the sales forecast. And you have to know
+which existing report is the trustworthy one, out of the four that all compute something
+pipeline-shaped. As a checklist:
 
 1. **Where that data physically lives**, across those dozen systems.
 2. **What the fields mean** - that `acct_st = 'A'` means an active paid contract and not an active
@@ -94,15 +166,16 @@ To answer it you must know four separate things:
 4. **Which existing report is the trustworthy one**, out of the four that all compute something
    pipeline-shaped.
 
-Only one kind of person holds all four at once: the data analyst. So every question queues behind
-them. LangChain describes exactly this state, and it is the entire motivation for what follows:
+Only one kind of person holds all four at once, and that is the data analyst. So every question queues
+behind them. LangChain describes exactly this state, and it is the entire motivation for what follows:
 "answering them usually required a data team member to translate the question, find the right model,
 write or adjust the query, validate the result, and send back an answer" - a team that at the time
 "was just one person" [S11 §Where we started].
 
 **Hold onto this framing, because it is the one that makes the rest make sense: the bottleneck is not
 query-writing. It is that the four things above live in one person's head and nowhere else.** An
-agent that writes SQL beautifully but has none of those four solves the wrong problem.
+agent that writes SQL beautifully but has none of those four solves the wrong problem. Before we can
+see why, though, it is worth knowing what the machinery underneath actually looks like.
 
 ---
 
@@ -111,7 +184,7 @@ agent that writes SQL beautifully but has none of those four solves the wrong pr
 > ⚠️ **This part is uncited background I am supplying so the rest reads.** Skip if you already work
 > with warehouses. Nothing here is a claim from the source.
 
-**The shape of essentially every modern company data stack:**
+Essentially every modern company data stack has the same shape:
 
 ```
 sources  ->  ingestion  ->  warehouse (raw)  ->  transformation  ->  warehouse (prod)  ->  reporting
@@ -121,14 +194,15 @@ sources  ->  ingestion  ->  warehouse (raw)  ->  transformation  ->  warehouse (
 > in place with SQL. Older **ETL** transformed before loading. ELT won because warehouse compute got
 > cheap and keeping the untouched raw copy is worth a lot when a definition turns out to be wrong.
 
-- **Warehouse** (here BigQuery): a database built for scanning large tables analytically rather than
-  for serving an application. You will hear "the warehouse" used to mean the whole storage layer.
-- **Ingestion** (Fivetran, Airbyte, Segment): managed connectors that copy Salesforce, the billing
-  system and event streams into the warehouse on a schedule. Nobody writes these by hand any more.
-- **dbt**: the transformation layer. You write `SELECT` statements; dbt manages their dependency
-  order, materialises the results as tables or views, and holds their documentation and tests
-  alongside the SQL in a git repo. **The important part for us: a dbt project is source code, so it
-  is versioned, reviewable, and readable by anything that can read a repo.**
+Three of those boxes are worth naming properly. The **warehouse**, here BigQuery, is a database built
+for scanning large tables analytically rather than for serving an application, and you will hear "the
+warehouse" used loosely to mean the whole storage layer. **Ingestion** tools such as Fivetran, Airbyte
+and Segment are managed connectors that copy Salesforce, the billing system and event streams into the
+warehouse on a schedule, and nobody writes these by hand any more. **dbt** is the transformation
+layer, where you write `SELECT` statements and dbt manages their dependency order, materialises the
+results as tables or views, and holds their documentation and tests alongside the SQL in a git repo.
+**The important part for us is that a dbt project is source code, so it is versioned, reviewable, and
+readable by anything that can read a repo.**
 
 > 💡 **Model** (dbt sense) - one `SELECT` statement that produces one table. Not a machine-learning
 > model. Data people say "model" constantly and mean this.
@@ -142,10 +216,10 @@ sources  ->  ingestion  ->  warehouse (raw)  ->  transformation  ->  warehouse (
 > calculation instead of being re-derived per query. Long-standing BI infrastructure; LookML shipped
 > the idea in 2012.
 
-Finally, the consumption end. A **dashboard** is a fixed set of charts someone built in advance. A
-**notebook** is an open workspace where you write queries ad hoc. The gap between them is the whole
-self-service problem: dashboards answer only anticipated questions, notebooks require you to know
-SQL and the schema.
+That leaves the consumption end. A **dashboard** is a fixed set of charts someone built in advance,
+and a **notebook** is an open workspace where you write queries ad hoc. The gap between the two is the
+whole self-service problem, because dashboards answer only anticipated questions while notebooks
+require you to know SQL and the schema already.
 
 Here is LangChain's actual instance of that generic shape, which is the article's own diagram:
 
@@ -170,12 +244,19 @@ Here is LangChain's actual instance of that generic shape, which is the article'
 
 ## Part 2 - The naive agent, and precisely how it fails
 
-Hand a competent model warehouse credentials and the schema - table names, column names, types.
-It will write syntactically valid, executable SQL. This works well enough in a demo that many teams
-stop here.
+Hand a competent model warehouse credentials and the schema, meaning table names, column names and
+types. It will write syntactically valid, executable SQL. This works well enough in a demo that many
+teams stop here, which is why it is worth being precise about what breaks.
 
 The source names four failure modes, and they are worth separating because they fail differently
-[S11 §intro, `n1`]:
+[S11 §intro, `n1`]. The first is that the agent queries `accounts_legacy` instead of `accounts`, since
+both exist, both look plausible, and nothing in a bare schema ranks them. The second is that it
+computes ARR by a textbook formula rather than yours, because the agreed formula was never written
+down anywhere machine-readable. The third is subtler, because the agent writes correct SQL that
+answers a subtly different question, and it does that because words like "customer" and "active" carry
+local meaning the schema cannot carry. The fourth is that it picks an asset that "looks relevant but
+is not the best source" [`n6`], and it cannot do better because trust is not a property of any single
+table. The four, compressed:
 
 | Failure | What it looks like | Why it happens |
 |---|---|---|
@@ -197,16 +278,17 @@ assumption.** Compare this to a coding agent, whose bad output usually fails a t
 
 **The generalisation to carry out of this note:** the danger of a domain agent scales with how
 plausible its wrong answers look, not with how often it is wrong. That is what makes context a
-safety property here and not just a quality one.
+safety property here and not just a quality one. Which raises the question the rest of the source
+answers, namely what exactly has to be written down.
 
 ---
 
 ## Part 3 - Deriving the context layer, one residual question at a time
 
-This is the heart of the source, and it is much more useful derived than listed. The method: give the
-agent what we have so far, ask **"what can it still not know?"**, and let each answer name the next
-store. The five that fall out are exactly the five in the article's own figure [S11 §How we think
-about context, `visuals/fig3_feedback-loop.png`, `n2`].
+This is the heart of the source, and it is much more useful derived than listed. The method is simple.
+Give the agent what we have so far, ask **"what can it still not know?"**, and let each answer name
+the next store. The five that fall out are exactly the five in the article's own figure [S11 §How we
+think about context, `visuals/fig3_feedback-loop.png`, `n2`].
 
 **Start:** the agent has the schema. Table names, column names, data types.
 
@@ -214,13 +296,13 @@ about context, `visuals/fig3_feedback-loop.png`, `n2`].
 
 **Residual 1: what does this column actually mean?**
 
-The type says `account_status` is a string. Nothing says which strings, or what they signify. The
+The type says `account_status` is a string. Nothing says which strings, or what they signify. So the
 agent must guess that `'Churned'` implies a former paying customer rather than a cancelled trial.
 
 → **Store 1: table and column definitions**, living in dbt and surfaced through the warehouse.
 
-*Why it cannot be skipped:* this is the only layer that grounds vocabulary. Everything above it
-assumes the words mean something fixed.
+This is the one layer that cannot be skipped, and the reason is that it is the only layer that grounds
+vocabulary. Everything above it assumes the words already mean something fixed.
 
 ---
 
@@ -231,8 +313,8 @@ either nothing or three different ones. **ARR is not a column. It is a calculati
 tables at a particular grain with particular filters, and your company has agreed on one version of
 it.**
 
-Notice *why* the previous store cannot help: no amount of documenting columns individually produces
-an agreed formula, because **a metric is a fact about a combination of columns, and there is nowhere
+Notice *why* the previous store cannot help. No amount of documenting columns individually produces an
+agreed formula, because **a metric is a fact about a combination of columns, and there is nowhere
 in a per-column store to write a fact about a combination.**
 
 → **Store 2: the semantic model**, defining metrics and how models relate.
@@ -241,10 +323,11 @@ in a per-column store to write a fact about a combination.**
 
 **Residual 3: how does this company actually operate?**
 
-Metrics are now defined. A user asks for "pipeline for the weekly GTM report" - and GTM's weekly
-definition excludes renewals, while the sales forecast includes them. Which dashboards count as
-canonical for a metric. How to read product usage across deployment types. When a question should be
-escalated to a human [S11 §Capturing business context, `n5`].
+Metrics are now defined. A user asks for "pipeline for the weekly GTM report", and GTM's weekly
+definition excludes renewals while the sales forecast includes them. The same gap opens in several
+other places. Somebody has to say which dashboards count as canonical for a metric. Somebody has to
+say how product usage should be read across deployment types. And somebody has to say when a question
+should be escalated to a human [S11 §Capturing business context, `n5`].
 
 None of this is a fact about data. It is a fact about the **organisation**, and there is no schema
 slot for "on Mondays we exclude renewals".
@@ -262,12 +345,12 @@ so they are versioned and reviewed like code.
 **Residual 4: which of these five ARR assets is the real one?**
 
 Business processes are now documented. The agent goes looking for ARR and finds four tables and two
-dashboards that all compute something ARR-shaped - some stale, one superseded, one canonical. **Every
+dashboards that all compute something ARR-shaped, some stale, one superseded, one canonical. **Every
 one of them is individually well documented.**
 
 This is the subtle one. Documentation of each asset can never resolve it, because **canonical-ness is
-a property of the relationship between assets, not of any asset.** You need a layer whose entire job
-is ranking.
+a property of the relationship between assets, not of any asset.** So you need a layer whose entire
+job is ranking.
 
 → **Store 4: endorsements** - a trust flag marking the canonical asset [S11 §Endorsements, `n6`].
 
@@ -279,7 +362,7 @@ The agent now picks the endorsed ARR dashboard and returns a figure. The user sa
 match my spreadsheet." Answering *that* requires the joins, filters and `CASE` statements that
 produced the number.
 
-And there is a sharper reason this layer must exist: **a definition says what a column means today;
+And there is a sharper reason this layer must exist. **A definition says what a column means today;
 only the SQL says how it actually got that way, and definitions drift from code.** When prose and
 implementation disagree, the implementation is what ran.
 
@@ -307,6 +390,7 @@ That rule is portable. Swap "table" for "API endpoint" and "dashboard" for "inte
 the five residuals reappear unchanged for any agent over any proprietary domain. **Nothing in this
 decomposition is actually about data**, which is why this brain filed it under context engineering
 rather than opening a new topic ([ADR-0014](../../brain/decisions/0014-no-topic-for-organisational-context.md)).
+Derived one at a time the five feel inevitable, so it is worth watching them all fire at once.
 
 ---
 
@@ -315,6 +399,19 @@ rather than opening a new topic ([ADR-0014](../../brain/decisions/0014-no-topic-
 Watch all five fire on a single realistic question:
 
 > *"What was ARR from active customers last quarter?"*
+
+Walk it a step at a time. The agent first has to know which tables hold accounts and subscriptions,
+and the column definitions answer that. Without them it queries the legacy table. Next it needs the
+agreed ARR formula and its grain, which is the semantic model's job. Without it the agent invents a
+plausible formula, and the number comes out wrong by the monthly-to-annual conversion. Then it has to
+know that "active" excludes churned and prospect accounts, which comes from the column definition's
+default rule, and without that the answer silently includes churned revenue. It also has to know
+whether "last quarter" is fiscal or calendar, which is a workspace guide fact, and getting it wrong
+moves the answer by a month invisibly. It then has to decide which ARR asset is canonical, which is
+what the endorsement is for, or else it takes the stale dashboard. And finally, when the user objects,
+it has to explain why the number disagrees with their spreadsheet, which only the dbt repo can
+support. Without that the agent cannot explain itself and the user stops trusting it. The same trace,
+compressed:
 
 | Step | The agent needs | Which store answers | What happens without it |
 |---|---|---|---|
@@ -329,7 +426,7 @@ Watch all five fire on a single realistic question:
 exclusion happened because someone wrote a filtering rule into a column description, and the model
 read it while doing something else. **That is context doing its job invisibly, and it is also why you
 cannot tell from a correct answer whether your context layer is working.** Which becomes Part 7's
-problem.
+problem. First, though, look closely at the sentence that did the work.
 
 ---
 
@@ -353,7 +450,12 @@ that has ended. Prospect means the account has not yet become a customer. For cu
 filter to Active unless the analysis explicitly includes churned or prospective accounts.
 ```
 
-Four things happen there, and **only the first is documentation**:
+Four things happen in that paragraph, and **only the first is documentation**. It names Salesforce as
+the system of record, which is provenance. It then enumerates the allowed values and defines each in
+*business* terms rather than restating the label. Having done that, it says what the distinction
+implies for analysis, which is interpretation guidance. And then it does something different in kind,
+because it issues a default policy - *filter to Active unless told otherwise* - which is an imperative
+addressed to the agent and stored in a metadata field. The four, compressed:
 
 1. **Provenance** - names Salesforce as the system of record.
 2. **Enumeration with meaning** - the allowed values, defined in *business* terms rather than
@@ -363,12 +465,17 @@ Four things happen there, and **only the first is documentation**:
    the agent, embedded in a metadata field.**
 
 Point 4 is the move. The stated purpose is to prevent "a technically correct answer based on the
-wrong business interpretation" - Part 2's dangerous failure, defused at the only point where it can
-be defused cheaply.
+wrong business interpretation", which is Part 2's dangerous failure, defused at the only point where
+it can be defused cheaply.
 
 ### Why this is a pattern and not a tip
 
-**This brain has now seen the same move three times in three unrelated domains:**
+It would be easy to file that as a documentation tip, and the reason not to is that **this brain has
+now seen the same move three times in three unrelated domains.** A skill's description turns out to be
+its **trigger**, and gets the blame for more than half of skill failures (S5, claim 43). A tool's name
+and description turn out to be **ranking features**, so the first tuning pass on a tool catalogue is
+editorial rather than algorithmic (S10, claim 88). And a column's description turns out to be a
+**default policy** the agent applies (S11, `n3`). The three, side by side:
 
 - A **skill's** description is the **trigger**, and causes 50%+ of skill failures (S5, claim 43).
 - A **tool's** name and description are **ranking features**, so the first tuning pass is editorial
@@ -376,15 +483,16 @@ be defused cheaply.
 - A **column's** description is a **default policy** the agent applies (S11, `n3`).
 
 In each case a field written for a human to skim was quietly promoted to a control surface the model
-acts on. And in each case the incumbent vocabulary is the failure - implementer shorthand ("get",
-"manage", "REST API") in S10, "the status of the account" here - **because it was written for a
-reader who already knows the answer.**
+acts on. And in each case the incumbent vocabulary is the failure, whether that is implementer
+shorthand such as "get", "manage" and "REST API" in S10, or "the status of the account" here.
+**Both were written for a reader who already knows the answer.**
 
 > **Metadata written for humans underperforms as metadata written for models, and nobody notices
 > until an agent reads it.** This is claim 93, and it is the most robust thing in this note.
 
-**And it is measured**, which is rare here ([F1](context/01_data-agent-accuracy-and-prior-art.md)).
-Column descriptions are worth **+20% accuracy on completely uninformative column names**
+It is also, unusually for this note, **measured**
+([F1](context/01_data-agent-accuracy-and-prior-art.md)). Column descriptions are worth **+20%
+accuracy on completely uninformative column names**
 ([arXiv:2408.04691](https://arxiv.org/abs/2408.04691), T3, BIRD-Bench). On a real warehouse with
 genuinely ambiguous names, query-derived descriptions moved execution accuracy **36% to 52%**, where
 the same intervention bought only **+2pp** on a public benchmark (MotherDuck, T2).
@@ -393,24 +501,26 @@ the same intervention bought only **+2pp** on a public benchmark (MotherDuck, T2
 > whose **result set** matches the gold query's. Measures the answer, not the phrasing.
 
 **The eight-fold gap between those two numbers is itself a lesson.** Benchmark schemas have distinct,
-clean column names; real warehouses have `acct_st`, `acct_status` and `account_state` side by side.
-**Documentation pays where names are ambiguous, which is where every real company lives and no public
-benchmark does** (claim 94). A context intervention that looks marginal on a benchmark may be
-decisive in your system, and neither number transfers.
+clean column names, whereas real warehouses have `acct_st`, `acct_status` and `account_state` sitting
+side by side. **Documentation pays where names are ambiguous, which is where every real company lives
+and no public benchmark does** (claim 94). In other words, a context intervention that looks marginal
+on a benchmark may be decisive in your system, and neither number transfers. That is the design
+settled. What remains is everything that goes wrong once it is running.
 
 ---
 
 ## Part 6 - The second-order problems
 
 You now have a design. Everything below is what goes wrong once it is running, which is the part
-that separates a demo from a system.
+that separates a demo from a system. Start with the question that determines whether it can exist at
+all.
 
 ### Who writes all this, and forever?
 
 Someone has to sit with GTM and find out what they mean by pipeline. That work has a name and a
-45-year-old diagnosis ([F5](context/01_data-agent-accuracy-and-prior-art.md)): it is **knowledge
+45-year-old diagnosis ([F5](context/01_data-agent-accuracy-and-prior-art.md)). It is **knowledge
 engineering**, and the constraint is Feigenbaum's **knowledge acquisition bottleneck** (1977). Expert
-systems were limited not by inference but by the human labour of eliciting and encoding expertise -
+systems were limited not by inference but by the human labour of eliciting and encoding expertise, in
 "a very painstaking way that reminds one of cottage industries".
 
 > 💡 **Knowledge acquisition bottleneck** - the limiting factor in a knowledge-based system is the
@@ -420,9 +530,10 @@ systems were limited not by inference but by the human labour of eliciting and e
 **What changed since 1977 is the target formalism: English prose instead of production rules, which
 collapses the *encoding* cost. The *elicitation* cost has not moved at all.** That is precisely why
 this stack costs three permanent people rather than one project, and it is the second independent
-historical precedent for claim 72 (the first being Bush's Memex, 1945). **Two separate literatures,
+historical precedent for claim 72, the first being Bush's Memex in 1945. **Two separate literatures,
 1945 and 1977, reached the same conclusion, and S11 is what it looks like when someone pays the
-bill.**
+bill.** Paying it buys you a context layer, which immediately raises the question of what stops that
+layer degrading.
 
 ### What stops the trust signal becoming noise?
 
@@ -434,15 +545,16 @@ memorising [S11 §Endorsements, `n6`]:
 That is a general property of trust signals, not a data detail. **A signal carries information only
 in proportion to what it excludes**, which is why a code-owners file, a "verified" badge and a
 `@deprecated` annotation all decay the moment everyone can apply them. So endorsement gets a
-**writer restriction**: only the data team may set it, and endorsed assets need review before changes
-ship.
+**writer restriction**, meaning only the data team may set it, and endorsed assets need review before
+changes ship. The transferable form of that is short. **If you add a trust flag to any agent-facing
+store, decide who may write it before you decide what it means.**
 
-**If you add a trust flag to any agent-facing store, decide who may write it before you decide what
-it means.**
-
-**Prior art makes this stronger, and improves on it** ([F4](context/01_data-agent-accuracy-and-prior-art.md)).
-Microsoft's Power BI has shipped endorsement for years, with attribution and search-priority effects,
-and **it has two tiers where this source has one**:
+Prior art makes the point stronger, and it also improves on the answer
+([F4](context/01_data-agent-accuracy-and-prior-art.md)). Microsoft's Power BI has shipped endorsement
+for years, with attribution and search-priority effects, and **it has two tiers where this source has
+one**. The lower tier, Promotion, may be applied by any content owner or by anyone with workspace
+write access. The higher tier, Certification, may be applied only by an admin-defined reviewer group,
+and only if an admin has enabled the feature at all. Side by side:
 
 | Tier | Who may apply it |
 |---|---|
@@ -454,12 +566,17 @@ absorbs the volume of "this is good, use it" so the scarce tier stays scarce wit
 gatekeepers a bottleneck.** LangChain has re-derived Certification and not yet re-derived Promotion.
 That a hyperscaler's governance feature and a three-person data team arrived at the same primitive
 independently, years apart, is better evidence that trust signals are structurally necessary than
-either instance alone.
+either instance alone. Scarcity keeps the signal meaningful, but something else has to keep the
+content true.
 
 ### What keeps it current?
 
-The demand signal is the agent's own conversations, with a triage rule mapping symptom to layer
-[S11 §How we improve the system, `n7`]:
+The demand signal is the agent's own conversations, and the article turns that into a triage rule
+mapping symptom to layer [S11 §How we improve the system, `n7`]. When people keep asking similar
+questions, the fix is to build a dashboard. When the agent repeatedly struggles with a metric, the
+semantic model needs clarifying. When questions need internal business context, someone writes a
+workspace guide. And when the agent reaches for the wrong source, the fix is in the endorsements or
+the dbt docs. As a lookup:
 
 | Symptom | Fix |
 |---|---|
@@ -468,13 +585,15 @@ The demand signal is the agent's own conversations, with a triage rule mapping s
 | Questions need internal business context | Write a workspace guide |
 | Agent uses the wrong source | Adjust endorsements or dbt docs |
 
-**And the first draft can be machine-written.** MotherDuck mined descriptions from query history -
-tracking how often an identifier appears, in which clauses, alongside which others - for **~$0.50 per
+That still sounds like unbounded human work, which is where external evidence helps, because **the
+first draft can be machine-written.** MotherDuck mined descriptions from query history, tracking how
+often an identifier appears, in which clauses, and alongside which others, for **~$0.50 per
 warehouse**, and that is where the +16pp of Part 5 came from
 ([F2](context/01_data-agent-accuracy-and-prior-art.md)). A separate study found "Common Queries" the
 highest-yield metadata component of all. **Two unrelated teams found usage to be the best signal for
-what to document.** Only the genuinely ambiguous cases still need the expert - which is exactly where
-the same paper found LLM generation falls down.
+what to document.** Only the genuinely ambiguous cases still need the expert, which is exactly where
+the same paper found LLM generation falls down. Put the demand signal, the stores and the humans on
+one picture and the shape of the whole system becomes visible.
 
 ### The loop, and the human the diagram forgets
 
@@ -500,42 +619,45 @@ flowchart LR
     style A fill:#2a4a2a,stroke:#93c47d,color:#fff
 ```
 
-**Orientation.** Read it clockwise from the blue box. Blue is the context layer - the five prose
-stores, no code. Green is the running agent. The **red diamond is a human**, and it is the only human
-in the picture. Context feeds the agent; the agent's behaviour is observed; the observations reach a
-person; that person writes back into the context layer. Users receive answers but are not part of the
-loop that improves it.
+Read it clockwise from the blue box. Blue is the context layer, which is the five prose stores and no
+code at all. Green is the running agent. The red diamond is a human, and it is the only human in the
+picture. Context feeds the agent. The agent's behaviour is observed. Those observations reach a
+person, and that person writes back into the context layer. Users do receive answers, but notice where
+they sit, which is outside the cycle that improves anything. **The crux is that the output of a
+working data-agent loop is not answers, it is context, and the only thing that closes the loop is a
+human writing prose.**
 
-**The crux: the output of a working data-agent loop is not answers, it is context - and the only
-thing that closes the loop is a human writing prose.**
-
-**Why it is shaped this way.** Three choices carry the design. First, the loop terminates in the
+Three choices give it that shape, and each is worth taking in turn. First, the loop terminates in the
 *context* box rather than at the user, which is what converts the data team's job from a queue of
-requests into maintenance of a shared artifact (`n8`) - **a queue never compounds, an artifact does**,
-and that single property is the whole return on the investment. Second, observability sits between
-the agent and the human rather than beside it: without it the team is guessing which of five stores to
+requests into maintenance of a shared artifact (`n8`). A queue never compounds and an artifact does,
+and that single property is the whole return on the investment. Second, observability sits between the
+agent and the human rather than beside them. Without it the team is guessing which of five stores to
 improve, and the triage table above is only executable because the conversations are logged (`n7`).
-Third, and most importantly, **the red diamond is drawn because the source's own architecture diagram
-omits it.** In `fig3` the feedback arrow runs from usage trends straight back into dbt with no review
-step, and no human appears anywhere (`d2`) - while the prose insists that only the data team may
-endorse and that endorsed assets need review before changes go live. Remove that diamond and you get
-a system that rewrites its own trust signals from usage, a self-reinforcing loop with no ground
-truth: **the agent's most-used source becomes its most-endorsed source becomes its most-used source.**
-The one control that makes this design safe is the one the diagram leaves out.
+Finally, and this is the choice that matters most, the red diamond is drawn here because the source's
+own architecture diagram omits it. In `fig3` the feedback arrow runs from usage trends straight back
+into dbt with no review step, and no human appears anywhere (`d2`), while the prose insists that only
+the data team may endorse and that endorsed assets need review before changes go live.
 
-**Provenance:** synthesized from `n2`, `n7`, `n8`, `d2`. The red diamond in particular is this brain's
-correction of `fig3`, not a shape the source drew.
+Suppose you removed that diamond. You would get a system that rewrites its own trust signals from
+usage, which is a self-reinforcing loop with no ground truth. The agent's most-used source becomes its
+most-endorsed source becomes its most-used source. In short, **the one control that makes this design
+safe is the one the diagram leaves out.**
+
+This diagram is synthesized from `n2`, `n7`, `n8` and `d2`, and the red diamond in particular is this
+brain's correction of `fig3` rather than a shape the source drew. Having noticed that the human is
+missing from the picture, it is worth asking how firmly that human is attached to the system at all.
 
 ### The gate that is a convention rather than a constraint
 
-Related, and worth noticing as a design smell you will meet elsewhere. Users are told that "agent
-responses should be treated with judgment", that the data team "should always be looped in when
-questions need validation", with reminders shared in Slack. One listed workspace-guide topic is
-"**when a question should be routed to the data team for validation**" - so **the routing rule is
-written for the agent to relay, not enforced by the system** (`n12`).
+The answer is a design smell you will meet elsewhere. Users are told that "agent responses should be
+treated with judgment", and that the data team "should always be looped in when questions need
+validation", with reminders shared in Slack. One listed workspace-guide topic is "**when a question
+should be routed to the data team for validation**", so **the routing rule is written for the agent to
+relay, not enforced by the system** (`n12`).
 
 That works at 290 people with a visible data team on Slack. **It is not obvious it survives 3,000**,
-and the failure would be silent: nobody ever sees the escalation that did not happen.
+and the failure would be silent, because nobody ever sees the escalation that did not happen. Silent
+failure is the theme of the next part too, and it is where the evidence gets thin.
 
 ---
 
@@ -551,49 +673,53 @@ You would run evals. **This stack has none, and the authors say so** [S11 §Eval
 
 That last sentence is the article conceding S5's thesis unprompted. **S5's title is literally "Don't
 Ship Skills Without Evals"** (claim 46: an instruction artifact without an eval is an unfalsifiable
-change) - and workspace guides *are* skills, by the author's own description (`n5`). This stack
+change), and workspace guides *are* skills, by the author's own description (`n5`). So this stack
 shipped five layers of instruction artifacts to an entire company with no eval on any of them, and it
 appears to be working. **Both things are true at once, and the honest reading is that nobody knows
 which layer is load-bearing.**
 
-**What is measured is adoption**, and it is worth listing so you see the shape (`n9`): ~2,200
-conversations in 30 days, from roughly a third of the company, 23 per user per month, 100% off the old
-BI tool in six weeks. Internally consistent (2,200 / 23 gives ~96 users, matching a third of ~290
-people).
+What is measured instead is adoption, and the shape of those numbers is worth seeing (`n9`). There
+were roughly 2,200 conversations in 30 days, from about a third of the company, at 23 per user per
+month, and the company was fully off the old BI tool within six weeks. The figures are internally
+consistent, since 2,200 divided by 23 gives about 96 users, which matches a third of roughly 290
+people.
 
 **Two cautions and then the real one.**
 
-The **40x** should never be quoted bare (`d3`). Its numerator is agent *conversations*; its
-denominator is the request volume a three-person team "could field directly" - an estimate, never
-measured, which back-solves to about 55 requests a month. **A conversation is not a request.** Four
-follow-ups are not four answered questions.
+The **40x** should never be quoted bare (`d3`). Its numerator is agent *conversations*, while its
+denominator is the request volume a three-person team "could field directly", an estimate that was
+never measured and that back-solves to about 55 requests a month. **A conversation is not a request.**
+Four follow-ups are not four answered questions.
 
-The real one is `d4`: **every reported figure measures adoption while the thesis is trust.** The
-article argues that without context "the answers are harder to trust" and that "the reliability of a
-data agent comes from the context" - and reliability is the one property never measured.
+The second caution is smaller but points the same way, because "100% migration in six weeks" measures
+that people stopped opening the old tool and nothing about whether the answers they now get are right.
+Which is the real one, `d4`. **Every reported figure measures adoption while the thesis is trust.**
+The article argues that without context "the answers are harder to trust" and that "the reliability of
+a data agent comes from the context", and reliability is the one property never measured.
 
 > **Generalise this, because you will see it constantly** (claim 100): **agent throughput is cheap to
 > count and agent correctness is not, so reported agent ROI is composed almost entirely of the
 > measurable half.** Not dishonesty - a structural bias in what instrumentation makes easy. When a
 > deployment reports only volume, read the missing correctness number as expensive, not as good.
 
-**How wrong could it be?** The task has a public benchmark ([F3](context/01_data-agent-accuracy-and-prior-art.md)).
-**Spider 2.0** is 632 enterprise text-to-SQL problems over BigQuery and Snowflake databases with
-1,000+ columns - the same warehouse class. The best model scored **17.0%** at publication, against
-91.2% for the same model class on the older Spider 1.0. Public leaderboard entries have since climbed
-steeply, but **the ordering is the signal**: the **dbt-based setting, the closest analogue to this
-stack, is the hardest, at 65.6%** among tuned, purpose-built commercial systems.
+**How wrong could it be?** The task does have a public benchmark
+([F3](context/01_data-agent-accuracy-and-prior-art.md)). **Spider 2.0** is 632 enterprise text-to-SQL
+problems over BigQuery and Snowflake databases with 1,000+ columns, which is the same warehouse class.
+The best model scored **17.0%** at publication, against 91.2% for the same model class on the older
+Spider 1.0. Public leaderboard entries have since climbed steeply, but **the ordering is the signal**,
+and the **dbt-based setting, the closest analogue to this stack, is the hardest, at 65.6%** among
+tuned, purpose-built commercial systems.
 
 That does not say LangChain's agent is inaccurate. **It says the task has a real, currently binding
 error rate, worst in exactly this configuration, and that 40x volume at an unknown accuracy is an open
 risk rather than a rhetorical caveat.**
 
-**The eval you would actually build first** is the one nobody has built
-([F6](context/01_data-agent-accuracy-and-prior-art.md)): **ablate the endorsement flags, hold
+If you were going to fix that with a single experiment, the obvious candidate is the one nobody has
+built ([F6](context/01_data-agent-accuracy-and-prior-art.md)). **Ablate the endorsement flags, hold
 everything else fixed, and measure whether source selection degrades.** Endorsement-style signals are
-widely shipped and independently re-derived, and every documented effect is on **human** discovery -
-badges, sort order, search priority. **Whether a trust flag changes a model's choice is assumed by
-everyone and demonstrated by no one.**
+widely shipped and independently re-derived, and yet every documented effect is on **human** discovery,
+whether that is badges, sort order or search priority. **Whether a trust flag changes a model's choice
+is assumed by everyone and demonstrated by no one.**
 
 ---
 
@@ -608,25 +734,26 @@ Sequencing, in the order the evidence supports:
 2. **Cover the head, not the tail.** "Start with the questions people ask most often... if you can
    cover roughly 80% of the questions people ask" (`n11`).
 3. **Generate the tail's first draft from the query log** rather than deferring it entirely
-   ([F2](context/01_data-agent-accuracy-and-prior-art.md)) - ~$0.50 per warehouse, and reserve the
-   humans for genuinely ambiguous columns.
+   ([F2](context/01_data-agent-accuracy-and-prior-art.md)). It costs about $0.50 per warehouse, and it
+   reserves the humans for genuinely ambiguous columns.
 4. **Add trust flags only once you actually have duplicate assets**, and decide the writer restriction
    in the same breath. Consider two tiers rather than one.
-5. **Do not add a store you cannot name a question for.** The rule from Part 3, used as a stopping
-   condition. One study found metadata gains flattening past three or four components; this stack
-   runs five, and whether the fifth pays for its maintenance is unknown.
+5. **Do not add a store you cannot name a question for.** That is the rule from Part 3, used here as a
+   stopping condition. One study found metadata gains flattening past three or four components, and
+   this stack runs five, so whether the fifth pays for its maintenance is unknown.
 6. **Instrument before you optimise.** The triage table is only executable because conversations are
-   logged - the same "log first" precondition S1 puts at the base of all evals (claim 1).
+   logged, which is the same "log first" precondition S1 puts at the base of all evals (claim 1).
+
+Step 2 deserves a second look, because a previous source in this brain says the opposite.
 
 ### The head/tail rule, and why S10 says the opposite
 
-Step 2 directly contradicts S10, which says **retrieve the long tail, pin the head** (claim 90). Both
-are right, and reconciling them gives you a rule worth more than either:
-
-- **S10's binding cost is tokens.** Indexing the tail is nearly free once the index exists, so the
-  tail gets retrieved and the head gets pinned - pinning protects what must never be missed.
-- **S11's binding cost is human authorship.** Every tail item is a definition someone writes, reviews
-  and maintains forever, so the tail gets deferred.
+S10's prescription is to **retrieve the long tail and pin the head** (claim 90), which is the reverse
+of covering the head and deferring the tail. Both are right, and reconciling them gives you a rule
+worth more than either. S10's binding cost is tokens, and indexing the tail is nearly free once the
+index exists, so the tail gets retrieved while the head gets pinned, because pinning protects what
+must never be missed. S11's binding cost is human authorship instead. Every tail item there is a
+definition someone writes, reviews and maintains forever, so the tail gets deferred.
 
 > **Same distribution, opposite prescription, because the scarce resource differs. The question is
 > never "head or tail" - it is "what runs out first, context window or people".**
@@ -646,22 +773,21 @@ Read this before citing anything above.
 | **Figures vs prose** | The figures **outrun** the prose twice: `d1` (no agent in the architecture diagram) and `d2` (no human in the loop diagram). Both findings come from the visual leg and exist nowhere in the text |
 
 **What rescues it** is that the deep-research pass found the mechanism measured by people with no
-stake in it: a T1 benchmark, a T1 product doc, a T3 preprint, a T2 first-party study and a 1977
+stake in it, namely a T1 benchmark, a T1 product doc, a T3 preprint, a T2 first-party study and a 1977
 result. **Claims 93 and 95 are the first in this brain to reach `corroborated` on independent
 external evidence rather than two internal legs.**
 
-**Good for:** the five-store derivation as a checklist for any agent over a proprietary domain; the
-weak-vs-strong definition as the clearest illustration here of metadata becoming a control surface;
-the endorsement guardrail as a general rule about trust signals; the triage table as an operational
-routine.
-
-**Not good for:** deciding whether any of it works.
+So the note is good for several things. The five-store derivation works as a checklist for any agent
+over a proprietary domain. The weak-versus-strong definition is the clearest illustration here of
+metadata becoming a control surface. The endorsement guardrail generalises into a rule about trust
+signals of any kind. And the triage table is a usable operational routine. It is not good for deciding
+whether any of it works.
 
 **One small observation.** MCP appears twice in this article, both times as an unremarked bullet in a
-list of ways to reach the agent, beside Slack and the CLI. No mechanism, no version, no design
-consequence. Per [ADR-0012](../../brain/decisions/0012-a-mention-is-not-a-source.md) that is a
+list of ways to reach the agent, beside Slack and the CLI. There is no mechanism, no version and no
+design consequence. Per [ADR-0012](../../brain/decisions/0012-a-mention-is-not-a-source.md) that is a
 mention, not a source, and it does not advance `brain/topics/mcp.md`. But the *manner* is mildly
-interesting: **MCP has become boring**, listed beside Slack by someone with no interest in the
+interesting, because **MCP has become boring**, listed beside Slack by someone with no interest in the
 protocol.
 
 ## Open questions

@@ -28,6 +28,65 @@ exists (`d1`).
 
 ## The 1-minute version
 
+This note covers a design post written by the team behind the Microsoft Agent Framework, and what is
+worth taking from it is a factoring rather than a product. The post pulls the word "agent" apart into
+three separable concerns and then draws them, and the drawing turns out to carry more of the argument
+than the prose does (`n1`, `n9`). Everything below hangs on the one confusion that factoring exists to
+dissolve, so it is worth naming that confusion before anything else.
+
+The problem is that "agent" names three different things at the same time. It names an execution
+cycle, the loop that takes input, reasons over context, calls a tool and continues. It names an
+orchestration topology, the arrangement of steps or of several agents working together. And it names a
+pile of runtime capabilities surrounding both, the tools, context, memory and controls an agent is
+given. Because one word covers all three, arguments about agent design are usually people talking
+about different layers without either side noticing.
+
+At first glance that sounds like a vocabulary complaint rather than a design problem, and the reason
+it is more than that is arrangement. Naming the three parts is the easy half. The hard half is knowing
+which of them you are allowed to decline, and a name says nothing about that. Two engineers can agree
+perfectly on all three words and still disagree about whether adopting orchestration commits them to a
+whole runtime, which is the question that actually decides whether a framework is adoptable at all.
+
+The obvious way to answer that question is the one most SDK diagrams reach for, which is to draw the
+three parts as a three-tier stack. Suppose you did. A stack asserts containment, so each layer rests
+on the one beneath it and cannot be had without it. Adopting workflows would then drag the harness in
+behind them, and the framework becomes all-or-nothing at precisely the moment a reader is deciding how
+much of it to buy. Worse, the drawing hides which single layer is genuinely mandatory, and that is the
+one fact a newcomer most needs to know.
+
+The post's answer is to separate the three concerns and then refuse the stack. The agent loop is the
+execution cycle over models, conversations, tools and state. Workflows are structured orchestration
+for multi-step or multi-agent processes. The harness is the reusable runtime capability layer around
+the agent (`n1`). In the summary figure, `Workflows` and `Harness` sit side by side **above** `Agent
+Loop` inside one container, and the two peers **do not touch**. In other words there are two optional
+surrounds over a single mandatory base, and each surround can be declined without the other (`n9`).
+
+Working out what each surround is actually for is where the post pays. Workflows exist because many
+real processes, support triage or bug-to-PR or research-with-review, need predictable steps rather
+than more autonomy (`n5`), and the figure names five patterns for them, Sequential, Handoff,
+Author/Critic, Magentic and Custom (`n6`). The harness is enumerated as four named columns, Common
+Tools, Context, Planning and Middleware, sitting above a row of preset harnesses by task archetype
+(`n7`), and that inventory is the only one of its kind anywhere in this brain. The justification for
+the whole layering is a single sentence: *"a strong model with poor tools, weak context and no
+controls will still produce a poor result"* (`n8`).
+
+What the post costs you is subtraction, and that omission is structural rather than careless. It lists
+what a harness may contain and never once suggests taking something out, which is what a catalog is
+for, and an SDK vendor has no reason to write the other half. Claim 31 supplies it from outside,
+holding that every harness component encodes an assumption about what the model cannot do alone and
+that those assumptions expire. There is a second cost, and it is sharper. The post contradicts claim
+12 head-on, because S2 says own all four parts of your loop while this says let the SDK own it, and it
+never acknowledges that a serious opposing position exists (`d1`).
+
+That leaves how far any of it may be trusted, and the honest answer is narrower than the post's
+confidence suggests. This is a T2 vendor design post about its own SDK, with nothing measured, nothing
+compared and no baseline of any kind. Four of the harness items appear only in a figure and in no
+prose at all, and the most architecturally interesting claim in the source, that an agent-provider
+slot can accept a whole third-party agent, rests on a single diagram tile (`n4`). Read it for
+vocabulary and taxonomy, and never for efficacy.
+
+The same argument, compressed for reference rather than for reading:
+
 | | |
 |---|---|
 | **The problem** | "Agent" names three different things at once - an execution cycle, an orchestration topology, and a pile of runtime capabilities - so arguments about agent design are usually people talking about different layers. |
@@ -79,36 +138,47 @@ flowchart TB
     style D fill:#fbf1dc
 ```
 
-**How to read it:** top to bottom is the order of the argument, in four movements. The **blue block is
-the contribution** - a taxonomy, and specifically the claim that its three parts are *independently
-declinable*. The **amber block is what you must supply yourself**, because this source has a
-structural reason not to.
+The diagram runs top to bottom in the order of the argument, gathered into four movements, and every
+box below a movement is a numbered section further down this note. Blue marks the block carrying the
+contribution, which is the taxonomy and specifically the claim that its three parts are independently
+declinable. Amber marks the block you have to supply yourself, because this source has a structural
+reason not to supply it for you. **The crux is that this is a vocabulary rather than a finding, and
+the vocabulary is worth having precisely because the arguments it settles are ones people currently
+have by accident.**
 
-**The crux: this is a vocabulary, not a finding - and the vocabulary is worth having precisely because
-the arguments it settles are ones people currently have by accident.**
+Movement A is deliberately short, because the problem it describes is definitional rather than
+technical, and a reader who already hears three separate questions inside the word "agent" can move
+straight past it. Movement B is the payload, and it is the one stretch where the figure carries more
+of the argument than the prose does. If you skim it you will still learn the three names, but you will
+miss the claim that the arrangement is making, which is the part that transfers to reading any other
+SDK diagram.
 
-**Why it is grouped this way:** A is short because the problem is definitional rather than technical.
-B is the payload and the figure carries more of it than the prose does. C is a tour, and D exists
-because reading a vendor catalog without a subtraction discipline is how harnesses get bloated - the
-missing half has to come from elsewhere in this brain.
+Movement C is a tour rather than a derivation, and it is where the concrete inventory lives. Read it
+for the names, since names are what this source is genuinely good for. Movement D then stops
+describing the source and starts judging it, and it exists because reading a vendor catalog without a
+subtraction discipline is how harnesses get bloated. Both of its sections import their argument from
+elsewhere in this brain, which is exactly the point being made about the missing half.
 
 *Synthesized roadmap of this note - not from the source.*
 
 ## 1. Three different things wearing one word
 
-Most disagreements about "agent design" are people arguing about different layers without noticing.
-The article's contribution is to name them apart (`n1`, §intro):
+Most disagreements about "agent design" turn out to be people arguing about different layers without
+noticing that they are. The article's contribution is to name those layers apart, and the three names
+are worth stating plainly before anything is done with them (`n1`, §intro). The first is the **agent
+loop**, the execution cycle over models, conversations, tools and state. The second is **workflows**,
+structured orchestration for multi-step or multi-agent processes. The third is the **harness**, the
+reusable runtime capabilities that surround the agent.
 
-- the **agent loop** - the execution cycle over models, conversations, tools and state;
-- **workflows** - structured orchestration for multi-step or multi-agent processes;
-- the **harness** - the reusable runtime capabilities around the agent.
+At first glance that is a taxonomy rather than a finding, and it is worth being clear about which one
+you are getting. **But a taxonomy that dissolves a recurring confusion is genuinely useful**, and this
+one does. "Should agents be autonomous?" is a question about the *loop*. "How do I make this
+repeatable?" is a question about *workflows*. "Why is my agent bad despite a good model?" is a
+question about the *harness*. Three questions that sounded like one now have three separate answers,
+and each answer lives somewhere different.
 
-That is a taxonomy, not a finding, and it is worth being clear about which you are getting. **But a
-taxonomy that dissolves a recurring confusion is genuinely useful**, and this one does: "should agents
-be autonomous?" is a question about the *loop*, "how do I make this repeatable?" is about *workflows*,
-and "why is my agent bad despite a good model?" is about the *harness*.
-
-The interesting part is not the three names. It is how they are arranged.
+The interesting part is not the three names, though, since a list of three concerns is the sort of
+thing any vendor could have written. It is how they are arranged.
 
 ## 2. The shape is the argument: not a stack
 
@@ -120,10 +190,12 @@ The interesting part is not the three names. It is how they are arranged.
 - Corroborated by: §Why this matters states the choice explicitly - *"Not every agent needs a complex
   workflow. Not every workflow needs a highly autonomous agent."*
 
-**Spend a moment on why the drawing matters, because this is the whole payload.** A stack implies
-**containment**: if workflows sat *on* the harness, adopting orchestration would drag the entire
-runtime in with it. Drawn as **peers that do not touch**, each is **separately declinable** - you can
-take the loop alone, the loop plus a harness, or the loop plus workflows.
+Spend a moment on why the drawing matters, because this is the whole payload. To see why, consider
+what the alternative drawing would have asserted. A stack implies **containment**, so if workflows sat
+*on* the harness, adopting orchestration would drag the entire runtime in with it. Drawn instead as
+**peers that do not touch**, each surround becomes **separately declinable**. You can take the loop
+alone, the loop plus a harness, or the loop plus workflows, and nothing in the picture obliges you to
+take all three.
 
 > **That is claim 17 one level up.** S2 says *not every problem needs an agent*; S9 says *not every
 > agent needs orchestration*. Same discipline, applied to the layer above - and the fact that a
@@ -136,6 +208,9 @@ take the loop alone, the loop plus a harness, or the loop plus workflows.
 > a framework all-or-nothing. **When you next read an architecture diagram, check whether the boxes
 > touch** - it usually tells you more about what you can decline than the prose does.
 
+That accounts for the two boxes you may decline. It says nothing yet about the one you may not, and
+the figure for that box has a second argument hidden in its proportions.
+
 ## 3. The loop is drawn small, and that is deliberate
 
 ![The agent loop: a small MAF AIAgent box above a much larger substrate of models, tools, hosting and agent providers](visuals/fig_AgentLoop.png)
@@ -147,14 +222,16 @@ take the loop alone, the loop plus a harness, or the loop plus workflows.
   difficulty is everything around it - messages, tool schemas, results, errors, streaming,
   permissions, state.
 
-The article's conclusion from that observation is: **the SDK should own the structure**, so you work
-on agent behaviour instead of plumbing (`n2`). Hold that thought - section 7 is where it collides with
-something.
+The article draws a conclusion from that observation, and it is a strong one. Because the loop itself
+is trivial and everything surrounding it is not, **the SDK should own the structure**, leaving you to
+work on agent behaviour instead of plumbing (`n2`). Hold that conclusion, because section 7 is where
+it collides with something this brain already believes.
 
-⚠️ **And one tile in this figure is the most conceptually interesting thing in the source and its
-weakest evidence** (`n4`). The `Agent Providers` box has five peer tiles, and two of them are
-**`Claude Code Agent`** and **`GitHub Copilot CLI Agent`** - whole third-party agent *products* -
-sitting beside a prompt-configured first-party agent and beside **A2A, a wire protocol**.
+⚠️ One tile in this figure is at once the most conceptually interesting thing in the source and its
+weakest evidence (`n4`). The `Agent Providers` box carries five peer tiles. Two of them are
+**`Claude Code Agent`** and **`GitHub Copilot CLI Agent`**, which are whole third-party agent
+*products*, and they sit beside a prompt-configured first-party agent and beside **A2A, a wire
+protocol**.
 
 > **If that tile means what it appears to mean, the unit of composition has moved up a level**: from
 > *which model does this agent call* to *which finished agent does this system delegate to*. **But the
@@ -162,6 +239,9 @@ sitting beside a prompt-configured first-party agent and beside **A2A, a wire pr
 > elsewhere", never names Claude Code, and "interact with" is considerably weaker than a peer slot.
 > **`single-leg` on a diagram tile** - treat it as a direction of travel, not a capability. A tile in
 > a vendor architecture diagram is exactly what this kit must not read as a capability statement.
+
+So much for the mandatory base. The two optional surrounds are the rest of the source's substance, and
+the first of them answers a question the loop cannot.
 
 ## 4. Workflows: the answer to "what if I do not want autonomy?"
 
@@ -174,9 +254,11 @@ sitting beside a prompt-configured first-party agent and beside **A2A, a wire pr
   support triage, bug-to-PR, research-with-review - need **predictable steps rather than more
   autonomy** (`n5`).
 
-**The framing is the useful part**: workflows are not a lesser form of agency, they are the correct
-answer when the topology is known in advance. Notice the figures are drawn as **fixed-topology graphs**
-- boxes and arrows - rather than cycles, which is the visual statement of exactly that.
+The framing is the useful part, and it inverts what the word usually implies. **Workflows are not a
+lesser form of agency.** They are the correct answer whenever the topology is known in advance, which
+describes a large share of the processes anyone actually wants automated. Notice that the panels are
+drawn as **fixed-topology graphs**, boxes and arrows rather than cycles. That is the same statement
+made visually.
 
 > **`Author/Critic` deserves its own note, because this brain has met it twice already.** It is
 > **claim 34** (S4: a separate evaluator beats a self-critical generator, because of self-evaluation
@@ -184,6 +266,9 @@ answer when the topology is known in advance. Notice the figures are drawn as **
 > reusable SDK primitive by a third vendor.** Treat that as corroboration of the pattern's
 > **currency**, not its **efficacy**: S9 measures nothing, and S4 remains the only source here that
 > measured anything about the split.
+
+Workflows are one of the two surrounds, and the one this brain already had vocabulary for. The other
+surround is where the source supplies something nothing else here does.
 
 ## 5. The harness, enumerated - which nothing else here does
 
@@ -197,19 +282,23 @@ answer when the topology is known in advance. Notice the figures are drawn as **
 - Corroborated by: §Harnesses covers most of it in prose. ⚠️ **But it is silent on four items -
   `skills`, `todo`, `tool selection` and the presets - which are figure-only and `needs-check`.**
 
-**This is the source's most useful contribution to this brain**, because nothing else here enumerates
-a harness; every other source gestures at one. Two of the figure-only items have since become
-load-bearing elsewhere: **`skills` filed under Context beside prompts and memory** is independent
-support for a skill being *procedural memory*, and **`tool selection`** is the box S10 later built and
-measured.
+**This is the source's most useful contribution to this brain**, and the reason is scarcity rather
+than depth. Nothing else here enumerates a harness. Every other source gestures at one and moves on.
+Two of the figure-only items have since become load-bearing elsewhere. **`skills` filed under Context
+beside prompts and memory** is independent support for a skill being *procedural memory*. **`tool
+selection`** is the box S10 later built and measured.
 
-And the justification is the strongest sentence in the article, and the one place it agrees with S4
-outright (`n8`, §Harnesses):
+The justification for the inventory is the strongest sentence in the article, and the one place it
+agrees with S4 outright (`n8`, §Harnesses):
 
 > **"A strong model with poor tools, weak context and no controls will still produce a poor result."**
 
 **The figure makes the same point structurally, and it is worth noticing: the model appears in none of
-the boxes.** Every element of a harness is something the developer supplies.
+the boxes.** Every element of a harness is something the developer supplies, which is exactly why the
+sentence lands as a design constraint rather than as a platitude.
+
+An inventory tells you what may go in. It does not tell you what to take out, and that second question
+is where this source stops being useful.
 
 ## 6. What the catalog will never tell you: what to remove
 
@@ -223,10 +312,11 @@ contain and never once suggests taking something out.
 > suggest subtraction.** That is not dishonesty; it is what the genre is for. But it means the
 > inventory is only half a discipline.
 
-**Read S9's inventory as a menu of things you might need, and claim 31 as the standing instruction to
-keep re-asking which ones you still do.** S4 supplies the procedure (remove one component at a time);
-S5 supplies the instrument (ablation - run the eval with and without). **Together those three make a
-complete practice that no single one of them contains.**
+The practical reading follows from that. Treat S9's inventory as a menu of things you might need, and
+treat claim 31 as the standing instruction to keep re-asking which ones you still do. S4 supplies the
+procedure, which is to remove one component at a time. S5 supplies the instrument, which is ablation,
+running the eval with and without. **Together those three make a complete practice that no single one
+of them contains.**
 
 > **Background, supplied.** This is the difference between a **capability catalog** and a **design
 > discipline**, and the distinction shows up whenever a vendor documents a platform. A catalog
@@ -234,20 +324,34 @@ complete practice that no single one of them contains.**
 > here is how to decide. **They are not in conflict, but a catalog read as a discipline produces
 > exactly the bloat the catalog's author benefits from.**
 
+Subtraction is the half this source omits quietly. There is a second half it omits loudly, and that
+one is a direct disagreement with something this brain already holds.
+
 ## 7. The conflict it never acknowledges
 
-And the sharpest reason to read this alongside S2 rather than instead of it (`d1`).
+This is the sharpest reason to read the post alongside S2 rather than instead of it (`d1`).
+
+Start with S2, which is the 12-factor agents talk, a T4 practitioner source. Its position is that
+implementing the loop well **is the whole job**, and that the 70-80% wall teams hit comes precisely
+from having let a framework own one of its parts. The prescription follows directly, which is to own
+all four parts yourself.
+
+Now take S9, this source, a T2 vendor post. Its position is that implementing the loop is **difficult,
+repetitive plumbing**, six lines of real logic buried under messages, schemas, errors and state. The
+prescription follows just as directly, which is to let the SDK own it so that you work on agent
+behaviour instead.
+
+**Both start from a near-identical premise - the loop is six lines and the surrounding management is
+hard - and land on opposite conclusions.** The same two positions, compressed:
 
 | | S2 (12-factor agents, T4) | S9 (Agent Framework, T2) |
 |---|---|---|
 | Implementing the loop well is | **the whole job** | **difficult, repetitive plumbing** |
 | Therefore | **own all four parts** - the 70-80% wall comes from a framework owning one | **let the SDK own it**, so you work on agent behaviour |
 
-**Both start from a near-identical premise - the loop is six lines and the surrounding management is
-hard - and land on opposite conclusions.**
-
-**Kept, not resolved**, and both sides are weak in the same way: **unmeasured assertions by
-non-disinterested authors.** S2's author sells an agent framework; S9 is a product post for an SDK.
+The conflict is **kept, not resolved**, and the reason is that both sides are weak in the same way.
+Each is an unmeasured assertion by a non-disinterested author. S2's author sells an agent framework,
+and S9 is a product post for an SDK.
 
 > **They may also be answering different questions**, which is the most useful reading. S2 is about
 > **where the debuggable seam sits when quality stalls at 80%**. S9 is about **how much plumbing you
@@ -259,22 +363,23 @@ non-disinterested authors.** S2's author sells an agent framework; S9 is a produ
 
 *Labelled commentary - my analogy, not the source's. Skip it if the figure already landed.*
 
-The **agent loop** is the driver: the thing that actually makes decisions, lap after lap, and the only
-component you cannot remove and still have a race. The **harness** is the car and the pit crew -
-tyres, telemetry, fuel strategy, the radio. The **workflow** is the race plan: pit on lap 22, hold
-position until the safety car clears.
+The **agent loop** is the driver, the thing that actually makes decisions lap after lap, and the only
+component you cannot remove and still have a race. The **harness** is the car and the pit crew, the
+tyres and telemetry and fuel strategy and radio. The **workflow** is the race plan, which says pit on
+lap 22 and hold position until the safety car clears.
 
-**Why the analogy earns its place:** a superb driver in a bad car finishes nowhere, which is `n8`
-exactly. And a race plan is worth having *because* it constrains the driver - you do not want
-improvisation on the pit timing, which is `n5`.
+The analogy earns its place because it carries two of the source's claims without needing them
+restated. A superb driver in a bad car finishes nowhere, which is `n8` exactly. And a race plan is
+worth having *because* it constrains the driver, since you do not want improvisation on the pit
+timing, which is `n5`.
 
 ### Where the analogy breaks, which is the part worth keeping
 
-**A driver cannot be swapped mid-race, and an agent provider can** (`n4`). More importantly, **the car
-does not expire.** A harness component is a bet on a model limitation, and models improve underneath
-you - so the closer analogy for claim 31 would be a car that quietly becomes slower every season you
-do not re-examine it. **No motorsport metaphor carries that, which is precisely why section 6 needs an
-outside source.**
+It breaks in two places, and the second matters more than the first. **A driver cannot be swapped
+mid-race, and an agent provider can** (`n4`). More importantly, **the car does not expire.** A harness
+component is a bet on a model limitation, and models improve underneath you, so the closer analogy for
+claim 31 would be a car that quietly becomes slower every season you do not re-examine it. **No
+motorsport metaphor carries that, which is precisely why section 6 needs an outside source.**
 
 ## Diagram (mental model)
 
@@ -295,20 +400,19 @@ flowchart TB
     style C31 fill:#fbf1dc
 ```
 
-**How to read it:** green is mandatory, blue is optional, amber comes from **outside this source**.
-The dotted arrows from the optional box are deliberate - they attach to the loop without containing
-it.
+Read the colours first, because they carry the whole legend. Green is mandatory, blue is optional, and
+amber comes from **outside this source** entirely. The dotted arrows leaving the optional box are
+deliberate, since they attach to the loop without containing it. **The crux is that only one box is
+green, and the two blue ones do not touch each other.**
 
-**The crux: only one box is green, and the two blue ones do not touch each other.**
-
-**Why it is shaped this way:** the workflows and harness boxes are drawn as siblings inside one
-container rather than as layers, because that is the source's actual claim and the thing most likely
-to be lost in retelling - **a stack would mean adopting orchestration drags in the runtime**. The
-model sits *below* the loop rather than inside the harness, because `n8`'s argument is that the model
-is the one thing the developer does **not** supply. And claim 31 is drawn entering from outside with
-its provenance labelled, because **the single most important thing about this inventory is that the
-article contains no instruction to prune it** - a diagram that quietly included subtraction would be
-crediting S9 with a discipline it does not have.
+The shape follows from what is most likely to be lost in retelling. Workflows and harness are drawn as
+siblings inside one container rather than as layers, because siblings are the source's actual claim
+and **a stack would mean adopting orchestration drags in the runtime**. The model sits *below* the
+loop rather than inside the harness, because `n8`'s argument is that the model is the one thing the
+developer does **not** supply. And claim 31 enters from outside with its provenance labelled, because
+**the single most important thing about this inventory is that the article contains no instruction to
+prune it.** A diagram that quietly folded subtraction in would be crediting S9 with a discipline it
+does not have.
 
 *Synthesized from `n1`, `n7`, `n8`, `n9` + claim 31 (S4) - a redrawing of `fig_AgentFramework.png`
 with the missing discipline added and marked.*

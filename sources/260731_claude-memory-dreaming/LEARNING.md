@@ -12,17 +12,82 @@
 
 ## TL;DR
 
-The agent-platform half of the memory pair, and the independent counterpart to
-[S6](../260731_chatgpt-memory-dreaming/LEARNING.md). Same architecture, same name, different vendor:
-agents write memory **during** work, and a decoupled batch pass rewrites it **between** sessions
-(`n11`, `n14`). **The reason to split the loops is objective conflict, not throughput** - one loop
-asked to both finish the task and curate memory trades them off untunably (`n12`). Memory is
+This is the agent-platform half of the memory pair, and the independent counterpart to
+[S6](../260731_chatgpt-memory-dreaming/LEARNING.md). Same architecture, same name, different vendor.
+Agents write memory **during** work, and a decoupled batch pass rewrites it **between** sessions
+(`n11`, `n14`). **The reason to split the loops is objective conflict, not throughput**, because one
+loop asked to both finish the task and curate memory trades them off untunably (`n12`). Memory is
 deliberately a **file system** the model drives with `bash` and `grep`, on the same bet that produced
-skills (`n2`, `n3`). And it adds everything a consumer assistant never needs: scoped stores,
-optimistic concurrency via a `content_sha256` precondition, per-session attribution (`n5`-`n7`).
-A live demo shows agents leaving **instructions** for their successors, not just facts (`n20`).
+skills (`n2`, `n3`). To that it adds everything a consumer assistant never needs, namely scoped
+stores, optimistic concurrency via a `content_sha256` precondition, and per-session attribution
+(`n5`-`n7`). A live demo shows agents leaving **instructions** for their successors, not just facts
+(`n20`).
 
 ## The 1-minute version
+
+This article covers a vendor conference talk about giving many agents one shared memory, and about
+the second process the vendor runs to stop that memory rotting. It is the agent-platform half of a
+pair of talks, and it is worth reading beside its counterpart because two vendors arrived at the same
+shape independently. A reader arriving expecting a talk about recall will find something else, since
+the problem it works on is not the one the word "memory" usually names.
+
+The problem is not forgetting. It is that **every agent learns alone**. At multi-agent scale the
+platform's own operators watched agents repeat each other's mistakes, because each agent learned from
+its mistakes independently, and the store they shared drifted into duplication and fragmentation
+(`n10`). Notice what is strange about that failure. No individual write was wrong.
+
+The reason it is hard is that the damage is invisible from inside any one of its causes. Each agent's
+write is locally reasonable, and the store degrades anyway, because nothing is responsible for the
+store as a whole. The talk's own phrase is that memory was updated in a locally optimal way that was
+not globally optimal (`n10`). A failure with no single culprit cannot be fixed by improving any
+single culprit, which is what separates this from an ordinary quality problem. At first glance it
+still looks like something you could prompt your way out of.
+
+Suppose instead you try exactly that, and simply tell the agent to curate more carefully as it works.
+That collapses for the sharpest reason in the talk. An agent asked to finish its task **and** to
+maintain memory quality is one loop holding two objectives, and it will trade them off silently under
+whatever pressure the task is applying (`n12`). You cannot observe the trade, because the agent never
+reports having made it. You cannot tune it, because there is no dial to turn. A second failure sits
+beside the first and is easier to miss, since patterns that only appear *across* sessions are
+invisible from inside any single session by construction. Both failures point at the same missing
+thing, which is a vantage point outside the work.
+
+The idea, then, is to run **two clocks**. Memory does real-time writes while agents are working, and
+**dreaming** is a periodic batch pass that runs out of band, reads session transcripts, and rewrites
+the store between sessions (`n11`, `n14`). The second process completes no user task, which is
+precisely what makes it trustworthy as a curator, because it has exactly one objective and nothing to
+trade that objective against.
+
+How it works starts with a deliberately plain choice about the thing being curated. Memory is modelled
+as a file system the model drives with `bash` and `grep` rather than through a bespoke memory API, on
+the stated bet that the right move is to get out of the model's way, which is the same bet that
+produced skills (`n2`, `n3`). Sharing that file system between many agents then demands three things a
+single-user store never needs. It needs **scopes**, so that a slow-changing org-wide store can be
+read-only while a team store stays read-write. It needs **optimistic concurrency**, supplied here as a
+`content_sha256` write precondition so that a conflict fails loudly instead of clobbering silently. And
+it needs **per-session attribution**, so that any memory can be traced to the session that wrote it
+(`n5`-`n7`). A live demo shows the whole arrangement running, and it carries one detail the narration
+never states, which is that agents leave **instructions** for their successors and not only facts
+(`n20`).
+
+What it costs comes in two parts, one budgeted and one not. The budgeted cost is test-time compute,
+paid once by a process that finishes no user task and repaid to every downstream agent that reads the
+result (`n13`, `single-leg`). The unbudgeted cost is an attack surface the source never raises at all,
+because a shared store that carries imperatives is a coordination channel rather than a knowledge
+base, and the talk supplies attribution and version history as forensics while supplying no admission
+control. Sitting between the two is a gap in the design itself. Dreaming's output is described as "a
+verified, better organized snapshot", and nothing in the talk or the demo says what verification
+means, who performs it, or what happens when it fails (`d4`). For a system whose entire premise is
+that unsupervised writes drift, that is the load-bearing step.
+
+How far to trust it turns on splitting the source in two. This is a **T2 vendor talk about the
+vendor's own product, at the vendor's own conference**, and every outcome number in it is a customer
+testimonial with no baseline, no n and no eval set. Read it for the architecture and never for the
+figures. The genuinely strong evidence is the live demo, because a running console showing a version
+strip, a session ID and a `content_sha256` precondition is a photograph of the artifact rather than a
+restatement of the pitch.
+
+The same argument, compressed for reference rather than for reading:
 
 | | |
 |---|---|
@@ -78,25 +143,38 @@ flowchart TB
     style D fill:#fbf1dc
 ```
 
-**How to read it:** top to bottom is the order of the argument, in four movements. The **blue block is
-the transferable idea** - and unusually, it is the *diagnosis* rather than the mechanism: objective
-conflict generalises far past memory. The **amber block is where the talk stops short**, and section 8
-is the hole worth carrying away, because the whole design rests on it.
+The diagram runs top to bottom in the order of the argument, in four movements, and every box is a
+numbered section below. Two of the movements are shaded. Blue marks the transferable idea, and amber
+marks the place where the talk stops short. **The crux is that the blue movement, unusually, carries a
+*diagnosis* rather than a mechanism - objective conflict generalises far past memory - while the amber
+movement holds the hole the whole design rests on.**
 
-**The crux: a loop asked to optimise two things trades them off in a way you can neither observe nor
-tune - so curation gets its own loop, not better instructions.**
+Movement A does no design work at all, and that is deliberate. Its only job is to move the reader off
+the word "memory" and onto coordination, because the storage decisions that follow look arbitrary
+until you accept that the problem is many agents failing to learn from each other rather than one
+agent failing to recall. A reader who already holds that framing can skim it, at the cost of losing
+the reason the rest is shaped the way it is.
 
-**Why it is grouped this way:** A before B because the storage design only makes sense once you accept
-that the problem is coordination across agents rather than recall within one. C is the payload. D is
-separated because it contains both the most ambitious claim in the talk and its largest gap, and they
-should be read together.
+Movement B is where the design becomes concrete, and it is written as a derivation. Section 3 fixes
+what memory *is*, which immediately forces section 4 to ask what breaks the moment a second writer
+exists. Reading those two out of order will still tell you what the components are, but it hides which
+of them are load-bearing, and the answer is not the one a reader guesses.
+
+Movement C is the payload. It introduces the second clock and then, in section 6, shows it running,
+which matters more than usual here because the demo is the only evidence in the source that is not the
+vendor describing itself. If you read one movement, read this one.
+
+Movement D is separated from the rest for a reason worth stating, since it holds both the most
+ambitious claim in the talk and its largest gap, and the two only make sense together. **Section 8 is
+the part to carry away**, because the design's premise is that unsupervised writes drift, and the step
+that is supposed to catch the drift is the one step with no mechanism behind it.
 
 *Synthesized roadmap of this note - not from the source.*
 
 ## 1. The problem is not forgetting - it is that every agent learns alone
 
-Memory talk usually starts with recall. This one starts with **coordination**, and the reframe is what
-makes the rest worth reading.
+A memory talk usually starts with recall. This one starts with **coordination**, and that reframe is
+what makes the rest worth reading, because it changes which problems count as memory problems at all.
 
 ![Slide "Memory lets agents learn": three columns - learning about tasks, about environments, and from other agents](visuals/frame_200.jpg)
 
@@ -106,12 +184,16 @@ makes the rest worth reading.
 - Corroborated by: "agents can learn from common strategies and previous mistakes... And finally, they
   can transfer these learnings to and from other agents."
 
-**The third column is the one a single-user memory system never has to think about**, and it is where
-the diagnosis lands:
+Two of those three columns are familiar. A single-user assistant learns about tasks and about its
+environment, and both of those are recall problems in the ordinary sense. The third column is the one
+a single-user memory system never has to think about, and it is where the diagnosis lands.
 
 > At multi-agent scale, agents "were prone to making many of the same mistakes, and **they learn from
 > their mistakes independently**... memory was being updated in a **locally optimal way, but it wasn't
 > globally optimal**. In some cases, there was duplication or fragmentation." (`n10`, `&t=615s`)
+
+The slide that goes with it draws the shape of the fix before the talk has argued for it, which is
+worth looking at now and holding until section 5.
 
 ![Slide "Out-of-band memory updates": shared learnings across agents contrasted against independent memory curation](visuals/frame_772.jpg)
 
@@ -120,17 +202,37 @@ the diagnosis lands:
   `n10` `n12` `&t=615s`
 - Corroborated by: the narration naming duplication and fragmentation as the observed symptoms.
 
-**Read "locally optimal, globally suboptimal" as the whole problem statement.** Each agent's write is
-individually reasonable. The *store* degrades anyway, because nothing is responsible for the store as
-a whole. That is a coordination failure, not a memory failure - and it is the reason the answer is a
-second process rather than a better prompt.
+Read "locally optimal, globally suboptimal" as the whole problem statement. Each agent's write is
+individually reasonable, and the store degrades anyway, because nothing is responsible for the store
+as a whole. In other words this is a coordination failure rather than a memory failure. That
+distinction is what decides the shape of the answer, since a coordination failure is not something any
+one participant can fix from where it stands.
 
-Which raises the obvious cheaper alternative.
+At first glance there is still a cheaper answer available, and it is the one most teams reach for.
 
 ## 2. Why "just make the agent curate better" cannot work
 
-This is the sharpest idea in the talk and it generalises far past memory (`n12`, `&t=764s`).
-Decoupling the curation loop buys three things:
+The cheaper answer is to keep one loop and simply instruct it better, telling the agent to tidy the
+store as it goes. The talk rejects that, and its reasoning is the sharpest idea in the source
+(`n12`, `&t=764s`). It is worth walking the three things a decoupled curation loop buys, because only
+one of them is the real argument and the other two are easy to mistake for it.
+
+The first is cross-session pattern detection. A pattern that only shows up across many sessions is
+invisible from inside any one of them, not because the agent is careless but because the evidence is
+not in its context. That is an information argument, and it is genuine, but a sufficiently clever
+in-session prompt could in principle be handed a summary of other sessions.
+
+The third is latency, and it is the weakest of the three. Moving curation off the hot path means it
+can afford to be expensive, which is a real operational benefit and no kind of correctness argument.
+
+The second is the one that actually decides the design. **An agent told to finish its task *and* to
+maintain memory quality will trade the two off silently.** It does not report "I spent 15% less effort
+on memory in order to finish faster". It simply does it, invisibly, under whatever pressure the task
+is applying. A separate process has exactly one objective and therefore has nothing to trade. The
+first argument says a single loop lacks information; the second says it lacks *incentive*, and no
+amount of extra information fixes an incentive.
+
+Compressed for reference:
 
 | Reason to run curation out of band | What it buys |
 |---|---|
@@ -138,23 +240,25 @@ Decoupling the curation loop buys three things:
 | **No objective conflict** | **An agent told to finish its task *and* maintain memory quality will trade them off silently.** A separate process has exactly one objective. |
 | No added latency | Curation is off the hot path, so it can afford to be expensive. |
 
-**The middle row is the durable idea, and it is not really about memory.** Whenever one loop is asked
-to optimise two things, you have created a trade-off you can **neither observe nor tune**. The agent
-does not report "I spent 15% less effort on memory to finish faster". It just does it, invisibly,
-under whatever pressure the task is applying.
+The durable idea in the middle row is not really about memory at all. Whenever one loop is asked to
+optimise two things, you have created a trade-off you can neither observe nor tune. That generalises
+to anything with a producer and a critic inside the same process, which is why it is the claim from
+this source most worth carrying elsewhere.
 
 > **Background, supplied.** This is a **conflict of interest**, and every discipline that has met it
-> answers the same way: structural separation, not better instructions. Auditors do not audit their
-> own accounts; code review is done by someone else; separation of duties exists because "just be
-> careful" does not survive incentive pressure. **The design move is always the same - remove the
-> conflicted party from the decision rather than asking them to hold both objectives honestly.**
+> answers the same way, which is structural separation rather than better instructions. Auditors do
+> not audit their own accounts. Code review is performed by someone other than the author. Separation
+> of duties exists as a control precisely because "just be careful" does not survive incentive
+> pressure. **The design move is always the same - remove the conflicted party from the decision
+> rather than asking them to hold both objectives honestly.**
 
 > **And this brain records the same shape twice more.** S4's generator/evaluator split exists to
 > defeat **self-evaluation bias**, not to add capability
 > ([`brain/claims.md`](../../brain/claims.md) claim 34). S1 stacks QA gates as separate stages. **Three
 > sources, three domains, one answer: when a loop has two objectives, split the loop.**
 
-So curation gets its own process. But before the second clock, the thing being curated needs a shape.
+So curation gets its own process. Before that second process can be described, though, the thing it
+curates needs a shape, and the choice made there is a bet rather than an engineering detail.
 
 ## 3. Memory as a file system, on the skills bet
 
@@ -166,9 +270,10 @@ So curation gets its own process. But before the second clock, the thing being c
 - Corroborated by: "previously, we built memory focusing on capabilities in the harness... you might
   be familiar with Claude.md for Claude code, or dedicated memory tools in the SDKs."
 
-**Note where `skills` sits on that ladder**, because it is a gift to a neighbouring topic: skills are
-labelled **procedural memory**, which puts skills and memory in one family rather than two adjacent
-subjects. Memory of *how to do things*, as opposed to memory of facts.
+Note where `skills` sits on that ladder, because it is a gift to a neighbouring topic. Skills are
+labelled **procedural memory**, which places skills and memory in one family rather than treating them
+as two adjacent subjects. One is memory of *how to do things*, and the other is memory of facts. Where
+the ladder ends is the more consequential part, and the next slide states the rationale.
 
 ![Slide "Built to maximize intelligence": filesystem-native, flexible and agent-native, over an org-conventions tree](visuals/frame_392.jpg)
 
@@ -178,9 +283,11 @@ subjects. Memory of *how to do things*, as opposed to memory of facts.
 - Corroborated by: "Models and Claude are great at navigating virtual environments and a file
   system... with memory, we've modeled it as a file system to Claude."
 
-The rationale is stated explicitly, and it is a **bet** rather than a result: *"as models improve, we
-really just want to get out of Claude's way, **similar to what we did with skills**. And skills was a
-very basic format that was highly flexible"* (`n3`).
+The reasoning is stated openly, and it is a bet rather than a result. The talk's words are that *"as
+models improve, we really just want to get out of Claude's way, **similar to what we did with
+skills**. And skills was a very basic format that was highly flexible"* (`n3`). In other words the
+argument is not that a file system is a better data model. It is that the model has already outgrown
+the abstraction the alternative would impose on it.
 
 > **This is claim 31 applied to memory.** Every harness component encodes an assumption about what the
 > model cannot do alone, and those assumptions expire. **A bespoke memory API assumes the model cannot
@@ -188,11 +295,13 @@ very basic format that was highly flexible"* (`n3`).
 > and if it is wrong, it is wrong quietly, because a model that navigates files *badly* still produces
 > plausible-looking memory.
 
-⚠️ The accompanying capability claim - Opus 4.7 is "state-of-the-art at file system-based memory" and
-therefore needs less up-front context (`n4`) - is a **vendor claim about its own model with no
-benchmark, comparison point or method.**
+⚠️ The capability claim offered alongside it needs a label at the point of use. The assertion that
+Opus 4.7 is "state-of-the-art at file system-based memory" and therefore needs less up-front context
+(`n4`) is a **vendor claim about its own model, with no benchmark, no comparison point and no method.**
+Treat the design rationale as transferable and the capability figure as marketing.
 
-A file system is enough for one agent. It is not enough for many.
+A file system is enough for one agent. It stops being enough the moment there is a second one, and
+what it stops being enough for is not what most readers guess.
 
 ## 4. What multi-agent memory needs that a single-user store never does
 
@@ -206,6 +315,10 @@ A file system is enough for one agent. It is not enough for many.
 - Corroborated by: "we offer read-only scopes and read-write scopes... And so, this creates a
   hierarchy."
 
+Scopes answer who may write where, and concurrency answers what happens when two writers arrive at
+once. Neither answers the question a reader should ask next, which is how anyone later reconstructs
+what happened. That is the third slide's job.
+
 ![Slide "Built for auditability and developer control": versioning with rollback and diffing, attribution linking every memory to its session, and a portable standalone API](visuals/frame_522.jpg)
 
 - What it teaches: **versioning** (history, rollback, diffing), **attribution** (every memory links to
@@ -215,19 +328,20 @@ A file system is enough for one agent. It is not enough for many.
   attribution to see which agent wrote which part of the memory."
 
 > **Background, supplied - and the concurrency choice is the interesting one.** **Optimistic**
-> concurrency assumes conflicts are rare: you read, you compute, and at write time you assert that
-> nothing changed underneath you - here via a **content hash precondition** - failing loudly if it
-> did. **Pessimistic** concurrency locks up front. The optimistic choice is right when conflicts are
-> rare and holding a lock is expensive, which describes agents writing notes precisely. **What it buys
-> is that a conflict becomes a visible, retryable failure rather than a silent overwrite** - and
-> "silent" is the word doing the work, because a clobbered memory is exactly the kind of loss nobody
-> would ever notice.
+> concurrency assumes conflicts are rare. You read, you compute, and at write time you assert that
+> nothing changed underneath you, here via a **content hash precondition**, failing loudly if it did.
+> **Pessimistic** concurrency takes a lock up front instead. The optimistic choice is right when
+> conflicts are rare and holding a lock is expensive, which describes agents writing notes precisely.
+> **What it buys is that a conflict becomes a visible, retryable failure rather than a silent
+> overwrite** - and "silent" is the word doing the work, because a clobbered memory is exactly the kind
+> of loss nobody would ever notice.
 
-**The generalisable rule: the moment a second writer exists, memory needs the machinery of a versioned
-multi-writer store** - preconditions, attribution, history. A single-loop design needs none of it,
-which is exactly why single-loop designs look simpler and stop working at the second agent.
+The generalisable rule is that the moment a second writer exists, memory needs the machinery of a
+versioned multi-writer store, meaning preconditions, attribution and history. A single-loop design
+needs none of it. That is exactly why single-loop designs look simpler and why they stop working at
+the second agent.
 
-That is memory. Now the second clock.
+All of that governs writes made while agents work. Now the second clock.
 
 ## 5. Dreaming: the batch pass that runs out of band
 
@@ -239,6 +353,10 @@ That is memory. Now the second clock.
 - Corroborated by: "**It is a batch process. It runs out of band from sessions. It's completely
   decoupled.**"
 
+The input is transcripts rather than the memory store itself, which is the detail that makes the
+information argument from section 2 concrete. Dreaming can see what agents *did* and not merely what
+they chose to write down. The architecture that results fits into one picture.
+
 ![Slide "A unified memory system": agent sessions and a team-memory store on the left, session transcripts feeding a Dreaming pass that verifies, organizes and enriches on the right](visuals/frame_925.jpg)
 
 - What it teaches: **the two-clock architecture in one picture, and the best single visual in the
@@ -248,6 +366,8 @@ That is memory. Now the second clock.
 - Corroborated by: "Memory on the left helps agents learn and remember from task to task. And dreaming
   on the right verifies, organizes, and enriches the memory."
 
+The talk then generalises away from its own product, and this is the piece most worth stealing.
+
 ![Slide "Components of the memory architecture": three panels - storage, structure, and process](visuals/frame_574.jpg)
 
 - What it teaches: a memory architecture decomposes into exactly three components - **storage** (where
@@ -256,23 +376,28 @@ That is memory. Now the second clock.
   `n9` `&t=566s`
 - Corroborated by: the narration walking all three in order.
 
-**That decomposition is worth keeping as a checklist**, because most memory discussions collapse all
-three into "what do we store". Structure and process are separate decisions, and this talk's whole
-contribution lives in the third.
+Keep that decomposition as a checklist, because most memory discussions collapse all three into "what
+do we store". Structure and process are separate decisions from storage, and this talk's entire
+contribution lives in the third of them.
 
-Two more details, both `single-leg`: dreaming is framed as **test-time compute applied to memory** -
-spend tokens up front, and the return is paid to every downstream agent (`n13`, `&t=890s`); and the
-**trigger is programmable** - ad hoc, nightly, hourly, or event-driven, all via API (`n22`, `&t=715s`).
+Two further details are worth recording, and both are `single-leg`. Dreaming is framed as **test-time
+compute applied to memory**, meaning you spend tokens up front and the return is paid to every
+downstream agent (`n13`, `&t=890s`). And its trigger is programmable, so a run can be fired ad hoc,
+nightly, hourly or on an event, all through the API (`n22`, `&t=715s`).
 
 > **The economics are worth stating plainly, because they are what make an expensive pass sane.** The
-> cost is borne **once, by a process that completes no user task**; the return is paid to **every
-> downstream agent**. That asymmetry only works because the curator is on a different clock - a
-> curator inside the session would be spending the user's latency budget on someone else's benefit.
+> cost is borne **once, by a process that completes no user task**, and the return is paid to **every
+> downstream agent**. That asymmetry only works because the curator runs on a different clock. A
+> curator sitting inside the session would be spending the user's latency budget on someone else's
+> benefit.
+
+Everything to this point is the vendor describing itself. The next section is the one place that
+changes.
 
 ## 6. Seen running: the strongest evidence in the source
 
-Slides show what a vendor believes. The demo shows the artifact - and it carries detail the narration
-never states.
+Slides show what a vendor believes. The demo shows the artifact, and here it carries detail the
+narration never states.
 
 ![A live memory file showing a version strip, session attribution, and a content_sha256 write precondition](visuals/frame_1030.jpg)
 
@@ -283,13 +408,18 @@ never states.
   to config diff**", and one minute later `sre-agent-a16` writes "Confirmed... **per a07's lead,
   skipped dep checks**". `n20`
 
-**That is the most interesting thing in the talk, and the speaker passes over it.**
+Read those two lines again before moving on, because the speaker passes over them and they are the
+most interesting thing in the talk. What one agent wrote was not a fact. It was an order, and the next
+agent followed it.
 
 > **A memory store carrying imperatives is a coordination channel, not a knowledge base.** That is a
 > different object with different failure modes: **a wrong *fact* degrades one answer; a wrong
 > *instruction* redirects every agent that reads it.** Nothing in the source addresses what happens
 > when a bad instruction lands there - see the security note below, which this finding makes
 > considerably less theoretical.
+
+The console showing dreaming itself is the second half of the demo, and it answers how the pass is
+implemented rather than what it produces.
 
 ![The dreaming console: a dream detail pane showing input sessions and duration, beside a memory-updates pane showing a red/green line diff](visuals/frame_1188.jpg)
 
@@ -299,11 +429,15 @@ never states.
   `&t=1161s`
 - Corroborated by: "it spins off a series of sub-agents to analyze transcripts in parallel."
 
-**What dreaming actually added in the demo is the useful detail**: it detected "a common pattern of an
-alert triggering 60 seconds after a CPU spike" **across sessions and agents**, inferred a likely
-retry-behaviour problem, and rewrote the triage log "in a more holistic way rather than just being a
-rote log of all the events that happened" (`n21`). That is precisely the cross-session generalisation
-section 2 said a single agent structurally cannot reach.
+What dreaming actually added in that run is the useful detail. It detected a common pattern of an
+alert triggering 60 seconds after a CPU spike, found it **across sessions and agents**, inferred a
+likely retry-behaviour problem, and rewrote the triage log "in a more holistic way rather than just
+being a rote log of all the events that happened" (`n21`). That is precisely the cross-session
+generalisation section 2 argued a single agent structurally cannot reach, observed rather than
+asserted.
+
+Having shown the mechanism working at the scale of one team, the talk turns to where it is meant to
+end up.
 
 ## 7. Where it points: organizational memory
 
@@ -315,26 +449,32 @@ section 2 said a single agent structurally cannot reach.
 - Corroborated by: "memory becomes a huge source of knowledge that Claude can use to understand the
   organization and the world that it's operating in."
 
-The ambition is explicit: memory as **the model's understanding of how a whole company works**. Take
-it as a direction of travel rather than a shipped capability - and note that it makes every gap in the
-next section larger, not smaller. A poisoned entry in a per-task note misleads one agent; a poisoned
-entry in org-wide memory misleads everyone.
+The ambition is explicit, which is memory as the model's understanding of how a whole company works.
+Take it as a direction of travel rather than a shipped capability. Note also that it makes every gap in
+the next section larger rather than smaller, because a poisoned entry in a per-task note misleads one
+agent while a poisoned entry in org-wide memory misleads everyone.
 
-⚠️ And the outcome figures offered alongside this vision are the weakest evidence in the source.
+⚠️ The outcome figures offered alongside that vision are the weakest evidence in the source, and they
+are worth looking at precisely so you know not to reuse them.
 
 ![Slide "Teams using memory today": three attributed customer pull-quotes](visuals/frame_280.jpg)
 
 - What it teaches: Rakuten reports "97% fewer first-pass errors at 27% lower cost and 34% lower
   latency"; Wisedocs that cross-session memory "sped verification up 30%"; Ando that it let them stop
   building memory infrastructure. `n17` `&t=275s`
-- ⚠️ **Vendor-curated testimonials on a marketing slide. No methodology, no baseline definition, no
-  eval set, no replication.** The same applies to Harvey's "~6x" completion-rate figure for dreaming
-  on a private internal benchmark (`n18`). **Direction only, never a measurement.**
+- ⚠️ **These are vendor-curated testimonials on a marketing slide.** No methodology is given. No
+  baseline is defined. There is no eval set and no replication. The same applies to Harvey's "~6x"
+  completion-rate figure for dreaming on a private internal benchmark (`n18`). **Direction only, never
+  a measurement.**
+
+Weak numbers are an ordinary hazard in a vendor talk and are easy to discount. The gap in the next
+section is not, because it sits inside the design rather than inside the marketing.
 
 ## 8. The hole: "verified" by what?
 
 The talk says dreaming's output is "**a verified**, better organized snapshot" that agents "can choose
-to adopt" (`d4`, `&t=748s`).
+to adopt" (`d4`, `&t=748s`). Read that sentence as a specification and see how little of it is
+specified.
 
 **Nothing in the talk or the demo says what verification means, who or what performs it, what happens
 when it fails, or how adoption is decided.**
@@ -344,22 +484,23 @@ when it fails, or how adoption is decided.**
 > claim in the talk has a slide or a running console behind it. This one has a word.
 
 A second gap sits beside it and is easier to miss, because the neighbouring problem *was* solved
-(`d5`). `n6`'s `content_sha256` preconditions stop two agents clobbering the same **file**. **Nothing
-addresses two agents learning contradictory *things*** - and the scope hierarchy from section 4
-guarantees the case exists: a read-only org store and a read-write team store can disagree, and
-nothing states which wins.
+(`d5`). The `content_sha256` preconditions from `n6` stop two agents clobbering the same **file**.
+Nothing addresses two agents learning contradictory *things*, and the scope hierarchy from section 4
+guarantees the case exists, since a read-only org store and a read-write team store can disagree and
+nothing states which one wins.
 
 > **Write conflicts are solved; semantic conflicts are not.** The mechanical half is easily mistaken
 > for the whole, and it is the half that matters least - two agents overwriting a file is a bug you
 > can detect, while two agents believing incompatible things is a bug that reads as normal operation.
 
-And one more the source never raises at all: **memory is an unexamined attack surface.** A background
-process that ingests session content and writes durable, automatically-applied instructions is a
-**persistent prompt-injection sink** - inject once, and the instruction is re-applied in every future
-session with no further access needed. Section 6's demo shows the propagation mechanism working
-exactly as an attacker would need it to. The source supplies attribution and version history, which
-are **forensics after the fact**; there is **no admission control** - nothing validates a memory
-before the next agent acts on it.
+One more gap goes unmentioned by the source entirely, and section 6 is what makes it concrete. Memory
+here is an **unexamined attack surface**. A background process that ingests session content and writes
+durable, automatically-applied instructions is a **persistent prompt-injection sink**, because an
+attacker injects once and the instruction is re-applied in every future session with no further access
+needed. The demo in section 6 shows that propagation path working exactly as such an attacker would
+need it to. The source supplies attribution and version history, and both of those are **forensics
+after the fact**. There is **no admission control**, so nothing validates a memory before the next
+agent acts on it.
 
 ## Diagram (mental model)
 
@@ -381,22 +522,21 @@ flowchart LR
     style WORK fill:#f7f7f7
 ```
 
-**How to read it:** the grey box is one clock - agents writing while they work. Green is the second
-clock, running between sessions. The amber circle is **not a component**; it marks the step the talk
-names and never specifies.
+Read it left to right, with colour marking which clock a box belongs to. The grey box is the first
+clock, where agents write while they work. Green is the second clock, running between sessions. The
+amber circle is not a component at all, and it marks the step the talk names and never specifies.
+**The crux is that three agents write to one store on one clock while a fourth process rewrites that
+same store on a different clock, and the second clock exists so that nothing is ever asked to do both
+jobs at once.**
 
-**The crux: three agents write to one store on one clock, and a fourth process rewrites that store on
-a different clock - and the second clock exists so that nothing is ever asked to do both jobs at
-once.**
-
-**Why it is shaped this way:** note that dreaming's output arrow returns to the **same store** the
-agents write to, rather than to a separate curated copy - which is what makes adoption a live question
-and why "agents can choose to adopt" needs a mechanism it does not have. Note that the org-wide store
-is drawn read-only and *attached* rather than written: that asymmetry is the scope hierarchy, and it
-is also where the unresolved semantic conflict lives, since nothing says what happens when it
-disagrees with the team store. And the amber circle is drawn deliberately as a gap rather than
-omitted, because a diagram that quietly completes the design would be claiming more than the source
-does.
+The shape carries three decisions worth noticing, and the first is where dreaming's output arrow
+lands. It returns to the **same store** the agents write to rather than to a separate curated copy,
+which is what turns adoption into a live question and why "agents can choose to adopt" needs a
+mechanism it does not have. The second is that the org-wide store is drawn read-only and *attached*
+rather than written, and that asymmetry is the scope hierarchy from section 4. It is also where the
+unresolved semantic conflict lives, since nothing says what happens when the org store disagrees with
+the team store. The third is that the amber circle is drawn as a gap instead of being omitted, because
+a diagram that quietly completed the design would be claiming more than the source does.
 
 *Synthesized from `n5`, `n6`, `n11`, `n12`, `n14`, `n19`, `d4`, `d5` - not a slide from the talk.*
 
