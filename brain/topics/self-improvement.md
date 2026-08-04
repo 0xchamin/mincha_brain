@@ -1,7 +1,8 @@
 # Topic: Self-improvement
 
-**Status:** emerging (1 source - **S14** Stanford CS329A lecture 1), created 2026-08-04 by
-[ADR-0018](../decisions/0018-self-improvement-topic.md).
+**Status:** emerging (**1 source / 1 independent** - **S14** Stanford CS329A lecture 1), created
+2026-08-04 by [ADR-0018](../decisions/0018-self-improvement-topic.md). **Both numbers are tracked
+because they are expected to diverge** - see the playlist warning below.
 **Basis:** one source, and it is **lecture 1 of a university course** - a survey by two researchers
 who work on the subject. That makes it a strong authority on *vocabulary and structure* and a weak
 one on *findings*, and this note is written to that split. The taxonomy claims are trustworthy; the
@@ -9,6 +10,22 @@ two numeric claims are labelled and one of them carries a recorded divergence ag
 **Cross-referenced with [`autonomous-research-loops.md`](autonomous-research-loops.md), deliberately
 not merged** - they are the same loop shape at different layers, and the merge-back trigger is in
 ADR-0018.
+
+> ⚠️ **S14 is lecture 1 of a playlist, and further lectures from it do NOT advance this note's
+> status.** CS329A is a multi-lecture course, so more of it is expected to arrive. Every one of those
+> lectures is **the same leg wearing a different hat** under the independence rule - same two
+> lecturers, same course, same academic and commercial position - and a later lecture agreeing with
+> this one is **not corroboration**. Ingest them for *mechanism* (lecture 1 defers nearly everything
+> to a later session), never for confidence.
+>
+> **So: `emerging -> established` requires a second *independent* source, not a second CS329A
+> lecture.** Record additional lectures as S15, S16 and so on, and keep the **independent** source
+> count separate from the raw one in the Status line above.
+>
+> **This trap has already been sprung once in this brain.** [`skills.md`](skills.md) went from 1 to 5
+> sources while its evidence did not move at all, and that note now carries the warning as its
+> headline. Written here on 2026-08-04, *before* the second lecture arrives, because the count rises
+> silently and nobody re-derives this at ingest time.
 
 > Living, cross-source synthesis on **systems that improve themselves from their own output**. Many
 > sources feed this note; **merge and de-duplicate** as they arrive (architect persona). Every claim
