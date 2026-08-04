@@ -1,8 +1,9 @@
 # Topic: Agents
 
-**Status:** established (9 sources - S1 Uber closed-loop evals, S2 12-factor agents, S4 Anthropic
+**Status:** established (10 sources - S1 Uber closed-loop evals, S2 12-factor agents, S4 Anthropic
 harness design, S5 skills evals, S7 Anthropic memory and dreaming, S9 Microsoft Agent Framework,
-S10 tool search, S12 Google Cloud multi-tenant reference architecture, S13 `karpathy/autoresearch`)
+S10 tool search, S12 Google Cloud multi-tenant reference architecture, S13 `karpathy/autoresearch`,
+S14 Stanford CS329A)
 
 > Living, cross-source synthesis on autonomous LLM agents. Many sources feed this note; **merge
 > and de-duplicate** as they arrive (architect persona) - this should read as one coherent view,
@@ -339,6 +340,7 @@ Single-leg, asserted, no operational data behind it.
 | Claim | Sources (cited) | Confidence |
 |---|---|---|
 | An agent = prompt + switch statement + context builder + loop; own all four. | S2 `&t=406s` | emerging |
+| **What ships today is mostly a hand-drawn static graph, not the open-ended loop the agent definition promises** (claim 127) - because for open-ended problems it is currently easier to draw the graph a human would follow than to let the agent find it. Independent academic restatement of claim 12. | S14 (`n7`, `frame_2640` + `&t=2622s`, `&t=2667s`) | corroborated (slide + narration), and **independent support for claim 12's practice** from a non-practitioner vantage |
 | **Autonomy requires explicitly suppressing the agent's check-in default, and two conditions earn it**: the check-in has no information to offer, and the blast radius is bounded (claim 119). **Sits against claim 16** and is reconcilable through those conditions - but the reconciliation is this brain's, not either source's. | S13 (`program.md:112`,`:114`, `n9`) | needs-check (single-leg; the conditions are this brain's reading) |
 | The enabling capability is structured output (sentence -> JSON); "tool use" is just JSON plus deterministic code. | S2 `&t=229s`, `&t=264s` | emerging |
 | **What ships in production is small, scoped LLM steps inside deterministic software - not one big autonomous loop.** | **S2 `&t=741s` + S1 `&t=376s` (two sources, converging from theory and practice)** | **established** |
@@ -491,4 +493,11 @@ Single-leg, asserted, no operational data behind it.
   *not*: **n independent agents behind one door, with no cross-tenant path and no supervisor** - do not
   read it as a multi-agent deployment pattern. Isolation mechanics live in
   [`agent-security.md`](agent-security.md).
+- **S14** - [Stanford CS329A: Self-Improving AI Agents, lecture 1](../../sources/260804_cs329a-self-improving-agents/LEARNING.md)
+  (video, 2026-08-03). **T4 course lecture**, and the first academic source here. Contributes
+  claim 127 - that predefined orchestration graphs remain the norm - which is an independent
+  restatement of claim 12 from a vantage with nothing to sell. It also frames the whole agent problem
+  as three capability gaps (planning, multi-step reasoning, self-improvement) [`n8`, single-leg], a
+  framing kept as prose rather than promoted because it rests on one spoken sentence. The
+  self-improvement half lives in [`self-improvement.md`](self-improvement.md).
 - **R1** - [deep-research pass on S2](../../sources/260725_12-factor-agents/context/01_context-limits-and-decomposition.md) (2026-07-25) - external evidence, tiered with independence calls.

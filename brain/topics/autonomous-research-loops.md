@@ -237,9 +237,15 @@ rather than restated in the other notes.
   branch name and designs nothing.
 - **Does the reporting-path leak (claim 113) matter empirically**, or only as a principle? No source
   here has observed an agent exploiting it.
-- **Where does this shape stop working?** Everything in S13 depends on "better" being one number a
+- ~~**Where does this shape stop working?** Everything in S13 depends on "better" being one number a
   frozen function computes. Most research questions worth automating do not have that, and this
-  brain holds nothing on the case where the accept decision is a judgement.
+  brain holds nothing on the case where the accept decision is a judgement.~~ **Partly closed
+  2026-08-04 by S14**, which names the constraint and generalises it: the loop runs at exactly the
+  rate its verifier can distinguish good output from bad, so where the accept decision is a
+  judgement rather than a number, the loop stalls on human attention (claim 124,
+  [`self-improvement.md`](self-improvement.md)). **Still open is the interesting remainder** - what a
+  loop should *do* in that case, since "wait for a human" is a description of the problem rather than
+  a design.
 - **Conflict to watch, not yet a contradiction:** claim 119 (suppress the check-in) sits against
   claim 16 from S2 (make contacting a human a tool call among the others). They are reconcilable -
   S2's agents act in the world, S13's acts on a branch - but the *condition* that separates them is
@@ -258,3 +264,16 @@ rather than restated in the other notes.
   absent from the repo, so nothing empirical here is reproducible. No code was executed by this
   brain (no GPU). No deep-research pass has been run - this note contains no external evidence at
   all.**
+- **S14** - [Stanford CS329A: Self-Improving AI Agents, lecture 1](../../sources/260804_cs329a-self-improving-agents/LEARNING.md)
+  (video, 2026-08-03). **Cross-reference, not counted as a primary source for this note** - it works
+  a different layer (a model improving its own weights, not an agent improving an artifact), and its
+  claims are filed in [`self-improvement.md`](self-improvement.md) under
+  [ADR-0018](../decisions/0018-self-improvement-topic.md). Two things reach here.
+  **First, the frame that explains claim 114**: verification sets a loop's ceiling, so S13's accept
+  rule banking a random-seed change is not a quirk of that repository but the general failure of a
+  verifier with no notion of variance. **Second, a second instance of the shape** - the AI Scientist
+  pipeline (Lu et al, 2024) runs idea generation, an experiment iteration loop, and paper write-up,
+  and terminates in a box reading "LLM Paper Reviewing" [S14 `n10`, `frame_3420`]. That is
+  **mention-level evidence under [ADR-0012](../decisions/0012-a-mention-is-not-a-source.md)** - a
+  lecture slide about someone else's paper, not an ingest of it - and the paper itself is on
+  [`reading-list.md`](../reading-list.md) as the obvious second primary for this note.

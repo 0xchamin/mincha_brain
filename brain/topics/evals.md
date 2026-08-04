@@ -1,10 +1,12 @@
 # Topic: Evals
 
-**Status:** established (5 sources - S1 Uber closed-loop evals, S4 Anthropic harness design, S5
+**Status:** established (6 sources - S1 Uber closed-loop evals, S4 Anthropic harness design, S5
 Google DeepMind skill evals, **S11 agent-first data stack - a *counter*-example, a production
-deployment with no evals whose authors concede the gap**, and **S13 `karpathy/autoresearch`, which
+deployment with no evals whose authors concede the gap**, **S13 `karpathy/autoresearch`, which
 supplies the half this note was missing: how to *design* a metric that an optimizer cannot game, and
-what an accept rule does with noise**).
+what an accept rule does with noise**, and **S14 Stanford CS329A, which supplies the first
+*independent* statement of self-evaluation bias and the first case of the verifier being written by
+the thing it judges**).
 **Basis:** all three independently arrive at *an independent checking stage that can fail the work* -
 S1's Swiss-cheese QA gates on a production pipeline, S4's evaluator agent with hard thresholds on a
 build loop, and S5's CI gate that blocks a skill diff from merging without proof of lift. **S5 is the
@@ -154,11 +156,37 @@ before.
 > variance**, arrived at from opposite ends - one prescribing repetition, one demonstrating its
 > absence.
 
+### Self-evaluation bias now has two independent statements and still no measurement
+
+Claim 34 has sat in this note since S4 as a vendor postmortem's assertion: do not let the producer
+grade its own work, because a generator has no independent vantage point on itself. **S14 states the
+same bias from a different community, a different mechanism and a different vantage** - asked whether
+a smaller model could generate reasoning traces for a larger one, the lecture answers that models
+"like their own traces more. Even if the traces are coming from a better model, they tend to like
+their own generated traces more" [S14 `n9`, claim 125].
+
+That is worth something and it is worth being precise about how much. Two independent sources now
+assert self-preference, which raises the prior considerably. **Neither measures it.** S4's is a
+vendor's n=1 experience report and S14's is an uncited spoken sentence with no magnitude attached, so
+the practice is corroborated and the *effect size* remains completely unknown. It is recorded here as
+this note's best deep-research target.
+
+**S14 also supplies the case that makes the bias structural rather than avoidable.** Where verifiers
+are scarce, the field's answer is to have the model generate them - agents writing the tests they
+must then pass [S14 `n13`, claim 126]. The hazard is not that model-written tests are bad, since a
+test either passes or fails when executed and that is more than most checks offer. It is that a
+verifier drawn from the same weights and the same misreading of the specification will be wrong in
+the **same direction** as the output it judges, so the loop reports success and banks the error. This
+is claim 113's finding arriving from the opposite end: there, separation existed at the function
+level and leaked through the reporting path; here, separation is abandoned at the source.
+
 ## Key claims
 
 | Claim | Sources (cited) | Confidence |
 |---|---|---|
 | Log the full flat trace first - it is the precondition for evals and any self-learning loop. | S1 `&t=418s` (slide `frame_1058` + narration) | emerging |
+| **Models prefer their own reasoning traces over better traces from a stronger model** (claim 125). An independent, different-mechanism statement of claim 34's self-evaluation bias. | S14 (`n9`, `&t=2291s`) | **needs-check** - single-leg, uncited by the source, no magnitude. Two independent assertions, zero measurements |
+| **The verifier is increasingly written by the system it judges** - agents generating the tests they must pass (claim 126). Presented approvingly by the source and never interrogated. | S14 (`n13`, `&t=2992s`, `&t=3196s`) | **needs-check** - single-leg, and recorded as a structural hazard rather than a documented failure. Extends claims 34 and 113 |
 | **Anti-Goodhart is a code-layout problem, not a prompt problem** - normalise by a unit the optimizer cannot redefine, evaluate under fixed conditions, and pin the holdout in read-only code (claim 111). | S13 (`prepare.py:343-365`, `:350`, `:42-44` @ `228791f`, `n2`, `n4`) | corroborated (docs+code, internal to one repo) |
 | **A protected metric can still reach the decision through producer-editable code** - separating generator from evaluator at the function level does not separate them on the *reporting* path (claim 113). Extends claim 34 as plumbing rather than prompting. | S13 (`train.py:26`,`:613`,`:621-630` @ `228791f`, `n5`) | corroborated (code). No observed exploitation - structural, not an incident |
 | **An accept rule with no variance handling banks noise** - S13's own run kept a change of random seed as one of fifteen "improvements" (claim 114). Every accept then permanently raises the bar for the next one. | S13 (`program.md:103-104` + `visuals/progress_endgame.png`, `n11`, `g3`) | corroborated (stated rule + the source's own figure) |
@@ -264,3 +292,9 @@ before.
 - **R2** - [deep-research pass on S11](../../sources/260802_agent-data-stack/context/01_data-agent-accuracy-and-prior-art.md)
   (2026-08-02) - Spider 2.0 (T1/T3) for the accuracy ceiling on enterprise text-to-SQL, and
   MotherDuck (T2) for the benchmark-vs-production gap (claim 94).
+- **S14** - [Stanford CS329A: Self-Improving AI Agents, lecture 1](../../sources/260804_cs329a-self-improving-agents/LEARNING.md)
+  (video, 2026-08-03). **T4 course lecture**, contributing two claims about the *evaluator* rather
+  than the eval: the second independent statement of self-preference (125) and the verifier written
+  by the generator (126). Also supplies the **coverage against pass@1** distinction, which is filed in
+  [`self-improvement.md`](self-improvement.md) as claim 120 because it is the loop's vocabulary
+  rather than a measurement practice.
