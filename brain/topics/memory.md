@@ -1,9 +1,10 @@
 # Topic: Memory
 
-**Status:** **established** (3 sources - S6 "Dreaming: Better memory for a more helpful ChatGPT",
+**Status:** **established** (4 sources - S6 "Dreaming: Better memory for a more helpful ChatGPT",
 OpenAI, 2026-06-04; S7 "Memory and dreaming for self learning agents", Anthropic, 2026-05-21;
 **S8 "LLM Wiki", Andrej Karpathy, 2026-04-04 - a partial feeder**, contributing only to the
-decoupled-curation claim, from outside agent memory entirely).
+decoupled-curation claim, from outside agent memory entirely; **S16 "AgentPoison", 2026-08-04 - the
+adversarial feeder**, which designs no memory and attacks the shape all three of the others share).
 **Basis:** created under [ADR-0007](../decisions/0007-memory-topic.md); promoted to `established`
 under [ADR-0008](../decisions/0008-memory-established.md) on **two-vendor architectural
 convergence**.
@@ -345,6 +346,38 @@ independent vendors converging on an architecture - now with a third, non-vendor
 the same operation earlier and from outside agent memory entirely - is genuine evidence that the
 *design* is the natural answer. **It is not evidence that the design works, and it would look
 identical if it did not.** Three unmeasured sources are not more measured than two.
+
+### The adversarial reading, which three design sources never supplied
+
+**This note's standing caveat has been that three sources converged on a design and none published an
+experiment. S16 is the first source here to publish an experiment, and it is an attack.**
+
+Every memory architecture above is a **writable store that is read back into context automatically**,
+and S16 attacks exactly that shape. An adversary who can write a single record, plus a short trigger
+phrase that rides inside an ordinary query, causes the agent to retrieve attacker-written
+demonstrations and act on them - roughly 62% of the time from **one** poisoned record, with benign
+behaviour intact ([S16](../../sources/260804_agentpoison/LEARNING.md) `n5`, claims 135 and 138). Full
+synthesis in [`agent-security.md`](agent-security.md); recorded here because it bears directly on two
+design choices this note treats as settled.
+
+The first is **representation**. This note records the field's move toward a maintained artifact that
+an agent reads back as instruction, which is the property S16 exploits, since a retrieved record is
+already functioning as an instruction by the time anything could inspect it. The second is
+**retrieval by embedding similarity**, which every design here assumes and none examines. S16's whole
+method is that similarity is a **coordinate system an adversary can write into**, and that placing a
+record at chosen coordinates is cheaper than competing for relevance.
+
+> **What this does not say.** S16 attacks a RAG-style key-value store, and none of the three memory
+> sources here were its target. The shared property is the one that matters - automatic retrieval of
+> attacker-writable text into context - and the transfer is this brain's reading rather than S16's
+> claim.
+
+The consequence for this note's **decoupled background pass** is worth stating, because it cuts both
+ways and neither direction is measured. A pass that runs out of band, reads the whole store and
+rewrites it is the only place in any of these architectures where something could plausibly notice a
+poisoned record. It is also, by claim 61's logic, a second writer with no admission control of its
+own. **Nobody has built either version**, and the dream pass in this kit is an instance of the same
+unresolved question.
 
 ## Key claims
 

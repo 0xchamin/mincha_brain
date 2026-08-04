@@ -1,11 +1,24 @@
 # Topic: Agent security
 
-**Status:** emerging (3 sources - S3 OAuth/OIDC, the only one that studies security as its subject;
+**Status:** emerging (4 sources - S3 OAuth/OIDC, the delegated-authorization substrate;
 **S7 memory and dreaming, which does not discuss security at all** and feeds this note only by making
 memory poisoning concrete; **S12 a cloud reference architecture, which is entirely about isolation and
-entirely unmeasured**). **A rising source count is still not rising evidence:** neither S7 nor S12
-corroborates a single one of S3's claims - they occupy different halves of this note - so the bar for
-`established` is unchanged: a second source that studies the *same* material as an existing one.
+entirely unmeasured**; **S16 AgentPoison, the note's first measured attack**). **A rising source count
+is still not rising evidence:** no two of these corroborate each other's claims - they occupy
+different halves of this note - so the bar for `established` is unchanged: a second source that
+studies the *same* material as an existing one.
+
+> **S16 changes what this note is, without changing its status, and the distinction is worth stating.**
+> Until 2026-08-04 every source here described a **design** - a protocol, an isolation topology, a
+> memory architecture - and the threat half of the note was assembled from this brain's own commentary.
+> S16 is an **attack, measured**, from five academics at four universities with nothing to sell. It
+> supplies the first primary evidence that the threat half was pointing at something real, and it
+> closes the note's longest-standing open question by demonstrating the thing that question feared.
+>
+> **Status stays `emerging` deliberately.** S16 corroborates no claim of S3's, S7's or S12's, because
+> it studies a different subject from all three. What it does is convert **claim 63** from labelled
+> commentary into a measured threat. That is a real advance in evidence and it is not the two-sources-
+> on-the-same-material test, which is what `established` means here.
 
 *(Status line corrected in [dream 0001](../dreams/0001-260802.md): it read "1 source" while two were
 listed below and `INDEX.md` said two - the same defect `skills.md` recorded fixing on 2026-08-02.)*
@@ -153,6 +166,67 @@ unauthorized Google Cloud resources". True of the drawn topology; not true unqua
 the alternatives recommended three sections later, which are never cross-referenced (S12 `d3`). **Read
 a reference architecture back to front - alternatives first, then the headline.**
 
+### The retrieval store is an input, and attacking it is cheaper than attacking anything else
+
+**The note's first measured attack, and it lands exactly where the open question below said the hole
+was.** S16 poisons an agent's memory or RAG knowledge base so that a chosen trigger phrase, appearing
+anywhere in a user query, causes the agent to retrieve attacker-written demonstrations and act on them
+([S16](../../sources/260804_agentpoison/LEARNING.md) `n1`, claim 135).
+
+Start with why the store counts as input at all, because that framing is the contribution. An agent
+encodes the user's query, fetches the k nearest records, and pastes them into the prompt as
+demonstrations. **Retrieval is therefore a mechanism for selecting text that will function as
+instruction, and the selection is made by geometry rather than by any judgement about trust.** Whoever
+can write one record has written into the prompt of every future query that retrieves it.
+
+The reason this had not been exploited well before is that retrieval is accidentally robust. An
+attacker dumping malicious documents into a corpus must win a similarity contest against the whole
+benign corpus for every query they care about, which historically meant a high poisoning ratio and
+visible damage to benign accuracy. S16's move is to stop competing. It optimises the trigger so that
+triggered queries land in a region of the embedding space that is **unique**, meaning far from where
+benign queries fall, and **compact**, meaning they all land together (claim 137). The poison goes at
+those coordinates, and retrieval then succeeds by construction.
+
+> **The property that makes it effective is the same one that makes it quiet.** A region no benign
+> query visits is never retrieved for benign traffic, so the attack does not trade stealth against
+> strength the way corpus poisoning does. That is unusual and it is why the benign-accuracy column
+> stays flat while the attack rate is high (claim 137, S16 `n12`).
+
+**Three consequences matter more than the headline attack rate, and each removes a defence someone is
+currently relying on.**
+
+The first removes volume detection. A single poisoned record yields roughly 62% retrieval success and
+a single-token trigger roughly 79%, with benign accuracy above 90% throughout (claim 138). Any monitor
+watching for bulk ingestion, anomalous write rates or near-duplicate clusters is calibrated for an
+attacker who needs many records, and has nothing to fire on against one. **Scale was what volume-based
+detection was implicitly counting on.**
+
+The second removes keeping your embedder private. The trigger transfers to retrievers it was never
+optimised against, including a black-box commercial embedding API, at roughly 0.68-0.78 retrieval
+success (claim 139). The paper lists white-box embedder access as its one limitation and then largely
+dissolves it, so privacy of the embedder raises attacker cost by 10 to 20 points rather than from
+possible to impossible.
+
+The third removes perplexity filtering, and it generalises furthest. A coherence term in the objective
+yields triggers that read as ordinary language - the driving agent's is **"Be safe and make a
+discipline."** against GCG's `tomcat]$. Comment Helen Cortversions <?` - whose perplexity distribution
+overlaps benign traffic while GCG's sits visibly apart (claim 140). The filter was never defeated by
+cleverness. **The optimiser was simply asked to stop producing the artifact the filter measures**, and
+any detector keyed to an artifact of an attacker's tooling has the same weakness.
+
+That leaves the one defence built for this threat, and here the finding is a prediction rather than a
+measurement. **Isolate-then-aggregate** runs the model separately against each retrieved record and
+aggregates, which works while poison is a *minority* of the retrieved set. S16 counts a retrieval
+successful only when **all** k neighbours are poisoned, and claim 138 is why that is affordable
+(claim 141, `single-leg`). **The defence rested on an assumption about attacker economics, and a
+better optimiser invalidated the estimate.** Worth noting the paper asserts this and never runs the
+defence against itself, which makes it the most valuable open experiment in this note.
+
+> **This is claim 106 arriving with a measurement.** S12 records that sharing a component converts a
+> structural guarantee into an enforcement obligation nobody has specified. A shared retrieval store is
+> exactly such a component, and S16 is what the unspecified obligation looks like when someone attacks
+> it. The two sources never mention each other and are describing the same hole from opposite sides.
+
 ## Key claims
 
 | Claim | Threat / mitigation | Sources (cited) | Confidence |
@@ -168,6 +242,13 @@ a reference architecture back to front - alternatives first, then the headline.*
 | Bound the **principal**, not the resource - IAM is additive and distributed, so only a subtractive central cap answers "may this identity be here at all" | mitigation: blast radius | S12 `n4` (claim 102) | emerging on the mechanism; the "even if compromised" guarantee is **single-leg and conditional on topology** (S12 `d3`) |
 | Prompt-injection filtering can live at the network edge, in the same component as the WAF - unbypassable by app bugs, but it sees the request and not the assembled prompt | mitigation: input filtering | S12 `n6` (claim 103) | emerging; **the bound is this brain's reading** |
 | Sharing a component converts a structural guarantee into an enforcement obligation, and the two costs are asymmetric - one is countable, the other is a class of defect | design: where the boundary sits | S12 `n10`, `n11`, `n14` (claim 106) | emerging - **the most transferable claim in S12 and one it never asserts** |
+| A retrieval store is an attack surface with the properties of a prompt: retrieved records enter context as instruction, selected by geometry rather than by trust | threat: memory / KB poisoning | S16 `n1`, `n11` (claim 135) | OK (corroborated) - **the note's first measured attack** |
+| Poisoning the retriever needs no model access and no training; the optimisation targets the embedder | threat: attack surface placement | S16 `n2` (claim 136) | OK (corroborated) |
+| The mechanism is geometric - map triggered queries into a **unique** and **compact** embedding region, then put the poison at those coordinates | threat: mechanism | S16 `n3`, `n14` (claim 137) | OK (corroborated) |
+| **One poisoned record and a one-token trigger are close to sufficient**, which removes the volume signal that anomaly detection depends on | threat: detection evasion | S16 `n5` (claim 138) | OK (corroborated) - **the most consequential number here** |
+| Triggers transfer to embedders they were never optimised on, including black-box APIs, so a private embedder is not a mitigation | threat: transferability | S16 `n6` (claim 139) | OK on the matrix; the distributional explanation is argued, not measured |
+| A fluency constraint defeats perplexity filtering by removing the property the filter measures | threat: defence evasion | S16 `n7`, `n8` (claim 140) | OK (corroborated) |
+| Isolate-then-aggregate fails against an attacker who poisons **all** k retrieved neighbours, because the defence assumed that was uneconomic | mitigation: **known-broken** | S16 `n10` (claim 141) | **needs-check** - argued from the success criterion, never run against the defence |
 
 ## Key visuals
 
@@ -188,6 +269,17 @@ frame rather than the fuller one. Every arrow entering a tenant descends from th
 Note also what makes the cost visible: everything in the yellow box is duplicated in the pink one
 (S12 `n2`, `n9`; full walkthrough in the
 [source note](../../sources/260802_gcp-multi-tenant-agentic-ai/LEARNING.md)).
+
+![Four scatter plots of a retriever's embedding space: CPA's poison scattered among benign queries, against AgentPoison's triggered queries collapsing into one tight isolated cluster by iteration 15](../../sources/260804_agentpoison/visuals/fig2_embedding_space.png)
+
+**The attack, and the reason it is quiet, in one picture.** Grey is benign queries, red is triggered
+queries, blue is the poisoned records. Panel (a) is the old approach, with poison scattered through the
+benign mass, which is why it gets retrieved for innocent queries and wrecks benign accuracy. Panels (b)
+to (d) are AgentPoison's optimiser finding a **private region of the embedding space** that no benign
+query occupies. Once the region exists, a handful of records - or one - covers it, and retrieval stops
+being a contest. Keep this as the canonical picture of why a retrieval store needs a threat model
+(S16 `n3`, claim 137; full walkthrough in the
+[source note](../../sources/260804_agentpoison/LEARNING.md)).
 
 ## Open questions / conflicts
 
@@ -242,7 +334,23 @@ Note also what makes the cost visible: everything in the yellow box is duplicate
   [`memory.md`](memory.md)]. S7 ships attribution and version history, which are **forensics after the
   fact**; there is **no admission control** - nothing validates a memory before the next agent acts on
   it. Recorded as claim 63 and **labelled commentary**, since neither memory source discusses the
-  threat. **The most actionable open question in this note.**
+  threat. ~~**The most actionable open question in this note.**~~ **Substantially answered by S16 on
+  2026-08-04, and answered worse than feared.** S7's path needed a *cooperating* agent writing an
+  imperative to its successor; S16 shows an **external** attacker reaching the same outcome by writing
+  **one** record and letting the retrieval step do the work, with no imperative and no cooperation
+  (claims 135, 138). **The half that remains open is the defence.** No source here has one: volume
+  detection, embedder privacy and perplexity filtering are each independently defeated (claims 138-140),
+  and the one purpose-built defence is argued broken rather than shown broken (claim 141). **That
+  residue is now the most actionable open question in this note**, restated below.
+- **What actually defends a retrieval store, given that the obvious three do not?** Claims 138 through
+  141 close off volume detection, embedder privacy, perplexity filtering and isolate-then-aggregate.
+  Two directions are visible from what this brain already holds and neither is tested. The first is
+  **admission control on writes**, which is `rag.md`'s claim 95 - a trust signal needs a writer
+  restriction - applied as a security control rather than a quality one, and it is structural where
+  everything defeated above is detective. The second is **embedding-space anomaly detection**, because
+  S16's defining property is that triggered queries form a dense cluster in an otherwise empty region,
+  which is a conspicuous geometric signature that no defence in the paper looks for. **Commentary, not
+  a claim** - S16 tests neither.
 
 ## Note for the architect (topic boundary)
 
@@ -280,6 +388,16 @@ protocol details:
 
 ## Sources feeding this topic
 
+- **S16** - [AgentPoison](../../sources/260804_agentpoison/LEARNING.md) (Chen, Xiang, Xiao, Song, Li;
+  U Chicago / UIUC / U Wisconsin / UC Berkeley, arXiv 2024-07-17). **The note's first measured attack,
+  and its first source with no commercial position in what it claims.** Retrieval as attack surface,
+  the geometric mechanism, the single-record threshold, transferability across embedders, and the
+  defeat of perplexity filtering (claims 135-141). **T3 preprint** - the PDF reads "Preprint. Under
+  review." and the arXiv listing carried no journal reference at ingest. Read it for the mechanism,
+  which is well evidenced, and hold the efficacy accounting loosely: the benign-cost headline is an
+  average hiding a four-point worst case (`d1`) and the end-to-end success rate exceeds the action
+  success rate threefold on two agents with no explanation (`d2`). **Everything in it is internal to
+  one paper** - no external corroboration was gathered and the companion repo was not cloned.
 - **S12** - [Multi-tenant agentic AI system](../../sources/260802_gcp-multi-tenant-agentic-ai/LEARNING.md)
   (Google Cloud Architecture Center, reviewed 2026-06-18). **The containment half of this note, and the
   first source here that is about defending a running deployment rather than a protocol.** Isolation

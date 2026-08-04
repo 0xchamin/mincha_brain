@@ -1,7 +1,11 @@
 # Topic: RAG (Retrieval-Augmented Generation)
 
-**Status:** **emerging** (3 sources - S8 "LLM Wiki", Andrej Karpathy, 2026-04-04; S10 "Tool search",
-Microsoft, 2026-07-29; S11 "agent-first data stack", LangChain, 2026-07-27).
+**Status:** **emerging** (4 sources - S8 "LLM Wiki", Andrej Karpathy, 2026-04-04; S10 "Tool search",
+Microsoft, 2026-07-29; S11 "agent-first data stack", LangChain, 2026-07-27; **S16 "AgentPoison",
+2026-08-04 - the topic's first T3 academic source and its first adversarial one**, contributing
+retrieval geometry as a control surface an attacker can write into). **Still `emerging`:** S16
+corroborates none of the other three, and chunking, embeddings, vector stores, hybrid search and
+grounding evals remain at zero.
 **Basis:** the topic's first source arrived from an unexpected direction - **it is an argument against
 query-time retrieval**, not a description of how to do it. That is still the right home for it: a
 claim about what to build *instead* of RAG belongs in the note that owns RAG, and splitting it into a
@@ -358,6 +362,37 @@ LLM-*written* and self-maintaining by design, while S11's is **human-written thr
 consumes the layer and never edits it, and every write in the loop is a person's. On the question S8
 actually raises (can an LLM maintain its own knowledge store?) S11 is silent, having chosen the other
 answer without arguing for it. **That is why this note stays `emerging`** - see the status line.
+
+### Retrieval geometry is a control surface, and an adversary can write into it
+
+**The first source here to treat the embedding space as something someone shapes on purpose rather
+than as a property of the encoder.** S16 optimises a trigger phrase so that any query containing it
+lands in a region of the retriever's embedding space that is **unique** - far from where benign
+queries fall - and **compact**, meaning all triggered queries land together. Poison placed at those
+coordinates is then retrieved by construction rather than by winning a similarity contest
+([S16](../../sources/260804_agentpoison/LEARNING.md) `n3`, claim 137). Full synthesis in
+[`agent-security.md`](agent-security.md); recorded here because it changes how to read two things this
+note already holds.
+
+The first is **retrieval quality as an editorial problem** (claim 91, from S10). This note records that
+tuning what gets retrieved is a matter of writing better names and descriptions before it is a matter
+of better algorithms. S16 is the adversarial form of exactly that observation, and the symmetry is
+uncomfortable: **if editorial control over indexed text steers retrieval, then editorial control is a
+privilege, and nothing in S10 or S11 treats it as one.**
+
+The second is **claim 95, that a trust signal needs a writer restriction to mean anything**. S11
+reached that from a quality argument, since a store where everything is endorsed carries no signal.
+S16 supplies the security argument for the same control, and it is the stronger one. A writer
+restriction is *structural*, where every defence S16 defeats is *detective* - volume anomaly detection,
+perplexity filtering and embedder privacy each fail against an attacker who needs one record and a
+fluent trigger (claims 138 through 140). **Two independent arguments now point at the same mechanism
+from opposite directions, which is the most useful thing this note can say about it.**
+
+> **Worth carrying into any retrieval design: the property that makes the attack effective is the same
+> one that makes it quiet.** A region no benign query visits is never retrieved for benign traffic,
+> so poisoned records sitting there cost nothing in ordinary accuracy. **A retrieval store can be
+> compromised without its quality metrics moving**, which is the opposite of how corpus poisoning
+> behaved and the reason detection strategies built for it do not transfer.
 
 ## Key claims
 
