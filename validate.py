@@ -484,6 +484,13 @@ ALLOWED_NON_ASCII = set(
     "≤≥≠±×÷"              # comparison and arithmetic
     "²³·…"                # superscripts, middot, ellipsis
     "⭐"                   # used in a couple of tables
+    # Diacritics in researchers' names and paper titles. Added 2026-08-04, when the reading
+    # list first had to cite Christopher Re and the Darwin Godel Machine and could spell
+    # neither. A brain whose entire purpose is accurate citation must not silently ASCII-fold
+    # an author's name, so the alternative - dropping the accents - was the worse defect.
+    # Deliberately a fixed list of Latin-1 letters, not a category test: a stray CJK glyph is
+    # still the thing this check exists to catch.
+    "áàâäãåéèêëíìîïóòôöõúùûüñçßøæœÁÀÂÄÃÅÉÈÊËÍÌÎÏÓÒÔÖÕÚÙÛÜÑÇØÆŒ"
 )
 
 
