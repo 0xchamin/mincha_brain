@@ -131,9 +131,22 @@
 | Rollback-safe ledger | The rule that in a loop whose discard operation is a rollback, the audit trail must live outside the rolled-back state - otherwise the record of a failed attempt is destroyed along with the attempt. In S13: the code is committed, the results file is deliberately untracked. *(Name is this brain's; the source states only the instruction.)* | S13 (`n7`) |
 | Goodhart's law (mechanical form) | When a measure becomes a target it stops being a good measure. The version that matters for agent loops is not about incentives but about plumbing: **any degree of freedom that changes the metric's units improves the number without improving the thing**, and an optimizer will find it with no intent to cheat. | S13 (`n4`, and this brain's framing) |
 
+| Generation-verification gap | The distance between what a model can produce *somewhere* in its sample set and what any available selector can actually extract from it. Generation is cheap and scales with compute; verification does not, so the gap widens with problem difficulty - ~0.87 against 1.0 on GSM8K, ~0.40 against ~0.95 on MATH. **The binding constraint on every sampling-based method.** | S15 (`n10`, `n11`) |
+| Mechanical verifier | A correctness check whose result does not depend on a model's judgement - a proof assistant, a test suite, a compiler, a simulator. The distinction that matters is not automated against manual, but **grounded outside the model against produced by another model**. Its availability, not model capability, decides where repeated sampling pays. | S15 (`n8`) |
+| Exponentiated power law (inference scaling) | `c = exp(a·k^b)`, relating coverage `c` to sample count `k`. Its exponent is a property of the **benchmark's difficulty distribution** as much as of the model, because the power law exists only where a long tail of very hard problems drags out the per-problem exponentials. | S15 (`n3`, `n5`) |
+| Parallel sampling vs sequential revision | The two axes of test-time compute. Parallel draws k *independent* attempts and **explores**, producing both the diversity that gives coverage its power and the disagreement that makes selection hard. Sequential conditions each attempt on the previous ones and **exploits**, inheriting earlier correctness and earlier mistakes alike. | S15 (`n14`) |
+| Outcome vs process reward model (ORM / PRM) | An ORM scores a finished answer; a **PRM** scores each intermediate *step*, where a step is a semantically meaningful chunk and explicitly not a token. Step-level scores are what turn repeated sampling into **beam search over reasoning steps**, since you no longer have to wait for a complete answer to abandon a bad line. | S15 (`n16`, `n17`) |
+| Fusion (inference-time operation) | Handing a model **all** k candidates and asking it to synthesize one answer, rather than selecting among them. Reported to beat oracle selection, which is impossible under the selection frame and is the evidence that the frame was wrong - a synthesis can combine a correct approach from one candidate with a correct calculation from another. *(S15 `needs-check`: authors' own result, one unnamed benchmark.)* | S15 (`n25`) |
+
+> **⚠️ `pass@k` collides across sources, and the collision is already recorded.** S1 means *sequential
+> retries with QA feedback between them*; S14 and S15 mean *k independent samples with no feedback*.
+> S15 adds the sharper distinction to carry: **coverage (`pass@k`) is an existence claim about a
+> candidate set, `pass@1` is a delivered result**, and conflating them is claim 132.
+
 > **S12** = `sources/260802_gcp-multi-tenant-agentic-ai/` (Google Cloud Architecture Center, reviewed 2026-06-18).
 > **S13** = `sources/260803_autoresearch/` (Andrej Karpathy, `karpathy/autoresearch`, code snapshot `228791f`, 2026-03-26).
 > **S14** = `sources/260804_cs329a-self-improving-agents/` (Stanford CS329A lecture 1, `6YnLB0XbTnI`, 2026-08-03).
+> **S15** = `sources/260804_cs329a-test-time-compute/` (Stanford CS329A lecture 2, `-Ggc37xLj_Y`, 2026-08-03). **Not independent of S14.**
 > **F** = a [`foundations/`](../foundations/README.md) file - **supplied background, uncited by
 > construction.** A term attributed to `F` was not learned from a gated source; it is vocabulary this
 > brain supplies so the rest reads. Treat it as a definition, never as a finding.

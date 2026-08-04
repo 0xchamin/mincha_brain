@@ -1,12 +1,14 @@
 # Topic: Evals
 
-**Status:** established (6 sources - S1 Uber closed-loop evals, S4 Anthropic harness design, S5
-Google DeepMind skill evals, **S11 agent-first data stack - a *counter*-example, a production
-deployment with no evals whose authors concede the gap**, **S13 `karpathy/autoresearch`, which
-supplies the half this note was missing: how to *design* a metric that an optimizer cannot game, and
-what an accept rule does with noise**, and **S14 Stanford CS329A, which supplies the first
+**Status:** established (7 sources / **6 independent** - S1 Uber closed-loop evals, S4 Anthropic
+harness design, S5 Google DeepMind skill evals, **S11 agent-first data stack - a *counter*-example, a
+production deployment with no evals whose authors concede the gap**, **S13 `karpathy/autoresearch`,
+which supplies the half this note was missing: how to *design* a metric that an optimizer cannot game,
+and what an accept rule does with noise**, **S14 Stanford CS329A, which supplies the first
 *independent* statement of self-evaluation bias and the first case of the verifier being written by
-the thing it judges**).
+the thing it judges**, and **S15, CS329A lecture 2 - not independent of S14**, contributing the
+coverage-versus-`pass@1` reporting failure and a scaling law that reads as a diagnostic for your
+evaluation set).
 **Basis:** all three independently arrive at *an independent checking stage that can fail the work* -
 S1's Swiss-cheese QA gates on a production pipeline, S4's evaluator agent with hard thresholds on a
 build loop, and S5's CI gate that blocks a skill diff from merging without proof of lift. **S5 is the
@@ -180,6 +182,35 @@ the **same direction** as the output it judges, so the loop reports success and 
 is claim 113's finding arriving from the opposite end: there, separation existed at the function
 level and leaked through the reporting path; here, separation is abandoned at the source.
 
+### The metric that is not a metric: coverage against pass@1
+
+**The measurement failure this note is now best placed to warn about, because it was caught from the
+artifacts rather than argued from principle** [S15 `d1`, `d2`, `d3`; S14 `d1`].
+
+Two numbers get reported for the same experiment and they are not the same kind of thing. **Coverage**
+(`pass@k`) says a correct answer exists *somewhere* in k samples, and on many published panels it is
+resolved by an "oracle verifier" handed the ground truth. **`pass@1`** says the system committed to one
+answer and was right. Coverage is an existence claim; `pass@1` is a result. Only the second is
+something a user experiences.
+
+The distance between them is not a rounding error. On MATH with Llama-3-8B, every deployable selector
+sits near 0.40 while coverage reaches about 0.95 [S15 `n10`, `frame_1000`], and **the gap widens with
+difficulty** - on the easier GSM8K it is 0.87 against 1.0. So the discrepancy is smallest where nobody
+would notice and largest where the claim is most impressive.
+
+**Why this belongs in `evals` rather than in the topic it came from.** It is not a fact about
+test-time compute. It is a rule for reading anyone's results: *check which of the two a chart plots
+before believing a comparison drawn on it*, and be especially careful when a headline says
+"outperforms" over an axis labelled coverage.
+
+> **It is a reporting-incentive failure, not dishonesty, and the evidence for that reading is unusually
+> clean.** The same lecturer in the same hour overstates twice while presenting *sampling* papers
+> [S15 `d1`, `d2`] and then reports **pass@1** correctly while presenting her own lab's *architecture*
+> paper [S15 `n31`], which emits one answer. **The reporting followed the artifact each time.** A
+> method that measures coverage gets described in coverage, and the slide title is written by whoever
+> is holding that number. Expect the same wherever a technique's natural metric and its deployed metric
+> differ - which is exactly claim 100's shape, arrived at from a different direction.
+
 ## Key claims
 
 | Claim | Sources (cited) | Confidence |
@@ -187,6 +218,8 @@ level and leaked through the reporting path; here, separation is abandoned at th
 | Log the full flat trace first - it is the precondition for evals and any self-learning loop. | S1 `&t=418s` (slide `frame_1058` + narration) | emerging |
 | **Models prefer their own reasoning traces over better traces from a stronger model** (claim 125). An independent, different-mechanism statement of claim 34's self-evaluation bias. | S14 (`n9`, `&t=2291s`) | **needs-check** - single-leg, uncited by the source, no magnitude. Two independent assertions, zero measurements |
 | **The verifier is increasingly written by the system it judges** - agents generating the tests they must pass (claim 126). Presented approvingly by the source and never interrogated. | S14 (`n13`, `&t=2992s`, `&t=3196s`) | **needs-check** - single-leg, and recorded as a structural hazard rather than a documented failure. Extends claims 34 and 113 |
+| **A benchmark's scaling exponent is a fact about the benchmark before it is a fact about the model** (claim 129). Average `pass@k` rises as a *power law* only because per-problem success is *exponential* in k and the difficulty distribution has a **long tail of very hard problems** - stated as necessary as well as sufficient. | S15 (`n5`, `frame_590`, `&t=558s`) | corroborated, and **the only peer-reviewed result in either CS329A lecture** (ICML 2025). Read it as a diagnostic for your eval set |
+| **Reporting coverage as performance is this field's characteristic measurement failure** (claim 132). `pass@k` is an *existence claim* about a candidate set, often resolved by an oracle handed the ground truth; `pass@1` is what a system delivers. **The gap between them is 0.40 against 0.95 on MATH.** | S15 (`n10`, `n11`, `d1`, `d2`, `d3`, `frame_1000`, `frame_150`); the same defect independently gated in S14 (`d1`) | corroborated **as a pattern, from the artifacts themselves** - the gate caught it 4 times across 2 lectures. See the note below on why this is not an accusation |
 | **Anti-Goodhart is a code-layout problem, not a prompt problem** - normalise by a unit the optimizer cannot redefine, evaluate under fixed conditions, and pin the holdout in read-only code (claim 111). | S13 (`prepare.py:343-365`, `:350`, `:42-44` @ `228791f`, `n2`, `n4`) | corroborated (docs+code, internal to one repo) |
 | **A protected metric can still reach the decision through producer-editable code** - separating generator from evaluator at the function level does not separate them on the *reporting* path (claim 113). Extends claim 34 as plumbing rather than prompting. | S13 (`train.py:26`,`:613`,`:621-630` @ `228791f`, `n5`) | corroborated (code). No observed exploitation - structural, not an incident |
 | **An accept rule with no variance handling banks noise** - S13's own run kept a change of random seed as one of fifteen "improvements" (claim 114). Every accept then permanently raises the bar for the next one. | S13 (`program.md:103-104` + `visuals/progress_endgame.png`, `n11`, `g3`) | corroborated (stated rule + the source's own figure) |
@@ -298,3 +331,11 @@ level and leaked through the reporting path; here, separation is abandoned at th
   by the generator (126). Also supplies the **coverage against pass@1** distinction, which is filed in
   [`self-improvement.md`](self-improvement.md) as claim 120 because it is the loop's vocabulary
   rather than a measurement practice.
+- **S15** - [Stanford CS329A, lecture 2: Test-Time Compute Scaling](../../sources/260804_cs329a-test-time-compute/LEARNING.md)
+  (video, 2026-08-03). **⚠️ Not independent of S14** - same course, same lecturers, so it raises this
+  note's raw count and not its evidence. Contributes claims **129** (a scaling exponent is a
+  diagnostic for the *benchmark*) and **132** (the coverage-as-performance reporting failure).
+  **What makes 132 unusually well-evidenced despite the source being weak: it was gated off the
+  artifacts four separate times across two lectures, not argued from principle**, and the same
+  lecturer reports honestly when her artifact emits a single answer (`n31`). That combination is what
+  turns it from a complaint into a reading rule.
