@@ -1,12 +1,27 @@
 # Topic: Agent security
 
-**Status:** emerging (4 sources - S3 OAuth/OIDC, the delegated-authorization substrate;
-**S7 memory and dreaming, which does not discuss security at all** and feeds this note only by making
-memory poisoning concrete; **S12 a cloud reference architecture, which is entirely about isolation and
-entirely unmeasured**; **S16 AgentPoison, the note's first measured attack**). **A rising source count
-is still not rising evidence:** no two of these corroborate each other's claims - they occupy
-different halves of this note - so the bar for `established` is unchanged: a second source that
-studies the *same* material as an existing one.
+**Status:** **established** (**5 sources, of which exactly one *pair* corroborates** - S16 and S17,
+on agent memory as a persistence surface). Advanced 2026-08-04 by
+[ADR-0019](../decisions/0019-agent-security-established.md). The other three remain non-corroborating
+and are listed for what they are: **S3** OAuth/OIDC, the delegated-authorization substrate; **S7**
+memory and dreaming, which does not discuss security at all and feeds this note only through this
+brain's commentary; **S12** a cloud reference architecture, entirely about isolation and entirely
+unmeasured.
+
+> **The pair is the reason, not the count**, and that distinction is the whole point of this line.
+> This note held the bar "a second source that studies the *same* material as an existing one" through
+> four sources and enforced it twice, including against S16 hours before S17 arrived. **S17 met it on
+> one specific node.** Its `n6` shows the *agent itself* writing an injection into long-term memory
+> and re-poisoning a fresh session on read; S16's `n1`/`n5`/`n11` show an *external attacker* writing
+> poisoned records a triggered query retrieves. Opposite mechanisms, same conclusion, and the
+> independence was checked rather than assumed: no author, institution or country in common, seventeen
+> months apart, neither a vendor (claim 145).
+>
+> ⚠️ **`established` describes evidential coverage of what this note asserts, and this note asserts
+> attacks.** Everything gated here is an attack; **nothing here is a gated defence.** S17's mitigation
+> survey is `single-leg`, three years old, and names no working solution by its authors' own
+> admission. The entire defensive literature between 2023 and 2026 is ungated. **Do not read this
+> status as "the topic is handled".** Keep this warning on any future edit.
 
 > **S16 changes what this note is, without changing its status, and the distinction is worth stating.**
 > Until 2026-08-04 every source here described a **design** - a protocol, an isolation topology, a
@@ -227,6 +242,60 @@ defence against itself, which makes it the most valuable open experiment in this
 > exactly such a component, and S16 is what the unspecified obligation looks like when someone attacks
 > it. The two sources never mention each other and are describing the same hole from opposite sides.
 
+### The general case: retrieved data is executable, and the adversary never appears
+
+S16 attacks one component. **S17 names the property that makes every such attack possible**, and it is
+the framing the field has been built on since:  when augmenting an LLM with retrieval, "*processing*
+untrusted retrieved data would be analogous to *executing* arbitrary code, and the line between *data*
+and *code* would get *blurry*" ([S17](../../sources/260804_indirect-prompt-injection/LEARNING.md)
+`n1`, claim 142).
+
+Take that seriously and the defensive position collapses in a specific direction. There is no
+parameterised prompt available - a context window is one flat token sequence, and instruction
+following is a learned disposition rather than a parser with a grammar - so the SQL-injection fix has
+no analogue here. **The equivalence earns itself by predicting the capability list correctly**, which
+is a stronger argument than asserting it: code execution buys persistence, propagation, remote
+control, exfiltration and denial of service, and S17 demonstrates a working instance of each on real
+deployed products including Bing Chat on GPT-4 and GitHub Copilot (claim 146).
+
+The consequence for who you are defending against is the part that invalidates existing controls.
+Every pre-2023 mitigation assumed the adversary was the **user**, because the user was the only party
+talking, and filtering, refusal, rate limiting and banning all presume you can identify a malicious
+requester. Indirect injection removes them from the session entirely: they write text onto a page and
+wait for somebody else's agent to fetch it, so **there is no account to suspend and no request to
+block** (claim 143). The request that carries the payload was issued by the victim's own application,
+to a source it trusts, as part of working correctly.
+
+**That is why the taxonomy is worth having, and why nothing in it is novel.** S17 adapts the classical
+cyber-threat categories and asks what each becomes when the compromised component is a model with
+tools, producing information gathering, fraud, intrusion, malware, manipulated content and
+availability, across four injection methods and four affected parties (claim 144). No new *category*
+of harm appears. What is new is that a text generator turns out to occupy the architectural position
+of a host an attacker has landed on.
+
+Two findings then make the attacker's economics worse than the taxonomy suggests. The first is that
+**the attacker states the goal and the model supplies the method**: prompted only to persuade the
+user without arousing suspicion, Bing Chat invented its own urgency, authority and flattery cues that
+nobody specified (claim 147). Attack quality therefore scales with model capability at no cost to the
+attacker, which inverts the usual relationship where effort tracks sophistication. The second is that
+**the model's follow-up API calls reinforce the injection** - told to suppress a source, it issued its
+own searches and returned material arguing that source had lost credibility, laundering the injection
+through what looks to the user like independent retrieval.
+
+> **And the practical lesson sits in a place most teams have already got wrong.** Bing Chat **did**
+> filter its chat channel; the authors confirm prompts typed directly were caught and the session
+> terminated. The same prompts arriving inside a retrieved page went through, because the retrieval
+> path had been classified as **data plumbing rather than as input** (claim 148). The control has to
+> sit **between retrieval and the context window, on the assembled prompt**, since that is the only
+> point that sees the untrusted text in the form the model will receive it.
+>
+> **This independently confirms a bound this brain wrote as its own commentary.** Against S12's
+> claim 103 this note recorded that edge filtering "sees the request, not the assembled prompt, so
+> indirect injection arriving in a retrieved document or a tool result never crosses it", flagged at
+> the time as the brain's reading rather than the source's. S17 is that reading confirmed on a
+> shipped product by an unrelated team - and the commentary was written from architecture alone,
+> before this brain held any source that had tested it.
+
 ## Key claims
 
 | Claim | Threat / mitigation | Sources (cited) | Confidence |
@@ -249,6 +318,13 @@ defence against itself, which makes it the most valuable open experiment in this
 | Triggers transfer to embedders they were never optimised on, including black-box APIs, so a private embedder is not a mitigation | threat: transferability | S16 `n6` (claim 139) | OK on the matrix; the distributional explanation is argued, not measured |
 | A fluency constraint defeats perplexity filtering by removing the property the filter measures | threat: defence evasion | S16 `n7`, `n8` (claim 140) | OK (corroborated) |
 | Isolate-then-aggregate fails against an attacker who poisons **all** k retrieved neighbours, because the defence assumed that was uneconomic | mitigation: **known-broken** | S16 `n10` (claim 141) | **needs-check** - argued from the success criterion, never run against the defence |
+| **Processing untrusted retrieved data is analogous to executing arbitrary code**, because data and instructions share one undifferentiated channel and there is no parameterised prompt | threat: the root property | S17 `n1` (claim 142) | OK (corroborated). **The framing everything else follows from** |
+| Indirect injection removes the adversary from the session: no account, no request, no rate limit, because the fetch was issued by the victim's own application | threat: attacker position | S17 `n2` (claim 143) | OK (corroborated) |
+| The classical threat taxonomy transfers wholesale - six threat classes, four injection methods, four affected parties including the model itself | framework | S17 `n3` (claim 144) | OK (corroborated) |
+| **Agent memory is a persistent compromise surface and a session reset does not clear it** | threat: persistence | **S17 `n6` + S16 `n1`, `n5`, `n11`** (claim 145) | **OK - corroborated by 2 independent sources.** The pair this topic's status rests on ([ADR-0019](../decisions/0019-agent-security-established.md)) |
+| Worms, command-and-control and multi-stage payloads all demonstrated on real deployed products | threat: malware playbook | S17 `n5`, `n7`, `n9` (claim 146) | OK as demonstrations; **unquantified** (`d1`) |
+| The attacker states the goal and the model supplies the method, so attack quality scales with model capability for free | threat: economics | S17 `n10`, `n11` (claim 147) | OK (corroborated) |
+| **Input filtering fails by sitting on the wrong channel** - Bing Chat filtered chat and not retrieval, because retrieval was classified as plumbing rather than input | mitigation: **placement** | S17 `n12` (claim 148) | OK (corroborated). **The most actionable defensive claim here**, and it confirms this note's own prior commentary on claim 103 |
 
 ## Key visuals
 
@@ -342,6 +418,17 @@ being a contest. Keep this as the canonical picture of why a retrieval store nee
   detection, embedder privacy and perplexity filtering are each independently defeated (claims 138-140),
   and the one purpose-built defence is argued broken rather than shown broken (claim 141). **That
   residue is now the most actionable open question in this note**, restated below.
+- **What defends against any of this, in 2026? The largest gap in this note, and it is a gap in the
+  brain rather than in the sources.** S17 walks four candidate defences to their failure points and
+  declines to name a solution - alignment training is "Whack-A-Mole" with impossibility results cited,
+  filtering retrieved input faces a dilemma where a filter capable enough to decode obfuscation is
+  itself injectable, an LLM supervisor must read the untrusted source to judge faithfulness and lands
+  in the same position, and interpretability-based outlier detection is offered as a direction rather
+  than a method (S17 `n14`, `single-leg`). **That survey is from early 2023.** Everything the field
+  has built since - spotlighting, delimiter schemes, dual-model and capability-based patterns,
+  provenance tracking - is **entirely ungated here**. Combined with claims 138-141, this note now
+  documents that six named defences fail and holds no evidence about any that works. **The highest-
+  value research target in the topic.**
 - **What actually defends a retrieval store, given that the obvious three do not?** Claims 138 through
   141 close off volume detection, embedder privacy, perplexity filtering and isolate-then-aggregate.
   Two directions are visible from what this brain already holds and neither is tested. The first is
@@ -386,8 +473,31 @@ protocol details:
 | Consent is **per-flow and interactive** | Workload identity is **continuous and automatic**; agent auth has to answer what consent means for a long-running process |
 | The client is **fixed software** that requests scopes its author chose | An agent chooses actions at **run time** - the open question below |
 
+![The indirect prompt injection threat taxonomy: four injection methods, six threat classes, and four affected parties including the LLM itself](../../sources/260804_indirect-prompt-injection/visuals/fig2_taxonomy.png)
+
+**The threat map for this whole topic, on one page.** Injection methods on the left are how the
+payload arrives (passive by retrieval, active by sending, user-driven, hidden). The six threat classes
+across the bottom are the classical cyber-threat categories asked anew of a model with tools, with
+"Spreading injections (*Prompts as worms*)" sitting under Malware. Affected parties on the right
+include **the LLM itself**, which is unusual in a threat taxonomy and follows from availability
+attacks that make the model useless without harming anyone else. Keep this as the canonical
+enumeration of the surface (S17 `n3`, claim 144; full walkthrough in the
+[source note](../../sources/260804_indirect-prompt-injection/LEARNING.md)).
+
 ## Sources feeding this topic
 
+- **S17** - [Indirect prompt injection](../../sources/260804_indirect-prompt-injection/LEARNING.md)
+  (Greshake, Abdelnabi, Mishra, Endres, Holz, Fritz; Saarland / CISPA / sequire technology, arXiv
+  2023-02-23, v2 2023-05-05). **The source that moved this topic to `established`, and the paper that
+  named indirect prompt injection.** The data-instruction blur, the threat taxonomy, goal-only
+  payloads, worms and persistence and C2, and the filter-on-the-wrong-channel finding (claims
+  142-148). Demonstrated on **real deployed products** - Bing Chat on GPT-4, GitHub Copilot - with
+  responsible disclosure to OpenAI and Microsoft. **T3 preprint** (no journal reference on the arXiv
+  listing at ingest). **⚠️ Entirely qualitative: no success rate, no sample size, no statistics for
+  any of the six threat classes** (`d1`), and the most striking results run against a black-box
+  product the authors concede they cannot reproduce exactly (`d2`). Its **mitigations survey is
+  three years old and is its weakest material** - read it as "no solution existed in early 2023, and
+  here is why each obvious one is hard", never as a current statement.
 - **S16** - [AgentPoison](../../sources/260804_agentpoison/LEARNING.md) (Chen, Xiang, Xiao, Song, Li;
   U Chicago / UIUC / U Wisconsin / UC Berkeley, arXiv 2024-07-17). **The note's first measured attack,
   and its first source with no commercial position in what it claims.** Retrieval as attack surface,

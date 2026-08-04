@@ -3,8 +3,9 @@
 **Status:** **established** (4 sources - S6 "Dreaming: Better memory for a more helpful ChatGPT",
 OpenAI, 2026-06-04; S7 "Memory and dreaming for self learning agents", Anthropic, 2026-05-21;
 **S8 "LLM Wiki", Andrej Karpathy, 2026-04-04 - a partial feeder**, contributing only to the
-decoupled-curation claim, from outside agent memory entirely; **S16 "AgentPoison", 2026-08-04 - the
-adversarial feeder**, which designs no memory and attacks the shape all three of the others share).
+decoupled-curation claim, from outside agent memory entirely; **S16 "AgentPoison" and S17 "indirect
+prompt injection", both 2026-08-04 - the adversarial feeders**, which design no memory and attack the
+shape all three of the others share, from two independent directions).
 **Basis:** created under [ADR-0007](../decisions/0007-memory-topic.md); promoted to `established`
 under [ADR-0008](../decisions/0008-memory-established.md) on **two-vendor architectural
 convergence**.
@@ -371,6 +372,28 @@ record at chosen coordinates is cheaper than competing for relevance.
 > sources here were its target. The shared property is the one that matters - automatic retrieval of
 > attacker-writable text into context - and the transfer is this brain's reading rather than S16's
 > claim.
+
+**S17 removes the need for that reading, because it attacks a memory store directly and the agent
+writes the poison itself.** In its persistence demonstration a compromised model is instructed by
+retrieved content to write part of the injection into a simple key-value long-term memory. The
+session ends and the model is reset. A **fresh, uncompromised** model then reads its own stored notes
+and is re-compromised while answering the user
+([S17](../../sources/260804_indirect-prompt-injection/LEARNING.md) `n6`, claim 145).
+
+Sit with what that does to the obvious mitigation. **Ending the session and starting clean is the
+first thing anyone reaches for, and this is that mitigation failing** - not because the reset was
+incomplete, but because the compromise was moved into the one component deliberately designed to
+survive resets. Every architecture in this note has that component, and none of them treats a memory
+write as an untrusted input on the way back in.
+
+> **The two attacks meet here, and their independence is what makes the pair worth having.** S16 has
+> an **external attacker** writing poisoned records that a triggered query retrieves. S17 has the
+> **agent itself** writing the poison, with no attacker access to the store at all. Different
+> mechanism, unrelated teams, seventeen months apart, neither a vendor - and the same conclusion, that
+> **agent memory is a persistent compromise surface and a reset does not clear it.** That pair is what
+> moved [`agent-security.md`](agent-security.md) to `established`
+> ([ADR-0019](../decisions/0019-agent-security-established.md)), and it is the first thing in this
+> brain to corroborate anything about memory *from the adversarial side*.
 
 The consequence for this note's **decoupled background pass** is worth stating, because it cuts both
 ways and neither direction is measured. A pass that runs out of band, reads the whole store and
