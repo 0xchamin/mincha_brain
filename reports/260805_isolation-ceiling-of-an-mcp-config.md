@@ -10,7 +10,7 @@
 | Date | 2026-08-05 |
 | Built from | claims 149, 152, 153, 155, 166, 167, 173; conjecture h7; R3 (AgentDyn); `mcp.md` |
 | For | Deciding whether this is the next thing to build alongside **MCP Shark** |
-| Verdict in one line | **The measurement is unclaimed and cheap, and the closest prior-art survey has now been read and does not cover it. The remaining risk is not novelty - it is whether conjecture h7 is true.** |
+| Verdict in one line | **Build it.** The prior-art survey was read and does not cover it (§6.1), and **the load-bearing conjecture was tested against AgentDojo's own data on 2026-08-05 and holds at 220x, chi-square 227** (§3.1). The remaining risk is no longer the idea - it is approximating task tool sets without ground truth |
 
 ## 1. The proposition
 
@@ -72,6 +72,32 @@ proposed here measures nothing and the idea dies.
 
 **That is also why this is worth doing.** The cheapest way to test h7 is to build the measurement and
 correlate it against defence failure rates - so the product and the experiment are the same work.
+
+### 3.1 h7 was tested on 2026-08-05, and it holds
+
+**Promoted to claim 178.** Run entirely over artifacts AgentDojo publishes - its ground-truth tool
+sequences and its shipped run data - with no model calls and nothing re-executed. One file, reproducible:
+[`experiments/260805_h7_agentdojo_test.py`](experiments/260805_h7_agentdojo_test.py).
+
+A (user task, injection task) pair is **un-isolatable** when the injection's required tools are a subset
+of the user task's - the filter has nothing to remove. Over 547 mappable pairs:
+
+| Pipeline | un-isolatable pairs | isolatable pairs | risk ratio | chi-square |
+|---|---|---|---|---|
+| **No defence** (control) | 50.7% attacked | 47.9% attacked | **1.1x** | **0.2** - not significant |
+| **Tool filter** | **46.7% attacked** | **0.2% attacked** | **220x** | **227.2**, p much less than 0.001 |
+
+**The control row is what turns this from a correlation into a mechanism.** Un-isolatability predicts
+nothing about whether an attack succeeds when there is no defence. It becomes almost totally
+determinative once the filter is applied - which is precisely the claim. **35 of the 36 attacks that
+survive the tool filter are un-isolatable pairs.**
+
+> **An honest note on how nearly this was missed.** The first cut of this test was the one §8 originally
+> specified - correlate **per suite**, four data points. It came back inconclusive and slightly
+> discouraging: Spearman +0.80 against tool-filter attack rate, but equally correlated with *baseline*
+> attack rate, and the discriminating residual-ratio test ran the wrong way at -0.40. **Aggregating to
+> four suites was hiding a 220x effect.** The per-pair unit was both the correct test and available all
+> along. Recorded because a reader repeating this would otherwise repeat the mistake.
 
 ## 4. The measurement, defined precisely enough to argue with
 
@@ -159,8 +185,10 @@ Finally, its **boundary taxonomy gives the idea a place to sit**. This metric me
 
 ## 7. What would kill this
 
-**h7 is false.** If defence failure rate does not track read/write overlap, the metric predicts
-nothing. **This is the real risk and it is testable early** - see §8.
+~~**h7 is false.**~~ **Tested 2026-08-05 and it holds at 220x** (§3.1, claim 178). **The risk this
+retired has been replaced by a narrower and more practical one**, below: the test used the benchmark's
+**ground-truth** tool sets, and a real MCP config has none. The mechanism is established; what is
+unproven is whether an *approximation* of task tool sets preserves the signal.
 
 **Tool classification is too unreliable.** The metric inherits MCP Shark's stated limitation exactly:
 toxic-flow heuristics "depend on quality of tool name classifications", and tool-level rules only apply
@@ -168,8 +196,12 @@ when server entries include explicit `tools` arrays. **A metric built on a name 
 someone can dismiss.** Mitigation: report coverage alongside the number, and refuse to emit a ceiling
 for configs below a threshold of classified tools.
 
-**The task distribution is assumed rather than observed.** If you synthesise tasks from tool
-descriptions, the number is circular. Traffic-derived tasks avoid this and require real captures.
+**The task distribution is assumed rather than observed - and after §3.1 this is now the single biggest
+risk.** The experiment knew each task's exact required tools because AgentDojo publishes them. Your
+product will not. Traffic-derived task reconstruction from MCP Shark's SQLite store is the defensible
+route and its error is unmeasured. **The first thing to build is therefore the approximation, and the
+first thing to measure is how much signal it loses against the ground-truth version** - which
+AgentDojo lets you check directly, because it has both.
 
 **Someone has already published it.** §6's table remains a reason for caution, though **the single most likely source has been checked and cleared** (§6.1).
 
@@ -187,11 +219,14 @@ own "the field still lacks stable abstractions for authority, trust, and privile
 its observation that real failures are cross-boundary while benchmarks are not - which is the ground
 MCP Shark already occupies.
 
-**So the next action is now the first one: test h7 before building the product.** AgentDojo is open source and extensible by design. Take
-its four suites, compute read/write overlap for each, and check whether tool-filter failure rate
-tracks it across suites. **Four data points is not a result and it is enough to kill the idea** - and
-if the correlation appears, you have both a validated metric and a publishable finding that h7 is
-true, with S20's own benchmark as the evidence.
+~~**Then test h7 before building the product.**~~ **Done 2026-08-05 - see §3.1. It holds at 220x with a
+clean null control, and is promoted to claim 178.**
+
+**So the remaining work starts at what was step 3, with one addition that §7 now makes the priority.**
+Build the **task-tool-set approximation** first, not the counting function - reconstruct required tool
+sets from captured traffic, then **validate it against AgentDojo's ground truth**, which is the one
+place both versions exist. If approximated overlap reproduces the 220x separation, the metric is real
+outside a benchmark. If it does not, you have found the actual hard part before shipping a number.
 
 **Only then build it into MCP Shark**, with coverage reporting and the claim-155 caveat attached.
 
@@ -202,9 +237,11 @@ precisely so that outcome is not a wasted week.
 
 ## 9. What to distrust in this report
 
-**One step is a conjecture, not a claim.** h7 was generated by this brain on 2026-08-05 by combining
-claims 167, 166 and 155. It has no external support and is not cited anywhere in the literature. §3
-states this; do not let it drift into sounding established.
+**The key finding is this brain's own analysis, not an independent publication.** h7 was generated here
+on 2026-08-05 and tested here the same day (§3.1, claim 178). **The data is third-party and
+peer-reviewed; the analysis is mine and unreviewed.** It is reproducible in one file, which is the
+mitigation, and it is not the same thing as someone else having found it. Coverage was 87% - 82 of 629
+pairs skipped where ground truth would not parse statically - on one model and one attack type.
 
 **The prior-art search was one query on one domain.** It was enough to bound the novelty claim
 downward and is not a systematic review. §6's table is a reason for caution, not a clearance.
