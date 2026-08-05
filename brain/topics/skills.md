@@ -1,8 +1,17 @@
 # Topic: Skills
 
-**Status:** emerging (5 sources, but **only one of them is about skills** - S5 "Don't Ship Skills
+**Status:** emerging (6 sources, but **only one of them is about skills** - S5 "Don't Ship Skills
 Without Evals", Philipp Schmid / Google DeepMind, AI Engineer WF 2026; plus S7, S9, S11 and S13, each
-contributing a single peripheral observation).
+contributing a single peripheral observation, and **S19 memory poisoning, which supplies this note's
+first security material** by treating skill synthesis as a memory write channel with no validation
+step and an amplification vulnerability attached).
+
+> **The count-versus-evidence trap this note exists to warn about still applies, and S19 is the
+> honest test of it.** The source count moves 5 to 6 and S19 is **not** about skills either - it is
+> about memory poisoning, and skills enter as one of its four write channels. It earns its place
+> because it says something about skills nothing else here does (they are written with no inspection,
+> and a self-improving loop optimises a poisoned one), and it does **not** corroborate a single one of
+> S5's claims. **Still one source on skills.**
 **Basis:** S5 remains the only source that studies skills. It is unusually well-evidenced for a
 `seed -> emerging` promotion because its central numbers come from **SkillsBench**, a public
 third-party benchmark, rather than from the speaker's assertions. **Note the independence limit:** a
@@ -145,6 +154,47 @@ This **instruments** [`agents.md`](agents.md)'s claim 31 (every harness componen
 expiring assumption about what the model cannot do). A skill *is* a harness component. S4 named the
 expiry and offered only "remove one component at a time"; S5 supplies the measurement - and adds
 what S4 does not have: **keep the meter after you remove the part.**
+
+### The topic's first security material: a skill is a write channel
+
+**This note has never held anything on security, and S19 supplies it by treating skill synthesis as a
+path into persistent memory** ([S19](../../sources/260805_memory-poisoning-systematic/LEARNING.md)
+`n2`, claim 158).
+
+S7 gave this topic its category name - a skill is **procedural memory**. S19 works out what follows
+when that store is adversarial. Its channel **C4, experience-to-procedure write**, fires when an agent
+decides a completed interaction constitutes a reusable skill and synthesises it into procedural
+memory. The trigger is the *shape of the execution trace* - a novel workflow, an error recovery, a
+successful completion - and the write authority is **the agent's own judgement that this was worth
+keeping**. No human wrote the skill and no instruction requested it.
+
+Two vulnerabilities attach to that channel and neither has an equivalent for factual memory.
+**V-S4, no validation for skill creation**: the content is committed to procedural memory with no
+inspection before the skill file is written. And **V-S5, self-improvement as amplification**, which is
+the one worth carrying (claim 162):
+
+> A poisoned skill is not static. Each execution produces an observation, **the loop treats every step
+> that ran without error as validated**, and later revisions are built around the existing procedure
+> including any adversarially introduced step. Over time "the skill evolves into a well optimized
+> adversarial procedure."
+
+**Read that against claim 31 and the two point in opposite directions.** Claim 31 frames scaffolding
+as an expiring bet, with ablation as the test for whether it has expired - a skill earns its place by
+measurably helping, and you delete it when it stops. **Ablation tests whether a skill still helps. It
+does not test what the skill does when it is wrong on purpose**, and V-S5 describes a skill that gets
+*better at helping* while carrying a hostile step, which is precisely the case an evals-based
+retirement policy would keep.
+
+> **The uncomfortable pairing is with claim 26.** This note holds that AI-written skills are a
+> *negative* intervention (-8 to -11 points, SkillsBench), measured on quality. S19 supplies a second,
+> unrelated reason to be wary of a skill nobody wrote: **there is no inspection step on the path**, and
+> the self-improvement loop that refines it treats absence of error as evidence of correctness.
+> Neither source knows about the other, and they converge on "be suspicious of skills the system wrote
+> itself" from quality and from security respectively.
+
+Full synthesis in [`agent-security.md`](agent-security.md). **Gated `needs-check`:** V-S5 is a
+mechanism argument with no measurement - S19's benchmark measures skill-procedure *insertion* (58.33%
+attack success on HERMES), not amplification across successive refinements.
 
 ## Key claims
 

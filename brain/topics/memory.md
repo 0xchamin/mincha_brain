@@ -3,9 +3,11 @@
 **Status:** **established** (4 sources - S6 "Dreaming: Better memory for a more helpful ChatGPT",
 OpenAI, 2026-06-04; S7 "Memory and dreaming for self learning agents", Anthropic, 2026-05-21;
 **S8 "LLM Wiki", Andrej Karpathy, 2026-04-04 - a partial feeder**, contributing only to the
-decoupled-curation claim, from outside agent memory entirely; **S16 "AgentPoison" and S17 "indirect
-prompt injection", both 2026-08-04 - the adversarial feeders**, which design no memory and attack the
-shape all three of the others share, from two independent directions).
+decoupled-curation claim, from outside agent memory entirely; **S16 "AgentPoison", S17 "indirect
+prompt injection" and S19 "memory poisoning, systematic study" - the adversarial feeders**, which
+design no memory and attack the shape all three of the others share, from three independent
+directions. **S19 is the one that makes this note uncomfortable rather than merely cautious**, because
+it measures the design direction itself as the attack surface.)
 **Basis:** created under [ADR-0007](../decisions/0007-memory-topic.md); promoted to `established`
 under [ADR-0008](../decisions/0008-memory-established.md) on **two-vendor architectural
 convergence**.
@@ -401,6 +403,50 @@ rewrites it is the only place in any of these architectures where something coul
 poisoned record. It is also, by claim 61's logic, a second writer with no admission control of its
 own. **Nobody has built either version**, and the dream pass in this kit is an instance of the same
 unresolved question.
+
+### The finding this note has to sit with: better memory is more exploitable
+
+**S16 and S17 attacked memory. S19 measures the design choices in this note and finds the good ones are
+the dangerous ones** ([S19](../../sources/260805_memory-poisoning-systematic/LEARNING.md) `n9`,
+claim 160).
+
+Holding the model constant, two real agent systems differ by roughly a factor of two in how easily
+their memory is poisoned, and the cause is architecture rather than model behaviour. **HERMES** writes
+memory readily under a permissive retention policy, has a low compaction threshold an attacker can
+reach by controlling payload length, and **injects memory into the system prompt as a frozen snapshot
+at session start** - so a poisoned entry is present in every follow-up with no retrieval step at all.
+Its attack success rate is 66.67% and its cross-session retrieval success 64.70%. **OpenClaw** has a
+conservative retention policy and retrieves **only when the agent explicitly invokes a `memory_search`
+tool**. Its figures are 34.25% and 17.40%.
+
+The authors' generalisation is the sentence to bring to a design review: agents "designed to write and
+retrieve memory more freely in order to perform better on long-horizon tasks are proportionally easier
+to poison".
+
+**Read that against what this note already holds and the discomfort is specific.** Every design move
+the three vendor sources converge on - richer stores, background curation that writes without a human
+in the loop, agents leaving instructions for their successors, memory as a file system the model
+drives - is on the wrong side of that finding. **The capability and the attack surface are the same
+feature**, which is the identical shape S16 found for retrieval geometry and S17 found for agent
+autonomy. This is not an argument against maintained memory; it is the cost side of a trade this note
+had only ever priced in engineering effort.
+
+**The one lever the comparison hands you is architectural and legible.** OpenClaw is safer largely
+because retrieval is an **explicit tool call** rather than an automatic injection at session start.
+That is available to anyone, visible in a code review, and does not depend on the model getting
+anything right.
+
+S19 also supplies the mechanism half neither S16 nor S17 had: memory is written through **four
+channels, and three of them are decided by the model's own judgement** rather than by any command
+(claim 158) - a standing retention policy, a compaction threshold, or the agent deciding a finished
+task was a reusable skill. Full synthesis in [`agent-security.md`](agent-security.md).
+
+> **What this means for the decoupled background pass this note recommends.** That pass is a second
+> writer with no admission control, and S19 names the exact vulnerability class it sits in: V-P2,
+> compaction without source filtering, and V-S1, no write-path validation. **The pass that this note
+> holds up as the fix for staleness is, on S19's map, an unguarded write channel.** Nobody has built
+> the version that validates what it writes, and the dream pass in this kit is an instance of the same
+> unresolved question.
 
 ## Key claims
 
