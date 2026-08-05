@@ -448,8 +448,10 @@ sourced._
   have measured (index-based vs embedding retrieval at that scale).
 - **This brain is a live instance of the pattern and currently proves nothing.** It runs exactly the
   described design - immutable `raw/`, an agent-written `brain/`, `AGENTS.md` as the schema,
-  `INDEX.md` read first, an append-only `log.md` - at **11 sources**, an order of magnitude below the
-  claimed ceiling. **n=1, well inside the easy regime**: no evidence either way, and worth saying so
+  `INDEX.md` read first, an append-only `log.md` - at **a source count still well over an order of
+  magnitude below the claimed ceiling** (see `INDEX.md` for the live total; **the number was
+  hard-coded here and went stale twice**, at dream 0001 and again at dream 0002, so it is a pointer
+  now). **n=1, well inside the easy regime**: no evidence either way, and worth saying so
   before the coincidence gets mistaken for corroboration.
 - ~~**Nothing here addresses retrieval mechanics at all.**~~ **Partially closed by S10
   (2026-08-01)**, and the remainder is worth stating precisely. Now covered: **sparse lexical

@@ -1,6 +1,6 @@
 # Topic: Memory
 
-**Status:** **established** (4 sources - S6 "Dreaming: Better memory for a more helpful ChatGPT",
+**Status:** **established** (6 sources - S6 "Dreaming: Better memory for a more helpful ChatGPT",
 OpenAI, 2026-06-04; S7 "Memory and dreaming for self learning agents", Anthropic, 2026-05-21;
 **S8 "LLM Wiki", Andrej Karpathy, 2026-04-04 - a partial feeder**, contributing only to the
 decoupled-curation claim, from outside agent memory entirely; **S16 "AgentPoison", S17 "indirect

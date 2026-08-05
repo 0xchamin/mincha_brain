@@ -1,6 +1,6 @@
 # Topic: Agents
 
-**Status:** established (11 sources / **10 independent** - S1 Uber closed-loop evals, S2 12-factor
+**Status:** established (14 sources / **13 independent** - S1 Uber closed-loop evals, S2 12-factor
 agents, S4 Anthropic harness design, S5 skills evals, S7 Anthropic memory and dreaming, S9 Microsoft
 Agent Framework, S10 tool search, S12 Google Cloud multi-tenant reference architecture, S13
 `karpathy/autoresearch`, S14 Stanford CS329A, **S15 CS329A lecture 2 - not independent of S14**,
@@ -532,10 +532,19 @@ cheaper, since most of CaMeL's 2.82x token overhead is re-prompting to fix inval
   benchmarks, ablations or failure rates appear anywhere in S2.
 - Self-tuning agents (reflect/synthesize, agent store) remain `single-leg` from S1 - still needs a
   second source.
-- **Gap: nothing here yet on agent security.** Both sources treat tool calls as trusted; neither
-  discusses prompt injection into the context window or tool poisoning. See
-  [`agent-security.md`](agent-security.md) (`emerging`, and still with no source that studies agent
-  threats - S3 covers the authorization substrate, S7 only makes memory poisoning concrete).
+- ~~**Gap: nothing here yet on agent security.** Both sources treat tool calls as trusted.~~
+  **Closed 2026-08-05 by S17, S18 and S20** (claims 147, 149, 168), and by seven security sources in
+  [`agent-security.md`](agent-security.md), which is now `established`. *The struck sentence was
+  written when this note had two sources and it survived twelve more, which is finding 4 of
+  [dream 0002](../dreams/0002-260805.md).*
+  **What is actually still open is narrower and sharper.** The foundational sources here - S1, S2, S9 -
+  do treat tool calls as trusted, and **none of the design guidance in this note has been revisited in
+  the light of the threat material.** Claim 12 puts small LLM steps inside deterministic code for
+  reliability and claim 149 derives the same shape for security, but **no source here tells you how to
+  build the four owned parts *given* an adversary**: what a context builder does with untrusted tool
+  output, what a switch statement does with an action the model was talked into, or what pause/resume
+  means when the serialised thread may carry an injection. **That gap is real and it is a different
+  gap from the one struck above.**
 
 ## Sources feeding this topic
 

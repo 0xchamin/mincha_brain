@@ -466,8 +466,16 @@ being a contest. Keep this as the canonical picture of why a retrieval store nee
   what remains open in three specific ways. **First, it needs independent evaluation** - every
   efficacy number is on its own authors' benchmark (claim 153), and ingesting AgentDojo will *not*
   fix this because it shares authors. **Second, it covers the action half only** - fraud and
-  manipulated content are explicit non-goals (claim 155), and **nothing in this brain addresses
-  them**, which is now the largest untouched surface here. **Third, its own authors predict a
+  manipulated content are explicit non-goals (claim 155), and ~~**nothing in this brain addresses
+  them**~~ **only S21 partially does, and the reason is structural rather than incidental**
+  (corrected in [dream 0002](../dreams/0002-260805.md), finding 5 - the original sentence was written
+  during S18's compound and S21 landed hours later). **Behavioural defences are the one class that can
+  touch this half**, because they act *before* an instruction is followed rather than gating an action
+  after the fact, so datamarking reduces the chance the model obeys an injected "summarise this
+  wrongly" at all. **But it is unmeasured for this case**: S21's evaluation counts a keyword payload
+  being retrieved, not a summary being falsified, and its whole evaluation is non-agentic (S21 `d3`).
+  So the honest position is *one weakly-evidenced partial answer*, and this remains the largest
+  thinly-covered surface here. **Third, its own authors predict a
   return-oriented-programming analogue against it** (claim 156) and nobody has built one. The
   remaining literature - spotlighting, delimiter schemes, dual-model variants, provenance tracking -
   is still ungated, though S18 measures Spotlighting's cost at 1.06x tokens in passing.
@@ -493,10 +501,21 @@ being a contest. Keep this as the canonical picture of why a retrieval store nee
 
 ## Note for the architect (topic boundary)
 
-This note now carries three distinguishable bodies of material: **agent-specific threats** (prompt
-injection, tool poisoning, memory poisoning - still thin), **the delegated-authorization substrate**
-(S3), and **containment / isolation architecture** (S12). They are held together deliberately, per the
-"don't spawn a topic per source" rule.
+This note now carries **four** distinguishable bodies of material: **agent-specific threats** (prompt
+injection, memory and retrieval poisoning, worms, persistence, supply chain - S16, S17, S19, and **no
+longer thin**: it is the bulk of the note and carries both corroborating groups), **defences** (S18's
+capabilities and policies, S20's tool filter, S21's transformations, sorted into three classes by
+claim 173), **the delegated-authorization substrate** (S3), and **containment / isolation
+architecture** (S12). They are held together deliberately, per the "don't spawn a topic per source"
+rule.
+
+> **Updated by [dream 0002](../dreams/0002-260805.md), finding 8.** The "three bodies, threats still
+> thin" description was written at three sources and survived seven more. **The natural split on
+> current weight is now threats-and-defences apart from substrate-and-containment**, which is a
+> *different* axis from the planned `identity-and-authorization` split below. Not actionable yet - the
+> threat and defence material is one argument and separating it would put claim 173's taxonomy in a
+> different note from the attacks it sorts - but this is the note most likely to need an architect
+> call next, and it should be made deliberately rather than because the file got long.
 
 **The split is expected, not hypothetical.** The owner has stated an identity track - **OAuth 2.1,
 SPIFFE/SPIRE, AAuth** - so a second identity source is planned rather than possible. The rule still

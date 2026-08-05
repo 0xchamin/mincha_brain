@@ -241,9 +241,15 @@ attack success on HERMES), not amplification across successive refinements.
   already-disciplined descriptions would presumably see a different split.
 - **Everything here is coding agents.** S5 says harnesses differ [S5 `&t=1163s`]; nothing says
   whether the findings survive outside code.
-- **Nothing yet on skills as an attack surface.** A skill is instructions injected into context on a
-  trigger the *model* chooses - which is a prompt-injection and tool-poisoning question this source
-  never raises. See [`agent-security.md`](agent-security.md).
+- ~~**Nothing yet on skills as an attack surface.**~~ **Closed 2026-08-05 by S19**, and the answer is
+  worse than the question anticipated. The worry was that a skill is instructions injected into
+  context on a trigger the *model* chooses. S19 adds that **skill synthesis is itself a memory write
+  channel** (C4) with **no content inspection before the file is written** (V-S4), and that a
+  self-improving loop **optimises** a poisoned skill rather than merely carrying it (V-S5, claim 162).
+  See the security section above and [`agent-security.md`](agent-security.md).
+  **What remains open is narrower**: nobody has measured V-S5 - S19's benchmark measures skill
+  *insertion*, never amplification across refinements - and **no source relates skills to prompt
+  injection through the trigger itself**, which was the original worry and is still unaddressed.
 - **Unconnected to MCP.** No source in this brain yet relates skills to MCP servers or tools. See
   [`mcp.md`](mcp.md) - `emerging` since S10, but scoped entirely to tool cost and retrieval, so it
   says nothing about skills either.
