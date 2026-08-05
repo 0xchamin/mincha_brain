@@ -1,12 +1,24 @@
 # Topic: Autonomous research loops
 
-**Status:** emerging (1 primary source - **S13** `karpathy/autoresearch`), created 2026-08-03 by
-[ADR-0017](../decisions/0017-autonomous-research-loops-topic.md).
-**Basis:** one source, and it is a **T4 personal repository** whose design is fully inspectable and
-whose *results* are a single unreproducible PNG. The design claims are strong (code read against its
-own docs, gate passing on every one); the empirical claims are weak by construction and are labelled
-so throughout. **This note is a candidate for merge back into [`agents.md`](agents.md) if no second
-primary source arrives** - the trigger is recorded in ADR-0017 rather than left to be re-derived.
+**Status:** **emerging (2 primary sources, and no longer a merge-back candidate)** - **S13**
+`karpathy/autoresearch` and **S22** the Darwin Godel Machine. Created 2026-08-03 by
+[ADR-0017](../decisions/0017-autonomous-research-loops-topic.md); **merge-back trigger resolved
+2026-08-05 by [ADR-0020](../decisions/0020-autonomous-research-loops-second-primary.md)**.
+**Basis, and the two sources are almost opposites evidentially.** S13 is a **T4 personal repository**
+whose design is fully inspectable and whose *results* are a single unreproducible PNG - strong design
+claims, weak empirical ones, labelled so throughout. S22 is **ICLR 2026 main track with open-sourced
+code and two ablations that isolate its claimed components**, which makes it the best-evidenced source
+in this brain on any subject. ~~This note is a candidate for merge back into `agents.md` if no second
+primary source arrives.~~ **It arrived.**
+
+> **What the pairing buys, beyond a source count.** S13 supplies a *practitioner's* freezes, stated as
+> design and unmeasured. S22 supplies **ablations** - remove the archive and progress plateaus lower,
+> remove self-improvement and it plateaus earlier - so for the first time this note can say a
+> structural choice was *tested* rather than merely reasoned. And the two disagree productively on the
+> one thing they both got wrong-adjacent: S13's accept rule had **no notion of variance** and banked a
+> random-seed change (claim 114), while S22 built a staged evaluation with a promotion threshold
+> "chosen based on the noise observed in preliminary runs". **One loop ignored noise and one designed
+> around it, and the second is the one that worked.**
 
 > Living, cross-source synthesis on **agents that iterate on an artifact unattended**, accepting or
 > rejecting each change against an automated metric. Many sources feed this note; **merge and
@@ -189,6 +201,93 @@ output contract, the ledger schema, the loop and the autonomy policy. **Every ga
 note is a markdown edit rather than an engineering project**, which is the strongest argument that
 the inversion is real and not a slogan. See [`skills.md`](skills.md), which records this as the
 second instance in this brain of the pattern outside a coding-assistant context.
+
+### An archive beats a lineage, and it is the first ablated claim this note holds
+
+**S13 froze rollback-as-discard: any change that did not improve the metric was reverted with
+`git reset`. S22 measures what that costs**
+([S22](../../sources/260805_darwin-godel-machine/LEARNING.md) `n8`, claim 174).
+
+Take the obvious search first. Hold the current best agent, ask it to modify itself, keep the child if
+it scores better. Now ask what happens the first time a self-modification is bad: **you have damaged
+the only agent you have**, and every later improvement starts from the worse version. The failure
+compounds, because an agent degraded at editing code is degraded at exactly the capability it needs to
+repair itself. S22 runs that configuration as an ablation and it plateaus **lowest of three**.
+
+The alternative is to keep everything. S22 maintains an **archive** of every agent ever produced and
+selects the next parent from the whole archive, weighting selection **proportionally to score and
+inversely to how many children an agent already has**, with every agent retaining non-zero probability
+(claim 175). One bad child then costs one iteration rather than the run.
+
+**The payoff is visible and it is the argument for the whole design.** At iterations 4 and 56 the
+agent scored *below* its parent. A hill-climber discards that branch; the archive let the search
+continue down it and produce an agent that outperformed every predecessor. **An accept rule that only
+moves forward cannot cross a valley** - which is a plain statement of what S13's rollback-as-discard
+freeze buys and what it costs.
+
+> **Both S22 ablations matter and they separate cleanly.** Freeze the meta-agent so it never improves
+> at improving - the prior ADAS approach - and gains "taper off quickly", plateauing in the middle.
+> Keep only the latest agent and it plateaus lowest. **Neither component is decoration**, and this is
+> the only ablation-backed claim about self-improving architecture anywhere in this brain.
+
+### What must not be modifiable, now stated by two sources
+
+S13 gave this note its organising idea: **the four things you freeze before letting an agent change
+everything else.** S22 freezes two, for stated reasons, and one of them is sharper than anything S13
+had (claim 176).
+
+**The viability gate.** Only agents that compile **and retain the ability to edit a codebase** are
+admitted to the archive; everything else is discarded, because only those can continue self-modifying.
+Note what kind of check that is - **not a quality bar**, since an agent much worse than its parent is
+still archived. It is a **liveness invariant, deliberately separate from the performance metric**, and
+it is the only thing standing between the system and a self-modification that ends the run by breaking
+the tool it needs to modify itself.
+
+**The meta-level.** Archive maintenance and parent selection are "fixed and not modifiable by the
+DGM". Ask what lifting that restriction would do and the reason is immediate: **a system that can
+rewrite its own selection criteria can rewrite them to prefer itself**, and the empirical evidence that
+was supposed to discipline the search is then produced under rules the search chose.
+
+> **This is claim 113 avoided by construction, and the contrast with S13 is exact.** S13's autoresearch
+> had a *protected* metric whose value nonetheless reached the decision through code the agent could
+> rewrite - separation at the level of functions did not deliver separation in fact. S22 puts the
+> deciding machinery **outside the modifiable surface entirely**. The principle both sources point at:
+> **the thing that decides what counts as improvement must not be inside what improves.**
+
+It also bounds S22's own framing. The search is open-ended **within a human-designed search
+procedure**, which is the same concession S18's authors made about their architecture search, and the
+paper records it as future work.
+
+### The loop amplifies whatever its verifier cannot see, and three sources now say so
+
+**The most important thing this note holds, and it is now stated from three independent directions**
+(claim 177).
+
+S22's Safety Discussion says it plainly of their own system: if evaluation benchmarks "do not fully
+capture all desired agent properties (e.g., safety and robustness), **the self-improvement loop could
+amplify misalignment over successive generations**".
+
+| Source | Form | What it says |
+|---|---|---|
+| **S13**, claim 114 | **Observed** | A loop with a real, cheap, automatic verifier banked a **change of random seed** as its final improvement, because the accept rule had no notion of variance |
+| **S19**, claim 162 | **Predicted, adversarially** | An attacker's step in a self-refining skill runs without error, the loop treats "no error" as validation, and the procedure is optimised **around** the adversarial step |
+| **S22**, claim 177 | **Predicted, by the builders** | If the benchmark misses a property, successive generations **compound** the miss |
+
+**All three are one statement**: a self-improving loop optimises what it can measure and compounds what
+it cannot. **And claim 124 is the frame that explains all three** - verification, not generation, is
+the rate limit, so a loop improves at the rate its verifier can discriminate and degrades at the rate
+its verifier is blind.
+
+S22's safeguards follow from taking that seriously, and what they are *not* is the instructive part:
+sandboxed execution, a strict per-execution time limit, a modifiable scope confined to the agent's own
+codebase, and a **traceable lineage** of every modification for human review. **Every one is
+containment.** None is a check that a modification is *good* - consistent with the paper's own premise,
+since the impossibility of that check is why it swapped proof for evidence in the first place.
+
+The authors then name the shape of a real answer as future work: incentivising a self-improving system
+to retain safety directives is hard, and "an option worth exploring is to create an **unmodifiable part
+of the system to be able to evaluate at halt the rest**". **That is this note's freeze pattern proposed
+for the safety layer, and nobody has built it.**
 
 ## Key claims
 

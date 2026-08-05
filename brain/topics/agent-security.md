@@ -1,9 +1,10 @@
 # Topic: Agent security
 
-**Status:** **established** (**9 sources, with two independent corroborating groups.** A **trio** -
+**Status:** **established** (**10 sources, with three independent corroborating groups.** A **trio** -
 S16, S17 and S19 - on agent memory as a persistence surface, from three unrelated institutions across
-three years; and a **pair** - S17 and S20 - on capability growth being an attacker subsidy, one
-qualitative and one quantitative, with no author overlap.) Advanced 2026-08-04 by [ADR-0019](../decisions/0019-agent-security-established.md) on the
+three years; a **pair** - S17 and S20 - on capability growth being an attacker subsidy, one qualitative and one
+quantitative, with no author overlap; and a second **trio** - S13, S19 and S22 - on a self-improving
+loop amplifying what its verifier cannot see, of which S13's is the only *observed* instance.) Advanced 2026-08-04 by [ADR-0019](../decisions/0019-agent-security-established.md) on the
 original pair; **S19 (2026-08-05) is the third leg** and it is the first of the three to enumerate how
 the malicious write actually happens. **The note now holds three defences**: S18 (CaMeL, structural), S20's tool filter (structural), and
 S21 (Spotlighting, behavioural) - which is enough to sort them, and claim 173 does. The remaining three are listed for
@@ -355,6 +356,7 @@ through what looks to the user like independent retrieval.
 | **Detection-based defences fail, and retraining makes the strongest one worse** - the weakness is structural, and every detector collapses on weak-signal attacks | mitigation: **known-broken** | S19 `n10`-`n12` (claim 159) | OK (corroborated). **Scope: four *detectors* were tested, no structural defence** (`d3`) |
 | Cross-session persistence measured: retrieval success above zero for **every** attack class on both agents, up to 86.33% | threat: persistence | S19 `n8` (claim 161) | OK - **the third independent leg of claim 145** |
 | **A self-improvement loop optimises a poisoned skill** - "executed without error" is treated as validation, and revisions build around the adversarial step | threat: amplification | S19 `n4` (claim 162) | **needs-check - a mechanism argument, no measurement.** Claim 114 is the non-adversarial version, observed |
+| **A self-improving loop amplifies whatever its verifier cannot see** - stated by the builders of the most capable such system, corroborating S19's V-S5 non-adversarially | threat: amplification | **S22 + S19 + S13** (claim 177) | **corroborated (3 independent sources on the mechanism)**; S13's is the only observed instance. Full synthesis in [`autonomous-research-loops.md`](autonomous-research-loops.md) |
 | **Provenance tracking is where two independent groups converged**, on different surfaces - execution (S18) and the memory write path (S19) - and neither spans a session boundary | mitigation: direction | S18 `n5` + S19 `n14` (claim 163) | **needs-check.** S19's is a discussion sketch; **the synthesis is this brain's** |
 | **In an adversarial evaluation the judge must be deterministic** - a model judge shares a vulnerability with the system it grades, so the failure is correlated in the direction that hides it | eval design | S20 `n3` (claim 164) | OK (corroborated). **The sharpest form of claim 34 here** |
 | **Capability is an attacker subsidy: more capable models are measurably easier to attack** | threat: scaling | **S20 `n6` + S17 `n10`** (claim 165) | **OK - corroborated by 2 independent sources**, one qualitative and one quantitative, no author overlap |

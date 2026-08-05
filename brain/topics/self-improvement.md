@@ -242,6 +242,41 @@ commercialized" [S14 `n12`]. **The loop's shape is well established, its mechani
 commercial systems ship on it.** That is why claim 122 is gated on the architecture rather than on
 efficacy.
 
+### The open question about loop length, answered next door
+
+**This note has carried "how many turns of the loop has anyone actually run?" as an open question since
+it was created, and S22 answers it: eighty**
+([S22](../../sources/260805_darwin-godel-machine/LEARNING.md) `n7`).
+
+The answer is **cross-referenced rather than re-homed**, because S22 sits on the artifact side of
+[ADR-0018](../decisions/0018-self-improvement-topic.md)'s boundary by its own admission - its framing
+suggests a system that could rewrite its own training scripts, and §3 concedes "we do not show that in
+this paper", scoping the work to coding agents with **frozen pretrained FMs**. **The model never
+changes; the scaffolding around it does.** Its claims live in
+[`autonomous-research-loops.md`](autonomous-research-loops.md), and
+[ADR-0020](../decisions/0020-autonomous-research-loops-second-primary.md) records the boundary holding
+under its hardest test so far.
+
+Three things from it bear directly on claims here anyway.
+
+**Claim 122 gets its longitudinal evidence, at the wrong altitude.** This note gates the loop-closure
+claim on *architecture* rather than efficacy, because S14 showed the shape and measured no turns. S22
+runs 80 turns and improves monotonically in steps, with **held-out transfer** ruling out benchmark
+overfitting. That is real evidence that a self-improvement loop sustains gains over many iterations -
+for an **artifact**. Whether the model-layer loop behaves the same over 80 rounds of fine-tuning is
+still unmeasured by anything here.
+
+**Claim 124 is the frame that explains S22's own safety section.** Verification, not generation, is the
+rate limit - and S22's builders state the corollary this note had not: the verifier also sets the rate
+of **silent degradation**, since "if evaluation benchmarks do not fully capture all desired agent
+properties, the self-improvement loop could amplify misalignment over successive generations". **A
+verifier's blind spots compound at the same rate its signal does.**
+
+**And the note's own open question about threat models is now answered from two directions.** This note
+recorded that a threat model for a system writing its own training data was absent from CS329A's
+syllabus entirely. S19 supplied the adversarial version (claim 162) and S22 supplies the builders'
+version (claim 177) - and claim 177 records that S13 already **observed** the non-adversarial case.
+
 ## Key claims
 
 | Claim | Sources (cited) | Confidence |
