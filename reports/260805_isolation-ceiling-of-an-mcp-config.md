@@ -2,14 +2,15 @@
 
 > Persona: **synthesizer**. A report written *out* of the brain, cited to the claims it draws on.
 > **Read the evidence grades in §2 and §3 before acting on this** - one load-bearing step is a
-> conjecture, not a claim, and §6 names the paper most likely to have got there first.
+> conjecture, not a claim. **§6.1 records the prior-art survey being read on 2026-08-05: it clears
+> the idea**, so the next action is testing that conjecture, not more reading.
 
 | Field | Value |
 |---|---|
 | Date | 2026-08-05 |
 | Built from | claims 149, 152, 153, 155, 166, 167, 173; conjecture h7; R3 (AgentDyn); `mcp.md` |
 | For | Deciding whether this is the next thing to build alongside **MCP Shark** |
-| Verdict in one line | **The measurement is unclaimed and cheap. The novelty claim is narrower than it first looks, and one survey must be read before committing.** |
+| Verdict in one line | **The measurement is unclaimed and cheap, and the closest prior-art survey has now been read and does not cover it. The remaining risk is not novelty - it is whether conjecture h7 is true.** |
 
 ## 1. The proposition
 
@@ -115,12 +116,46 @@ A search of arXiv for capability-overlap metrics in agent security returns a **m
 | [Dynamic Capability Scoping](https://arxiv.org/html/2607.22445v1) | Three-layer permission architecture - role ceiling, task-context classifier, prohibition layer | **Prescriptive**: what permissions to grant. Not a measurement of overlap in a config that already exists |
 | [Prompt Flow Integrity](https://arxiv.org/html/2503.15547v2) | Preventing privilege escalation in LLM agents | A mechanism again |
 | [AgentSecBench](https://arxiv.org/html/2605.26269) | Benchmark measuring injection, privacy leakage, tool-use integrity | Measures **agents**, not deployed configurations |
-| **[Isolation as a First-Class Principle for LLM-Agent System Safety](https://arxiv.org/html/2607.12406v1)** | Concepts, taxonomy, challenges, future directions for isolation | **Read this before committing.** A taxonomy paper on exactly this axis is the single most likely place for the overlap metric to already appear, even as a sketch |
+| **[Isolation as a First-Class Principle for LLM-Agent System Safety](https://arxiv.org/abs/2607.12406)** (Jing, Hu, Chen, Shi, Zhang, Yang, Fan, Xie, Luo, Chan, Fan, Li, Song; arXiv 2607.12406 v1, 2026-07-14) | Boundary-centric taxonomy of isolation across five boundaries: user-agent, **agent-tool**, agent-execution, agent-agent, system-environment | **Read 2026-08-05. It does not cover this** - see §6.1. Purely a taxonomy: Table 1 organises representative papers by boundary and **contains no evaluation metrics or numerical measures** |
 
 **So the defensible claim is not "this is unclaimed territory."** It is: *the field has mechanisms and
 agent benchmarks, and no one appears to compute the isolation ceiling as a static property of a
-deployed configuration, ahead of choosing a defence.* That is a narrower and more survivable claim -
-and §7's first action is to test it properly rather than assert it.
+deployed configuration, ahead of choosing a defence.* That is a narrower and more survivable claim.
+
+### 6.1 The survey has been read, and it clears the idea
+
+**Checked 2026-08-05, which was §8's first action.** Two probes with deliberately different vocabulary
+- one asking about metrics and capability sufficiency, one about over-restriction, least privilege,
+authority budgets and utility trade-offs. **Both came back negative on the same three points.**
+
+- **No quantitative metric of any kind.** It "provides no numerical framework for assessing isolation
+  strength", and Table 1 organises representative papers by boundary type with **no evaluation
+  metrics or numerical measures**.
+- **No read/write overlap, tool-sufficiency, or capability-overlap analysis.** Absent entirely.
+- **It does not argue that isolation has an upper bound set by the system's own required
+  capabilities** - which is the exact proposition in §1.
+
+It cites **CaMeL** as an example of privilege separation, and mentions **neither Progent, AgentDyn,
+nor tool filtering by name** - so despite being a July 2026 survey it is already behind R3's material.
+
+**Two things in it actively help, and both are worth citing rather than merely noting.**
+
+Its own open-challenges section states that **"the field still lacks stable abstractions for authority,
+trust, and privilege in full workflows."** A measurable overlap property is a step toward exactly such
+an abstraction, and having a survey say the gap exists is stronger support than asserting it.
+
+And it observes that **"many benchmarks still test single boundaries, while real failures are
+cross-boundary."** That is an independent argument for the vehicle rather than the idea: **MCP Shark's
+toxic-flow analysis is already cross-server**, so it operates where this survey says the real failures
+live and the benchmarks do not look.
+
+Finally, its **boundary taxonomy gives the idea a place to sit**. This metric measures the
+**agent-tool boundary**, which is vocabulary worth adopting if any of this is written up.
+
+> **What this clearance is and is not.** Two targeted probes against the rendered paper, not a full
+> human read of a survey. **Absence of a metric in one survey is not absence in the field**, and §6's
+> table remains a reason for caution. What has changed is that the single most likely source of
+> prior art has been checked and does not contain it.
 
 ## 7. What would kill this
 
@@ -136,7 +171,7 @@ for configs below a threshold of classified tools.
 **The task distribution is assumed rather than observed.** If you synthesise tasks from tool
 descriptions, the number is circular. Traffic-derived tasks avoid this and require real captures.
 
-**Someone has already published it.** §6's last row.
+**Someone has already published it.** §6's table remains a reason for caution, though **the single most likely source has been checked and cleared** (§6.1).
 
 **And the honest scope limit:** claim 155 means this measures the **action** half only. Fraud and
 manipulated-content attacks have no data-flow consequence and no isolation defence touches them, so a
@@ -145,10 +180,14 @@ or it is misleading.**
 
 ## 8. What to do first, in order
 
-**Read [2607.12406](https://arxiv.org/html/2607.12406v1)** before writing code. One afternoon, and it
-is the cheapest way to find out whether §6's claim survives.
+~~**Read [2607.12406](https://arxiv.org/abs/2607.12406) before writing code.**~~ **Done 2026-08-05, and
+it clears the idea** - see §6.1. The survey has no metric, no capability-overlap analysis, and does not
+argue that isolation is bounded by required capabilities. It also supplies two citable supports: its
+own "the field still lacks stable abstractions for authority, trust, and privilege" gap statement, and
+its observation that real failures are cross-boundary while benchmarks are not - which is the ground
+MCP Shark already occupies.
 
-**Then test h7 before building the product.** AgentDojo is open source and extensible by design. Take
+**So the next action is now the first one: test h7 before building the product.** AgentDojo is open source and extensible by design. Take
 its four suites, compute read/write overlap for each, and check whether tool-filter failure rate
 tracks it across suites. **Four data points is not a result and it is enough to kill the idea** - and
 if the correlation appears, you have both a validated metric and a publishable finding that h7 is
