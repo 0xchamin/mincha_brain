@@ -658,6 +658,63 @@ this note against a baseline that was already failing a third of the time.
 > And §4.3 says more involved isolation would be needed, which is what S18 built a year later from the
 > same lab. **Neither benchmark covers a patient adversary against a stateful agent.**
 
+### What survives independent evaluation, and the nine defences this note does not hold
+
+**The first external evidence in this topic, from a deep-research pass on 2026-08-05**
+([R3, AgentDyn](../../sources/260804_camel-prompt-injection-defense/context/01_independent-evaluation-and-the-2026-defence-landscape.md)).
+It answers the question this note recorded as open twice - **has anyone outside CaMeL's authors
+evaluated CaMeL?** - and the answer bounds three claims here without refuting any.
+
+**AgentDyn** builds 60 open-ended tasks and 560 injection cases across Shopping, GitHub and Daily
+Life, deliberately targeting what it argues existing benchmarks miss: dynamic open-ended tasks and
+**helpful third-party instructions**. It evaluates ten defences. Its authors have **no overlap with
+S18's**, which is the independence that matters here. *(One overlap elsewhere: Chaowei Xiao also
+authored S16, so this is not a free second witness for anything S16 asserts.)*
+
+**CaMeL scores 0.00% utility and 0.00% attack success on open-ended tasks, across every model
+tested** - while its AgentDojo result replicates. The reason is structural: CaMeL writes a static
+program from the user's instruction before execution, and an open-ended task's plan cannot be written
+in advance. **That is perfect security by accomplishing nothing**, which is precisely the degenerate
+corner S20's two-axis design exists to expose - and it took a third party's benchmark to surface it
+(claim 153, now `refines`).
+
+> **The correct way to cite claim 153 from here on.** CaMeL is not refuted. **It is bounded to
+> plannable task suites.** If your agent's tool sequence can be fixed before the work starts, the
+> 77%-with-security result is the relevant one. If it cannot, this defence currently does nothing for
+> you.
+
+**The failure generalises, and it is the one S20 named about itself.** AgentDyn finds that
+"planning-dependent approaches - such as **Tool Filter, CaMeL, and DRIFT** - rely heavily on initial
+plans, leading to severe utility drops in the dynamic-planning tasks", with the tool filter blocking
+"essential tools required for later dynamic interactions because they appear unnecessary for the
+original user task". **Claim 167's 17% was the bound on a benchmark whose plans are writable up
+front.** The real constraint on plan-time isolation is whether a plan exists before the work does.
+
+**Detection fails from the other direction too, which is the pass's cleanest corroboration.**
+ProtectAI and PIGuard over-defend on AgentDyn through a "limited ability to distinguish helpful
+instructions from malicious injections" - so where S19 showed detectors **miss what looks legitimate**,
+AgentDyn shows them **block what is** (claim 159, now externally supported by a second team on a
+different benchmark). One root cause: a detector is asked to make a judgement the text does not
+contain.
+
+**And S21's `d3` is closed.** Spotlighting had never been evaluated against a tool-calling agent by
+anyone. On AgentDyn it reaches **52.24% utility under attack at 27.61% attack success**, with the
+verdict that prompting-based defences "only slightly reduce ASR". **The low utility cost holds; the
+security benefit does not transfer** - nothing like the 3.1% it reports on document tasks (claim 170).
+
+> ⚠️ **The coverage gap this pass exposed, and it is larger than the findings.** This note holds
+> **three** defences. AgentDyn evaluates **ten**, and a second 2026 preprint names five in the
+> structural family alone. Missing entirely: **Progent, DRIFT, FIDES, RTBAS, FORGE, Meta SecAlign,
+> PromptGuard2, ProtectAI, PIGuard.** Worse, **the three this note holds are the three a third party
+> ranks as planning-dependent, over-defensive, or weakly effective** - and the best of the ten,
+> **Meta SecAlign-70B at 53.35% utility under attack and 8.98% ASR**, is one it has never heard of.
+> **No defence in that comparison is acceptable on both axes.**
+
+**The next three sources are named by this pass rather than guessed**: **AgentDyn** itself, as the
+benchmark that tests deployability rather than security-in-principle; **Meta SecAlign**, as the only
+defence anyone ranks acceptable on both axes; and **Progent**, as the dynamic-aware defence that
+CaMeL's static planning structurally cannot be.
+
 ### The cheap defence, and the analogy that names every defence's class
 
 **S21 (Spotlighting) is the mitigation most teams actually ship**, and S18 prices it at **1.06x input
