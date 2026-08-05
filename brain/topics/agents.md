@@ -4,7 +4,7 @@
 agents, S4 Anthropic harness design, S5 skills evals, S7 Anthropic memory and dreaming, S9 Microsoft
 Agent Framework, S10 tool search, S12 Google Cloud multi-tenant reference architecture, S13
 `karpathy/autoresearch`, S14 Stanford CS329A, **S15 CS329A lecture 2 - not independent of S14**,
-S17 indirect prompt injection, S18 CaMeL)
+S17 indirect prompt injection, S18 CaMeL, S20 AgentDojo)
 
 > **On S17's admission here, since its sibling S16 was declined.** S16 (AgentPoison) attacks a
 > retrieval store, which is a *component*, and was kept out of this note under
@@ -343,6 +343,29 @@ Single-leg, asserted, no operational data behind it.
   what the model can do *reliably* - something it cannot get right every time - and engineering
   reliability around it anyway [S2 `&t=848s`]. This is also the answer to "won't better models make
   this obsolete?": a better model moves the boundary, and the engineering moves with it.
+
+### The uncomfortable baseline: they fail a third of the time with nobody attacking
+
+**Measured, on realistic multi-step tool work, and it belongs here rather than in the security note**
+([S20](../../sources/260805_agentdojo/LEARNING.md) `n4`, claim 168).
+
+AgentDojo's 97 user tasks are ordinary - summarise a day's calendar, pay a bill, book a hotel, invite
+someone to Slack - across four applications with 70 tools between them. **State-of-the-art models
+solve under 66% of them in the absence of any attack.** The paper adds that even restricted to benign
+settings its tasks are "at least as challenging as existing function-calling benchmarks", so this is
+not a benchmark built to be hard.
+
+Two consequences worth carrying. **The first is a reading correction for every security number in
+this brain**: when a defence "costs 15-20% of utility", the baseline it erodes was already failing a
+third of the time. **The second is that this is claim 18 measured** - target work at the boundary of
+what the model does *reliably* and engineer reliability around it. S2 reached that from first
+principles in 2025; S20 quantifies the boundary, and it is closer in than the deployment pattern
+suggests.
+
+There is also a denial-of-service finding that is easy to miss because it is not about attacker
+success. Under attack, most models lose **10-25% absolute utility** whether or not the attacker's goal
+is achieved (claim 168). **An injection that steals nothing still breaks the agent's ability to do its
+job**, which means "did the attack succeed?" understates the operational cost of being targeted.
 
 ### A more capable agent is a more capable attack payload, at no cost to the attacker
 

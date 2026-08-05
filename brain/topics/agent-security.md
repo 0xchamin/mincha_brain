@@ -1,8 +1,9 @@
 # Topic: Agent security
 
-**Status:** **established** (**7 sources. The corroborating group is now a trio, not a pair** - S16,
-S17 and S19, on agent memory as a persistence surface, from three unrelated institutions across three
-years). Advanced 2026-08-04 by [ADR-0019](../decisions/0019-agent-security-established.md) on the
+**Status:** **established** (**8 sources, with two independent corroborating groups.** A **trio** -
+S16, S17 and S19 - on agent memory as a persistence surface, from three unrelated institutions across
+three years; and a **pair** - S17 and S20 - on capability growth being an attacker subsidy, one
+qualitative and one quantitative, with no author overlap.) Advanced 2026-08-04 by [ADR-0019](../decisions/0019-agent-security-established.md) on the
 original pair; **S19 (2026-08-05) is the third leg** and it is the first of the three to enumerate how
 the malicious write actually happens. **S18 (CaMeL) remains the note's only gated defence** and
 corroborates nothing here, because nothing else here proposes one. The remaining three are listed for
@@ -355,6 +356,11 @@ through what looks to the user like independent retrieval.
 | Cross-session persistence measured: retrieval success above zero for **every** attack class on both agents, up to 86.33% | threat: persistence | S19 `n8` (claim 161) | OK - **the third independent leg of claim 145** |
 | **A self-improvement loop optimises a poisoned skill** - "executed without error" is treated as validation, and revisions build around the adversarial step | threat: amplification | S19 `n4` (claim 162) | **needs-check - a mechanism argument, no measurement.** Claim 114 is the non-adversarial version, observed |
 | **Provenance tracking is where two independent groups converged**, on different surfaces - execution (S18) and the memory write path (S19) - and neither spans a session boundary | mitigation: direction | S18 `n5` + S19 `n14` (claim 163) | **needs-check.** S19's is a discussion sketch; **the synthesis is this brain's** |
+| **In an adversarial evaluation the judge must be deterministic** - a model judge shares a vulnerability with the system it grades, so the failure is correlated in the direction that hides it | eval design | S20 `n3` (claim 164) | OK (corroborated). **The sharpest form of claim 34 here** |
+| **Capability is an attacker subsidy: more capable models are measurably easier to attack** | threat: scaling | **S20 `n6` + S17 `n10`** (claim 165) | **OK - corroborated by 2 independent sources**, one qualitative and one quantitative, no author overlap |
+| **Attack success is a property of the application, not the model** - 92% to 0% holding the model fixed, predicted by how much tool output the attacker controls | threat: where risk lives | S20 `n8`, `n9` (claim 166) | OK (corroborated). The averaged "under 25%" figure conceals it (`d3`) |
+| **A tool filter is the Pareto-winning defence at 7.5% ASR, and fails on the 17% of cases where the task's own tools suffice for the attack** | mitigation: isolation | S20 `n12`, `n13` (claim 167) | OK (corroborated). **The 17% bounds every isolation defence here, CaMeL included** |
+| Agents fail >34% of these tasks with **no** attacker, defences cost a further 15-20% under attack, and attack degrades benign work 10-25% regardless of success | baseline | S20 `n4`, `n7`, `n15` (claim 168) | OK (corroborated) |
 
 ## Key visuals
 
@@ -562,6 +568,70 @@ across a session boundary into a store and back** (claim 163). Two independent g
 provenance is the strongest signal either offers about where this is going, and the gap between them
 is currently unbuilt in both.
 
+### The measurement layer, and the two findings it settles
+
+**Four sources in, every efficacy number here had come from whoever was making the claim.**
+[S20 (AgentDojo)](../../sources/260805_agentdojo/LEARNING.md) is the field's reference benchmark and
+the first artifact here built to settle such arguments rather than win one - 97 user tasks crossed
+with injection tasks to give 629 security cases, across four realistic applications, peer-reviewed at
+NeurIPS 2024's Datasets and Benchmarks track.
+
+> ⚠️ **Read the use restriction before the findings.** S20 shares two authors with S18 - Debenedetti
+> first-authors both, Tramèr co-authors both - so **nothing in it validates CaMeL** (`d1`). S18's 77%
+> figure is measured on this benchmark, and the "next best defence is a tool filter" ranking S18
+> reports is the same team's benchmark measuring the same team's baseline. That open question is still
+> open. S20's corroborating weight lies entirely in being independent of **S16, S17 and S19**.
+
+**Its most transferable idea is a design decision rather than a result** (claim 164). Every task ships
+a **deterministic** utility function, and the reason is adversarial rather than economic: an attack
+strong enough to hijack the agent may also hijack a model-based evaluator, so the failure is
+**correlated in the direction that hides it** - a successful attack can report itself as a defensive
+success. **This is the sharpest form of claim 34 this brain holds**, and note it is sharper than the
+original: the producer and the grader here are not even the same component, and the argument still
+holds because the adversary sits upstream of both. The cost is honest - 97 hand-written tasks instead
+of thousands generated, scale traded for soundness.
+
+Two findings then settle arguments this note had been carrying on weaker evidence.
+
+**First, capability is an attacker subsidy, and this is now corroborated** (claim 165). More capable
+models are measurably **easier** to attack, because a weak model fails at executing the attacker's
+multi-step goal for the same reason it fails at the user's. S17 reached this qualitatively in 2023 from
+Saarland and CISPA; S20 measures it in 2024 from ETH, with no author overlap. **The safety of a weak
+agent is incompetence, not robustness** - and incompetence is the thing every model release erodes.
+
+**Second, attack success is a property of the application rather than the model** (claim 166). Holding
+the model fixed, targeted success runs from about **92% on a Slack suite to 0% on some Travel tasks**.
+The two predictors are how much of the tool output the attacker controls, and how many independent
+malicious steps the attack must chain. **Both are decided when you choose which tools an agent gets**,
+which makes them design levers rather than security controls - and the widely-quoted "attacks succeed
+in under 25% of cases" is an average that conceals exactly this (`d3`).
+
+**And the defence result is the most actionable thing in the topic** (claim 167). Of four defences
+tested, the winner is the least sophisticated: a **tool filter**, which has the model choose the tools
+its task needs *before* it observes untrusted data and then restricts it to those. It drops targeted
+attack success to **7.5%** at high benign utility. A BERT injection detector reaches a similar rate and
+costs roughly **thirty points** of utility to do it - and the detector's 8% is the figure that travels
+while its cost does not (`d2`).
+
+> **The 17% is the number to carry into a design review.** The tool filter fails when the tools
+> required for the user's task are **also sufficient to carry out the attack**, true of 17% of test
+> cases. The reason is structural: the defence works by exploiting a mismatch between what the user
+> needs and what the attacker needs, and sometimes there is no mismatch. **That bound applies to every
+> isolation defence in this note, CaMeL's policies included**, and neither S18 nor S20 tests it against
+> CaMeL.
+
+**Finally, the sobering baseline.** Agents solve **under 66%** of these tasks with **no attacker
+present**, every defence costs a further 15-20% of utility under attack, and attack degrades benign
+work by 10-25% whether or not the attacker's goal succeeds (claim 168). Read every defence cost in
+this note against a baseline that was already failing a third of the time.
+
+> **S20's own stated limitations are a map of the two sources around it.** §4.3 names an attack it
+> cannot test - an injection instructing the agent to *wait* until it receives a task with the right
+> tools - which is a **persistence** attack and therefore S19's whole subject. S19 independently
+> observes that AgentDojo's paradigm is **single-session** and does not account for memory poisoning.
+> And §4.3 says more involved isolation would be needed, which is what S18 built a year later from the
+> same lab. **Neither benchmark covers a patient adversary against a stateful agent.**
+
 ### The first defence that does not ask the model to behave
 
 **Everything above is an attack, and this note carried no gated defence until S18.** Its thesis is a
@@ -676,6 +746,17 @@ claim 158; full walkthrough in the
 
 ## Sources feeding this topic
 
+- **S20** - [AgentDojo](../../sources/260805_agentdojo/LEARNING.md) (Debenedetti, Zhang, Balunović,
+  Beurer-Kellner, Fischer, Tramèr; ETH Zurich + Invariant Labs, **NeurIPS 2024 Datasets and Benchmarks
+  Track**). **The topic's first eval harness and the only measured comparison of prompt-injection
+  defences it holds.** 97 user tasks, 629 security cases, 70 tools, four applications; deterministic
+  utility checks; the inverse-scaling finding; the tool filter at 7.5% and its 17% bound (claims
+  164-168). **The strongest venue in this set** - a peer-reviewed main-conference track rather than a
+  workshop or a preprint - and open source. **⚠️ Shares two authors with S18, so it cannot validate
+  CaMeL** (`d1`); its corroborating weight is against S16, S17 and S19. Models evaluated are two
+  generations old, which dates the leaderboard and **not** the framework - and `n6` predicts the
+  staleness runs the alarming way. The repository was not cloned, which is **the highest-value
+  un-taken second leg in this brain's security set**.
 - **S19** - [Memory poisoning, systematic study](../../sources/260805_memory-poisoning-systematic/LEARNING.md)
   (Dash, Ge, Jain, Shah, Shang; Huawei Canada + University of Waterloo, arXiv 2026-06-03, AIWILD
   workshop at ICML 2026). **The third independent leg of claim 145, and the first source anywhere here

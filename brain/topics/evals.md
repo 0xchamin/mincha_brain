@@ -1,6 +1,6 @@
 # Topic: Evals
 
-**Status:** established (7 sources / **6 independent** - S1 Uber closed-loop evals, S4 Anthropic
+**Status:** established (8 sources / **7 independent** - S1 Uber closed-loop evals, S4 Anthropic
 harness design, S5 Google DeepMind skill evals, **S11 agent-first data stack - a *counter*-example, a
 production deployment with no evals whose authors concede the gap**, **S13 `karpathy/autoresearch`,
 which supplies the half this note was missing: how to *design* a metric that an optimizer cannot game,
@@ -210,6 +210,39 @@ before believing a comparison drawn on it*, and be especially careful when a hea
 > method that measures coverage gets described in coverage, and the slide title is written by whoever
 > is holding that number. Expect the same wherever a technique's natural metric and its deployed metric
 > differ - which is exactly claim 100's shape, arrived at from a different direction.
+
+### Do not let a model grade an adversarial run
+
+**The sharpest form of claim 34 in this brain, and it arrives from eval design rather than from
+self-evaluation** ([S20](../../sources/260805_agentdojo/LEARNING.md) `n3`, claim 164).
+
+Claim 34 says do not let the producer grade its own work, because a generator has no independent
+vantage point on itself. S20 makes a stronger version of the same argument for adversarial settings.
+Every task in AgentDojo ships a **deterministic** binary utility function over environment state, and
+the paper rejects the more scalable LLM-judge approach for one reason: it studies "attacks that
+explicitly aim to inject new instructions into a model", so "if such an attack were particularly
+successful, there is a chance that it would also hijack the evaluation model".
+
+Notice why that is a different and harder problem than ordinary judge noise. The familiar complaints
+about model judges are that they are biased, expensive or inconsistent, and all three are
+*uncorrelated* with what is being measured. Here the judge and the subject **share a vulnerability**,
+so the failure is correlated in exactly the direction that hides it - **a successful attack can report
+itself as a defensive success**. The producer and the grader are not even the same component and the
+argument still holds, because the adversary sits upstream of both.
+
+The cost is real and the paper pays it openly. Deterministic checks are why AgentDojo has 97 tasks
+rather than thousands, and automating the specification "without sacrificing the reliability of the
+evaluation" is listed as future work. **Scale was traded for soundness**, which is a trade this note
+should expect to see again wherever an eval has an adversary in it.
+
+There is a second, quieter contribution to eval design here. S20 scores **utility and security as two
+axes**, never one number, because either alone is trivially gameable - an agent that refuses
+everything is perfectly secure, and an agent that does everything is maximally useful and maximally
+exploitable. Collapsing them would reward uselessness. That is worth generalising past security:
+**any eval with a safety-shaped constraint needs the constraint and the capability on separate axes**,
+or the metric rewards the degenerate corner.
+
+Full synthesis in [`agent-security.md`](agent-security.md).
 
 ## Key claims
 

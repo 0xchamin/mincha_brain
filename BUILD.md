@@ -1,6 +1,6 @@
 # BUILD.md - build Brain from scratch, from this file alone
 
-> **Generated 2026-08-04 from commit `667c935`** by `tools/make_build_doc.py`. Do not hand-edit: edit the
+> **Generated 2026-08-05 from commit `9cd75a3`** by `tools/make_build_doc.py`. Do not hand-edit: edit the
 > source files in the reference clone and regenerate, or your copy silently diverges from the kit
 > it claims to build.
 
@@ -2132,6 +2132,10 @@ ALLOWED_NON_ASCII = set(
     # Deliberately a fixed list of Latin-1 letters, not a category test: a stray CJK glyph is
     # still the thing this check exists to catch.
     "áàâäãåéèêëíìîïóòôöõúùûüñçßøæœÁÀÂÄÃÅÉÈÊËÍÌÎÏÓÒÔÖÕÚÙÛÜÑÇØÆŒ"
+    # Latin Extended-A, added 2026-08-05 for Slavic, Baltic and Turkish surnames - the first
+    # was Mislav Balunovic (AgentDojo). Same reasoning as the Latin-1 block above: a citation
+    # index must not ASCII-fold an author's name. Still a fixed list, not a category test.
+    "ćčďěğıłńňřśšťůźżžĆČĎĚĞİŁŃŇŘŚŠŤŮŹŻŽāēīōūąęįųĀĒĪŌŪĄĘĮŲ"
 )
 
 
@@ -6297,7 +6301,7 @@ _(Diagrams/slides across sources, embedded with caption + citation.)_
 
 | Date | Source | Entry |
 |---|---|---|
-| 2026-08-04 | brain (kit) | Kit built from `BUILD.md` (a generated bundle of the reference clone). Empty brain: 6 seed topics, no sources, no claims. |
+| 2026-08-05 | brain (kit) | Kit built from `BUILD.md` (a generated bundle of the reference clone). Empty brain: 6 seed topics, no sources, no claims. |
 ``````
 
 #### `reports/README.md`

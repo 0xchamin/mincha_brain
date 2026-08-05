@@ -491,6 +491,10 @@ ALLOWED_NON_ASCII = set(
     # Deliberately a fixed list of Latin-1 letters, not a category test: a stray CJK glyph is
     # still the thing this check exists to catch.
     "áàâäãåéèêëíìîïóòôöõúùûüñçßøæœÁÀÂÄÃÅÉÈÊËÍÌÎÏÓÒÔÖÕÚÙÛÜÑÇØÆŒ"
+    # Latin Extended-A, added 2026-08-05 for Slavic, Baltic and Turkish surnames - the first
+    # was Mislav Balunovic (AgentDojo). Same reasoning as the Latin-1 block above: a citation
+    # index must not ASCII-fold an author's name. Still a fixed list, not a category test.
+    "ćčďěğıłńňřśšťůźżžĆČĎĚĞİŁŃŇŘŚŠŤŮŹŻŽāēīōūąęįųĀĒĪŌŪĄĘĮŲ"
 )
 
 
