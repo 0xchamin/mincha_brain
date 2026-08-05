@@ -1,6 +1,6 @@
 # Topic: Context engineering
 
-**Status:** established (9 sources - S2 12-factor agents, S4 Anthropic harness design, **S8 LLM Wiki
+**Status:** established (10 sources - S2 12-factor agents, S4 Anthropic harness design, **S8 LLM Wiki
 (a partial feeder, 2 claims)**, **S9 Agent Framework (a partial feeder, 1 claim)**, **S10 Tool search
 (a partial feeder, 2 claims - and the first *measurement* of a claim S9 could only place)**, **S11
 agent-first data stack (4 claims - the first source here where the context is written for a
@@ -9,7 +9,7 @@ reference architecture (a partial feeder, 1 claim - the token cap read as a loop
 budget)**, **S13 `karpathy/autoresearch` (a partial feeder, 1 claim - the *per-iteration* budget of
 an unattended loop, which is the first time this note has had to think about a multiplier)**, **S18
 CaMeL (a partial feeder, 1 claim - the strictest statement here of *who may write into the context
-window*, and the first arguing it from authority rather than from attention)**; plus
+window*, and the first arguing it from authority rather than from attention)**, **S21 Spotlighting (a partial feeder, 1 claim - provenance as a property of the tokens themselves)**; plus
 the R1 research passes). **Basis for the promotion:** S4
 independently arrives at S2's serialisation claim from the opposite direction - S2 argues you should
 own the thread format so you *can* pause and resume; S4 needs exactly that artifact to make context
@@ -415,6 +415,34 @@ reach the model" stops being a single decision made at prompt-assembly time and 
 carried by each value through the whole execution (S18 `n5`, `n7`). That is a stronger form of context
 ownership than anything else this note holds, and its cost is measured: **2.82x input tokens** for the
 median task (claim 154).
+
+### Provenance is a property of the tokens, not of the prompt structure
+
+This note has always framed the question as *which tokens reach the model*. S21 adds a dimension it
+did not have: **how those tokens are written carries security meaning independent of what they say**
+([S21](../../sources/260805_spotlighting/LEARNING.md) `n5`, claim 170).
+
+The technique is small. Interleave a marker token throughout untrusted text - `In^this^manner^Cosette`
+- and tell the model in the system prompt that this transformation happened. Attack success falls from
+about 50% to 3.1%, and **task accuracy is unchanged** across SQuAD, sentiment, WiC and BoolQ (claim
+170). The model reads mangled text as competently as clean text, which is the surprising half.
+
+The design lesson is why marking the **body** beats marking the **edges**. Delimiters put the
+provenance signal at the boundaries, where an adversary who knows the convention can forge one.
+Datamarking makes provenance a property of every token, so forging it requires knowing the marker.
+**A boundary an attacker can forge is not a boundary**, and this note should generalise that past
+security: any structure you impose on the context window that an untrusted source can reproduce is
+decoration.
+
+> **Read against claim 22 and claim 151 together, because the three are different arguments for the
+> same discipline.** Claim 22 limits context for **attention** reasons - the model degrades as the
+> window fills. Claim 151 restricts who may write into it for **authority** reasons - text in the
+> window is indistinguishable from instruction. S21 adds a third: **the same tokens carry different
+> meaning depending on how they are marked**, so the window's *encoding* is a design surface and not
+> just its contents.
+
+Full synthesis in [`agent-security.md`](agent-security.md), including where this sits among the other
+defences and why its own authors call it in-band signalling.
 
 ## Key claims
 
