@@ -6,6 +6,13 @@ hard constraints. This document is the build.
 **Status of this document.** A specification written from a validated finding, by an agent that has
 not seen MCP Shark's source. **Every reference to MCP Shark's internals is an assumption to check
 against the codebase, not a description of it.** Where a name is guessed it is marked `[verify]`.
+> **Where this document lives, and why its links look inconsistent.** This file is served from
+> **`main`** - or from commit `48e74ca` onward, the commit that introduced it. **Do not construct a
+> URL to this file using `638ebe9`; that commit predates the handoff pack and will 404.** The
+> evidence links *inside* this document are deliberately pinned to `638ebe9` because that is the
+> commit whose wording they cite, and those files all exist there. Two different jobs, two different
+> refs: **the pack itself tracks `main` so you always get the current version; its citations are
+> frozen so they cannot drift.**
 
 ---
 
