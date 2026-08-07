@@ -1,6 +1,9 @@
 # Topic: Agent security
 
-**Status:** **established** (**10 sources, with three independent corroborating groups.** A **trio** -
+**Status:** **established** (**11 sources, with three independent corroborating groups.** **S23
+(2026-08-07) is the eleventh and joins no group** - it contributes the first spec-level authorization
+mechanism this note has ever been given (claim 182) and one fresh trust surface (claim 181), and
+corroborates nothing already here. A **trio** -
 S16, S17 and S19 - on agent memory as a persistence surface, from three unrelated institutions across
 three years; a **pair** - S17 and S20 - on capability growth being an attacker subsidy, one qualitative and one
 quantitative, with no author overlap; and a second **trio** - S13, S19 and S22 - on a self-improving
@@ -193,6 +196,50 @@ user present.
 > arriving in a production architecture diagram**, four times, with the requirement stated and the
 > protocol missing. The gap is the field's, not the document's.
 
+### Statelessness moves state into the client, and the client is the component this note distrusts
+
+**New 2026-08-07 from S23, and it is the first entry here that is a *consequence of a protocol design*
+rather than an attack or a defence.** MCP's 2026-07-28 specification made server-to-client questions
+stateless by handing the state to the client. Under MRTR the server returns an `InputRequiredResult`
+carrying a serialized `requestState` blob, the client collects the user's answer, and the client
+reissues the call with the blob echoed back - so any instance can resume [S23 §MRTR, `n7`]. A server
+that is stateless by design has **kept nothing to compare the returned value against**, which is not
+an implementation weakness but the direct consequence of the property being sought.
+
+In S23's own example that blob is `eyJzdGVwIjoxLCJmaWxlcyI6WyJhIiwiYiIsImMiXX0=`, decoded during that
+source's gate to `{"step":1,"files":["a","b","c"]}` - 32 bytes of plaintext, no signature, no MAC, no
+ciphertext - carried beside the elicitation **"Are you sure you want to delete these 3 files?"**
+[S23 `n8`] (claim 181).
+
+> 💡 **Client-held server state.** State a server serializes, hands to a client, and accepts back in
+> order to avoid storing it. Standard and good, and it has one non-negotiable requirement: it must be
+> **integrity protected**, because the client can otherwise rewrite it. Signed cookies and JWT
+> signatures exist for exactly this. Base64 is transport encoding and protects nothing.
+
+**This note already held the rule being broken, from 2012.** Claim 29 records OAuth's design choice
+that the untrusted leg should carry only **useless** material, which is why an authorization code can
+safely cross the browser: stealing it accomplishes nothing without a back-channel secret. Here the
+untrusted leg carries exactly the material the server will act on. Claim 28 records that consent works
+because **the ask is itemised** - and this design itemises the ask ("these 3 files") while leaving the
+itemisation mutable by the party the consent exists to constrain. The failure it enables is precise: a
+user consents to three files, and what reaches the server is a consent for three attached to a state
+naming thirty.
+
+> **Two limits, stated because the alarming version of this is wider than the defensible one.** First,
+> **the specification was not read** - S23's ingest ran no deep-research pass, so what is established
+> is that *the article* shows an unprotected example and never mentions integrity, not that *the
+> protocol* permits it. A competent implementation signs this, and SEP-2322 may require it. Second,
+> S23 **has a security section**, and it secures inherited OAuth concerns (claim 182) rather than the
+> surface its own redesign created [S23 `d1`] - which is what makes the omission worth recording
+> rather than assuming.
+
+**The generalisation belongs here rather than in `mcp.md`.** Every technique that makes a component
+stateless relocates its state to some other owner, and the security question is never whether state
+was eliminated but **who holds it now and what they can do to it**. Claim 106 is the same conversion
+seen from the isolation side: sharing or relocating a component turns a structural guarantee into an
+implementation obligation. Claim 180 is the transport instance. This row is the one where the new
+owner is a party the threat model already treats as compromisable.
+
 **And a guarantee whose truth depends on which variant you took is the genre's characteristic failure.**
 S12's use case says flatly that "even if an agent identity is compromised, the agent can't access
 unauthorized Google Cloud resources". True of the drawn topology; not true unqualified once you take
@@ -318,6 +365,9 @@ through what looks to the user like independent retrieval.
 
 | Claim | Threat / mitigation | Sources (cited) | Confidence |
 |---|---|---|---|
+| **Client-held server state is a trust surface, and MCP's stateless redesign created one.** `requestState` carries server execution context through the client, which echoes it back to a server that has kept nothing to compare it against. S23's own example is unsigned plaintext beside a delete confirmation. **Inverts claim 29** (the untrusted leg should carry useless material) and **defeats claim 28** (consent is itemised, but the itemisation is mutable by the constrained party). | Tampering with client-held state between the two halves of a confirmed action | S23 (`n7`, `n8`, `d1`), claim 181; against claim 28 + claim 29 | **needs-check.** Corroborated that the blob is client-held and echoed, and that the printed example is unauthenticated. **Not established: what the spec requires** - SEP-2322 unread |
+| **MCP authorization builds on OAuth and now names two mechanisms:** RFC 9207 issuer verification (`iss` validation by public clients) and RFC 8707 resource indicators (audience restriction, named as the confused-deputy fix). **The first spec-level answer to this note's identity question**, and it closes that question's direction only. | Confused deputy across multiple MCP servers; redirect and session-hijacking attacks | S23 (`n11`), claim 182 | needs-check (single-leg, two sentences, no artifact). **The RFCs themselves are T1 and unread** |
+|---|---|---|---|
 | Credential sharing is the anti-pattern OAuth exists to kill: passwords are unscopable, unrevocable and unexpiring | threat: over-broad permissions | S3 `n1` [&t=648s](https://www.youtube.com/watch?v=996OiexHze0&t=648s) | OK (corroborated) |
 | Scopes bind a token to a named permission set; the resource server rejects out-of-scope use even with a valid token | mitigation: least privilege | S3 `n7` [&t=1549s](https://www.youtube.com/watch?v=996OiexHze0&t=1549s) | OK (corroborated) |
 | The consent screen is generated from the requested scopes, so approval is specific rather than blanket | mitigation: human-in-the-loop | S3 `n7` [&t=1428s](https://www.youtube.com/watch?v=996OiexHze0&t=1428s) | OK (corroborated) |
@@ -415,17 +465,37 @@ being a contest. Keep this as the canonical picture of why a retrieval store nee
   sharpest open question this note has, because it is the one a real deployment hits first. S12 states
   the requirement - "you securely propagate the end-user identity... [the server] uses the propagated
   user identity to enforce fine-grained access control" - and names **no** token format, exchange,
-  audience restriction or delegation model (S12 `n11`). Candidates the owner's stated identity track
-  will reach: **OAuth 2.1 token exchange, SPIFFE/SPIRE workload identity, the MCP authorization spec**.
-  It also sits on top of `mcp.md`'s open question about what an aggregating server owes the servers
-  behind it. **The cheapest high-value research target in this note.**
+  audience restriction or delegation model (S12 `n11`). **Partially answered 2026-08-07 by S23: one of
+  the four blanks now has a name.** MCP's 2026-07-28 specification adopts **RFC 8707 resource
+  indicators**, letting a client state explicitly which server a token is intended for, named as the
+  fix for the confused deputy - plus **RFC 9207** issuer verification against redirect and
+  session-hijacking attacks in multi-server architectures (S23 `n11`, claim 182). **That is audience
+  restriction, and it leaves token format, exchange and delegation model open**, along with the case
+  this note has flagged twice as hardest, an agent acting on a schedule with no user present. **Still
+  the cheapest high-value research target in this note**, and the artifacts are now specific: **the MCP
+  authorization specification, RFC 8707 itself, OAuth 2.1 token exchange, SPIFFE/SPIRE**.
+- **Must client-held server state be integrity protected, and does MCP require it?** **New 2026-08-07,
+  and it is a fresh surface rather than an inherited one.** MCP's stateless redesign hands server
+  execution context to the client in a `requestState` blob and takes it back on faith, and the client
+  is the component this brain spends most of its pages treating as compromisable (S23 `n7`, `n8`,
+  claim 181). S23's own example is unsigned plaintext guarding a file deletion. **The spec was not read
+  in that pass**, so what is established is that the article gives a reader no reason to believe the
+  blob is protected, not that the protocol permits it unprotected. Read SEP-2322. **The second-order
+  question is the one this note is better placed to ask than `mcp.md`:** is `requestState` a write
+  channel from an injection-compromised client into server-side execution state? An agent client
+  compromised by indirect injection need not attack the server, because it is already the trusted
+  custodian of the state. Commentary, promoted nowhere.
 - **What is consent when the user is not present?** The design assumes a human at a browser clicking
   Yes. Long-running or scheduled agents break that. The client credentials flow (S3 `n10`) removes the
   user entirely - but that discards the delegation guarantee that made OAuth worth having. Open.
-- **How does MCP's authorization actually build on this?** Believed to rest on OAuth 2.1, but **no
-  source in this brain establishes it** - the connection is currently agent commentary, not a cited
-  claim. Resolve before promoting anything into `mcp.md`. *(Note: `mcp.md` is no longer empty as of
-  S10, but it says nothing about auth beyond a bearer token in a screenshot, so this stands.)*
+- ~~**How does MCP's authorization actually build on this?** Believed to rest on OAuth 2.1, but no
+  source in this brain establishes it.~~ **Closed 2026-08-07 by S23**, which is the brain's first
+  primary MCP source and states the connection directly: the 2026-07-28 specification adds **RFC 9207**
+  issuer verification for public clients validating `iss` on authorization responses, and **RFC 8707**
+  resource indicators for audience restriction (`n11`, claim 182). Both are OAuth-layer requirements,
+  so the answer is yes, MCP authorization builds on the S3 substrate. **What survives is narrower and
+  is the bullet two above**: naming the RFCs is not the same as having a token format, an exchange or a
+  delegation model, and S23 supplies none of those.
 - **Retrieved tool catalogs create an invisible steering surface, and no source discusses it.** When a
   tool catalog is searched rather than enumerated (S10, [`mcp.md`](mcp.md)), two new facts hold at
   once: the model sees **only a shortlist** it did not choose, and the field that decides that
@@ -900,6 +970,16 @@ claim 158; full walkthrough in the
 
 ## Sources feeding this topic
 
+- **S23** - [MCP stateless updates](../../sources/260807_mcp-stateless-updates/LEARNING.md) (Van Gent +
+  Blount, **Google**, 2026-08-05). **Not a security source, and it feeds this note twice anyway.** It
+  supplies the first spec-level authorization mechanism the note has ever had (RFC 9207 + RFC 8707,
+  claim 182), partially closing the identity question two earlier sources arrived at from opposite
+  directions. And its stateless redesign **creates** a trust surface it never discusses - server
+  execution state pushed through the client, unsigned in the article's own example, guarding a deletion
+  (claim 181). **T2 vendor on a standard it says it led, nothing measured, release candidate on beta
+  SDKs.** The security material is two sentences of prose with no artifact; the `requestState` finding
+  came from decoding a payload the authors printed and did not examine. Read it in
+  [`mcp.md`](mcp.md) for the protocol mechanics.
 - **S21** - [Spotlighting](../../sources/260805_spotlighting/LEARNING.md) (Hines, Lopez, Hall, Zarfati,
   Zunger, Kıcıman; **Microsoft**, arXiv 2024-03-20). **The cheap defence most teams actually deploy**,
   and this note's cost anchor at 1.06x input tokens. Datamarking at 3.1% attack success for no

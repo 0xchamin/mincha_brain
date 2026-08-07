@@ -96,6 +96,19 @@ result, resume - "the agent doesn't even know that things happened in the backgr
 [S2 `&t=460s`, `&t=495s`]. Correspondingly, the agent itself should hold **no state of its own**
 (factor 12, "stateless reducer") [S2 `&t=865s`].
 
+> **S2 named the pattern in 2025 and MCP standardised it in 2026, down to the "REST or MCP endpoint"
+> S2 happened to write.** The 2026-07-28 specification does exactly this twice. Its **Tasks extension**
+> returns a `taskId` immediately for work taking 10 to 60 seconds and lets the client poll `tasks/get`
+> or subscribe to `tasks/update` while the conversation continues, which is S2's long-running tool call
+> with the state ID promoted to a protocol primitive. Its **MRTR** design serialises mid-call context
+> into a `requestState` the client echoes back, so an elicitation resumes on any server instance
+> ([S23](../../sources/260807_mcp-stateless-updates/LEARNING.md) `n7`, `n9`, claim 180). **This is
+> corroboration of the design's necessity, not of its correctness** - S2 argued from building agents
+> and S23 from operating servers, and they converged on serialise-and-resume from opposite ends. Note
+> what the protocol version costs that S2's version did not: `requestState` puts the serialised state
+> **in the client** rather than in a store you own, which is a trust surface rather than a datastore
+> ([`agent-security.md`](agent-security.md), claim 181).
+
 Owning the loop is what makes mid-run interventions possible at all - break, summarise, insert
 LLM-as-judge [S2 `&t=423s`].
 
