@@ -1,6 +1,11 @@
 # Topic: Agent security
 
-**Status:** **established** (**11 sources, with three independent corroborating groups.** **S23
+**Status:** **established** (**12 sources, with three independent corroborating groups.** **S24
+(2026-08-14) is the twelfth and joins no group either** - it is an agent architecture write-up with no
+threat model, contributing the constructive premise under this note's structural defences (claim 188),
+an isolation primitive one layer below S12's (claim 185), and **an identification rather than a claim**:
+its subject is the same running system S19 attacked, which is a first here (claim 196). It corroborates
+nothing already present, and specifically **not** S19's memory findings. **S23
 (2026-08-07) is the eleventh and joins no group** - it contributes the first spec-level authorization
 mechanism this note has ever been given (claim 182) and one fresh trust surface (claim 181), and
 corroborates nothing already here. A **trio** -
@@ -418,6 +423,11 @@ through what looks to the user like independent retrieval.
 | Design against an adversary holding your system prompt: **randomise the marker**, and never use a transformation the attacker can invert | mitigation: design rule | S21 `n9`, `n10` (claim 171) | OK (corroborated) |
 | **Spotlighting is in-band signalling; its own authors name out-of-band as the answer and call it infeasible** - which S18 met one level up a year later | limit: the behavioural ceiling | S21 `n11`, `n12` (claim 172) | OK on the analogy and the admission; **the S18 link is this brain's** |
 | **Defences sort into three classes by what they ask of the model** - detection, behavioural, structural - failing for unrelated reasons, so they compose. **All three act on the input path; none survives a memory write** | framework | S21 + S18 + S19 + S20 (claim 173) | **needs-check - the taxonomy is this brain's synthesis** |
+
+| **A tool schema is a request format and proves nothing about authorization, isolation or approval** - the constructive premise under claims 152 and 167 | framework: why structural defences exist | S24 `n16` (claim 188) | emerging (T4, unmeasured, internally corroborated). The claim is a **distinction** and does not rest on the source's product facts |
+| **The isolation policy of a multi-tenant agent is the routing key's field list**, not a layer above it - claim 105 one level down, and its author refuses to call it a security guarantee | mitigation: structural | S24 `n2`, `n3` (claim 185) | emerging (T4, unmeasured) |
+| **Persist intent, re-resolve authority** - a session may remember non-secret provider and model intent, and credentials resolve through the auth path every run, so a rotation takes effect next turn | design rule | S24 `n13` (claim 192) | emerging (uncontroversial design argument, unmeasured) |
+| **The artifact S19 attacked now has an independent architecture description** - a first for this brain, and it is an identification rather than corroboration | provenance | S19 + S24 (claim 196) | **verified against S19's bibliography.** Moves neither claim 160 nor 161 - see `d5` |
 
 ## Key visuals
 
@@ -968,8 +978,73 @@ task was a reusable skill - **no command was issued, so there is none to filter*
 claim 158; full walkthrough in the
 [source note](../../sources/260805_memory-poisoning-systematic/LEARNING.md)).
 
+### The artifact this note attacked now has an architecture description, and the boundary it lacks
+
+Something happened with S24 that has not happened here before. **This note now holds an independent
+measured attack and an independent architecture description of the same running system** (claim 196).
+S19 evaluated memory poisoning against two real agents, one of which it names HERMES and attributes in
+its own bibliography to Nous Research, citing the project's developer guide. S24 is a practitioner
+walking that same project's session, persistence and delivery architecture end to end. Neither author
+knows the other, and neither wrote about the other's subject.
+
+Be careful about what that licenses, because the temptation to treat it as corroboration is strong and
+would be wrong. **S24 Part 1 is not about memory**, says so explicitly, and defers the subject to a
+later instalment. It therefore moves neither claim 160 nor claim 161, and no confidence anywhere in
+this note changes on account of it. The pairing is an *identification*, not a measurement.
+
+What it does buy is worth having anyway. It confirms S19 attacked a real, released, documented product
+rather than a research mock, which matters more than usual because S19's own `d1` conceded that its
+benchmark handed payloads to the agent as a labelled block rather than routing them through a real tool
+call. It supplies mechanism behind a parameter S19 could only observe from outside, since S19 cites a
+low compaction threshold as one of the two design choices making HERMES twice as poisonable, and S24
+documents what compaction actually does - fork a child session and keep the parent link. And it shows
+the write path a genuine payload would have to travel, which is the thing S19's benchmark short-cut.
+
+That last point leads to the claim from S24 this note should actually carry. **A tool schema is a
+request format and proves nothing about authorization, isolation or approval** (claim 188). It tells
+the model how to *ask* for a capability, and establishes nothing about whether the caller may use it,
+whether the backend is isolated, or whether a destructive action was approved. Read that against what
+this note already holds and it is the constructive premise sitting under two of its defences. S18 puts
+the security decision where the untrusted component cannot reach it, and S20's tool filter chooses the
+available tools before the agent sees untrusted data, and both only make sense once you accept that a
+well-formed call is not a permitted one. **Where no authority sits behind the schema, the model's
+ability to compose a valid call is indistinguishable from permission to make it.**
+
+The other thing S24 contributes is an isolation primitive one level below anything here. **The
+isolation policy of a multi-tenant agent is the routing key's field list** (claim 185), so putting
+participant identity into the key isolates per participant and omitting it shares the lane. There is no
+separate access-control component to misconfigure, because the key schema already decided. This is
+claim 105 one layer down - S12 put the tenancy boundary at a cloud project and bounded the principal,
+and this puts it in a string schema - and both are saying the same thing, which is that isolation has
+to be structural and settled before the model is involved, **because the model gets no vote in what its
+own routing key contains**.
+
+To the source's credit it refuses to oversell this, and the refusal is the part worth quoting. Its
+stated defaults are that ordinary group sessions isolate per participant while threaded sessions are
+shared, and it immediately adds that **this is a routing policy and not a universal security
+guarantee**. The two coincide only when nothing else in the system moves data between lanes, which is
+a property S24 does not claim and could not establish.
+
+> **What this note still does not have from S24, and it is the interesting gap.** S24 documents an
+> agent runtime with no injection defence of any kind. No filter, no marker, no capability, no policy
+> check at the tool call - none of the eleven defences this note has catalogued appears anywhere in
+> it, and the word injection is never used. That is not a criticism of a Part 1 about sessions, and
+> Part 5 is titled "Security Boundaries, Profiles, and Safe Deployment". **But it is a data point about
+> the field's default posture**: this is a careful, security-literate architecture write-up of a real
+> agent, and its threat model is operational failure rather than an adversary.
+
 ## Sources feeding this topic
 
+- **S24** - [Hermes Agent Architecture Part 1](../../sources/260814_hermes-agent-architecture-p1/LEARNING.md)
+  (Vinoth Govindarajan, "The Agent Stack", 2026-08-10). **Not a security source, and it feeds this note
+  three times.** It supplies the constructive premise under claims 152 and 167 (a tool schema is not an
+  authorization, claim 188), an isolation primitive one layer below S12's (the routing key's field list
+  *is* the policy, claim 185), and the credential discipline in claim 192. **Its most consequential
+  contribution is an identification rather than a claim**: its subject is the same artifact S19
+  attacked (claim 196), which is a first for this brain. **⚠️ T4, nothing measured, both corroboration
+  legs one author.** Read `d5` in its [`nodes.md`](../../sources/260814_hermes-agent-architecture-p1/nodes.md)
+  before using it against S19 - **it corroborates none of S19's memory findings.** Full synthesis in
+  [`agents.md`](agents.md).
 - **S23** - [MCP stateless updates](../../sources/260807_mcp-stateless-updates/LEARNING.md) (Van Gent +
   Blount, **Google**, 2026-08-05). **Not a security source, and it feeds this note twice anyway.** It
   supplies the first spec-level authorization mechanism the note has ever had (RFC 9207 + RFC 8707,

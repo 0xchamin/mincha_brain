@@ -1,6 +1,6 @@
 # Topic: Evals
 
-**Status:** established (8 sources / **7 independent** - S1 Uber closed-loop evals, S4 Anthropic
+**Status:** established (9 sources / **8 independent** - S1 Uber closed-loop evals, S4 Anthropic
 harness design, S5 Google DeepMind skill evals, **S11 agent-first data stack - a *counter*-example, a
 production deployment with no evals whose authors concede the gap**, **S13 `karpathy/autoresearch`,
 which supplies the half this note was missing: how to *design* a metric that an optimizer cannot game,
@@ -284,6 +284,10 @@ Full synthesis in [`agent-security.md`](agent-security.md).
 | **Most asserts can be cheap regex** (correct SDK, model ID, methods, no deprecated patterns), which is what makes many trials affordable; LLM-as-judge is reserved for trace-level checks. | S5 `&t=878s`, `&t=914s` | emerging |
 | **Start with 10-20 real prompts** - 5 happy-path, 5 negative/near-miss, 5 production traces. Real traces beat synthetic guesses, and a small suite beats none. | S5 `&t=628s`, `&t=645s` | emerging |
 
+| **"The agent succeeded" is not an operable completion model** - the chain runs event accepted, run owned, action completed, transcript committed, obligation recorded, send attempted, platform reports, reply available, and **every arrow is its own failure boundary**. Execution, persistence and delivery need separate evidence, because one flag cannot distinguish "nothing happened" from "everything happened except the last hop" - and an operator reading it wrong reruns a destructive tool. Claim 190. | S24 `n17`, `n18` + `fig3`, `fig4` | emerging (T4, unmeasured, internally corroborated) |
+| **Record the provider tuple that *served* the call, not the one selected at session start** - fallback can replace provider, model, endpoint, client and API mode together, so a start-of-session log line records an intention. Claim 193. | S24 `n15` + `fig3_gateway-message-flow.png` | emerging (unmeasured) |
+| **A runtime built on explicit identity and durable state is debuggable with no access to model internals** - across six documented production failures, not one piece of evidence to inspect names anything inside the model. Claim 194. | S24 `n22` + `fig4_six-failure-cases.png` | emerging. **A claim about a chosen set of six, not a survey** |
+
 ## Key visuals
 
 ![Full agent architecture with per-stage QA gates and logging](../../sources/260725_closed-loop-evals-multimodal-agent/visuals/frame_1058.jpg)
@@ -333,6 +337,12 @@ Full synthesis in [`agent-security.md`](agent-security.md).
 
 ## Sources feeding this topic
 
+- **S24** - [Hermes Agent Architecture Part 1](../../sources/260814_hermes-agent-architecture-p1/LEARNING.md)
+  (Vinoth Govindarajan, 2026-08-10). **The first source here on *operational* evidence rather than on
+  offline evaluation**, and the distinction is worth keeping: it never scores anything, and it is
+  entirely about what a running agent must emit for a human to reconstruct what it did. Contributes
+  claims 190, 193 and 194. **⚠️ T4, nothing measured, both corroboration legs one author.** Full
+  synthesis in [`agents.md`](agents.md).
 - **S1** - [Building Closed-Loop Evals for a Multimodal Agent at Scale](../../sources/260725_closed-loop-evals-multimodal-agent/LEARNING.md) (Uber, AI Engineer 2026) - the founding source.
 - **S4** - [Harness Design for Long-Running Application Development](../../sources/260725_harness-design-long-running-apps/LEARNING.md)
   (Prithvi Rajasekaran, Anthropic Labs, 2026-03-24). **T2 vendor source, n=1 runs, visual leg

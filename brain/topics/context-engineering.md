@@ -1,6 +1,6 @@
 # Topic: Context engineering
 
-**Status:** established (10 sources - S2 12-factor agents, S4 Anthropic harness design, **S8 LLM Wiki
+**Status:** established (11 sources - S2 12-factor agents, S4 Anthropic harness design, **S8 LLM Wiki
 (a partial feeder, 2 claims)**, **S9 Agent Framework (a partial feeder, 1 claim)**, **S10 Tool search
 (a partial feeder, 2 claims - and the first *measurement* of a claim S9 could only place)**, **S11
 agent-first data stack (4 claims - the first source here where the context is written for a
@@ -444,6 +444,33 @@ decoration.
 Full synthesis in [`agent-security.md`](agent-security.md), including where this sits among the other
 defences and why its own authors call it in-band signalling.
 
+### The storage-side argument for a discipline this note reached from the attention side
+
+This note has argued context-window ownership from two directions so far. Claim 22 argues it from
+attention and token budget, since what you put in the window degrades what the model does with it. S18
+argues it from authority, since the planner never sees tool output at all. S24 supplies a third and
+much more mundane route to the same discipline, and its mundanity is the point.
+
+**Session state is not prompt context** (claim 186). The durable session is the record continuity is
+reconstructed from, and what the model receives is a payload assembled for one call out of selected
+history, instructions, tool definitions and retrieved context. The two are different objects with
+different lifetimes, and **the stored session is routinely larger than anything the model sees**. No
+argument about attention or authority is needed to get there, because it falls straight out of the
+storage design once you notice that one thing is written to a database and the other is built per call
+and thrown away.
+
+Why that matters for this note is what it does to the framing. Context assembly is usually discussed as
+a decision about *quality* - which tokens help. Read from the storage side it is first a decision about
+*derivation* - the window is a projection of a larger durable record, and somebody chose the projection.
+That is a more useful frame for anyone building the thing, because a projection can be inspected,
+versioned and got wrong in ways a quality judgement cannot.
+
+> **It also names where a poisoning mechanism would live.** S19 reports that HERMES injects memory into
+> the system prompt as a frozen snapshot at session start, which is precisely a choice about this
+> projection. S24 is the architecture description of that same system (claim 196) and defers prompt
+> assembly to its Part 2, so **this note has the vocabulary for the mechanism and not yet the
+> mechanism**.
+
 ## Key claims
 
 | Claim | Sources (cited) | Confidence |
@@ -473,6 +500,8 @@ defences and why its own authors call it in-band signalling.
 | **The output of a working context loop is a write to the context store, not an answer** - which converts a service team into maintainers. Remove the human from that loop and it self-reinforces with no ground truth. | S11 Key Takeaways + `visuals/fig3` (`n8`, `d2`) | emerging - mechanism corroborated, organisational consequence prose-only, self-reinforcement risk is this brain's reading of `d2` |
 | **An "agent-first" data layer turned out to be a documentation layer over an unchanged pipeline.** Check whether any box moved or only the documentation did. | S11 §Closing + `visuals/fig2` (`n1`, `d1`) | emerging (single company, and the reading is the figure's, not the prose's) |
 | **A session token cap is a loop guard filed under cost** - it terminates a runaway without having to detect that the runaway is a loop, which is the hard part. The crude backstop under whatever loop detection you build. | S12 `n17` (claim 109) | needs-check (single-leg, T2, unmeasured) |
+
+| **Session state is not prompt context, and the durable record is routinely larger than the payload** - the window is a *projection* of a stored session, which reaches claim 22's discipline from the storage side rather than from attention or authority. Claim 186. | S24 `n7` + `fig1_model-inside-the-loop.png` | emerging (T4, unmeasured, internally corroborated) |
 
 ## Key visuals
 
@@ -546,6 +575,12 @@ defences and why its own authors call it in-band signalling.
 
 ## Sources feeding this topic
 
+- **S24** - [Hermes Agent Architecture Part 1](../../sources/260814_hermes-agent-architecture-p1/LEARNING.md)
+  (Vinoth Govindarajan, 2026-08-10) - **a partial feeder, contributing one claim**: session state is not
+  prompt context, which is the storage-side route to claim 22. Its subject is the same system S19
+  attacked (claim 196), and **prompt assembly - where S19's stated injection mechanism lives - is
+  deferred to its Part 2**. **⚠️ T4, nothing measured, both legs one author.** Full synthesis in
+  [`agents.md`](agents.md).
 - **S2** - [12-Factor Agents: Patterns of reliable LLM applications](../../sources/260725_12-factor-agents/LEARNING.md) (Dex Horthy, HumanLayer, AI Engineer WF 2025) - factors 2, 3, 9 and the "everything is context engineering" framing.
 - **S4** - [Harness Design for Long-Running Application Development](../../sources/260725_harness-design-long-running-apps/LEARNING.md) (Prithvi Rajasekaran, Anthropic Labs, 2026) - the serialisation artifact that makes context resets work, **context anxiety**, and compaction-vs-reset. **T2 vendor, n=1 self-reported runs, visual leg skipped** - mechanisms transfer, numbers are not replicated. *(Row added 2026-07-31: S4 was named in this note's status line and cited by two claims but had no row here - an orphan of exactly the class [ADR-0009](../decisions/0009-dreaming-reconciliation-pass.md) exists to catch, found incidentally while ingesting S8.)*
 - **S8** - [LLM Wiki](../../sources/260731_llm-wiki/LEARNING.md) (Andrej Karpathy, 2026-04-04) - **a partial feeder**, contributing two claims only: the schema document as the load-bearing artifact, and the mechanical two-pass constraint on markdown with inline images. **T4, unmeasured, no figures** - read it for the framing, never as evidence.

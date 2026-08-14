@@ -1,10 +1,10 @@
 # Topic: Agents
 
-**Status:** established (14 sources / **13 independent** - S1 Uber closed-loop evals, S2 12-factor
+**Status:** established (15 sources / **14 independent** - S1 Uber closed-loop evals, S2 12-factor
 agents, S4 Anthropic harness design, S5 skills evals, S7 Anthropic memory and dreaming, S9 Microsoft
 Agent Framework, S10 tool search, S12 Google Cloud multi-tenant reference architecture, S13
 `karpathy/autoresearch`, S14 Stanford CS329A, **S15 CS329A lecture 2 - not independent of S14**,
-S17 indirect prompt injection, S18 CaMeL, S20 AgentDojo)
+S17 indirect prompt injection, S18 CaMeL, S20 AgentDojo, S24 Hermes agent architecture)
 
 > **On S17's admission here, since its sibling S16 was declined.** S16 (AgentPoison) attacks a
 > retrieval store, which is a *component*, and was kept out of this note under
@@ -439,6 +439,56 @@ cheaper, since most of CaMeL's 2.82x token overhead is re-prompting to fix inval
 > *down* the value of compensatory scaffolding. **Those are two different bets and ablation only
 > tests one of them.**
 
+### The runtime half, which this note had almost nothing on until S24
+
+Everything above describes what an agent *is* and how its loop should be shaped. None of it says what
+happens to a message on the way in or to an answer on the way out, and S24 is the first source here to
+work that layer deliberately. Its subject is a single open-source agent walked end to end, and its
+finding is that the interesting engineering lives entirely in boundaries that are easy to collapse.
+
+Start with identity, because everything else depends on it. **Routing identity and conversation
+identity are separate objects** (claim 184), and the reason the distinction is not pedantic is that
+collapsing them fails silently. A message routed into the wrong conversation produces a conversation
+that is perfectly valid, so nothing raises an error and the only symptom is a human noticing that the
+history looks unfamiliar. One identifier is derived from the source and chooses the lane; a different
+one names the durable transcript that lane currently points at, and it changes on reset, on compaction
+and on rebind while the first one does not move at all.
+
+That separation is what makes claim 18's pause-and-resume actually implementable rather than merely
+desirable. **No process stays alive between turns**, and continuity is a property reconstructed from
+durable state on each message, which is why every identifier has to be written down and why each one
+can be written down wrongly. It also produces the failure with the widest blast radius in the source,
+because session identity and **execution workspace** are two more objects that look like one. Resume
+the conversation after the working directory has moved and every visible signal is correct while the
+tools act somewhere else entirely (claim 187). The recovery is the transferable part and it is
+preventive rather than detective, since you confirm the workspace before letting tools act rather than
+inferring the problem later from its effects.
+
+Two further collapses are worth carrying because they are both now standard practice. **Restoring
+parallel tool results in model-call order is transcript validity and not side-effect ordering** (claim
+189), so a tidy sequence in the transcript may describe an interleaving that never happened - the
+transcript is a record of the conversation, not a log of the world. And **"remote" names three
+unrelated boundaries** (claim 195), since a remote model API, a remote tool-execution backend and a
+remote gateway imply nothing whatever about each other, and the conflation lets someone conclude that
+a hosted model implies sandboxed execution.
+
+The sharpest finding, though, is about how these systems are read rather than how they are built.
+**A mutual-exclusion guard may be memory-only, and a component diagram cannot show it** (claim 191).
+In the system documented, the guarantee that one conversation runs at most one turn is held in process
+memory, so it dies with the process and does not hold across two gateway processes, while everything
+around it is backed by SQLite and does. A box is a box whether its contents are durable or not, and the
+two behave identically until the moment they do not. **Read the durability column before the
+architecture diagram** is the rule that falls out, and it applies to every agent runtime this note
+covers, not just to the one that produced it.
+
+> **Note where this claim came from, because it is a lesson about sources.** The article's prose never
+> states it. Its closing checklist asks the reader to determine the answer for their own system, and
+> only a cell in its own ownership table answers it for the article's own subject (`d1`). A reader
+> taking the prose alone finishes with the opposite belief. This is the corroboration gate doing the
+> only useful thing available on a single-author source: agreement between an author's prose and the
+> same author's diagram proves nothing about the world, and **disagreement still finds the cell that
+> matters**.
+
 ## Key claims
 
 | Claim | Sources (cited) | Confidence |
@@ -477,6 +527,11 @@ cheaper, since most of CaMeL's 2.82x token overhead is re-prompting to fix inval
 | **Once tools are retrieved rather than enumerated, a tool description becomes an index entry** - written in the vocabulary of whoever is searching, not of whoever built it. Adding a tool becomes an information-retrieval question. | S10 §Tuning the search space + §intro (`n13`, `n19`) | emerging (single-leg experience report) |
 | **Deploying agents across an organisation, one tenancy boundary buys three properties at once** - confidentiality isolation, blast-radius isolation and noisy-neighbour isolation. The corollary: a deletion made for cost sells all three, while the cost argument names only one. | S12 `n13` (claim 107); the source states each separately, the unification is this brain's | emerging (T2 vendor, unmeasured) |
 | **Agent workloads need agent-shaped failure semantics:** on a blown context deadline, graceful shutdown reporting **partial progress** - meaningful for a multi-step agent, meaningless for a request/response service. | S12 `n16` (claim 108) | needs-check (single-leg, asserted) |
+| **Routing identity and conversation identity are separate objects**, and collapsing them fails silently because a misrouted message produces a valid conversation. Claim 184. | S24 `n1` + `fig2_ownership-split.png` | emerging (T4, internally corroborated, **unmeasured**) |
+| **Session identity is not the execution workspace**, so "correct transcript, wrong repository" is reachable and presents as success. Confirm the workspace **before** letting tools act. Claim 187. | S24 `n10` + `fig4_six-failure-cases.png` | emerging (unmeasured, no incident behind it) |
+| **Parallel tool results restored in model-call order buy transcript validity, not side-effect ordering** - the transcript is a record of the conversation, not a log of the world. Claim 189. | S24 `n14` + `fig3_gateway-message-flow.png` | emerging. **The most testable claim in the source and untested** |
+| **A mutual-exclusion guard may be memory-only and therefore process-local, and a component diagram cannot show it.** Read the durability column first. Claim 191. | S24 `n8`, `d1` + `fig2_ownership-split.png` | emerging. **Product-specific in its instance, general in its lesson** |
+| **"Remote" names three unrelated boundaries** - remote model API, remote execution backend, remote gateway - and none implies the others. Claim 195. | S24 `n6` + `fig1_model-inside-the-loop.png` | emerging (vocabulary, and load-bearing) |
 
 ## Key visuals
 
@@ -498,6 +553,13 @@ cheaper, since most of CaMeL's 2.82x token overhead is re-prompting to fix inval
 > The harness enumerated rather than gestured at - and note the model appears in **none** of the
 > boxes. Pair it with claim 31: this is the menu, not the instruction to order everything.
 > S9 `fig_AgentHarness`.
+
+![Ownership split table: state, owner, scope, durable form, failure symptom](../../sources/260814_hermes-agent-architecture-p1/visuals/fig2_ownership-split.png)
+> **The best single visual this note has on the runtime layer, and the column that earns it is
+> "Durable form".** Most architecture diagrams show what talks to what, which is the easy half; this
+> shows what is written down, which decides whether the system can be reconstructed after a crash.
+> Read row 6: the active-run guard is **memory only**, which is claim 191 and is the fact the
+> article's own prose never states. S24 `fig2_ownership-split.png`.
 
 ## Open questions / conflicts
 
@@ -619,4 +681,14 @@ cheaper, since most of CaMeL's 2.82x token overhead is re-prompting to fix inval
   tasks repeated sampling suits, and the answer is decided by the task's verifiability rather than by
   the agent's design. The rest of its argument lives in
   [`self-improvement.md`](self-improvement.md) and [`evals.md`](evals.md).
+- **S24** - [Hermes Agent Architecture Part 1: Gateway, Sessions, and the Agent Loop](../../sources/260814_hermes-agent-architecture-p1/LEARNING.md)
+  (Vinoth Govindarajan, "The Agent Stack", 2026-08-10). **The first source here on the runtime and
+  operational layer** - identity, routing, persistence, failure boundaries and delivery - rather than
+  on the shape of the loop. Contributes claims 184, 187, 189, 191 and 195. Unusually free of
+  commercial position for a T4 blog, because the author analyses **somebody else's** open-source
+  project rather than his own. **⚠️ Nothing in it is measured** - no latency, error rate, incident or
+  comparison - and its two corroboration legs are one author's prose against the same author's
+  diagrams, so `corroborated` means internally consistent and nothing more. **It also opens with a
+  deterministic test task it never shows running** (`d3`). The security material is in
+  [`agent-security.md`](agent-security.md) and the observability material in [`evals.md`](evals.md).
 - **R1** - [deep-research pass on S2](../../sources/260725_12-factor-agents/context/01_context-limits-and-decomposition.md) (2026-07-25) - external evidence, tiered with independence calls.
