@@ -162,6 +162,7 @@ framing. Understanding is the deliverable.)*
 | Section | Required? |
 |---|---|
 | `## TL;DR` | **Hard** - the executive summary, and `build_site.py` lifts it onto the landing page |
+| The **TL;DR diagram**, inside that section, under the prose | **Hard wherever the argument has a shape** - the whole note in one glance, for a reader deciding whether to spend twenty minutes. Same conditional as the mental model, and it is **not** the same diagram. See below |
 | `## The 1-minute version` | **Hard** - the whole article compressed to a scannable table. See below |
 | `## Key claims` | **Hard** - also lifted onto the landing page |
 | `## What you will learn, and in what order` | **Hard** - a mermaid roadmap of the walkthrough, grouped into movements. See below |
@@ -241,6 +242,61 @@ right trade for a note whose job is teaching, and it is why the compressed forms
 > **Reference implementation:** [`sources/260803_autoresearch/LEARNING.md`](sources/260803_autoresearch/LEARNING.md)
 > - the source that forced this section. Its `1-minute version` and roadmap walkthrough are the two
 > shapes to copy.
+
+### The TL;DR diagram
+
+> **Why this exists.** The notes run 5,000 to 9,000 words. A reader deciding whether to spend twenty
+> minutes gets four sentences of prose, and prose is the slowest possible way to convey a *shape*. The
+> three compressed forms this file already defines all answer questions in words - what is this, what
+> does it say, what may I cite - and **none of them shows the reader the structure of the argument
+> before they commit to reading it.** One diagram does that in about three seconds.
+
+**Place it inside `## TL;DR`, immediately after the prose.** `build_site.py` lifts that whole section
+onto the landing page, so the diagram travels with the summary and a reader sees the shape without
+opening the note at all. That lift is also the constraint that governs everything below.
+
+**The hard part is not drawing it, it is not drawing one of the other two.** A note in this shape
+carries up to three diagrams and they are trivially easy to collapse into three views of one picture,
+which wastes two of them. Keep the division of labour explicit:
+
+| Diagram | Answers | Must not |
+|---|---|---|
+| **TL;DR diagram** | *what is the shape of the argument?* | be the flow, or the reading order |
+| **Roadmap** (`What you will learn`) | *what order will I meet it in, and what may I skim?* | be the subject - it is about the note |
+| **Mental model** (`Diagram`) | *how does the subject actually work?* | be a compressed table of contents |
+
+The reliable way to make the first one distinct is to **draw the note's thesis rather than its
+subject**. If the walkthrough keeps saying that two things get mistaken for each other, draw the
+pairs. If it keeps saying a decision has to be made before some point, draw the point. *(Worked
+example: [`sources/260814_hermes-agent-architecture-p1`](sources/260814_hermes-agent-architecture-p1/LEARNING.md)
+hangs six "X is not Y" nodes off the source's own six-stage spine - the mental model already owned the
+flow, so the TL;DR diagram took the collapses instead, and each one is pinned to the stage where it
+bites.)*
+
+**Keep it phone-sized, and prefer `flowchart TB`.** It renders on a landing card among two dozen
+others and on a 390px screen. A diagram needing a laptop to read has failed at the one job it has.
+
+**It still carries a walkthrough** - the hard rule in Global rules has no exemption, and orientation,
+crux, why-this-shape and provenance all still apply. Write it as **one compact paragraph in flowing
+prose**, not four labelled blocks, and remember the register rules forbid the bold lead-in labels
+anyway. Four or five sentences is right; if it needs more, the diagram is too complicated for the slot.
+
+**Skip it when the argument has no shape** - the same conditional the mental model carries. A source
+whose contribution is a list of independent findings has nothing to draw here, and a diagram invented
+to satisfy a table row is decoration, which the diagram rule already forbids. **Say nothing when you
+skip it**; unlike the visual leg, there is no evidential cost to record.
+
+> **Two costs, both real, both accepted.** It makes that source's landing-page card **taller** than
+> its neighbours, which is a genuine asymmetry when only some notes have one. And it depends on
+> `render_home` running the lifted section through `mermaidify` - **which it did not do until
+> 2026-08-14**, publishing the diagram source as a visible code block on the homepage instead. That is
+> fixed. It is recorded here because it is the failure mode a future agent would otherwise rediscover
+> by shipping it.
+
+> **Deliberately not enforced by `validate.py`.** Whether an argument *has* a shape, and whether a
+> diagram duplicates its neighbours, are both judgement. The validator checks that mermaid fences
+> balance and that diagrams exist where this file says they must; it cannot check that three diagrams
+> are three different diagrams, and encoding that would launder judgement as a green check.
 
 ### The 1-minute version
 

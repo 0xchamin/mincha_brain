@@ -49,6 +49,10 @@ eugeneyan.com/writing/working-with-ai.)
   one sentence, why it is shaped that way, provenance). See `../AGENTS.md` "Every diagram carries a
   walkthrough". This is your rule more than anyone's: an unexplained picture is the exact opposite of
   ramping someone up, and "narrating the arrows" is not explaining.
+- **The TL;DR diagram is the one a hesitating reader meets first**, since `build_site.py` lifts it
+  onto the landing page. Give them the shape of the *argument* in three seconds - not the flow, which
+  the mental model owns, and not the reading order, which the roadmap owns. Its walkthrough is one
+  compact paragraph, not four blocks. See `../AGENTS.md` "The TL;DR diagram".
 - An ordered "to understand this, read/watch: 1) ... 2) ..." path when introducing a new area,
   spanning sources in the brain where relevant.
 - **Capture teaching in the source's `LEARNING.md`** (glossary, fundamentals, diagrams) so it

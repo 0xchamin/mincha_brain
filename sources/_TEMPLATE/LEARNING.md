@@ -31,6 +31,25 @@
 
 <2-4 sentences: what this source teaches and why it is worth knowing.>
 
+```mermaid
+flowchart TB
+    A["<the shape of the argument, not the flow>"] --> B["<...>"]
+```
+
+<One compact paragraph, flowing prose, no labelled blocks: how to read it, the crux in one bold
+sentence, why this shape rather than another, and provenance. Four or five sentences.>
+
+<!-- The TL;DR diagram: the whole note in one glance, for a reader deciding whether to spend twenty
+     minutes. It is lifted onto the landing page with this section, so keep it phone-sized and prefer
+     flowchart TB.
+
+     THE TRAP: this must not be the roadmap (reading order) or the mental model (how the subject
+     works). Draw the note's THESIS, not its subject - if the walkthrough keeps saying two things get
+     mistaken for each other, draw the pairs. See AGENTS.md "The TL;DR diagram".
+
+     Delete this block and the fence above if the argument has no shape worth drawing. That is a legal
+     outcome and needs no note - same conditional the mental model carries. -->
+
 ## The 1-minute version
 
 | | |

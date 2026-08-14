@@ -25,6 +25,10 @@ use **code-explorer** instead - it is the code analog of this persona.)
   a walkthrough". An extracted frame gets its "what it teaches / corroborated by" pair; a diagram
   *you* generated needs more, because the reader cannot go back to a slide to check what you meant.
   If you cannot state the diagram's crux in one sentence, it is decoration - cut it.
+- **A `LEARNING.md` carries up to three diagrams and they must do three different jobs.** The TL;DR
+  diagram is the shape of the *argument*, the roadmap is the reading *order*, the mental model is how
+  the *subject* works. Drawing the flow three times wastes two of them. See `../AGENTS.md` "The TL;DR
+  diagram" - the reliable trick is to draw the note's **thesis** in the TL;DR, not its subject.
 
 ## Output
 
