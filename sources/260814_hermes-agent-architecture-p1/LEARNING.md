@@ -572,6 +572,17 @@ correct engineering, because the information needed to resolve the ambiguity doe
 side of the boundary. The author says so plainly, which is more than most architecture writing manages:
 this is at-least-once recovery and **it is not exactly-once delivery** `n19`.
 
+There is a second window the article does not mention, and running it found it. The ledger reasons
+over a record that is written **after** the side effect it protects, so a crash in the gap between the
+effect and the transcript commit leaves no evidence the tool ever ran, and the only available recovery
+is to rerun the task. Measured, that duplicates the irreversible action in **100% of runs**, with the
+ledger enabled and working exactly as designed
+([`experiments/260815_runtime-boundaries`](../../experiments/260815_runtime-boundaries/RESULTS.md),
+case 03). **At-least-once delivery and at-least-once side effects are two different guarantees, and
+the ledger buys only the first.** Closing the other needs the effect and its record to commit
+together, or a tool that is idempotent. *This is the brain's own experiment on a reimplementation, not
+a claim from the source.*
+
 He then does something rarer still and polices the scope of his own mechanism. Streaming output,
 progress messages, media and explicit tool-driven sends may have different semantics, and a final-text
 delivery ledger should not be generalised into "every byte Hermes sends is durable" `n20`. The
@@ -814,19 +825,31 @@ is public code pinned to a commit the author names.
 
 ## Open questions
 
-- **Does the active-run guard's process-locality matter in practice?** The finding in `n8` is
-  structural and its consequences are unmeasured. Nobody has reported what actually happens when a
-  second gateway process runs against one `state.db`, and the article does not say whether that
-  configuration is supported, discouraged, or prevented.
+- ~~**Does the active-run guard's process-locality matter in practice?** Nobody has reported what
+  actually happens when a second gateway process runs against one `state.db`.~~ **Answered
+  2026-08-15 for a system of this shape**, by running it:
+  [`experiments/260815_runtime-boundaries`](../../experiments/260815_runtime-boundaries/RESULTS.md)
+  case 02. Two processes, 40 turns each, WAL plus a busy timeout - **database integrity was perfect
+  and semantic integrity was destroyed.** All 80 rows landed with zero `SQLITE_BUSY`, and every turn
+  number was written twice, losing half the increments, with no error raised anywhere. **This is
+  evidence about the mechanism and not about Hermes**, which may well use an atomic increment or a
+  lease; the article does not say. What is settled is that `n9`'s distinction between a database
+  concurrency rule and a semantic one has teeth. *Still open: whether the configuration is supported,
+  discouraged or prevented.*
 - **What is the correct primitive for cross-process mutual exclusion in an agent runtime?** A
   conversation-scoped lease in the store is the obvious answer and it inherits every distributed-lock
   problem this brain has already recorded against locking schemes. Unresolved here.
 - **How does this interact with parallel sub-agents?** The article covers one turn per conversation.
   Delegation is deferred to Part 4, and the ordering guarantee in `n14` is stated for tool calls
   rather than for concurrent agents sharing a workspace.
-- **Is "transcript order is not side-effect order" ever actually observed to bite?** `n14` is an
-  honest disclaimer with no incident behind it, and it is the single most testable claim in the
-  article.
+- ~~**Is "transcript order is not side-effect order" ever actually observed to bite?**~~ **Answered
+  2026-08-15: yes, and without anybody inserting a delay.**
+  [`experiments/260815_runtime-boundaries`](../../experiments/260815_runtime-boundaries/RESULTS.md)
+  case 01 - two concurrent tools appending to one file, results restored in model-call order,
+  diverged in **12% of 200 runs** with ordinary I/O and **49%** with sub-3ms jitter. So `n14`
+  describes something a system meets by accident rather than a theoretical possibility. Again a
+  **mechanism** finding, not a measurement of any shipping runtime. *Still open: how often it bites
+  when tools do real work.*
 - **Part 2 is the one this brain should want, and the reason is in section 10 below.** S19 reports
   that HERMES injects memory into the system prompt as a frozen snapshot at session start, and prompt
   assembly is Part 2's subject. That is where the architecture of the exact mechanism S19 measured
