@@ -18,6 +18,35 @@ guarantee stopping two turns from mutating one conversation is held **in memory*
 process-local, and it does not survive a restart. Read it as the operational half of everything this
 brain already holds about agent loops.
 
+```mermaid
+flowchart TB
+    MSG["inbound message"] --> SESS["session"]
+    SESS --> CTX["context"]
+    CTX --> LOOP["model and tool loop"]
+    LOOP --> PERS["persistence"]
+    PERS --> DEL["delivery"]
+
+    SESS -.-> C1["routing identity is not<br/>conversation identity"]
+    CTX -.-> C2["session state is not<br/>prompt context"]
+    LOOP -.-> C3["a tool schema is not<br/>an authorization"]
+    LOOP -.-> C4["transcript order is not<br/>side-effect order"]
+    PERS -.-> C5["session identity is not<br/>the execution workspace"]
+    DEL -.-> C6["committed is not<br/>delivered"]
+
+    classDef collapse fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    class C1,C2,C3,C4,C5,C6 collapse
+```
+
+Read the spine downward as the article's own one-line summary of what a message becomes, and each red
+node as a distinction the note exists to defend. **The crux is that every failure worth naming here
+comes from writing two objects as one.** It is drawn against the spine rather than as a list of pairs
+because each collapse bites at a particular stage, and knowing where it bites is what tells you which
+component owns the fix - a routing bug is not repaired by changing the model, and a delivery problem
+must not be allowed to run a destructive tool twice. A tidier shape, six pairs in a table, would let a
+reader memorise the distinctions without ever learning where they apply, which is the failure this
+whole note is arguing against. *Spine quoted from the source; the collapses are synthesized from `n1`,
+`n7`, `n10`, `n14`, `n16` and `n17`.*
+
 ## The 1-minute version
 
 This article is a walk through the runtime of one real agent, from the moment a message arrives at a
