@@ -1,6 +1,6 @@
 # BUILD.md - build Brain from scratch, from this file alone
 
-> **Generated 2026-08-05 from commit `9cd75a3`** by `tools/make_build_doc.py`. Do not hand-edit: edit the
+> **Generated 2026-08-15 from commit `247ca82`** by `tools/make_build_doc.py`. Do not hand-edit: edit the
 > source files in the reference clone and regenerate, or your copy silently diverges from the kit
 > it claims to build.
 
@@ -3309,11 +3309,18 @@ def render_home(topics: list[dict], sources: list[dict], claims: list[dict], rw:
         )
 
     # Source lessons: TL;DR + key claims, lifted verbatim from each LEARNING.md.
+    # A lifted section may contain a mermaid block (S24's TL;DR does), so both run through
+    # mermaidify here exactly as a full page does - otherwise the diagram source renders as a
+    # visible code block on the landing page. home_mermaid gates loading the mermaid bundle.
     scards = ""
+    home_mermaid = False
     for s in sources:
         tldr = rw.apply(md_to_html(s["tldr"]), REPO / "sources" / s["id"], "index.html")
+        tldr, tldr_mm = mermaidify(tldr)
         tldr = linkify_timestamps(tldr, youtube_id(s["external"]))
         claims_html = rw.apply(md_to_html(s["key_claims"]), REPO / "sources" / s["id"], "index.html")
+        claims_html, claims_mm = mermaidify(claims_html)
+        home_mermaid = home_mermaid or tldr_mm or claims_mm
         claims_html = linkify_timestamps(claims_html, youtube_id(s["external"]))
         topics_html = "".join(pill(t, "topic-tag") for t in s["topics"])
         scards += f"""<article class="lesson">
@@ -3344,6 +3351,7 @@ def render_home(topics: list[dict], sources: list[dict], claims: list[dict], rw:
         body=body,
         description="Lessons from every ingested source, and the topic syntheses they compound into.",
         active="lessons",
+        mermaid=home_mermaid,
     )
 
 
@@ -6301,7 +6309,7 @@ _(Diagrams/slides across sources, embedded with caption + citation.)_
 
 | Date | Source | Entry |
 |---|---|---|
-| 2026-08-05 | brain (kit) | Kit built from `BUILD.md` (a generated bundle of the reference clone). Empty brain: 6 seed topics, no sources, no claims. |
+| 2026-08-15 | brain (kit) | Kit built from `BUILD.md` (a generated bundle of the reference clone). Empty brain: 6 seed topics, no sources, no claims. |
 ``````
 
 #### `reports/README.md`
