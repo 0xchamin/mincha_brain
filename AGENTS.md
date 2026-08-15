@@ -469,8 +469,15 @@ walkthrough is roughly 150 words.
 
 **Adopt [presenter](personas/presenter.md), which owns the full spec.** Placed **last, after
 `Feeds these topics`** - so it cannot disturb the ramp, and `build_site.py` (which lifts only `TL;DR`
-and `Key claims`) never pulls it onto the landing page. Five to seven movements, a visual each,
-closing on `### Takeaway message`. **Budget 700-1,200 words.**
+and `Key claims`) never pulls it onto the landing page. An audience-facing **framing note**, then
+five to seven **slides** (`### Slide N - <the claim>`) with a visual each, closing on
+`### Key takeaway message`. **Budget 900-1,500 words** - widened from 700-1,200 when the bullets went, on the same +25-30% precedent the Register rules already carry.
+
+**It is a talk track, not slide notes, and the tone rules are in the persona.** The short version:
+**no bullets anywhere**, slide titles that are claims rather than labels, one bolded declarative
+sentence opening each slide, the audience named out loud where the register shifts
+(*"the leadership significance is..."*), and questions posed then answered. **Say "slide", never
+"movement"** - `movement` already names the roadmap's groups of walkthrough sections.
 
 **Three rules are load-bearing and are restated here because they are the ones that will erode:**
 
@@ -493,9 +500,11 @@ cites; synthesize a new diagram only where a movement's consequence has no exist
 already struggles to keep three diagrams distinct** and five more would be decoration. This also keeps
 the frame-prune rule satisfiable, and a frame earning its place twice was well chosen.
 
-**Register carve-out, deliberately narrow.** Movement **bullets** are exempt from the Register rules
-(no bold lead-in labels, no colon-led lists, no semicolon chains) because that is what bullets are.
-**The presenter explanations underneath them are not exempt** - they are prose carrying an argument.
+**No register carve-out, and an earlier one was withdrawn.** The first version of this section
+exempted slide bullets from the Register rules. **The tone rules removed the bullets, so the
+exemption had nothing left to cover** - and the register's demands, complete sentences and paragraphs
+that hand off, are exactly what a spoken track needs. A slide's bolded opening is a **claim**, not the
+lead-in label the register forbids.
 
 > **Scoped to new ingests, and the reason is recorded in
 > [ADR-0026](brain/decisions/0026-presenter-persona.md).** Twenty-six notes predate this section and

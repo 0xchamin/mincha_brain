@@ -784,118 +784,141 @@ sources for the pattern is counting one source twice.
 
 ## Presentation narrative
 
-> Persona: **presenter**. Written after the note above was complete and does not repeat it - the
-> walkthrough teaches, this selects. **It opens on the conclusion**, which the walkthrough is
-> forbidden from doing, because an audience that may leave after five minutes needs the consequence
-> before the mechanism.
+> **Presentation framing, synthesized.** A senior-leadership talk track derived from this source's
+> gated nodes. It presents the work as an architecture decision and an evidence increment. **It adds
+> no production-readiness claim the source did not establish**, and where the source measures nothing
+> the track says so rather than rounding it up.
 
-### Movement 1 - Everyone has this problem and search is the wrong purchase
+### Slide 1 - The headline
 
-![the core idea of the pattern being implemented](visuals/frame_712.jpg)
+**A pattern this brain has held since April now has its first independent implementation, and the
+valuable part is not that it works - it is the four mechanisms the pattern never specified.** Someone
+at another company read Karpathy's `llm-wiki` gist, built it, and ran it against a real corpus of a
+few hundred notes [`n1`].
 
-- Notes accumulate faster than anyone organises them, and the asset decays into an archive
-- Retrieval is stateless across queries, so a five-document question re-derives the same synthesis
-  every time while the user waits
-- Better search improves which fragment you find and never relates one fragment to another
+The leadership significance is that we can stop treating this design as a proposal. What we could not
+say in April was whether anyone other than its author could stand it up; we can say that now. What we
+still cannot say is whether it outperforms the retrieval systems it replaces, because **nothing in
+this source is measured** [`n16`].
 
-The distinction decides where the money goes, so it is worth four seconds of care. The expensive
-thing is not lookup, it is the relating of documents to each other, and that happens *after* the right
-documents are already in hand. Better chunking and a stronger reranker improve the cheaper half. The
-architectural move is to pay the relating once at ingest and keep the artifact current, which is a
-build step against an interpreter. Note whose slide this is - Karpathy's gist, held independently by
-this brain as S8, so the pattern is not the speaker's contribution and his displaying it corroborates
-nothing. *[S8 `n1`, `n2`; `n1` on lineage]*
+![the pattern being implemented](visuals/frame_712.jpg)
 
-### Movement 2 - The architecture is an ownership diagram, not a storage diagram
+This is a provenance slide, not an architecture slide. Those words are the gist's, not the speaker's,
+so his agreement with them buys nothing evidentially - it is one source displayed twice. **The crux is
+that we gained an existence proof and not a second opinion**, which is what stops us counting one idea
+as two when we cite it. *Synthesized from `n1` and `n16`.*
+
+### Slide 2 - The problem was accumulation, not retrieval
+
+**Every knowledge base we have built attacks the wrong cost.** Notes arrive faster than anyone
+organises them, the instinct is to point search at the pile, and better search genuinely improves
+which document comes back [`n3`].
+
+It changes nothing about the expensive part. Retrieval is stateless across queries, so a question
+needing five documents synthesised pays for that synthesis again on every single ask, while the user
+waits, and then the result is discarded [S8 `n1`]. The question for an architecture review is
+therefore not whether our retrieval is good enough. **It is whether anything we compute is ever kept.**
+
+![a raw dictated note](visuals/frame_280.jpg)
+
+The sidebar matters more than the note, where dated filenames run past the fold. **The crux is that
+nothing in that list was ever related to anything else, and no search infrastructure will relate
+them.** Engineers should notice where that puts the budget - chunking, embeddings and rerankers all
+improve lookup, and every one leaves synthesis where it was. *Corroborated by `n3`, narration @t=311s.*
+
+### Slide 3 - The architecture is an ownership decision, not a storage one
+
+**The design that works layers the store by who is allowed to write to it, and that is a governance
+choice before it is a technical one.** Raw sources are immutable and act as the audit anchor, the
+derived wiki is written only by the model and read only by us, and the schema document is the single
+layer both parties touch [S8 `n4`, `n5`].
+
+What engineers should take from this is where the engineering lands. Not the retrieval stack and not
+the embedding model - a prose contract telling the agent how the store is organised. The leadership
+significance is that an autonomous writer is governed by a reviewable document rather than by code
+nobody reads.
 
 ![the three layers, defined by who may write](visuals/frame_728.jpg)
 
-- Raw sources: immutable, the audit anchor
-- The wiki: the model writes, you read
-- The schema document: the only layer both parties touch
+This is an ownership diagram, not a component diagram. Nothing here tells you where bytes live, and
+that is deliberate. **The crux is that the immutable raw layer is what lets any derived claim be
+walked back to something the model could not have edited** - remove it and the knowledge base becomes
+its own only witness. Hold that word immutable; slide 5 is where this implementation breaks it.
+*Corroborated by S8 `n4`, `n5`.*
 
-Most knowledge-base designs are drawn by what is stored where. This one is drawn by **who is allowed
-to write**, which is the more useful axis for anyone who has to govern it. The immutable raw layer is
-what lets a derived claim be walked back to something the model could not have edited, and the
-engineering effort goes into a prose contract rather than a retrieval stack. Hold the word immutable;
-movement 4 is where it breaks. *[S8 `n4`, `n5`]*
+### Slide 4 - What the pattern left out is what decides whether it survives
 
-### Movement 3 - Running it needs two mechanisms the pattern never specifies
+**Two mechanisms appear in the implementation that appear nowhere in the design, and both are guards
+rather than features.** The first is an idempotence stamp: three lines in the enrichment skill that
+skip any note already carrying an `enrichedAt` timestamp and write one on completion [`n5`].
 
-![the enrichment skill, with its idempotence rule](visuals/frame_404.jpg)
+That sounds like housekeeping and it is the difference between a design and an operation. Without it,
+maintenance costs grow with everything ever written, so the job gets dearer precisely as the knowledge
+base becomes more valuable. With it, cost tracks your writing rate. Nobody puts an unbounded pass on a
+timer, which is why the pattern says "periodically ask the model" and this implementation says
+"nightly". The second guard is a tag registry the agent must read before tagging, because each call
+sees one note and an agent with no view of the corpus coins a locally perfect, globally useless label
+[`n6`].
 
-- An idempotence stamp, which makes maintenance incremental rather than corpus-wide
-- A controlled tag registry the agent must read first, with an instruction to resist extending it
-- Neither appears in the pattern; both decide whether the system survives a year
+![the enrichment skill and its idempotence rule](visuals/frame_404.jpg)
 
-This is where an implementation earns its keep over a design document. The stamp is three lines - skip
-if already enriched, stamp on completion - and it converts a job whose cost grows with everything you
-have ever written into one whose cost tracks your writing rate. That is the difference between "ask
-the model periodically" and a nightly schedule. The registry solves the other failure, because each
-call sees one note, so an agent with no view of the corpus coins a locally perfect and globally
-useless label and you get one tag per document instead of a taxonomy.
-*[`n5`, `n6`, `visuals/frame_425.jpg`]*
+This is a control diagram rather than a data-flow one. **The crux is that both mechanisms bound
+something - one bounds cost, the other bounds vocabulary - and a system missing either degrades
+quietly rather than failing.** That is what makes them easy to omit from a design document and
+expensive to omit from a build. *Corroborated by `n5`, `n6`, and `visuals/frame_425.jpg`.*
 
-### Movement 4 - The rule it endorses is the rule it breaks
+### Slide 5 - The rule it endorses is the rule it breaks
+
+**The implementation writes titles, tags and backlinks directly into the raw notes, minutes after
+displaying the rule that raw sources are read-only, and never notices** [`n7`, `n11`, `d1`].
+
+We should resist calling this an implementation bug, because the strict rule cannot survive a real
+vault. Capture has to be frictionless, so notes arrive with no metadata, and that metadata has to land
+somewhere; enforcing purity means a shadow file per note to protect a property version control already
+supplies. **The rule that survives is one declared writer per layer, with the exception written down.**
+The cost belongs in any adoption decision and is easy to skip past: the audit story moves from "the
+agent could not have edited this" to "check the history", and what carries trust instead is that every
+generated claim links to the one note behind it [`n9`].
 
 ![the enriched note, written back into the raw layer](visuals/frame_1060.jpg)
 
-- The system writes titles, tags and backlinks into the raw notes
-- The same talk displays "raw sources are read-only" and encodes it in its own automation
-- The talk never notices
+This is a before-and-after of a single file, and the sidebar path is the whole finding. **The crux is
+that the contradiction is only visible when you put both jobs on one picture, which the source never
+does** - seen separately, each looks correct. That is worth remembering as a review habit, because it
+is how a governance rule quietly stops being enforced. *Corroborated by `n7` and `d1`; the
+reconciliation is this brain's reading, not the source's.*
 
-This is the most valuable finding in the source and the speaker does not make it. Strict immutability
-cannot survive a real vault, because capture has to be frictionless, so notes arrive with no metadata
-and it has to land somewhere - and enforcing purity means a shadow file per note to protect a property
-version control already gives you. **What survives is one declared writer per layer, with the
-exception written down.** The cost is real and belongs in any adoption decision: the audit story moves
-from "the agent could not have edited this" to "check the history". *[`n7`, `n11`, `d1` - and the
-reconciliation is this brain's reading, not the source's]*
+### Slide 6 - It runs unattended, and the gate that makes that safe was never examined
 
-### Movement 5 - What makes a generated page safe to trust
+**The whole system runs overnight in a cloud sandbox and the human meets it as a morning diff, which
+is the right design and rests on one unexamined sentence** [`n10`, `n13`].
 
-![a generated entity page with per-claim citations](visuals/frame_776.jpg)
-
-- Every assertion links to the one source note behind it
-- Sourcing is per claim, not per page
-- The page is an entity assembled from four notes that never mention each other
-
-The difference shows up the first time a generated claim is wrong. Page-level sourcing tells you it
-drew on four documents and leaves you to re-read all four, where claim-level sourcing means following
-one link. A generated artifact you cannot debug is one you eventually stop trusting wholesale. Note
-also what the page is - it existed in none of its inputs, which is the accumulation promised in
-movement 1, made concrete. *[`n9`]*
-
-### Movement 6 - It runs unattended, and the gate that makes that safe is unexamined
+The loop itself is deliberately unclever - sync the vault down, run the skill, sync it back - and it
+is affordable only because of the stamp from slide 4. The leadership significance is the part to slow
+down on. Unattended maintenance with write access to our notes is safe if and only if bad output gets
+caught, and the entire evidence for that is one remark about reading a fresh wiki over breakfast. No
+bad-edit rate. No recorded rejection. No revert procedure.
 
 ![the scheduled maintenance job](visuals/frame_980.jpg)
 
-- Nightly and weekly runs in a cloud sandbox, sync down, run the skill, sync up
-- The human moves from triggering the work to reviewing a morning diff
-- Nothing reports whether a bad edit has ever been caught
-
-This is the boundary, and it is where an adoption decision should slow down. Unattended maintenance
-with write access to your notes is safe if and only if bad output gets caught, and the entire evidence
-for that is one sentence about reading a fresh wiki over breakfast. No bad-edit rate, no record of a
-rejection, no revert procedure. The immutability constraint and the per-directory schema override
-visible in this prompt are both **figure-only** - present in a screenshot, never spoken - so they are
-evidence about a saved prompt rather than about how the system behaves. *[`n10`, `n13`; `n11` and
-`n12` `single-leg`]*
+This is a saved prompt, which is exactly as much as it proves. **The crux is that the immutability
+constraint and the per-directory schema override visible here were never spoken aloud, so they are
+evidence about a configuration rather than about behaviour** - both are `single-leg` and should be
+cited that way. *Corroborated by `n10`; `n11` and `n12` are figure-only.*
 
 ### Key takeaway message
 
-A personal or team knowledge base decays because synthesis is re-derived on every question and nobody
-maintains the result, and the answer that works is to compile it once into a layered store an agent
-maintains - which this source is the first independent evidence anyone can actually build and run.
-What it delivers is a parts list the pattern omits: an idempotence stamp that makes maintenance
-schedulable, a controlled vocabulary that stops the taxonomy sprawling, per-claim citations that keep
-the derived layer auditable, and the correction that immutability is scoped per job rather than per
-layer. The boundary is unambiguous and decides the verdict - **nothing in this source is measured**,
-there is no baseline, no error rate and no corpus size, and the human review step carrying the whole
-safety argument for unattended operation has never been examined by anyone. **So the decision is not
-to adopt and not to reject, but to pilot with the gate instrumented**: build the four mechanisms,
-which are cheap and well reasoned, and measure the one thing nobody has - how often the overnight run
-produces an edit a human rejects. That number is what converts this from a good design into an
-operable one, and it costs a fortnight to get.
+A knowledge base decays because synthesis is re-derived on every question and nobody maintains the
+result, and this source is the first independent evidence that the compile-once alternative can
+actually be built and run by someone other than its author. What it delivers is the parts list the
+pattern omits - an idempotence stamp that makes maintenance schedulable, a controlled vocabulary that
+stops the taxonomy sprawling, per-claim citations that keep the derived layer auditable, and the
+correction that immutability is scoped per job rather than per layer. The boundary is unambiguous and
+it sets the verdict: nothing here is measured, and the human review step carrying the entire safety
+argument for unattended operation has never been examined by anyone. **So the decision is neither to
+adopt nor to reject, but to pilot with that gate instrumented** - build the four mechanisms, which are
+cheap and well reasoned, and measure the one number nobody has, which is how often an overnight run
+produces an edit a human rejects. That number is what turns a good design into an operable one, and it
+costs a fortnight.
 
 > Inherits the global rules in [`../../AGENTS.md`](../../AGENTS.md).
