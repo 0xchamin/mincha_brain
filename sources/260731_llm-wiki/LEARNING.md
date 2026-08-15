@@ -498,9 +498,11 @@ structure is assembled from prose and may impose more shape than the author inte
   disinterested expert is still an unmeasured claim** - it just fails differently from a vendor's.
 - **This brain is a live instance of the pattern and proves nothing about it.** It runs exactly this
   design - immutable `raw/`, an agent-written `brain/`, `AGENTS.md` as the schema, `INDEX.md` read
-  first, an append-only `log.md` - at **11 sources**, an order of magnitude below the claimed ceiling.
-  **n=1, well inside the easy regime.** Worth saying before the coincidence gets mistaken for
-  corroboration.
+  first, an append-only `log.md` - at a source count **still below `n10`'s claimed ~100 ceiling**
+  (see [`INDEX.md`](../../INDEX.md) for the live total; **the number was hard-coded here and went
+  stale**, so it is a pointer now, matching the same fix already made in
+  [`rag.md`](../../brain/topics/rag.md)). **n=1, and still inside the easy regime.** Worth saying
+  before the coincidence gets mistaken for corroboration.
 - **The "Background, supplied" blocks are mine** - the compile/interpret trade and its staleness cost,
   append-only-plus-derived-views and reconstructability. Uncited by construction.
 
