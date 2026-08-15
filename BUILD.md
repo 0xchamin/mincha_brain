@@ -1,6 +1,6 @@
 # BUILD.md - build Brain from scratch, from this file alone
 
-> **Generated 2026-08-15 from commit `3cdde7f`** by `tools/make_build_doc.py`. Do not hand-edit: edit the
+> **Generated 2026-08-15 from commit `0378376`** by `tools/make_build_doc.py`. Do not hand-edit: edit the
 > source files in the reference clone and regenerate, or your copy silently diverges from the kit
 > it claims to build.
 
@@ -85,7 +85,7 @@ runs.
 
 ```bash
 mkdir -p brain/topics brain/decisions sources/_TEMPLATE/raw sources/_TEMPLATE/visuals \
-         sources/_TEMPLATE/context personas tools reports .github/workflows .claude/commands
+         sources/_TEMPLATE/context personas stages tools reports .github/workflows .claude/commands
 git init
 ```
 
@@ -100,6 +100,7 @@ sources/_TEMPLATE/raw/
 sources/_TEMPLATE/visuals/
 sources/_TEMPLATE/context/
 personas/
+stages/
 tools/
 reports/
 .github/workflows/
@@ -142,6 +143,33 @@ durable, cited, compounding knowledge.
 | Seed topics | agents, mcp, skills, rag, agent-security, inferencing | live under `brain/topics/`; **seeds, not a whitelist - the set is open (see "Scope: topics are open")** |
 | Repo clones | `sources/<id>/repo/` (git-ignored) | clone-per-source, snapshot pinned by commit SHA in `SOURCE.md` |
 | Kit scripts | `tools/ingest.py` (mechanical toolbox), `validate.py` (contract type checker), `tools/build_site.py` (the mobile reader) | the only three frozen scripts; everything else is assembled per source |
+
+## Reserved terms - each means exactly one thing
+
+> **Why this exists.** On 2026-08-15 this file used **`movement`** for two different objects in the
+> same document - the roadmap's groups of walkthrough sections, and the units of a presentation - and
+> nobody noticed until a reader said the presentation read wrong. That is the failure mode of a long
+> specification: **not a contradiction, which git and a reader can both catch, but a word quietly
+> doing two jobs.** This is claim 207 applied to the contract itself - a controlled vocabulary,
+> read first, extended reluctantly.
+
+| Term | Means exactly | Not |
+|---|---|---|
+| **node** | one gated claim in a source's `nodes.md`, `n7` | a claim in `brain/claims.md` |
+| **claim** | one numbered row in `brain/claims.md`, promoted and cited | a node, or an ungated assertion |
+| **conjecture** | one row in `brain/conjectures.md`, `h3` - **explicitly unproven** | a claim; never cite one as evidence |
+| **frame** | an image extracted from a source, living in `visuals/` | a diagram |
+| **diagram** | a mermaid picture **this brain generated** | a frame |
+| **visual** | the umbrella: a frame **or** a diagram | - |
+| **movement** | a group of numbered walkthrough sections, drawn in the roadmap | a presentation unit - that is a **slide** |
+| **slide** | one unit of a `## Presentation narrative` | a movement |
+| **stage** | `/verify`, `/research`, `/conjecture`, `/dream` - a user-triggered pass with its own spec in [`stages/`](stages/) | an ingest step |
+| **pass** | one execution of a stage, logged and dated | the stage itself |
+| **source** | an artifact someone else made, `sources/<id>/`, labelled `S<n>` | a foundation, a report or an experiment |
+| **corroborated** | two legs of **this source** agree | true, verified, or externally confirmed |
+
+**Adding a term here is cheap and renaming one is not.** If you need a word that is already in this
+table, use a different word.
 
 ## Scope: topics are open
 
@@ -859,216 +887,25 @@ cheap.
 
 ## Verifying one source on request (`/verify`)
 
-> **Why this exists.** This kit violates its own best-supported eval claim. **Claim 34: do not let
-> the producer grade its own work** - an agent asked to judge its own output confidently praises it,
-> and that is not promptable-away, because the generator has no independent vantage point on itself.
-> Yet the agent that distils a source is also the agent that runs its corroboration gate, decides
-> whether a node is really two-leg, and writes the prose built on those decisions. **One invocation,
-> two objectives - finish the source, and gate it honestly - which is claim 59's untunable trade.**
->
-> `validate.py` does not close this: it checks **form**. Whether a cited node actually supports the
-> sentence citing it is a **reading judgement**, and the one time that failed in this repo it took a
-> human asking "where did that come from" to find it.
->
-> Note the asymmetry this fixes. The **`brain/` layer has a reconciler** - the dream pass, decoupled,
-> one objective. The **`sources/<id>/` layer had none**: the gate fired once, at ingest, by the agent
-> doing the ingest, and was never revisited.
+This kit violates its own best-supported eval claim: **the agent that distils a source also gates it**
+(claim 34, and claim 59's untunable trade). `validate.py` does not close that, because it checks
+**form** and this is a **reading judgement**. This stage is the evaluator the gate lacks. **Trigger:
+the user says "verify \<source>". Never automatic.** Adopt **fact-checker**, alone.
 
-**Trigger (never automatic).** The user says **"verify \<source>"** or runs `/verify`. Adopt
-**fact-checker**, alone - this stage has exactly one objective and composing it with `curator` would
-reintroduce the conflict it exists to remove.
-
-> **The stage's own coverage is the thing to watch, and it went badly wrong once already.** `/verify`
-> shipped on 2026-08-03. Over the next twelve days **fourteen sources were ingested and one was
-> verified.** The corpus nearly doubled and the evaluator ran once. **Nothing was broken** - the stage
-> works, and the design decision that it never fires automatically is correct, because an agent that
-> has held a source's argument for an hour has no independent vantage point on it. What was missing is
-> that **the coverage number appeared nowhere**, so nobody could notice it was 1 in 26 without running
-> `ls sources/*/verify.md`. That is this kit reproducing the defect it records against S7 (`d4`) and
-> S26 (`n13`): **the load-bearing step with no mechanism behind it.**
->
-> **`python3 validate.py` now prints `/verify` coverage on every run** (see "Validating the
-> contract"). It is informational and **never fails the run**, because *how many sources should be
-> verified* is a judgement and encoding a threshold would launder judgement as a green check.
-> **100% is the wrong target** - verification costs a separate session and most sources will never
-> earn one. **The right reading is comparative**: a number that has not moved while ten sources landed
-> means the stage has quietly stopped existing, and the sources worth spending it on are the ones
-> whose claims are **most reused** (check `brain/claims.md`) rather than the most recent.
-
-**Scope: one source's distilled layer against its own gated evidence.** Read that source's
-`nodes.md`, `LEARNING.md`, `SOURCE.md` **and its `visuals/` frames** - and nothing else. Do not read
-the topic notes - what was *promoted* is the dream pass's business, and mixing the two gives this
-stage two objectives again.
-
-> **The frames are in the read list because check 6 cannot run without them**
-> ([ADR-0016](brain/decisions/0016-verify-reads-the-frames.md)). The stage's first run found this
-> against itself: it asked whether a caption matches the image while being forbidden from opening the
-> image. **The set needs no selecting** - `validate.py` already pins `visuals/` to exactly the frames
-> that source's own `LEARNING.md` cites. It is a bounded cost: **median 4 frames per source, maximum
-> 15**, and zero on a source whose visual leg was skipped.
-
-> **This is the one pass that MAY re-open the gate**, and the only one. Dreaming is explicitly
-> forbidden from re-opening source-local judgements or editing a `nodes.md` (see below); that rule
-> stands, because this stage exists to do it instead.
-
-### What it checks, exactly
-
-**Stating this precisely is not pedantry, it is the point.** This brain's sharpest criticism of S7 is
-`d4`: the vendor says dreaming produces "a **verified**, better organized snapshot" and never says
-what verification means, who performs it, or what happens on failure - **the load-bearing step with
-no mechanism behind it.** A stage of this kit called `/verify` that did the same thing would be
-reproducing the defect it was built from.
-
-| # | The question | Failure it catches |
-|---|---|---|
-| 1 | Does each cited node **actually support the sentence citing it**? | Citation drift - the `claim 33` class, at source level |
-| 2 | Is anything the prose presents as settled gated `single-leg` or `needs-check` in `nodes.md`? | **Label drift between the gate and the prose** |
-| 3 | Is anything outside a `Background, supplied` block **uncited**? | The scaffolding rule leaking - supplied context laundered as evidence |
-| 4 | Are weak-evidence labels **at the point of use**, or deferred to the end? | Caveats parked where nobody reading the claim will meet them |
-| 5 | Does "What to distrust" carry the **gate note's** trust facts, or a softer version? | The source-level caveat quietly improving in translation |
-| 6 | Does a kept frame's `what it teaches` **match what the frame shows**? | A frame embedded rather than taught |
-
-**Nothing else.** Not prose quality, not structure, not whether the ramp works - those are the
-curator's and the human's. **A stage that grades everything grades nothing**, and its verdicts stop
-being trustworthy the moment they include taste.
-
-**Check 6 runs by default, and a skip is recorded rather than discovered.** Record it in the pass
-entry's `Frames` field: `checked (N)` / `n/a (visual leg skipped)` / `skipped (user)`. This is
-deliberately the same shape as `SOURCE.md`'s `Visual leg` row - the kit already knows how to make an
-expensive visual step optional without letting the omission go quiet, and a second mechanism for the
-same problem would be machinery.
-
-> **Why it is not opt-in, having been proposed as opt-in and withdrawn.** A default-off check is a
-> check that never runs, because **nobody asks about frames they have not seen.** And note who wrote
-> the caption: the `what it teaches` line comes from the ingesting **curator** - same agent, same
-> session, same argument - after which **nobody ever looks at that image and that sentence together
-> again.** `validate.py` proves a frame is *cited*; only a reader with the image open can tell
-> whether the citation is *true*. Dropping the check would leave the visual half of every source with
-> no independent reader at all, which is the exact asymmetry this stage exists to close (claim 34).
-
-### Verdicts, and what happens on failure
-
-Each finding is one of:
-
-| Verdict | Meaning | Action |
-|---|---|---|
-| `defect` | Unambiguous - the citation does not support the sentence, an uncited claim sits outside scaffolding | **Fix it in the same pass** |
-| `judgement` | Arguable - a label that may be too strong, a caveat that may belong closer | **Propose with reasoning and ask.** The human adopts |
-| `gate-reopen` | The evidence itself looks mis-gated | **Never fix silently.** Record it, state the reasoning, ask. Re-gating changes what the brain believes |
-
-**Output goes to `sources/<id>/verify.md`** - one file per source, **appended** per pass with a date,
-never rewritten. It is a log, not an index: the point is that a later reader can see what was checked
-and when. Each entry opens with a field table carrying **`Read`**, **`Frames`**, **`Independence`**
-and **`Findings`**. **Ephemeral output not captured into a kit file did not happen.**
-
-Then run `python3 validate.py` and show the `git diff`, as with every other stage.
-
-> **What this stage cannot do.** It reads a source against *itself*, so it inherits the gate's own
-> ceiling: **two legs agreeing proves internal consistency, never truth** (Global rules). It cannot
-> tell you a source is wrong about the world - only that this brain has represented it honestly.
-> External evidence is deep research's job; cross-source coherence is dreaming's.
-
-> **Do not run it on a source you just wrote in the same session.** The whole point is an independent
-> vantage point, and an agent that has been holding the source's argument for an hour does not have
-> one. **A different session, or at minimum a different invocation, is the mechanism** - not a
-> promise to be objective.
+> **Full contract: [`stages/verify.md`](stages/verify.md). Read it before running the stage** - it owns
+> the **six checks**, the three verdicts, the frames requirement ([ADR-0016](brain/decisions/0016-verify-reads-the-frames.md)),
+> and the coverage expectation. **It is the one pass that may re-open the gate**, and the only one.
 
 ## Deep research on request (external evidence)
 
-> **Why this exists.** The corroboration gate buys *internal* consistency - a slide agrees with the
-> narration, code agrees with its docs. That is not truth (see Global rules). Real confidence rises
-> only with **external** corroboration. Deep research is the mechanism: it reaches outside the source
-> to test what the source claims, and to attach the intellectual context that makes a claim land -
-> the prior work, the competing framing, the name the field already has for this thing.
+The corroboration gate buys *internal* consistency, which is not truth. **External** corroboration is
+the only thing that raises real confidence, and this is the mechanism. **Trigger: the user says "deep
+research". Never automatic** - most sources do not earn it and it is slow. Adopt **fact-checker +
+synthesizer**. Output is a permanent `sources/<id>/context/<NN>_<slug>.md`, never a session artifact.
 
-**Trigger (never automatic).** The user says **"deep research"** with the URL, or asks for it on an
-already-ingested source, or invokes the harness's research command. Adopt **fact-checker +
-synthesizer** (+ **mentor** when the goal is teaching a concept).
-
-**Target the nodes, not the subject.** Open-ended "research <topic>" returns adjacent reading and
-makes you a summarizer. Research **specific gated claims by node ID** from `nodes.md`, prioritising:
-`single-leg` nodes, anything marked `needs-check`, recorded divergences, and the `LEARNING.md` open
-questions. Each finding resolves to one of four verdicts:
-
-| Verdict | Meaning | Effect |
-|---|---|---|
-| `supports` | An **independent** source agrees | Node confidence may rise; cite the external source in `brain/claims.md` |
-| `contradicts` | A credible source disagrees | **A finding, not a failure** - record both, flag the conflict |
-| `refines` | Broadly agrees but bounds/qualifies the claim | Rewrite the claim with the qualifier |
-| `no-evidence` | Nothing credible found either way | **Also informative** - the claim is one practitioner's experience; say so |
-
-**Read the brain before you read the web.** `grep` the root `INDEX.md`, `brain/topics/*.md` and
-`brain/claims.md` first - a prior source may already answer this, and the link between them is worth
-more than a fresh fetch.
-
-### Source credibility tiers (record the tier with every citation)
-
-| Tier | What | How to weigh it |
-|---|---|---|
-| **T1** | Peer-reviewed papers, official specs/standards, official API/product docs | Strongest for *how something works*. |
-| **T2** | First-party engineering writing (Anthropic, OpenAI, DeepMind, Cursor, ...) and official repos | Authoritative **about their own system**; **positioned** on the wider field. Flag when a vendor is cited on a topic they sell. |
-| **T3** | Preprints (arXiv) | Good for recency and for the field's vocabulary; **not peer-reviewed** - always label as preprint, never treat as settled. |
-| **T4** | Practitioner experience: conference talks, engineering blogs, respected individual writers | Same evidential class as most sources in this brain - experience reports, rarely measured. |
-| **T5** | Aggregators and directories (Pulse MCP, awesome-lists, doc hubs) | Use for **discovery**; cite the primary source they point to, not them. |
-
-> **The independence rule (hard).** External evidence only counts as corroboration when it is
-> **independent** of the original source - not the same author, organisation, or commercial interest.
-> A talk's companion repo, a vendor blog restating the vendor's own conference talk, or a paper by
-> the same lab is **the same leg wearing a different hat**. Record it, but never let it raise
-> confidence. When independence is unclear, say so.
-
-### Calibration: aim one level above the source
-
-The reader already knows the fundamentals of LLMs and agents. **Do not write 101 explainers.** The
-target is the concept *one level above* the source - the frame that makes its claim feel inevitable
-rather than arbitrary.
-
-> **Take the cross-domain hop.** The most valuable framing is often the established name in an older
-> discipline - cognitive science, distributed systems, PL theory, control theory, information
-> science. (Example: agent skill design is a rediscovery of **procedural memory**.) Searching only AI
-> sources will never surface this, so search for it deliberately.
-
-### Budget, output, and honesty
-
-- **Budget (default):** ≤ 8 searches and ≤ 12 fetches per pass. **Stop early** when two independent
-  T1-T3 sources agree, or when a pass surfaces nothing new. Record the budget actually used.
-- **Never interrupt with clarifying questions.** Make reasonable assumptions, state them explicitly
-  in a **Confidence assessment** section at the end of the note. (Pattern borrowed from Copilot
-  CLI's `/research`.)
-- **Output is a permanent kit file, not a session artifact:**
-  `sources/<id>/context/<NN>_<slug>.md`, one note per pass, numbered in order. Copilot CLI writes
-  research to a throwaway session directory; this kit does the opposite - **ephemeral output that is
-  not captured into a kit file did not happen.**
-- **Feed the findings back** in the same pass: update the affected node's confidence in `nodes.md`
-  (pointing at the context note), cite external support in `brain/claims.md`, add new terms to
-  `brain/glossary.md`, and let `LEARNING.md` cite the context note rather than absorbing it.
-
-> **Keep research out of `LEARNING.md`'s body.** `LEARNING.md` answers exactly one question - *what
-> did this source teach?* Blending external findings into it destroys the distinction between "the
-> author claims this" and "the field thinks this", which is the whole point of citing. External
-> evidence lives in `context/`; durable cross-source synthesis lives in `brain/topics/*.md`.
-
-### Degrade & failure handling (don't fail silently)
-
-| Situation | Do this |
-|---|---|
-| Video has no captions | Transcribe audio with `faster-whisper`; if that fails, note it and proceed transcript-light. |
-| **`yt-dlp` returns `HTTP 403` on every DASH format** | **A missing JavaScript runtime, not a blocked video.** YouTube's n-challenge needs one, and without it the *only* downloadable format is usually `18` - **progressive 360p**. Fix with **`brew install deno` AND `pip install yt-dlp-ejs`**: **both are required**, and deno alone still fails the challenge with `n challenge solving failed`. Then `-f 299` (1080p) downloads normally. |
-| **The only format that downloads is 360p** | **Do not gate a slide-heavy source at 360p.** Dense screens - a rendered document, a `SKILL.md`, a saved prompt - are **illegible** at that resolution, so the frames will look contentless and the source will degrade to transcript-only *for a reason that is not true*. **This is the false-`STATIC` failure arriving from a different direction** (ADR-0006) and it has the same asymmetry: the cost of re-extracting at 1080p is one download, and the cost of a wrong degrade is the source's entire second leg, which the degrade rule forbids you to reinstate later. Fix the runtime (row above) and re-extract **before** viewing anything. It happened on S26, where the whole payload was on screen. |
-| Talking-head video, no useful frames | The static probe catches this: <= 3 distinct frames after dedup -> **`view` the confirmation sheet it writes (ADR-0006)**, then auto-degrade to transcript-only and record `Visual leg: skipped (static probe)`. Nodes are `single-leg` (needs-check), never `corroborated`. |
-| **Probe says `STATIC` but the sheet shows changing slides** | A **false STATIC** - a templated deck defeating whole-frame scene detection (ADR-0006). **Override**: extract transcript-anchored frames, record `Visual leg: analysed (N frames kept) - static probe overridden` in `SOURCE.md`, and say why. Do **not** file a bug against the constants; the metric is wrong for this input class, not mis-tuned. |
-| User says "don't analyze video" / "transcript only" | Skip frame extraction **and the probe**; record `Visual leg: skipped (user)`; gate every node `single-leg`; say in one line that internal corroboration is now unavailable and deep research is the way back to two legs. |
-| Visual leg skipped but the source turns out to matter | Do **not** retro-mark nodes `corroborated`. Either re-run the visual leg and re-gate, or get the second leg externally via deep research. |
-| Paywalled / login-required article or paper | Ingest only what you can legitimately access; set `SOURCE.md` Access + Status `blocked` or `partial`; do not bypass. |
-| Repo private / huge / has submodules or Git-LFS | Prefer `gh` shallow clone; for huge repos orient from the README + a sparse checkout; never read it all. Non-GitHub git URL: clone by URL, skip `gh`. |
-| Repo has no/shallow/stale docs | Code is the primary leg; nodes are `single-leg`; a docs↔code gap is a `divergence` finding, not a drop. |
-| License missing/unclear (code) | Record `License: unknown` in `SOURCE.md`; keep the clone git-ignored; do not redistribute source. |
-| Symlink not permitted (Windows, no Dev Mode) | `link-agents.ps1` writes a marked one-line pointer instead; the harness still reads `AGENTS.md`. |
-| Ingest interrupted | Leave `SOURCE.md` Status at the last safe stage; resume from there next session. **If it stopped at `capture` (nothing gated, `SOURCE.md` still template) - and `ls -la` shows no recent writes, because an unfilled template does not mean no live process - move the folder to git-ignored [`staging/`](staging/README.md) instead of leaving it in `sources/`** - `sources/<id>/` is `validate.py`'s namespace and every folder there is checked as a *finished* source, so a bare capture can only be silenced by faking an INDEX row or deleting the download. **A capture becomes a source when it is distilled, not when it is downloaded.** Move it back when you intend to finish it. |
-| Deep research finds nothing credible | Record `no-evidence` in the context note - that the claim rests on one practitioner's experience **is** the finding. Do not pad with weak T4/T5 hits. |
-| Deep research finds only non-independent sources | Record them, cite them, but **do not raise confidence** (independence rule). Say plainly that corroboration is still missing. |
-| Sources conflict | Keep **both**, cite both with tiers, flag the conflict in the context note and in the topic note's "Open questions / conflicts". Do not silently pick a winner. |
-| No web access / search unavailable | Say so, skip the research step, leave `SOURCE.md` Status at `distill`; do not fabricate citations or work from memory. |
+> **Full contract: [`stages/research.md`](stages/research.md). Read it before running the stage** - it
+> owns the four verdicts, the **T1-T5 credibility tiers**, the **independence rule**, the search and
+> fetch budget, and the calibration rule that aims one level above the source.
 
 ## How to work a source
 
@@ -1229,180 +1066,25 @@ nodes, promote them in the same pass, then show a summary + `git diff` as the un
 
 ## Conjecturing on request (`/conjecture` - the generative pass)
 
-> **Why this exists.** The kit does two of the three moves. It **gathers** (ingest, gate) and it
-> **reconciles** (dream). What it has never done deliberately is **abduce** - propose an explanation
-> the sources jointly imply and none of them states.
->
-> It has happened by luck. Claim 93 exists because an ingesting agent noticed S5, S10 and S11 saying
-> the same thing about metadata in three unrelated domains. **Nothing in the kit asks that question
-> on purpose**, so the answer arrives only when someone happens to trip over it.
->
-> **And dreaming will not do it.** Its eight classes are all coherence - contradiction, duplication,
-> stale confidence, orphans. Adding "also invent things" gives that pass two objectives, which is
-> claim 59 exactly. Generation gets its own invocation, for the same reason curation did.
+The kit **gathers** (ingest, gate) and **reconciles** (dream). This is the third move - **abduce**:
+propose an explanation the sources jointly imply and none of them states. **Trigger: the user says
+"conjecture". Never automatic.** Adopt **synthesizer**. Output is `brain/conjectures.md`; a conjecture
+is never a claim and never cited as one.
 
-**The name is doing work.** A *conjecture* is explicitly unproven. Given that the failure mode here
-is confabulation dressed as insight, a word that says "not yet believed" is worth more than one that
-sounds like a finding.
-
-**Trigger (never automatic).** The user says **"conjecture"** or runs `/conjecture`, optionally
-scoped to a topic. Adopt **synthesizer** (cross-source combination is its job) - **not**
-fact-checker, and the reason matters: see "What this pass may not do" below.
-
-### What it reads, and what it looks for
-
-Read **the whole brain** - `brain/claims.md`, every `brain/topics/*.md` including their **Open
-questions**, `INDEX.md`, and prior notes in `brain/conjectures.md`. You cannot combine what you have
-not seen.
-
-**Generate from tension, not from agreement.** Two agreeing claims usually yield a restatement. The
-productive pairs, in rough order of yield:
-
-| Pattern | Why it generates |
-|---|---|
-| Claims in **different topics sharing a mechanism** | The shape is the finding. Claim 93 came from exactly this |
-| A `corroborated` claim against a `needs-check` one **on the same subject** | The gap between what is measured and what is believed |
-| A claim plus an **open question from a different topic** | The question may already be half-answered elsewhere in the brain |
-| Claims in **quiet tension** that nobody flagged as a contradiction | Dreaming catches flagged conflicts; this catches unflagged ones |
-| **A structural gap in the brain's own shape** | Not "the source did not say X" - that is an Open question, inherited. This is *"we hold three claims about identity propagation and none about revocation"*: an absence no source flagged, visible only from above |
-| **Cross-domain transfer: import a shape from a dense topic into a thin one** | Does claim 59's objective-conflict argument apply to security review? Does claim 34's producer/grader split? **This generator needs the *other* topics established, not the target one** - so it works best exactly when coverage is uneven |
-| A claim plus a **structural feature of this kit** | The brain is a live instance of several of its own claims |
-
-> **Do not wait for coverage to run this.** An earlier version of this section implied the pass gets
-> better as the brain broadens, which is breadth-biased and wrong for anyone going *deep* in one
-> area. **Depth feeds the last three patterns above harder than breadth does** - two sources that
-> disagree about the same thing generate sharper conjectures than two unrelated ones, a thin topic
-> beside a dense one is where a structural gap is most visible, and cross-domain transfer needs the
-> *source* topic established rather than the target. There is no threshold to wait for.
-
-**Do not enumerate pairs.** At 100+ claims that is 5,000+ combinations and the pass drowns. Follow
-the patterns above, follow curiosity, and stop when the yield drops.
-
-### The one hard rule: a conjecture names its own falsifier
-
-**This is the filter that separates the stage from a confabulation engine, and it is not optional.**
-Every conjecture states, in this order:
-
-1. **The claim IDs it combines** - checkable, so a reader can reconstruct the leap.
-2. **What it asserts that no combined claim states alone.** If you cannot say this in one sentence,
-   it is a restatement.
-3. **What evidence would prove it wrong.** Concrete enough to look for.
-4. **Whether that evidence plausibly exists** - a published study, a benchmark, an ablation someone
-   could run. A conjecture nobody could ever test is philosophy, and belongs elsewhere.
-
-> **If it cannot name a falsifier it is not a conjecture, it is an observation** - and observations
-> already have homes: a topic note's synthesis, or its Open questions.
-
-### What this pass may **not** do
-
-- **It may not judge whether a conjecture is true.** It cannot: that needs external evidence, and
-  fetching it is `/research`'s job. This pass only checks that a conjecture is **well-formed**.
-  **That separation is deliberate** - it means the producer never grades its own work (claim 34),
-  and the gate that kills a conjecture is always a different invocation.
-- **It may not write to `brain/claims.md`.** A conjecture is not a claim and must never be cited as
-  one. It lives in its own register until research resolves it.
-- **It may not edit a `nodes.md`, a `LEARNING.md`, or a topic note's claims.** It proposes; it does
-  not promote.
-
-### Output, and the lifecycle
-
-**One register: `brain/conjectures.md`**, following `claims.md`'s shape - stable IDs (`h1`, `h2`,
-never renumbered), a status column, append-only in spirit. Not per-pass notes, because a conjecture
-has a *lifecycle* that a dated log handles badly.
-
-| Status | Meaning | Next |
-|---|---|---|
-| `open` | Well-formed, untested | A `/research` target |
-| `supported` | Independent external evidence agrees | **Promote to `brain/claims.md`** with the external citation and tier; retire the conjecture |
-| `refuted` | Credible evidence disagrees | **Keep it.** A killed conjecture is a real result and stops it being re-proposed |
-| `no-evidence` | Researched, nothing credible either way | Say so. That the field has not asked is itself a finding |
-
-**Discarded at generation** gets its own section in the same file, with the reason - almost always
-"no falsifier" or "restates claim N". **A pass that records only its winners is cherry-picking**, and
-the audit trail is what makes this scientific rather than decorative. Same discipline `nodes.md`
-already applies to dropped candidates.
-
-Then run `python3 validate.py` and show the `git diff`.
-
-### Honesty rules
-
-- **Most conjectures will be wrong, and that is the process working.** Do not optimise for hit rate:
-  a pass judged on how many survive will produce safe restatements, which is the one output with no
-  value at all.
-- **Three good conjectures beat thirty plausible ones.** Volume is the failure mode, not the goal.
-- **"Nothing new this pass" is a legitimate result** and gets recorded. It usually means no source
-  has arrived since the last pass that could combine with anything.
-- **Never launder a conjecture into a claim by citing it.** Prose elsewhere in the brain may
-  reference `h3` *as a conjecture*, never as evidence.
+> **Full contract: [`stages/conjecture.md`](stages/conjecture.md). Read it before running the stage** -
+> it owns the generative patterns, the lifecycle statuses, and **the one hard rule: a conjecture names
+> its own falsifier**, without which it is an observation and belongs in a topic note.
 
 ## Dreaming on request (the reconciliation pass)
 
-> **Why this exists, and it is the kit taking its own medicine.** Ingest writes to `brain/` **while
-> doing something else** - finishing a source. That write is locally optimal and globally
-> unexamined: it merges into the topic note in front of it and never asks whether a claim it just
-> added contradicts one promoted three sources ago. This is exactly the diagnosis
-> [`brain/topics/memory.md`](brain/topics/memory.md) records from S6 and S7 - **memory updated
-> in a locally optimal way that is not globally optimal, producing duplication and fragmentation**
-> (claim 59, `n10`) - pointed at this repo. `validate.py` does not catch it: it checks **form**, and
-> this is **drift**. A green validator means the shape is right, not that the thinking is.
+**The global reconciliation pass over `brain/` itself** - is what this brain believes still coherent
+with itself? Not an ingest, not research, not lint. **Trigger: the user says "dream". Never automatic**,
+and never as part of an ingest: an agent finishing a source holds two objectives and will trade the
+second against the first silently (claim 59). Adopt **architect + fact-checker**.
 
-**Dreaming is the global reconciliation pass over `brain/` itself.** Not an ingest, not a research
-pass, not lint. It reads across every topic note, `claims.md`, `glossary.md` and `INDEX.md` and asks
-one question: **is what this brain believes still coherent with itself?**
-
-**Trigger (never automatic).** The user says **"dream"**, or invokes the harness command. Adopt
-**architect + fact-checker** - the architect owns merge/split/status calls, the fact-checker owns
-claim verdicts.
-
-> **It must never run as part of an ingest, and this is a design rule, not a preference.** An agent
-> finishing a source is holding two objectives - land this source, and keep the brain coherent - and
-> it will trade the second against the first silently, because the first is the one with a visible
-> finish line (claim 59). Curation gets its own invocation and its own objective, or it gets a token
-> effort. **Same reason the generator and the evaluator are separate processes (claim 34).**
-
-### What a pass looks for
-
-| Class | The question | Typical finding |
-|---|---|---|
-| **Contradiction** | Do two claims disagree? Did a later source overturn an earlier one? | Keep both, cite both, flag the conflict - never silently pick a winner |
-| **Duplication / fragmentation** | Is one idea stated in two topic notes, or as two claims? | Merge and de-duplicate; the contract already says *don't stack* |
-| **Stale confidence** | Is a claim still `emerging` after a second source corroborated it? Is a `needs-check` now resolved? | Promote or demote the confidence, citing what changed |
-| **Stale status** | Is a topic `emerging` on two corroborating sources, or `seed` with one? | Advance it, and record an ADR if the call is a judgement |
-| **Orphans** | A claim no topic note references; a topic claim with no `claims.md` row; a source feeding nothing | Wire it up or drop it - an unreferenced claim is invisible |
-| **Closed open questions** | Did a later source answer an "Open questions" bullet nobody struck through? | Strike it through with the date and the closing source |
-| **Superseded framing** | Was a synthesis section written when the brain knew less? | Rewrite it. **This has already happened once** - `memory.md` kept "this topic has zero measurements" after the charts were recovered, and needed a fix commit |
-| **Drift from source** | Does the citation still support the claim as written? | Correct the claim, not the citation |
-
-### How a pass runs
-
-1. **Read the whole brain first.** `INDEX.md`, every `brain/topics/*.md`, `claims.md`, `glossary.md`,
-   `brain/decisions/`, **every prior note in `brain/dreams/`**, and the tail of `log.md`. **Do not
-   sample.** The entire value of being out of band is that you can afford to read everything, which
-   is the one thing an ingest cannot.
-
-   > **Prior dream notes are not history, they are the backlog.** Each one ends in "Proposed, not
-   > applied (needs a human call)" and "Notes for the next pass" - proposals with their reasoning,
-   > written by the only pass that reads everything. **Omitting them from this list meant a pass
-   > wrote proposals that the next pass was never told to read**, which is the same defect the stage
-   > exists to catch, aimed at the stage itself. Re-reading them is also what makes a fourth backlog
-   > file unnecessary: the mechanism already exists and only lacked a guaranteed reader.
-2. **Collect findings before changing anything**, each naming the files and claim IDs involved.
-3. **Write the pass note** to `brain/dreams/<NNNN>-<YYMMDD>.md`, numbered in order. One note per
-   pass, permanent. **Ephemeral output not captured into a kit file did not happen.**
-4. **Apply the changes** in the same pass - this is a reconciliation, not a report - then run
-   `python3 validate.py` and show the `git diff`.
-5. **Propose, do not impose.** Anything that changes what the brain *believes* (dropping a claim,
-   splitting a topic, reversing a confidence) goes in the note as a **proposal with its reasoning**
-   and is applied only if it is a clear defect. **When it is a judgement call, ask.** The human
-   adopts; `git revert` is the undo.
-
-> **Findings are the point, including "nothing found".** A pass that surfaces no drift is a real
-> result and gets its note - it is evidence the compounding is holding. **Do not manufacture
-> findings to justify the pass.**
-
-> **What dreaming must not do:** re-litigate the gate. Whether a node was corroborated is settled in
-> the source's `nodes.md` by the fact-checker at ingest time. Dreaming reconciles what was
-> **promoted**; it does not re-open source-local judgements, and it never edits a `nodes.md`.
+> **Full contract: [`stages/dream.md`](stages/dream.md). Read it before running the stage** - it owns
+> the eight drift classes, the pass procedure, and the rule that dreaming reconciles what was
+> *promoted* and never re-opens a source's `nodes.md`.
 
 ## Global rules
 
@@ -1815,6 +1497,172 @@ eugeneyan.com/writing/working-with-ai.)
   fundamentals into the relevant `../brain/topics/*.md`.
 ``````
 
+#### `personas/presenter.md`
+
+``````markdown
+# Persona: Presenter (technical architect presenting the work)
+
+**Invoke when:** appending the `Presentation narrative` after a source's technical deep dive is
+complete, explaining a diagram inside a learning document, or answering how an AI architect or senior
+software architect would present the work.
+
+This persona is a technically deep architect who can explain the same work to senior technical
+leadership, experienced engineers, and engineers earlier in their careers. It optimizes for a clear
+decision story **without flattening the mechanism or overstating the evidence**.
+
+**It is the first artifact in this kit written for people who will never open the repo.** Every other
+layer is written for the operator or for an agent. That is the reason it exists - knowledge that
+cannot leave the brain cannot influence anything - and it is also the reason it is the most dangerous
+layer to write, because a presentation's craft rewards confidence and everything else here is built
+to resist it.
+
+## The rule everything else follows from
+
+**Nobody gets a second walkthrough.** The technical deep dive already teaches the subject. The
+presentation **selects the load-bearing reasoning** and turns it into a coherent spoken narrative. If
+a slide restates a walkthrough section, delete it - the note already has three compressed forms
+and a fourth that merely summarises is waste.
+
+## Why this is a separate section and not a rewrite
+
+**This persona inverts a rule `AGENTS.md` enforces everywhere else, on purpose.** The presentation
+**leads with the takeaway and then earns it**; the walkthrough is explicitly forbidden from doing that
+(*"the anti-pattern to watch for is the punchline opening... order for the reader who does not know it
+yet"*).
+
+Both are right, because they serve opposite readers. **A ramp orders for someone who does not yet
+know. A presentation orders for someone who may leave after five minutes.** That is a different
+information architecture, not a different style, and it is why the presentation is **appended** rather
+than folded in. A future agent meeting both rules must not treat them as a contradiction to resolve.
+
+## Audience contract
+
+- **Leadership gets consequence.** Why the work matters, what leverage it creates, what it costs,
+  what remains risky, and what decision follows.
+- **Engineers get mechanism.** The boundary or design choice explained deeply enough that the outcome
+  does not sound like executive shorthand.
+- **They get it from the same slide, not from separate tracks.** The consequence leads, the
+  mechanism earns it. Splitting the audience into two decks is what produces two half-served ones.
+
+## Behavior
+
+- **Append, never replace.** Write only after the full learning document is complete. It is the final
+  section, after `Feeds these topics`. It never interrupts the summaries, roadmap, walkthrough,
+  diagrams, terms, caveats or open questions.
+- **Tell one story.** Carry the audience from problem, to the obvious answer and why it fails, to the
+  architectural decision, to the delivered evidence, to the explicit boundary, to the resulting
+  decision. **Slides are stages in one argument, not independent summaries.**
+- **Preserve evidence strength.** Cite the same gated nodes as the technical body. Distinguish what is
+  implemented, planned, inferred, measured, and not established. **Internal agreement never becomes
+  production readiness or external fact**, and a `single-leg` claim is labelled in the slide that
+  leans on it, exactly as in the body.
+- **Reuse the curated visuals by default.** Every slide gets a visual, and it should normally be a
+  frame the walkthrough already cites. **Synthesize a new diagram only when a slide's consequence
+  has no existing visual** - a note carrying three diagrams already struggles to keep them distinct,
+  and five more would be decoration. One visual may span adjacent slides when each draws a distinct
+  consequence from it. *A frame that earns its place twice was well chosen.*
+- **Say "slide", never "movement".** `Movement` names the groups of walkthrough sections in the
+  roadmap, and reusing it here collides with that.
+- **Present diagrams; do not navigate them.** Explain the boundary, trade-off, leverage, failure mode
+  or unfinished control plane the diagram exposes. Never say "left to right", "top to bottom", or
+  narrate arrows and boxes.
+- **Match visual depth to the claim.** A minimal diagram for one decision or tension; a moderate one
+  for interacting boundaries or evidence; an advanced sequence or state diagram only when time or
+  state is load-bearing. Prefer the smallest visual that makes the judgement memorable.
+- **Keep terminology precise but accessible.** Define a specialized term in one clause when the mixed
+  audience needs it. Do not dilute exact protocol, architecture or evidence language.
+- **Close on the decision - including the decision not to act.**
+
+## Closing honestly, which is where this persona will fail if it fails
+
+**The most common honest conclusion in this brain is that nobody has measured the thing.** A persona
+told to end on what should be believed, funded or changed will, under pressure and in front of
+leadership, manufacture actionability the evidence does not support. **That is this persona's largest
+failure mode and it is not hypothetical** - it is the genre's default.
+
+So the null close is **first-class, not degenerate**: *"the decision is to not act yet, and here is
+precisely what would change that."* Presented properly this is the **stronger** leadership close,
+because it converts "we do not know" into a scoped experiment with a cost and a trigger. Reach for it
+whenever the source is unmeasured, and say which of the four verdicts the evidence actually supports:
+**adopt, pilot, watch, or reject**.
+
+## The register - how it has to sound
+
+**This is a talk track, not slide notes.** The difference is audible in the first sentence and it is
+the thing most likely to be got wrong, because writing bullets is easier than writing speech.
+
+- **No bullets. Prose only.** A bulleted slide reads as notes the presenter has not yet turned into
+  sentences. Flowing paragraphs read as somebody speaking. This is the single largest tonal lever and
+  it is not negotiable.
+- **Slide titles are claims, not labels.** *"The problem was contract fragmentation, not
+  connectivity"* is a title. *"The problem"* is a label. A reader scanning only the titles should
+  receive the argument.
+- **Open each slide with one bolded declarative sentence that states the thing**, then continue in
+  ordinary prose in the same paragraph. The bold carries the claim; it is never a lead-in label like
+  `**What it costs.**`, which the Register rules still forbid.
+- **Name the audience out loud when the register shifts.** *"The leadership significance is
+  architectural leverage."* *"What engineers should take from this is..."* A mixed room needs to be
+  told which sentence is addressed to whom, and saying so is what makes one narrative serve two
+  audiences instead of neither.
+- **Pose and answer.** *"The question is therefore not whether X. It is whether Y."* Reframing the
+  question in the room is the most reliable spoken move there is, and it does work no assertion can
+  do, because the audience feels the wrong question being discarded.
+- **Speak in the first person plural about what was done and the third about what was found.** "We
+  made X native without forcing Y" for delivery; "the source measures nothing" for evidence. Keeping
+  those grammatically distinct is how a listener hears the difference between a decision and a claim.
+- **Citations ride at the end of the sentence in brackets** - `[n1, n3, n5]` - unobtrusive and never
+  interrupting the cadence.
+
+**Open each diagram explanation by naming what kind of diagram it is, and what it is not.** *"This is
+a leverage diagram, not a component diagram."* That single clause does the orientation work in a way
+no arrow-narration can, then the crux follows, then what the audience should protect or decide, then
+italic provenance.
+
+## Output
+
+- **`## Presentation narrative`**, appended at the very end of the source's `LEARNING.md`.
+- A **framing note** first, audience-facing: what this talk track is, what it is derived from, and
+  what it deliberately does not claim.
+- A **source-shaped sequence of slides**, headed `### Slide N - <the claim>`, typically five to seven.
+  The source's argument decides the count; a source with three real beats gets three.
+- **A visual for every slide**, each with a presenter-style explanation and provenance.
+- **`### Key takeaway message`** - one paragraph stating the problem, the decision, the delivered
+  value, the boundary and the implication, **introducing no new claims**.
+- **Budget: roughly 900-1,500 words.** The notes already run 5,000-9,000, and a presentation that is
+  not compressed is not a presentation.
+
+> **The budget was widened from 700-1,200 when the bullets were removed, and the precedent is this
+> kit's own.** `AGENTS.md` already accepts that the Register rules cost **"+25 to +30% words"** for
+> prose that carries an argument, and prose-only slides are the same trade at slide scale: 1,200 x 1.3
+> is 1,560, and the first rewritten instance landed at 1,557 before trimming. **Widening for a change
+> of format is legitimate; widening because one draft ran long is not.**
+
+> **The slide count and the word budget are coupled, found on the first instance.** A slide needs
+> roughly 150 words to carry a visual and an explanation that says something, so **five to six fit
+> the budget and seven does not** - the S26 draft came in at 1,309 and line-level trimming recovered
+> 25. **Treat an overrun as a content signal before a budget one.** There the fix was real: two
+> slides were making the same point, and merging them improved the argument as well as the length.
+> **If you need a seventh slide, two of them are probably one.**
+
+> **The `Key takeaway message` is not a fourth summary and must not read as one.** `TL;DR` answers *should
+> I read this?*. The takeaway answers *what should I now believe or do?* - a decision statement, not a
+> recap.
+
+## Composition
+
+Composes with **mentor** for diagram explanations inside the technical body, and with **fact-checker**
+when a slide's evidence strength is in question. **Do not compose with curator while writing the
+presentation** - curator owns the ramp, this owns the argument, and running both at once reproduces
+the walkthrough in slide form.
+
+> Inherits the global rules in `../AGENTS.md` **in full, with no carve-out.** An earlier version of
+> this persona exempted slide bullets from the Register rules. **That exemption is withdrawn, because
+> the tone rules above removed the bullets** - and the register's demands (complete sentences,
+> paragraphs that hand off, no bold lead-in labels) are exactly what a talk track needs anyway. The
+> bolded opening sentence of a slide is a **claim**, not a lead-in label, and is not the thing the
+> register forbids.
+``````
+
 #### `personas/synthesizer.md`
 
 ``````markdown
@@ -1858,7 +1706,500 @@ topic from many sources. This is the "ask" and "report" persona.
   to the exact moment.
 ``````
 
-### 5.3 The three frozen scripts
+### 5.3 Stage contracts
+
+#### `stages/README.md`
+
+``````markdown
+# `stages/` - the user-triggered stage contracts
+
+**Four passes that fire on request and never automatically**, each with its own spec. They were
+extracted verbatim from `AGENTS.md` on 2026-08-15
+([ADR-0027](../brain/decisions/0027-stage-specs-leave-the-contract.md)).
+
+| Stage | Trigger | Spec | Writes |
+|---|---|---|---|
+| **verify** | "verify \<source>" | [`verify.md`](verify.md) | `sources/<id>/verify.md` |
+| **research** | "deep research" | [`research.md`](research.md) | `sources/<id>/context/<NN>_<slug>.md` |
+| **conjecture** | "conjecture" | [`conjecture.md`](conjecture.md) | `brain/conjectures.md` |
+| **dream** | "dream" | [`dream.md`](dream.md) | `brain/dreams/<NNNN>-<YYMMDD>.md` |
+
+## Why these left the root contract
+
+`AGENTS.md` was 1,408 lines and **every one of them was loaded into every session's context**, while
+these four specs are needed **once a fortnight between them**. They are 27% of the file, and the cost
+of carrying them everywhere is not only tokens: this brain measured in
+[X2](../experiments/260815_summary-index-ceiling/RESULTS.md) that discriminability decays with the
+volume attended over, and it holds claim 209 - **scope behaviour with a schema file placed in the
+thing being managed, discovered when needed, overriding the generic instruction**. The kit adopted
+that as a finding while running the opposite design.
+
+**The test that made this safe rather than merely tidy: each of these has a guaranteed loader.** The
+`.claude/commands/<stage>.md` wrapper fires and reads its spec, so a rule here is not a rule nobody
+loads - which is the one way a split is worse than a long file. **The `LEARNING.md` shape stayed in
+`AGENTS.md` for exactly the opposite reason**: it is needed on the most common operation, and its only
+guaranteed loader would be a template that had already gone stale once that same day.
+
+## The rules that still bind
+
+- **`AGENTS.md` is the root contract and these inherit every global rule in it.** Where the two
+  disagree, **`AGENTS.md` wins and the stage file is the bug.**
+- **Harness-neutral on purpose.** These live here rather than in `.claude/commands/` because Copilot
+  CLI, Codex and Cursor read the repo and not Claude Code's command folder. The wrappers point here;
+  the specs are portable.
+- **Single-writer, like the rest of the contract layer.** A specification needs one author to stay
+  coherent, and a clean merge is the dangerous case rather than the conflicting one.
+- **Every stage file must be linked from `AGENTS.md`.** `validate.py` enforces it, because the failure
+  a split introduces is an orphaned spec nobody is routed to.
+``````
+
+#### `stages/verify.md`
+
+``````markdown
+# Stage: `/verify` - verifying one source
+
+> The source-layer evaluator the corroboration gate lacks. **Triggered by the user, never automatic.**
+>
+> **This file is the contract for this stage.** It was extracted verbatim from `AGENTS.md`
+> on 2026-08-15 ([ADR-0027](../brain/decisions/0027-stage-specs-leave-the-contract.md)) so that a
+> spec needed once a fortnight stops occupying every session's context window. **`AGENTS.md`
+> remains the root contract** and this inherits every global rule in it; where the two
+> disagree, `AGENTS.md` wins and this file is the bug.
+
+## Verifying one source on request (`/verify`)
+
+> **Why this exists.** This kit violates its own best-supported eval claim. **Claim 34: do not let
+> the producer grade its own work** - an agent asked to judge its own output confidently praises it,
+> and that is not promptable-away, because the generator has no independent vantage point on itself.
+> Yet the agent that distils a source is also the agent that runs its corroboration gate, decides
+> whether a node is really two-leg, and writes the prose built on those decisions. **One invocation,
+> two objectives - finish the source, and gate it honestly - which is claim 59's untunable trade.**
+>
+> `validate.py` does not close this: it checks **form**. Whether a cited node actually supports the
+> sentence citing it is a **reading judgement**, and the one time that failed in this repo it took a
+> human asking "where did that come from" to find it.
+>
+> Note the asymmetry this fixes. The **`brain/` layer has a reconciler** - the dream pass, decoupled,
+> one objective. The **`sources/<id>/` layer had none**: the gate fired once, at ingest, by the agent
+> doing the ingest, and was never revisited.
+
+**Trigger (never automatic).** The user says **"verify \<source>"** or runs `/verify`. Adopt
+**fact-checker**, alone - this stage has exactly one objective and composing it with `curator` would
+reintroduce the conflict it exists to remove.
+
+> **The stage's own coverage is the thing to watch, and it went badly wrong once already.** `/verify`
+> shipped on 2026-08-03. Over the next twelve days **fourteen sources were ingested and one was
+> verified.** The corpus nearly doubled and the evaluator ran once. **Nothing was broken** - the stage
+> works, and the design decision that it never fires automatically is correct, because an agent that
+> has held a source's argument for an hour has no independent vantage point on it. What was missing is
+> that **the coverage number appeared nowhere**, so nobody could notice it was 1 in 26 without running
+> `ls sources/*/verify.md`. That is this kit reproducing the defect it records against S7 (`d4`) and
+> S26 (`n13`): **the load-bearing step with no mechanism behind it.**
+>
+> **`python3 validate.py` now prints `/verify` coverage on every run** (see "Validating the
+> contract"). It is informational and **never fails the run**, because *how many sources should be
+> verified* is a judgement and encoding a threshold would launder judgement as a green check.
+> **100% is the wrong target** - verification costs a separate session and most sources will never
+> earn one. **The right reading is comparative**: a number that has not moved while ten sources landed
+> means the stage has quietly stopped existing, and the sources worth spending it on are the ones
+> whose claims are **most reused** (check `brain/claims.md`) rather than the most recent.
+
+**Scope: one source's distilled layer against its own gated evidence.** Read that source's
+`nodes.md`, `LEARNING.md`, `SOURCE.md` **and its `visuals/` frames** - and nothing else. Do not read
+the topic notes - what was *promoted* is the dream pass's business, and mixing the two gives this
+stage two objectives again.
+
+> **The frames are in the read list because check 6 cannot run without them**
+> ([ADR-0016](../brain/decisions/0016-verify-reads-the-frames.md)). The stage's first run found this
+> against itself: it asked whether a caption matches the image while being forbidden from opening the
+> image. **The set needs no selecting** - `validate.py` already pins `visuals/` to exactly the frames
+> that source's own `LEARNING.md` cites. It is a bounded cost: **median 4 frames per source, maximum
+> 15**, and zero on a source whose visual leg was skipped.
+
+> **This is the one pass that MAY re-open the gate**, and the only one. Dreaming is explicitly
+> forbidden from re-opening source-local judgements or editing a `nodes.md` (see below); that rule
+> stands, because this stage exists to do it instead.
+
+### What it checks, exactly
+
+**Stating this precisely is not pedantry, it is the point.** This brain's sharpest criticism of S7 is
+`d4`: the vendor says dreaming produces "a **verified**, better organized snapshot" and never says
+what verification means, who performs it, or what happens on failure - **the load-bearing step with
+no mechanism behind it.** A stage of this kit called `/verify` that did the same thing would be
+reproducing the defect it was built from.
+
+| # | The question | Failure it catches |
+|---|---|---|
+| 1 | Does each cited node **actually support the sentence citing it**? | Citation drift - the `claim 33` class, at source level |
+| 2 | Is anything the prose presents as settled gated `single-leg` or `needs-check` in `nodes.md`? | **Label drift between the gate and the prose** |
+| 3 | Is anything outside a `Background, supplied` block **uncited**? | The scaffolding rule leaking - supplied context laundered as evidence |
+| 4 | Are weak-evidence labels **at the point of use**, or deferred to the end? | Caveats parked where nobody reading the claim will meet them |
+| 5 | Does "What to distrust" carry the **gate note's** trust facts, or a softer version? | The source-level caveat quietly improving in translation |
+| 6 | Does a kept frame's `what it teaches` **match what the frame shows**? | A frame embedded rather than taught |
+
+**Nothing else.** Not prose quality, not structure, not whether the ramp works - those are the
+curator's and the human's. **A stage that grades everything grades nothing**, and its verdicts stop
+being trustworthy the moment they include taste.
+
+**Check 6 runs by default, and a skip is recorded rather than discovered.** Record it in the pass
+entry's `Frames` field: `checked (N)` / `n/a (visual leg skipped)` / `skipped (user)`. This is
+deliberately the same shape as `SOURCE.md`'s `Visual leg` row - the kit already knows how to make an
+expensive visual step optional without letting the omission go quiet, and a second mechanism for the
+same problem would be machinery.
+
+> **Why it is not opt-in, having been proposed as opt-in and withdrawn.** A default-off check is a
+> check that never runs, because **nobody asks about frames they have not seen.** And note who wrote
+> the caption: the `what it teaches` line comes from the ingesting **curator** - same agent, same
+> session, same argument - after which **nobody ever looks at that image and that sentence together
+> again.** `validate.py` proves a frame is *cited*; only a reader with the image open can tell
+> whether the citation is *true*. Dropping the check would leave the visual half of every source with
+> no independent reader at all, which is the exact asymmetry this stage exists to close (claim 34).
+
+### Verdicts, and what happens on failure
+
+Each finding is one of:
+
+| Verdict | Meaning | Action |
+|---|---|---|
+| `defect` | Unambiguous - the citation does not support the sentence, an uncited claim sits outside scaffolding | **Fix it in the same pass** |
+| `judgement` | Arguable - a label that may be too strong, a caveat that may belong closer | **Propose with reasoning and ask.** The human adopts |
+| `gate-reopen` | The evidence itself looks mis-gated | **Never fix silently.** Record it, state the reasoning, ask. Re-gating changes what the brain believes |
+
+**Output goes to `sources/<id>/verify.md`** - one file per source, **appended** per pass with a date,
+never rewritten. It is a log, not an index: the point is that a later reader can see what was checked
+and when. Each entry opens with a field table carrying **`Read`**, **`Frames`**, **`Independence`**
+and **`Findings`**. **Ephemeral output not captured into a kit file did not happen.**
+
+Then run `python3 validate.py` and show the `git diff`, as with every other stage.
+
+> **What this stage cannot do.** It reads a source against *itself*, so it inherits the gate's own
+> ceiling: **two legs agreeing proves internal consistency, never truth** (Global rules). It cannot
+> tell you a source is wrong about the world - only that this brain has represented it honestly.
+> External evidence is deep research's job; cross-source coherence is dreaming's.
+
+> **Do not run it on a source you just wrote in the same session.** The whole point is an independent
+> vantage point, and an agent that has been holding the source's argument for an hour does not have
+> one. **A different session, or at minimum a different invocation, is the mechanism** - not a
+> promise to be objective.
+``````
+
+#### `stages/research.md`
+
+``````markdown
+# Stage: `/research` - deep research on gated claims
+
+> External evidence for specific gated nodes. **Triggered by the user, never automatic.**
+>
+> **This file is the contract for this stage.** It was extracted verbatim from `AGENTS.md`
+> on 2026-08-15 ([ADR-0027](../brain/decisions/0027-stage-specs-leave-the-contract.md)) so that a
+> spec needed once a fortnight stops occupying every session's context window. **`AGENTS.md`
+> remains the root contract** and this inherits every global rule in it; where the two
+> disagree, `AGENTS.md` wins and this file is the bug.
+
+## Deep research on request (external evidence)
+
+> **Why this exists.** The corroboration gate buys *internal* consistency - a slide agrees with the
+> narration, code agrees with its docs. That is not truth (see Global rules). Real confidence rises
+> only with **external** corroboration. Deep research is the mechanism: it reaches outside the source
+> to test what the source claims, and to attach the intellectual context that makes a claim land -
+> the prior work, the competing framing, the name the field already has for this thing.
+
+**Trigger (never automatic).** The user says **"deep research"** with the URL, or asks for it on an
+already-ingested source, or invokes the harness's research command. Adopt **fact-checker +
+synthesizer** (+ **mentor** when the goal is teaching a concept).
+
+**Target the nodes, not the subject.** Open-ended "research <topic>" returns adjacent reading and
+makes you a summarizer. Research **specific gated claims by node ID** from `nodes.md`, prioritising:
+`single-leg` nodes, anything marked `needs-check`, recorded divergences, and the `LEARNING.md` open
+questions. Each finding resolves to one of four verdicts:
+
+| Verdict | Meaning | Effect |
+|---|---|---|
+| `supports` | An **independent** source agrees | Node confidence may rise; cite the external source in `brain/claims.md` |
+| `contradicts` | A credible source disagrees | **A finding, not a failure** - record both, flag the conflict |
+| `refines` | Broadly agrees but bounds/qualifies the claim | Rewrite the claim with the qualifier |
+| `no-evidence` | Nothing credible found either way | **Also informative** - the claim is one practitioner's experience; say so |
+
+**Read the brain before you read the web.** `grep` the root `INDEX.md`, `brain/topics/*.md` and
+`brain/claims.md` first - a prior source may already answer this, and the link between them is worth
+more than a fresh fetch.
+
+### Source credibility tiers (record the tier with every citation)
+
+| Tier | What | How to weigh it |
+|---|---|---|
+| **T1** | Peer-reviewed papers, official specs/standards, official API/product docs | Strongest for *how something works*. |
+| **T2** | First-party engineering writing (Anthropic, OpenAI, DeepMind, Cursor, ...) and official repos | Authoritative **about their own system**; **positioned** on the wider field. Flag when a vendor is cited on a topic they sell. |
+| **T3** | Preprints (arXiv) | Good for recency and for the field's vocabulary; **not peer-reviewed** - always label as preprint, never treat as settled. |
+| **T4** | Practitioner experience: conference talks, engineering blogs, respected individual writers | Same evidential class as most sources in this brain - experience reports, rarely measured. |
+| **T5** | Aggregators and directories (Pulse MCP, awesome-lists, doc hubs) | Use for **discovery**; cite the primary source they point to, not them. |
+
+> **The independence rule (hard).** External evidence only counts as corroboration when it is
+> **independent** of the original source - not the same author, organisation, or commercial interest.
+> A talk's companion repo, a vendor blog restating the vendor's own conference talk, or a paper by
+> the same lab is **the same leg wearing a different hat**. Record it, but never let it raise
+> confidence. When independence is unclear, say so.
+
+### Calibration: aim one level above the source
+
+The reader already knows the fundamentals of LLMs and agents. **Do not write 101 explainers.** The
+target is the concept *one level above* the source - the frame that makes its claim feel inevitable
+rather than arbitrary.
+
+> **Take the cross-domain hop.** The most valuable framing is often the established name in an older
+> discipline - cognitive science, distributed systems, PL theory, control theory, information
+> science. (Example: agent skill design is a rediscovery of **procedural memory**.) Searching only AI
+> sources will never surface this, so search for it deliberately.
+
+### Budget, output, and honesty
+
+- **Budget (default):** ≤ 8 searches and ≤ 12 fetches per pass. **Stop early** when two independent
+  T1-T3 sources agree, or when a pass surfaces nothing new. Record the budget actually used.
+- **Never interrupt with clarifying questions.** Make reasonable assumptions, state them explicitly
+  in a **Confidence assessment** section at the end of the note. (Pattern borrowed from Copilot
+  CLI's `/research`.)
+- **Output is a permanent kit file, not a session artifact:**
+  `sources/<id>/context/<NN>_<slug>.md`, one note per pass, numbered in order. Copilot CLI writes
+  research to a throwaway session directory; this kit does the opposite - **ephemeral output that is
+  not captured into a kit file did not happen.**
+- **Feed the findings back** in the same pass: update the affected node's confidence in `nodes.md`
+  (pointing at the context note), cite external support in `brain/claims.md`, add new terms to
+  `brain/glossary.md`, and let `LEARNING.md` cite the context note rather than absorbing it.
+
+> **Keep research out of `LEARNING.md`'s body.** `LEARNING.md` answers exactly one question - *what
+> did this source teach?* Blending external findings into it destroys the distinction between "the
+> author claims this" and "the field thinks this", which is the whole point of citing. External
+> evidence lives in `context/`; durable cross-source synthesis lives in `brain/topics/*.md`.
+
+### Degrade & failure handling (don't fail silently)
+
+| Situation | Do this |
+|---|---|
+| Video has no captions | Transcribe audio with `faster-whisper`; if that fails, note it and proceed transcript-light. |
+| **`yt-dlp` returns `HTTP 403` on every DASH format** | **A missing JavaScript runtime, not a blocked video.** YouTube's n-challenge needs one, and without it the *only* downloadable format is usually `18` - **progressive 360p**. Fix with **`brew install deno` AND `pip install yt-dlp-ejs`**: **both are required**, and deno alone still fails the challenge with `n challenge solving failed`. Then `-f 299` (1080p) downloads normally. |
+| **The only format that downloads is 360p** | **Do not gate a slide-heavy source at 360p.** Dense screens - a rendered document, a `SKILL.md`, a saved prompt - are **illegible** at that resolution, so the frames will look contentless and the source will degrade to transcript-only *for a reason that is not true*. **This is the false-`STATIC` failure arriving from a different direction** (ADR-0006) and it has the same asymmetry: the cost of re-extracting at 1080p is one download, and the cost of a wrong degrade is the source's entire second leg, which the degrade rule forbids you to reinstate later. Fix the runtime (row above) and re-extract **before** viewing anything. It happened on S26, where the whole payload was on screen. |
+| Talking-head video, no useful frames | The static probe catches this: <= 3 distinct frames after dedup -> **`view` the confirmation sheet it writes (ADR-0006)**, then auto-degrade to transcript-only and record `Visual leg: skipped (static probe)`. Nodes are `single-leg` (needs-check), never `corroborated`. |
+| **Probe says `STATIC` but the sheet shows changing slides** | A **false STATIC** - a templated deck defeating whole-frame scene detection (ADR-0006). **Override**: extract transcript-anchored frames, record `Visual leg: analysed (N frames kept) - static probe overridden` in `SOURCE.md`, and say why. Do **not** file a bug against the constants; the metric is wrong for this input class, not mis-tuned. |
+| User says "don't analyze video" / "transcript only" | Skip frame extraction **and the probe**; record `Visual leg: skipped (user)`; gate every node `single-leg`; say in one line that internal corroboration is now unavailable and deep research is the way back to two legs. |
+| Visual leg skipped but the source turns out to matter | Do **not** retro-mark nodes `corroborated`. Either re-run the visual leg and re-gate, or get the second leg externally via deep research. |
+| Paywalled / login-required article or paper | Ingest only what you can legitimately access; set `SOURCE.md` Access + Status `blocked` or `partial`; do not bypass. |
+| Repo private / huge / has submodules or Git-LFS | Prefer `gh` shallow clone; for huge repos orient from the README + a sparse checkout; never read it all. Non-GitHub git URL: clone by URL, skip `gh`. |
+| Repo has no/shallow/stale docs | Code is the primary leg; nodes are `single-leg`; a docs↔code gap is a `divergence` finding, not a drop. |
+| License missing/unclear (code) | Record `License: unknown` in `SOURCE.md`; keep the clone git-ignored; do not redistribute source. |
+| Symlink not permitted (Windows, no Dev Mode) | `link-agents.ps1` writes a marked one-line pointer instead; the harness still reads `AGENTS.md`. |
+| Ingest interrupted | Leave `SOURCE.md` Status at the last safe stage; resume from there next session. **If it stopped at `capture` (nothing gated, `SOURCE.md` still template) - and `ls -la` shows no recent writes, because an unfilled template does not mean no live process - move the folder to git-ignored [`staging/`](../staging/README.md) instead of leaving it in `sources/`** - `sources/<id>/` is `validate.py`'s namespace and every folder there is checked as a *finished* source, so a bare capture can only be silenced by faking an INDEX row or deleting the download. **A capture becomes a source when it is distilled, not when it is downloaded.** Move it back when you intend to finish it. |
+| Deep research finds nothing credible | Record `no-evidence` in the context note - that the claim rests on one practitioner's experience **is** the finding. Do not pad with weak T4/T5 hits. |
+| Deep research finds only non-independent sources | Record them, cite them, but **do not raise confidence** (independence rule). Say plainly that corroboration is still missing. |
+| Sources conflict | Keep **both**, cite both with tiers, flag the conflict in the context note and in the topic note's "Open questions / conflicts". Do not silently pick a winner. |
+| No web access / search unavailable | Say so, skip the research step, leave `SOURCE.md` Status at `distill`; do not fabricate citations or work from memory. |
+``````
+
+#### `stages/conjecture.md`
+
+``````markdown
+# Stage: `/conjecture` - the generative pass
+
+> Abduction across the whole brain, into `brain/conjectures.md`. **Triggered by the user, never automatic.**
+>
+> **This file is the contract for this stage.** It was extracted verbatim from `AGENTS.md`
+> on 2026-08-15 ([ADR-0027](../brain/decisions/0027-stage-specs-leave-the-contract.md)) so that a
+> spec needed once a fortnight stops occupying every session's context window. **`AGENTS.md`
+> remains the root contract** and this inherits every global rule in it; where the two
+> disagree, `AGENTS.md` wins and this file is the bug.
+
+## Conjecturing on request (`/conjecture` - the generative pass)
+
+> **Why this exists.** The kit does two of the three moves. It **gathers** (ingest, gate) and it
+> **reconciles** (dream). What it has never done deliberately is **abduce** - propose an explanation
+> the sources jointly imply and none of them states.
+>
+> It has happened by luck. Claim 93 exists because an ingesting agent noticed S5, S10 and S11 saying
+> the same thing about metadata in three unrelated domains. **Nothing in the kit asks that question
+> on purpose**, so the answer arrives only when someone happens to trip over it.
+>
+> **And dreaming will not do it.** Its eight classes are all coherence - contradiction, duplication,
+> stale confidence, orphans. Adding "also invent things" gives that pass two objectives, which is
+> claim 59 exactly. Generation gets its own invocation, for the same reason curation did.
+
+**The name is doing work.** A *conjecture* is explicitly unproven. Given that the failure mode here
+is confabulation dressed as insight, a word that says "not yet believed" is worth more than one that
+sounds like a finding.
+
+**Trigger (never automatic).** The user says **"conjecture"** or runs `/conjecture`, optionally
+scoped to a topic. Adopt **synthesizer** (cross-source combination is its job) - **not**
+fact-checker, and the reason matters: see "What this pass may not do" below.
+
+### What it reads, and what it looks for
+
+Read **the whole brain** - `brain/claims.md`, every `brain/topics/*.md` including their **Open
+questions**, `INDEX.md`, and prior notes in `brain/conjectures.md`. You cannot combine what you have
+not seen.
+
+**Generate from tension, not from agreement.** Two agreeing claims usually yield a restatement. The
+productive pairs, in rough order of yield:
+
+| Pattern | Why it generates |
+|---|---|
+| Claims in **different topics sharing a mechanism** | The shape is the finding. Claim 93 came from exactly this |
+| A `corroborated` claim against a `needs-check` one **on the same subject** | The gap between what is measured and what is believed |
+| A claim plus an **open question from a different topic** | The question may already be half-answered elsewhere in the brain |
+| Claims in **quiet tension** that nobody flagged as a contradiction | Dreaming catches flagged conflicts; this catches unflagged ones |
+| **A structural gap in the brain's own shape** | Not "the source did not say X" - that is an Open question, inherited. This is *"we hold three claims about identity propagation and none about revocation"*: an absence no source flagged, visible only from above |
+| **Cross-domain transfer: import a shape from a dense topic into a thin one** | Does claim 59's objective-conflict argument apply to security review? Does claim 34's producer/grader split? **This generator needs the *other* topics established, not the target one** - so it works best exactly when coverage is uneven |
+| A claim plus a **structural feature of this kit** | The brain is a live instance of several of its own claims |
+
+> **Do not wait for coverage to run this.** An earlier version of this section implied the pass gets
+> better as the brain broadens, which is breadth-biased and wrong for anyone going *deep* in one
+> area. **Depth feeds the last three patterns above harder than breadth does** - two sources that
+> disagree about the same thing generate sharper conjectures than two unrelated ones, a thin topic
+> beside a dense one is where a structural gap is most visible, and cross-domain transfer needs the
+> *source* topic established rather than the target. There is no threshold to wait for.
+
+**Do not enumerate pairs.** At 100+ claims that is 5,000+ combinations and the pass drowns. Follow
+the patterns above, follow curiosity, and stop when the yield drops.
+
+### The one hard rule: a conjecture names its own falsifier
+
+**This is the filter that separates the stage from a confabulation engine, and it is not optional.**
+Every conjecture states, in this order:
+
+1. **The claim IDs it combines** - checkable, so a reader can reconstruct the leap.
+2. **What it asserts that no combined claim states alone.** If you cannot say this in one sentence,
+   it is a restatement.
+3. **What evidence would prove it wrong.** Concrete enough to look for.
+4. **Whether that evidence plausibly exists** - a published study, a benchmark, an ablation someone
+   could run. A conjecture nobody could ever test is philosophy, and belongs elsewhere.
+
+> **If it cannot name a falsifier it is not a conjecture, it is an observation** - and observations
+> already have homes: a topic note's synthesis, or its Open questions.
+
+### What this pass may **not** do
+
+- **It may not judge whether a conjecture is true.** It cannot: that needs external evidence, and
+  fetching it is `/research`'s job. This pass only checks that a conjecture is **well-formed**.
+  **That separation is deliberate** - it means the producer never grades its own work (claim 34),
+  and the gate that kills a conjecture is always a different invocation.
+- **It may not write to `brain/claims.md`.** A conjecture is not a claim and must never be cited as
+  one. It lives in its own register until research resolves it.
+- **It may not edit a `nodes.md`, a `LEARNING.md`, or a topic note's claims.** It proposes; it does
+  not promote.
+
+### Output, and the lifecycle
+
+**One register: `brain/conjectures.md`**, following `claims.md`'s shape - stable IDs (`h1`, `h2`,
+never renumbered), a status column, append-only in spirit. Not per-pass notes, because a conjecture
+has a *lifecycle* that a dated log handles badly.
+
+| Status | Meaning | Next |
+|---|---|---|
+| `open` | Well-formed, untested | A `/research` target |
+| `supported` | Independent external evidence agrees | **Promote to `brain/claims.md`** with the external citation and tier; retire the conjecture |
+| `refuted` | Credible evidence disagrees | **Keep it.** A killed conjecture is a real result and stops it being re-proposed |
+| `no-evidence` | Researched, nothing credible either way | Say so. That the field has not asked is itself a finding |
+
+**Discarded at generation** gets its own section in the same file, with the reason - almost always
+"no falsifier" or "restates claim N". **A pass that records only its winners is cherry-picking**, and
+the audit trail is what makes this scientific rather than decorative. Same discipline `nodes.md`
+already applies to dropped candidates.
+
+Then run `python3 validate.py` and show the `git diff`.
+
+### Honesty rules
+
+- **Most conjectures will be wrong, and that is the process working.** Do not optimise for hit rate:
+  a pass judged on how many survive will produce safe restatements, which is the one output with no
+  value at all.
+- **Three good conjectures beat thirty plausible ones.** Volume is the failure mode, not the goal.
+- **"Nothing new this pass" is a legitimate result** and gets recorded. It usually means no source
+  has arrived since the last pass that could combine with anything.
+- **Never launder a conjecture into a claim by citing it.** Prose elsewhere in the brain may
+  reference `h3` *as a conjecture*, never as evidence.
+``````
+
+#### `stages/dream.md`
+
+``````markdown
+# Stage: `/dream` - the reconciliation pass
+
+> Global coherence over `brain/` itself, into `brain/dreams/`. **Triggered by the user, never automatic.**
+>
+> **This file is the contract for this stage.** It was extracted verbatim from `AGENTS.md`
+> on 2026-08-15 ([ADR-0027](../brain/decisions/0027-stage-specs-leave-the-contract.md)) so that a
+> spec needed once a fortnight stops occupying every session's context window. **`AGENTS.md`
+> remains the root contract** and this inherits every global rule in it; where the two
+> disagree, `AGENTS.md` wins and this file is the bug.
+
+## Dreaming on request (the reconciliation pass)
+
+> **Why this exists, and it is the kit taking its own medicine.** Ingest writes to `brain/` **while
+> doing something else** - finishing a source. That write is locally optimal and globally
+> unexamined: it merges into the topic note in front of it and never asks whether a claim it just
+> added contradicts one promoted three sources ago. This is exactly the diagnosis
+> [`brain/topics/memory.md`](../brain/topics/memory.md) records from S6 and S7 - **memory updated
+> in a locally optimal way that is not globally optimal, producing duplication and fragmentation**
+> (claim 59, `n10`) - pointed at this repo. `validate.py` does not catch it: it checks **form**, and
+> this is **drift**. A green validator means the shape is right, not that the thinking is.
+
+**Dreaming is the global reconciliation pass over `brain/` itself.** Not an ingest, not a research
+pass, not lint. It reads across every topic note, `claims.md`, `glossary.md` and `INDEX.md` and asks
+one question: **is what this brain believes still coherent with itself?**
+
+**Trigger (never automatic).** The user says **"dream"**, or invokes the harness command. Adopt
+**architect + fact-checker** - the architect owns merge/split/status calls, the fact-checker owns
+claim verdicts.
+
+> **It must never run as part of an ingest, and this is a design rule, not a preference.** An agent
+> finishing a source is holding two objectives - land this source, and keep the brain coherent - and
+> it will trade the second against the first silently, because the first is the one with a visible
+> finish line (claim 59). Curation gets its own invocation and its own objective, or it gets a token
+> effort. **Same reason the generator and the evaluator are separate processes (claim 34).**
+
+### What a pass looks for
+
+| Class | The question | Typical finding |
+|---|---|---|
+| **Contradiction** | Do two claims disagree? Did a later source overturn an earlier one? | Keep both, cite both, flag the conflict - never silently pick a winner |
+| **Duplication / fragmentation** | Is one idea stated in two topic notes, or as two claims? | Merge and de-duplicate; the contract already says *don't stack* |
+| **Stale confidence** | Is a claim still `emerging` after a second source corroborated it? Is a `needs-check` now resolved? | Promote or demote the confidence, citing what changed |
+| **Stale status** | Is a topic `emerging` on two corroborating sources, or `seed` with one? | Advance it, and record an ADR if the call is a judgement |
+| **Orphans** | A claim no topic note references; a topic claim with no `claims.md` row; a source feeding nothing | Wire it up or drop it - an unreferenced claim is invisible |
+| **Closed open questions** | Did a later source answer an "Open questions" bullet nobody struck through? | Strike it through with the date and the closing source |
+| **Superseded framing** | Was a synthesis section written when the brain knew less? | Rewrite it. **This has already happened once** - `memory.md` kept "this topic has zero measurements" after the charts were recovered, and needed a fix commit |
+| **Drift from source** | Does the citation still support the claim as written? | Correct the claim, not the citation |
+
+### How a pass runs
+
+1. **Read the whole brain first.** `INDEX.md`, every `brain/topics/*.md`, `claims.md`, `glossary.md`,
+   `brain/decisions/`, **every prior note in `brain/dreams/`**, and the tail of `log.md`. **Do not
+   sample.** The entire value of being out of band is that you can afford to read everything, which
+   is the one thing an ingest cannot.
+
+   > **Prior dream notes are not history, they are the backlog.** Each one ends in "Proposed, not
+   > applied (needs a human call)" and "Notes for the next pass" - proposals with their reasoning,
+   > written by the only pass that reads everything. **Omitting them from this list meant a pass
+   > wrote proposals that the next pass was never told to read**, which is the same defect the stage
+   > exists to catch, aimed at the stage itself. Re-reading them is also what makes a fourth backlog
+   > file unnecessary: the mechanism already exists and only lacked a guaranteed reader.
+2. **Collect findings before changing anything**, each naming the files and claim IDs involved.
+3. **Write the pass note** to `brain/dreams/<NNNN>-<YYMMDD>.md`, numbered in order. One note per
+   pass, permanent. **Ephemeral output not captured into a kit file did not happen.**
+4. **Apply the changes** in the same pass - this is a reconciliation, not a report - then run
+   `python3 validate.py` and show the `git diff`.
+5. **Propose, do not impose.** Anything that changes what the brain *believes* (dropping a claim,
+   splitting a topic, reversing a confidence) goes in the note as a **proposal with its reasoning**
+   and is applied only if it is a clear defect. **When it is a judgement call, ask.** The human
+   adopts; `git revert` is the undo.
+
+> **Findings are the point, including "nothing found".** A pass that surfaces no drift is a real
+> result and gets its note - it is evidence the compounding is holding. **Do not manufacture
+> findings to justify the pass.**
+
+> **What dreaming must not do:** re-litigate the gate. Whether a node was corroborated is settled in
+> the source's `nodes.md` by the fact-checker at ingest time. Dreaming reconciles what was
+> **promoted**; it does not re-open source-local judgements, and it never edits a `nodes.md`.
+``````
+
+### 5.4 The three frozen scripts
 
 #### `validate.py`
 
@@ -2390,6 +2731,29 @@ def _is_emoji(ch: str) -> bool:
     return ord(ch) >= 0x1F000
 
 
+def check_stage_specs() -> None:
+    """Every stages/*.md must be routed to from AGENTS.md (ADR-0027).
+
+    This is the failure a split introduces and a long file cannot have: a spec
+    that exists, is correct, and that nothing points at - so no agent ever loads
+    it. Cheap to check, and the only genuinely new risk the extraction created.
+    """
+    d = ROOT / "stages"
+    if not d.is_dir():
+        return
+    agents = read(ROOT / "AGENTS.md")
+    readme = read(d / "README.md") if (d / "README.md").exists() else ""
+    for f in sorted(d.glob("*.md")):
+        if f.name == "README.md":
+            continue
+        if f"stages/{f.name}" not in agents:
+            err(ROOT / "AGENTS.md", 0,
+                f"stage spec 'stages/{f.name}' is not linked from AGENTS.md - "
+                f"an unrouted spec is a spec no agent loads")
+        if f"]({f.name})" not in readme:
+            warn(d / "README.md", 0, f"stages/README.md does not list {f.name}")
+
+
 CHECKS = [
     ("INDEX integrity", check_index_integrity),
     ("source metadata", check_source_metadata),
@@ -2404,6 +2768,7 @@ CHECKS = [
     ("mermaid", check_mermaid),
     ("diagram walkthroughs", check_diagram_walkthroughs),
     ("style", check_style),
+    ("stage specs", check_stage_specs),
 ]
 
 
@@ -3853,7 +4218,7 @@ if __name__ == "__main__":
     main()
 ``````
 
-### 5.4 Source template
+### 5.5 Source template
 
 #### `sources/_TEMPLATE/SOURCE.md`
 
@@ -4370,7 +4735,7 @@ which disappears. Ephemeral output that never reached a kit file did not happen.
 ```
 ``````
 
-### 5.5 Architecture decision records (the why, minus this brain's content decisions)
+### 5.6 Architecture decision records (the why, minus this brain's content decisions)
 
 #### `brain/decisions/0000-template.md`
 
@@ -4886,7 +5251,7 @@ the confirmation sheet); `AGENTS.md` § "The visual leg"; `prd.md` §5.1 and cha
 [`../log.md`](../log.md).
 ``````
 
-### 5.6 Plumbing
+### 5.7 Plumbing
 
 #### `requirements.txt`
 
@@ -5118,7 +5483,11 @@ VERBATIM: list[tuple[str, list[str]]] = [
     ("Personas", [
         "personas/README.md", "personas/architect.md", "personas/code-explorer.md",
         "personas/curator.md", "personas/fact-checker.md", "personas/mentor.md",
-        "personas/synthesizer.md",
+        "personas/presenter.md", "personas/synthesizer.md",
+    ]),
+    ("Stage contracts", [
+        "stages/README.md", "stages/verify.md", "stages/research.md",
+        "stages/conjecture.md", "stages/dream.md",
     ]),
     ("The three frozen scripts", ["validate.py", "tools/ingest.py", "tools/build_site.py"]),
     ("Source template", [
@@ -5319,6 +5688,7 @@ sources/_TEMPLATE/raw/
 sources/_TEMPLATE/visuals/
 sources/_TEMPLATE/context/
 personas/
+stages/
 tools/
 reports/
 .github/workflows/
@@ -5429,7 +5799,7 @@ runs.
 
 ```bash
 mkdir -p brain/topics brain/decisions sources/_TEMPLATE/raw sources/_TEMPLATE/visuals \\
-         sources/_TEMPLATE/context personas tools reports .github/workflows .claude/commands
+         sources/_TEMPLATE/context personas stages tools reports .github/workflows .claude/commands
 git init
 ```
 
@@ -6246,7 +6616,7 @@ allowed-tools: Read, Grep, Glob, Write, Edit, Bash, WebSearch, WebFetch
 
 # /research - deep research (external evidence)
 
-**The contract is `AGENTS.md` § "Deep research on request".** Read it now and follow it - this file
+**The contract is [`stages/research.md`](../../stages/research.md).** Read it now and follow it - this file
 is only the Claude Code wrapper for that stage. Do not duplicate the contract here; if the two ever
 disagree, `AGENTS.md` wins.
 

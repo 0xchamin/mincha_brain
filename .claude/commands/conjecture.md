@@ -6,7 +6,7 @@ allowed-tools: Read, Grep, Glob, Write, Edit, Bash
 
 # /conjecture - the generative pass
 
-**The contract is `AGENTS.md` § "Conjecturing on request".** Read it now and follow it - this file is
+**The contract is [`stages/conjecture.md`](../../stages/conjecture.md).** Read it now and follow it - this file is
 only the Claude Code wrapper for that stage. Do not duplicate the contract here; if the two ever
 disagree, `AGENTS.md` wins.
 

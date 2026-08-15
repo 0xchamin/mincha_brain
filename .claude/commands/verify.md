@@ -6,7 +6,7 @@ allowed-tools: Read, Grep, Glob, Write, Edit, Bash
 
 # /verify - the source-layer evaluator
 
-**The contract is `AGENTS.md` § "Verifying one source on request".** Read it now and follow it - this
+**The contract is [`stages/verify.md`](../../stages/verify.md).** Read it now and follow it - this
 file is only the Claude Code wrapper for that stage. Do not duplicate the contract here; if the two
 ever disagree, `AGENTS.md` wins.
 

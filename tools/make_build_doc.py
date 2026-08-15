@@ -47,7 +47,11 @@ VERBATIM: list[tuple[str, list[str]]] = [
     ("Personas", [
         "personas/README.md", "personas/architect.md", "personas/code-explorer.md",
         "personas/curator.md", "personas/fact-checker.md", "personas/mentor.md",
-        "personas/synthesizer.md",
+        "personas/presenter.md", "personas/synthesizer.md",
+    ]),
+    ("Stage contracts", [
+        "stages/README.md", "stages/verify.md", "stages/research.md",
+        "stages/conjecture.md", "stages/dream.md",
     ]),
     ("The three frozen scripts", ["validate.py", "tools/ingest.py", "tools/build_site.py"]),
     ("Source template", [
@@ -248,6 +252,7 @@ sources/_TEMPLATE/raw/
 sources/_TEMPLATE/visuals/
 sources/_TEMPLATE/context/
 personas/
+stages/
 tools/
 reports/
 .github/workflows/
@@ -358,7 +363,7 @@ runs.
 
 ```bash
 mkdir -p brain/topics brain/decisions sources/_TEMPLATE/raw sources/_TEMPLATE/visuals \\
-         sources/_TEMPLATE/context personas tools reports .github/workflows .claude/commands
+         sources/_TEMPLATE/context personas stages tools reports .github/workflows .claude/commands
 git init
 ```
 

@@ -525,6 +525,29 @@ def _is_emoji(ch: str) -> bool:
     return ord(ch) >= 0x1F000
 
 
+def check_stage_specs() -> None:
+    """Every stages/*.md must be routed to from AGENTS.md (ADR-0027).
+
+    This is the failure a split introduces and a long file cannot have: a spec
+    that exists, is correct, and that nothing points at - so no agent ever loads
+    it. Cheap to check, and the only genuinely new risk the extraction created.
+    """
+    d = ROOT / "stages"
+    if not d.is_dir():
+        return
+    agents = read(ROOT / "AGENTS.md")
+    readme = read(d / "README.md") if (d / "README.md").exists() else ""
+    for f in sorted(d.glob("*.md")):
+        if f.name == "README.md":
+            continue
+        if f"stages/{f.name}" not in agents:
+            err(ROOT / "AGENTS.md", 0,
+                f"stage spec 'stages/{f.name}' is not linked from AGENTS.md - "
+                f"an unrouted spec is a spec no agent loads")
+        if f"]({f.name})" not in readme:
+            warn(d / "README.md", 0, f"stages/README.md does not list {f.name}")
+
+
 CHECKS = [
     ("INDEX integrity", check_index_integrity),
     ("source metadata", check_source_metadata),
@@ -539,6 +562,7 @@ CHECKS = [
     ("mermaid", check_mermaid),
     ("diagram walkthroughs", check_diagram_walkthroughs),
     ("style", check_style),
+    ("stage specs", check_stage_specs),
 ]
 
 

@@ -6,7 +6,7 @@ allowed-tools: Read, Grep, Glob, Write, Edit, Bash
 
 # /dream - the reconciliation pass
 
-**The contract is `AGENTS.md` § "Dreaming on request".** Read it now and follow it - this file is
+**The contract is [`stages/dream.md`](../../stages/dream.md).** Read it now and follow it - this file is
 only the Claude Code wrapper for that stage. Do not duplicate the contract here; if the two ever
 disagree, `AGENTS.md` wins.
 

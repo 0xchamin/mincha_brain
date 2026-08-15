@@ -6,7 +6,7 @@ allowed-tools: Read, Grep, Glob, Write, Edit, Bash, WebSearch, WebFetch
 
 # /research - deep research (external evidence)
 
-**The contract is `AGENTS.md` § "Deep research on request".** Read it now and follow it - this file
+**The contract is [`stages/research.md`](../../stages/research.md).** Read it now and follow it - this file
 is only the Claude Code wrapper for that stage. Do not duplicate the contract here; if the two ever
 disagree, `AGENTS.md` wins.
 
