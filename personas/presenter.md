@@ -93,6 +93,14 @@ whenever the source is unmeasured, and say which of the four verdicts the eviden
 - **Budget: roughly 700-1,200 words.** The notes already run 5,000-9,000, and a presentation that is
   not compressed is not a presentation.
 
+> **The movement count and the word budget are coupled, found on the first instance.** A movement
+> needs roughly 150 words to carry a visual, three bullets and an explanation that says something,
+> so **five to six movements fit the budget and seven does not** - the S26 draft came in at 1,309
+> and no amount of line-level trimming closed it. **Treat an overrun as a content signal before a
+> budget one.** In that case the fix was real: movements 1 and 2 were making the same point (search
+> is the wrong purchase / the cost is synthesis not lookup), and merging them improved the argument
+> as well as the length. **If you need a seventh movement, two of them are probably one.**
+
 > **The `Takeaway message` is not a fourth summary and must not read as one.** `TL;DR` answers *should
 > I read this?*. The takeaway answers *what should I now believe or do?* - a decision statement, not a
 > recap.
