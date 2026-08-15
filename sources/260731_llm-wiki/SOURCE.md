@@ -29,7 +29,11 @@
 1. `SOURCE.md` - this file (facts).
 2. `raw/llm-wiki.md` - the captured gist verbatim (ground truth, git-ignored).
 3. `nodes.md` - knowledge nodes (gated claims + citations). **Read its evidence-class table first.**
-4. `context/` - **external evidence** from a deep-research pass (empty - not requested).
+4. `context/` - **external evidence** from a deep-research pass.
+   [`01_where-the-index-file-ceiling-actually-sits.md`](context/01_where-the-index-file-ceiling-actually-sits.md)
+   (2026-08-15) researches `n10`, the source's one quantified claim. Verdict **`refines`**: the
+   ceiling is real and measured twice independently, **the unit is wrong** (tokens, not sources), and
+   **`n10`'s own design was tested by nobody**.
 5. `LEARNING.md` - the distilled learning document.
 6. `visuals/` - empty; this source has no visual leg and nothing was generated.
 

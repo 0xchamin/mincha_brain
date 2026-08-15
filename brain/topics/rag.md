@@ -483,7 +483,9 @@ from opposite directions, which is the most useful thing this note can say about
 | **Queries are an input to the knowledge base, not just sources** - file good answers back as pages, so exploration compounds like ingestion. | S8 §Operations - Query (`n7`) | emerging (single-leg) |
 | **Split the catalog from the log.** An index must be rewritten to stay accurate; a log must never be rewritten to stay trustworthy. One file cannot do both. | S8 §Indexing and logging (`n9`) | emerging (single-leg) |
 | **The binding constraint on a knowledge base is maintenance labour** - not storage, retrieval or linking. Bush's Memex was blocked on exactly this in 1945. | S8 §Why this works (`n13`, `n15`) | emerging (single-leg) |
-| **An index file may substitute for embedding-retrieval infrastructure at moderate scale (~100 sources).** | S8 §Indexing and logging (`n10`) | **needs-check - unmeasured.** The one falsifiable claim here, with no eval, baseline or derivation. Do not cite as a result |
+| **An index file may substitute for embedding-retrieval infrastructure at moderate scale (~100 sources).** | S8 §Indexing and logging (`n10`) | **needs-check - unmeasured**, and **researched 2026-08-15 (R4), verdict `refines`.** Do not cite as a result; cite the refined version below instead |
+| **The ceiling on a no-embeddings knowledge store is a token budget, not a source count, and what fails first is cost rather than correctness.** Two independent measurements agree: long-context retrieval **matches** RAG at 128k tokens and **degrades positionally at 1M**, and an agentic filesystem approach **beats** hybrid RAG on quality at 5 papers (correctness 8.4 vs 6.4) then **crosses over at ~100 papers**, where RAG becomes faster with quality converging. At ~15k tokens per paper those two land in the same neighbourhood, ~1.5M tokens. **So `n10`'s "~100 sources" is roughly right for paper-sized documents and wrong in both directions elsewhere** - thousands of short notes should be fine, dozens of books should not. | **[LOFT, arXiv:2406.13121](https://arxiv.org/abs/2406.13121) (T3, Google DeepMind) + [LlamaIndex filesystem-vs-vector benchmark](https://www.llamaindex.ai/blog/did-filesystem-tools-kill-vector-search) (T2)** via R4 | **needs-check.** Both legs independent of S8 and of each other, and the T2 leg's commercial interest points *toward* RAG, which is the safe direction. **But the LlamaIndex arm is 5 questions per scale**, and **the token convergence is this brain's arithmetic, not a reported result** |
+| **Nobody has measured a summary-index design, which is the one S8 actually describes.** LOFT places the whole corpus in context and the filesystem benchmark greps raw documents; **an `index.md` of one-line summaries attends to ~2k tokens rather than ~1.5M**, so both studies bound `n10`'s *neighbours*. Its likely failure mode is therefore not attention but **whether a one-line summary discriminates well enough to pick the right page** - a catalog precision problem, which is the failure human directory editors actually had. | R4 (`no-evidence`), reasoning from LOFT's positional mechanism | **`no-evidence` - the sharpest result of the research pass.** The experiment is cheap and does not appear to exist |
 | **Defer search infrastructure until the index stops working**, then use a real engine; prefer one shipping both a CLI and an MCP server, so the harness chooses how to call it. | S8 §Optional: CLI tools (`n11`) | emerging (single-leg) |
 | **Corpus-wide maintenance needs an idempotence stamp, and the stamp is what makes it schedulable.** A per-item completion marker checked before work and written after turns an O(corpus) pass into an O(new) one, so cost tracks the writing rate rather than the archive size. | S26 `n5`, `visuals/frame_404.jpg` | **corroborated internally, unmeasured.** Mechanism is plain; nothing measures what it saves |
 | **A generated taxonomy needs a registry the agent reads first plus an explicit instruction to resist extending it** - otherwise each per-item call coins a locally perfect, globally useless label, and the vocabulary degenerates to one term per document. Coinages must ship a definition into the registry. | S26 `n6`, `visuals/frame_425.jpg`, `frame_404.jpg` | **corroborated internally, unmeasured.** The structural argument is this brain's; the source gives a behavioural one ("Claude loves to get creative") |
@@ -535,10 +537,19 @@ one instance's artifacts, not evidence about the pattern._
 - **How many context stores earn their maintenance?** One study found metadata gains flattening past
   three or four components (R2 F2, weak T4/T5 evidence, method not published); S11 runs five. Whether
   the fifth pays for itself is unknown, and ablation is the method that answers it (claim 47).
-- **Where does index-file navigation actually break?** [`n10`] claims ~100 sources / hundreds of pages
-  with no derivation and no account of the failure past it. **The highest-value deep-research target
-  in this topic**, and unlike most claims in this brain it is the sort of thing someone may genuinely
-  have measured (index-based vs embedding retrieval at that scale).
+- ~~**Where does index-file navigation actually break?**~~ **Closed 2026-08-15 by R4**, and it was
+  indeed the sort of thing someone had measured - **twice, independently, in agreement.** The ceiling
+  is real, denominated in **tokens** rather than sources, and `n10`'s magnitude is a coincidence of
+  its author's corpus. See the two claims added above. **What replaced it is narrower and better:**
+  nobody has measured a *summary-index* design, which is the one S8 describes and the one this brain
+  runs.
+- **Does a one-line summary discriminate well enough to pick the right page?** [R4] The research pass
+  relocated `n10`'s failure mode. If an index-navigated store attends to a 2k-token catalog rather
+  than a 1.5M-token corpus, attention is not what breaks first - **catalog precision is**, which is
+  exactly the failure human directory editors had before the LLM removed the labour half of the
+  problem. **A curated catalog has two ceilings and the LLM removes only one.** No source in this
+  brain measures the remaining one, and this note's own `INDEX.md` is a live instance of the design
+  in question.
 - **This brain is a live instance of the pattern and currently proves nothing** - and **as of S26 it
   is no longer the only one this note knows about**, which changes the shape of the question rather
   than answering it. Two independent single-author instances now run the design and neither measures
@@ -604,6 +615,17 @@ one instance's artifacts, not evidence about the pattern._
   schema descriptions (T2, claims 94 and 96), [arXiv:2408.04691](https://arxiv.org/abs/2408.04691)
   (T3), Spider 2.0 (T1/T3, the accuracy ceiling on enterprise text-to-SQL), Feigenbaum's knowledge
   acquisition bottleneck (T1, claim 98). Tiers and independence calls in the note.
+- **R4** - [deep-research pass on S8's `n10`](../../sources/260731_llm-wiki/context/01_where-the-index-file-ceiling-actually-sits.md)
+  (2026-08-15) - **the topic's first external evidence on retrieval scale, and its first on embeddings
+  at all.** [LOFT / arXiv:2406.13121](https://arxiv.org/abs/2406.13121) (**T3**, Google DeepMind, 19
+  authors - 32k/128k/1M token corpora, matching RAG at 128k and degrading **positionally** at 1M) and
+  the [LlamaIndex filesystem-vs-vector benchmark](https://www.llamaindex.ai/blog/did-filesystem-tools-kill-vector-search)
+  (**T2**, and its commercial interest points toward RAG - 5/100/1,000 papers, crossover at ~100).
+  **Independent of S8 and of each other**, which is what carries the verdict. Also records the
+  Claude Code agentic-search change as **`supports` on direction only and non-independent of this
+  brain's own harness**, and the Yahoo Directory as the historical natural experiment that produced
+  the pass's best framing: **a curated catalog has two ceilings - curation labour and attention over
+  the catalog - and the LLM removes only the first.**
 - **S26** - [LLM Knowledge Bases: a practical guide](../../sources/260815_llm-knowledge-bases/LEARNING.md)
   (Ben Holmes, Warp, AI Engineer World's Fair, 2026-08-15). **The first independent instantiation of
   S8, and the first pictures this topic has of the pattern running.** Read it for the four mechanisms

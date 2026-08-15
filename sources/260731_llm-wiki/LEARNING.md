@@ -373,8 +373,17 @@ attached:
 ⚠️ **Do not cite this as a result.** No eval set, no comparison against the infrastructure it says you
 can skip, no definition of "works well", no account of what breaks past the ceiling, and no derivation
 of the ~100. **The word "surprisingly" is doing the work a measurement should.** It is simultaneously
-the most useful sentence in the document to *test* and the least safe to *repeat* - and the best
-deep-research target in the source.
+the most useful sentence in the document to *test* and the least safe to *repeat*.
+
+> **It has since been tested, and the answer is in
+> [`context/01`](context/01_where-the-index-file-ceiling-actually-sits.md) rather than here** - this
+> section reports what the source said, and external evidence lives in `context/`. The three-line
+> version: the ceiling is **real and measured twice independently**, the two measurements **agree
+> with each other**, and **`n10`'s unit is wrong** - what binds is the token volume the navigation
+> ranges over, not the number of sources, so the same ~100 is far too low for short notes and far too
+> high for books. **Nobody has tested the design this section actually describes**, because reading a
+> summary index attends to a fraction of the corpus that both studies made the model attend to.
+> `n10` stays `needs-check`.
 
 **The staged position is defensible regardless of the number**: defer search until the index stops
 working, then reach for a real engine (`n11`). `qmd` is named - local, hybrid BM25/vector, LLM
@@ -509,9 +518,14 @@ structure is assembled from prose and may impose more shape than the author inte
 
 ## Open questions
 
-- **Where does index-file navigation actually break?** `n10` claims ~100 sources with no derivation
-  and no account of the failure past it. **The highest-value deep-research target here**, and unlike
-  most claims in this brain it is the sort of thing someone may genuinely have measured.
+- ~~**Where does index-file navigation actually break?**~~ **Researched 2026-08-15 -
+  [`context/01`](context/01_where-the-index-file-ceiling-actually-sits.md), verdict `refines`.** It
+  was indeed the sort of thing someone had measured: **twice, independently, and in agreement.** The
+  ceiling is real, it is **denominated in tokens rather than sources**, and `n10`'s magnitude is a
+  coincidence of its author's corpus size. **What replaced the question is sharper**: neither study
+  tested a *summary index*, which attends to ~2k tokens where they made the model attend to ~1.5M, so
+  **the design this note describes still has no measurement at all** - and its likely failure mode is
+  not attention but whether a one-line summary discriminates well enough to pick the right page.
 - **Why is contradiction-flagging in both ingest and lint?** `n3` puts it at ingest time and `n8` puts
   it in the periodic pass, with no account of why both are needed. The honest reading is that ingest's
   version is unreliable - which is `d1` again, and the document never says it.
