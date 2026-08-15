@@ -88,8 +88,8 @@ whenever the source is unmeasured, and say which of the four verdicts the eviden
 - A **source-shaped sequence of movements**, typically five to seven. The source's own argument decides
   the count; a source with three real beats gets three.
 - **A visual for every movement**, each with a presenter-style explanation and provenance.
-- **`### Takeaway message`** - one paragraph stating the problem, the decision, the delivered value,
-  the boundary and the implication, **introducing no new claims**.
+- **`### Key takeaway message`** - one paragraph stating the problem, the decision, the delivered
+  value, the boundary and the implication, **introducing no new claims**.
 - **Budget: roughly 700-1,200 words.** The notes already run 5,000-9,000, and a presentation that is
   not compressed is not a presentation.
 
@@ -101,7 +101,7 @@ whenever the source is unmeasured, and say which of the four verdicts the eviden
 > is the wrong purchase / the cost is synthesis not lookup), and merging them improved the argument
 > as well as the length. **If you need a seventh movement, two of them are probably one.**
 
-> **The `Takeaway message` is not a fourth summary and must not read as one.** `TL;DR` answers *should
+> **The `Key takeaway message` is not a fourth summary and must not read as one.** `TL;DR` answers *should
 > I read this?*. The takeaway answers *what should I now believe or do?* - a decision statement, not a
 > recap.
 

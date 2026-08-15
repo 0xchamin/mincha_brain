@@ -1,6 +1,6 @@
 # BUILD.md - build Brain from scratch, from this file alone
 
-> **Generated 2026-08-15 from commit `cafbfa8`** by `tools/make_build_doc.py`. Do not hand-edit: edit the
+> **Generated 2026-08-15 from commit `efcd54f`** by `tools/make_build_doc.py`. Do not hand-edit: edit the
 > source files in the reference clone and regenerate, or your copy silently diverges from the kit
 > it claims to build.
 
@@ -287,7 +287,9 @@ framing. Understanding is the deliverable.)*
 | `## The 1-minute version` | **Hard** - the whole article compressed to a scannable table. See below |
 | `## Key claims` | **Hard** - also lifted onto the landing page |
 | `## What you will learn, and in what order` | **Hard** - a mermaid roadmap of the walkthrough, grouped into movements. See below |
+| A **movement diagram** at the head of each movement, inside the walkthrough | **Hard for sources from 2026-08-15.** One per movement (so typically 3-4), showing how that movement's sections relate. See "Diagrams for a visual reader" below |
 | The walkthrough - **numbered sections, titled by what you learn** | **Hard** - the body; its shape follows the source |
+| A **gap-fill diagram** in any numbered section carrying no visual at all | **Hard for sources from 2026-08-15.** Every section gets something to look at. A curated frame satisfies it, and so does the movement diagram for the **first** section of a movement, since it sits directly above |
 | `## Diagram (mental model)` | **Hard** wherever the subject has structure |
 | `## 💡 Terms` | **Hard** |
 | `## What has aged (read before applying)` | **When the source is dated.** See below |
@@ -397,6 +399,14 @@ bites.)*
 
 **Keep it phone-sized, and prefer `flowchart TB`.** It renders on a landing card among two dozen
 others and on a 390px screen. A diagram needing a laptop to read has failed at the one job it has.
+
+**It must survive being the only thing read, which is the bar that was raised on 2026-08-15.** A
+diagram set in `The 1-minute version` was considered and rejected, because that section's job is *the
+argument in sixty seconds of scanning* and a set of diagrams makes it slower to scan than the prose it
+compresses - and because its thesis-shape is already drawn here. **So this diagram absorbed that
+requirement instead.** The test: a reader who looks at this and reads nothing else should be able to
+state the note's argument, not merely its topic. If they would come away with the subject rather than
+the claim, it is drawing the wrong thing.
 
 **It still carries a walkthrough** - the hard rule in Global rules has no exemption, and orientation,
 crux, why-this-shape and provenance all still apply. Write it as **one compact paragraph in flowing
@@ -526,6 +536,49 @@ one claim, it belongs next to that claim.
 > **Reference implementation:** [`sources/260802_agent-data-stack/LEARNING.md`](sources/260802_agent-data-stack/LEARNING.md)
 > - the source that forced this section, and the fullest instance of the shape.
 > `sources/_TEMPLATE/LEARNING.md` carries the skeleton to copy.
+
+### Diagrams for a visual reader (new sources only)
+
+> **Why this exists.** The walkthrough is contractually visual-led, and on a slide-heavy source that
+> works - S26 had a curated frame in 8 of its 10 sections. **But a frame and a diagram do different
+> cognitive work.** A frame is *evidence*: here is the artifact. A diagram is a *model*: here is how
+> the parts relate. A reader who learns visually needs both, and the kit was only guaranteeing the
+> first - and guaranteeing it **not at all** on a source whose visual leg was skipped, where the
+> walkthrough is entirely unillustrated.
+
+**Two additions, both targeted rather than per-section.**
+
+**A movement diagram at the head of each movement**, in the walkthrough, before that movement's first
+numbered section. **Not stacked in the roadmap section** - four abstractions before the reader has any
+content is worse than none, and the roadmap's job is the whole note's shape. At the head of a movement
+it is an advance organiser: it shows how *these three sections* relate, which is the connective tissue
+a per-section diagram structurally cannot show, because a diagram per section draws each step in
+isolation and the joins are the hard part to hold.
+
+**A gap-fill diagram wherever a numbered section has no visual at all.** A section already carrying a
+curated frame needs nothing. **This is the rule that matters most on a transcript-only source**, where
+the visual leg was skipped and *every* section qualifies - and it is the case the frame-led walkthrough
+never covered.
+
+> **Per-movement was chosen over per-section deliberately.** Per-section was the original request. On
+> S26 it would have added ten diagrams of which eight duplicated a frame already teaching that step,
+> for roughly +1,500 words, and it draws steps in isolation. Per-movement plus gap-fill gets full
+> visual coverage in four to six diagrams and draws the relationships instead.
+
+**The anti-collapse problem gets worse with more diagrams, so the division of labour is now explicit
+and each row must answer a different question:**
+
+| Diagram | Answers | Scope | Must not |
+|---|---|---|---|
+| **TL;DR** | what is the shape of the argument? | the whole note's **thesis** | be the flow, or the reading order |
+| **Roadmap** | what order will I meet it in, what may I skim? | the whole note's **structure** | be the subject |
+| **Movement** | how do the sections in this movement relate? | **one movement's** mechanism | restate the roadmap at smaller scale |
+| **Gap-fill** | whatever that section teaches | **one section** | exist where a frame already teaches the step |
+| **Mental model** | how does the subject actually work? | the whole **subject** | be a compressed table of contents |
+
+**Every one of them carries a walkthrough** under the hard rule, and every walkthrough is written with
+**presenter** - present the diagram, never narrate its arrows. Budget accordingly: a diagram plus its
+walkthrough is roughly 150 words.
 
 ### The `Presentation narrative` (new sources only)
 
@@ -1390,9 +1443,12 @@ claim verdicts.
   reader who already understands it does not need it, and the reader who does not is no better off.
   Write the walkthrough **as a mentor ramping up an engineer**, immediately after the diagram:
 
-  1. **Orientation** (1-2 sentences) - how to read it: direction of flow, what the shapes and colours
-     mean. If colour carries meaning, give a legend. Do not make the reader reverse-engineer your
-     notation.
+  1. **Orientation - one clause, and only where the notation is not self-evident.** If colour or
+     shape carries meaning, give a legend, because a reader must never reverse-engineer your
+     notation. **That is the whole of it.** Do **not** write "read it left to right" or "the flow runs
+     top to bottom" - a reader can see which way the arrows point, and those sentences are the single
+     most common filler in this repo's diagrams. **Adopt [presenter](personas/presenter.md) for every
+     diagram walkthrough**: present the diagram, do not navigate it.
   2. **The crux** (one bold sentence) - the single idea this diagram exists to convey. **If you
      cannot name it in one sentence, delete the diagram** - it is decoration.
   3. **Why it is shaped this way** (2-4 sentences) - the design rationale, and what would go wrong
@@ -4099,7 +4155,7 @@ underneath them are not.>
 
 <visual, then a presenter-style explanation with provenance>
 
-### Takeaway message
+### Key takeaway message
 
 <ONE paragraph: the problem, the decision, the delivered value, the boundary, the implication. No
 new claims. This answers "what should I now believe or do?" - it is NOT a fourth summary of the

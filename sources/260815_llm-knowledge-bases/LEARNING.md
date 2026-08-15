@@ -40,7 +40,6 @@ flowchart TB
     class Z warn
 ```
 
-Read it top to bottom as the question this source answers for a brain that already has the pattern.
 Green is what the instance adds, red is where it contradicts its own source, and amber is the ceiling
 on all of it. **The crux is that the interesting content of an implementation is exactly the part the
 pattern did not specify**, which is why the four green nodes matter more than the faithful
@@ -185,6 +184,28 @@ its source, and section 7 is the single most valuable page here - skipping it co
 correction this instance forces. Movement IV takes the human out of the loop and then puts the ceiling
 on everything above it, and a reader who reads only section 10 will at least not misquote the source.
 
+### Movement I - the ground you already hold
+
+```mermaid
+flowchart TB
+    PILE["a pile of notes<br/><i>grows faster than you organise it</i>"] --> Q{"which cost<br/>is the expensive one?"}
+    Q -->|"the instinctive answer"| LOOK["finding the documents<br/><i>buy better search</i>"]
+    Q -->|"the actual answer"| SYN["relating them to each other<br/><i>happens after you have them</i>"]
+    LOOK --> STUCK["synthesis still re-derived<br/>on every question"]
+    SYN --> ONCE["<b>compile once at ingest</b><br/>then keep it current"]
+    classDef wrong fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    classDef right fill:#dcfce7,stroke:#15803d,color:#14532d
+    class LOOK,STUCK wrong
+    class SYN,ONCE right
+```
+
+Red is the purchase most teams make and green is the one that pays. **The crux is that the diagnosis
+is a fork between two different costs, and the entire retrieval industry is aimed at the cheaper
+one.** It is drawn as a fork rather than as a pipeline because the two branches are not stages you
+pass through - they are alternatives, and choosing the red one feels like progress right up until you
+notice the synthesis is still being paid for on every question. Sections 1 and 2 walk the two branches
+in order. *Synthesized from S8 `n1` and `n2`.*
+
 ## 1. The pile, and why pointing search at it does not help
 
 Start with the artifact, because the whole design is a response to it.
@@ -257,6 +278,29 @@ have edited, and it is the rule this implementation breaks in section 7.
 So the pattern is settled and this brain already held it. What it never held was anyone running one,
 and running one turns out to require parts the pattern does not mention.
 
+### Movement II - what running it actually takes
+
+```mermaid
+flowchart TB
+    CAP["capture<br/><i>friction must be near zero</i>"] --> RAW["raw note<br/>no title, no tags"]
+    RAW --> PASS["enrichment pass<br/><i>a versioned skill, run later</i>"]
+    PASS --> G1{"already<br/>stamped?"}
+    G1 -->|yes| SKIP["skip<br/><i>cost tracks writing rate</i>"]
+    G1 -->|no| WORK["tag, attribute, link"]
+    REG[("tag registry<br/><i>read first, extend reluctantly</i>")] --> WORK
+    WORK --> STAMP["write enrichedAt"]
+    classDef guard fill:#dbeafe,stroke:#1d4ed8,color:#1e3a5f
+    class G1,REG guard
+```
+
+The two blue elements are the mechanisms S8 never specifies, and they are the subject of sections 5
+and 6. **The crux is that both are guards rather than features - one bounds cost, the other bounds
+vocabulary - and a system missing either degrades quietly rather than failing.** They are drawn
+touching the same work step because that is the honest picture: neither is a stage in the pipeline,
+each is a constraint the pipeline consults, which is why a reader skimming the talk hears four
+sequential steps and misses both. Sections 3 and 4 set up why enrichment is a separate pass at all.
+*Synthesized from `n2`, `n3`, `n4`, `n5`, `n6`.*
+
 ## 3. Capture, the constraint nobody budgets for
 
 The first of those parts is upstream of everything the pattern describes, which is presumably why the
@@ -315,6 +359,29 @@ The first is three lines long and easy to read past.
 > "Enrich one note - the one given by path, or the note in context - with metadata. **If the
 > frontmatter already has `enrichedAt`, the note is done - skip it.** Do the three steps below, then
 > stamp `enrichedAt` with the current ISO timestamp." [`visuals/frame_404.jpg`, `n5`]
+
+```mermaid
+flowchart LR
+    subgraph WITHOUT["without the stamp"]
+        W1["every run reads<br/>the whole corpus"] --> W2["cost grows with<br/>everything ever written"]
+        W2 --> W3["<b>gets dearer as the<br/>base gets more valuable</b>"]
+    end
+    subgraph WITH["with the stamp"]
+        S1["every run reads<br/>only the unstamped"] --> S2["cost tracks<br/>your writing rate"]
+        S2 --> S3["<b>flat, so it can<br/>go on a timer</b>"]
+    end
+    classDef bad fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    classDef good fill:#dcfce7,stroke:#15803d,color:#14532d
+    class W1,W2,W3 bad
+    class S1,S2,S3 good
+```
+
+**The crux is that the stamp is not a convenience, it is what converts maintenance from a cost that
+punishes success into one that does not.** The two chains are drawn in parallel rather than as a
+before-and-after sequence because they are not stages of anything - they are the same operation under
+two economics, and the third box in each is where they actually diverge. This is also the shape of the
+answer to a question S8 leaves open: sections 9's nightly schedule is unreachable from the red chain,
+because nobody puts an unbounded pass on a timer. *Synthesized from `n5`, and from S8 `n8`.*
 
 Before reading on, ask what that buys, because the answer is larger than it looks and the talk states
 only the small half of it. Ben's own framing is about coordination between agents: "put a little time
@@ -379,6 +446,28 @@ vocabulary in which `podcast` and `founders` compete for the same slot.
 
 Both mechanisms so far are about the process. What they produce is the subject of the next section,
 and it is where the design stops agreeing with itself.
+
+### Movement III - the payoff, and the crack in it
+
+```mermaid
+flowchart TB
+    ENR["enrichment job"] -->|"writes title,<br/>tags, backlinks"| RAW
+    WIKI["wiki-maintenance job"] -->|"<b>forbidden</b>"| RAW
+    RAW[("raw notes<br/><i>declared 'read-only'</i>")] -->|"reads"| W
+    WIKI -->|"writes"| W[("wiki pages<br/><i>cited per claim</i>")]
+    classDef bad fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    classDef ok fill:#dcfce7,stroke:#15803d,color:#14532d
+    class ENR bad
+    class WIKI,W ok
+```
+
+Two jobs reach for the same layer and only one of them is supposed to. **The crux is that "raw is
+immutable" was never the operative rule - the operative rule is one declared writer per layer, and
+the talk enforces it without ever saying so.** It is drawn with both arrows landing on `raw` because
+the contradiction is only visible when you put the two jobs on one picture, which the source never
+does; seen separately each looks correct. Section 7 is where the frames prove it happened and
+section 8 is the payoff that makes the derived layer worth trusting anyway.
+*Synthesized from `n7`, `n9`, `n11`, `d1`.*
 
 ## 7. Before and after, and the rule the system breaks
 
@@ -460,6 +549,28 @@ Notice what this page is not, as well. It is not a summary of a source. It is an
 accumulation the pattern promised in section 2, made concrete: the page did not exist in any input.
 
 The remaining question is who runs all this, and how often.
+
+### Movement IV - taking the human out of the trigger
+
+```mermaid
+flowchart TB
+    CRON["nightly / weekly schedule"] --> DOWN["sync vault into sandbox"]
+    DOWN --> RUN["run the skill<br/><i>incremental, so it is bounded</i>"]
+    RUN --> UP["sync back"]
+    UP --> DIFF["morning diff"]
+    DIFF --> REV["human reviews"]
+    REV -.->|"never measured"| BAD["reject / revert<br/><i>no rate, no procedure</i>"]
+    classDef unknown fill:#fef3c7,stroke:#b45309,color:#78350f
+    class BAD unknown
+```
+
+Every arrow here is solid except one. **The crux is that the loop is deliberately unclever and the
+entire safety argument rests on the single dotted arrow, which nobody has examined.** The amber node
+is drawn as an endpoint rather than a feedback edge on purpose: a real review loop would return to the
+wiki with a correction, and what the source actually documents is a human looking at a diff with no
+recorded case of anything being sent back. Section 9 covers the mechanism and the per-directory schema
+that makes it general; section 10 is the ceiling on all of it. *Synthesized from `n10`, `n12`, `n13`,
+`n16`.*
 
 ## 9. Taking the human out, and the scoping that makes that safe
 
@@ -771,7 +882,7 @@ visible in this prompt are both **figure-only** - present in a screenshot, never
 evidence about a saved prompt rather than about how the system behaves. *[`n10`, `n13`; `n11` and
 `n12` `single-leg`]*
 
-### Takeaway message
+### Key takeaway message
 
 A personal or team knowledge base decays because synthesis is re-derived on every question and nobody
 maintains the result, and the answer that works is to compile it once into a layered store an agent

@@ -227,7 +227,7 @@ underneath them are not.>
 
 <visual, then a presenter-style explanation with provenance>
 
-### Takeaway message
+### Key takeaway message
 
 <ONE paragraph: the problem, the decision, the delivered value, the boundary, the implication. No
 new claims. This answers "what should I now believe or do?" - it is NOT a fourth summary of the
