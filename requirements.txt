@@ -1,11 +1,17 @@
 # Brain helper packages - install into the local .venv
 # macOS:   python3 -m venv .venv ; source .venv/bin/activate ; pip install -r requirements.txt
 # Windows: python -m venv .venv  ; .\.venv\Scripts\Activate.ps1 ; pip install -r requirements.txt
-# NOTE: ffmpeg is a SYSTEM binary, not a pip package:
-#   macOS -> brew install ffmpeg
-#   Windows -> winget install Gyan.FFmpeg  (or scoop/choco)
+# NOTE: two SYSTEM binaries are not pip packages:
+#   ffmpeg -> macOS: brew install ffmpeg ; Windows: winget install Gyan.FFmpeg (or scoop/choco)
+#   deno   -> macOS: brew install deno   ; Windows: winget install DenoLand.Deno
+#
+# deno is REQUIRED for YouTube video capture. Without a JavaScript runtime, yt-dlp
+# cannot solve YouTube's n-challenge and every DASH format returns HTTP 403 - the only
+# format left is 18 (progressive 360p), at which slide-heavy talks are illegible.
+# deno alone is not enough: yt-dlp-ejs below is the other half. See AGENTS.md degrade table.
 
-yt-dlp            # fetch YouTube transcripts (auto-captions) and audio
+yt-dlp            # fetch YouTube transcripts (auto-captions), audio and video
+yt-dlp-ejs        # JS challenge solver for yt-dlp - pairs with deno; without both, DASH 403s
 faster-whisper    # ASR fallback when a video has no captions
 imagehash         # perceptual-hash dedup of sampled frames
 pillow            # image handling for frame/figure processing

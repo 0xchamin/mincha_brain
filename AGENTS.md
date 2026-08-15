@@ -17,7 +17,7 @@ durable, cited, compounding knowledge.
 |---|---|---|
 | Owner | `chamin` | pre-fills the `SOURCE.md` Owner row (always this person) |
 | Source naming | `YYMMDD_slug` | big-endian date sorts chronologically; `_` divides date/name, `-` between words (e.g. `260724_mcp-security-talk`) |
-| Env | `.venv` in this folder | `yt-dlp`, `faster-whisper`, `imagehash`, `pillow` (see `requirements.txt`); `ffmpeg` is a system binary (macOS: `brew install ffmpeg`; Windows: `winget install Gyan.FFmpeg`); `git` for cloning code repos; **`gh` (GitHub CLI) recommended** for code sources (license, commit SHA, orient-before-clone) - optional |
+| Env | `.venv` in this folder | `yt-dlp`, `yt-dlp-ejs`, `faster-whisper`, `imagehash`, `pillow` (see `requirements.txt`); `ffmpeg` is a system binary (macOS: `brew install ffmpeg`; Windows: `winget install Gyan.FFmpeg`); **`deno` is a system binary and is required for YouTube video capture** (`brew install deno`) - see the degrade table; `git` for cloning code repos; **`gh` (GitHub CLI) recommended** for code sources (license, commit SHA, orient-before-clone) - optional |
 | Seed topics | agents, mcp, skills, rag, agent-security, inferencing | live under `brain/topics/`; **seeds, not a whitelist - the set is open (see "Scope: topics are open")** |
 | Repo clones | `sources/<id>/repo/` (git-ignored) | clone-per-source, snapshot pinned by commit SHA in `SOURCE.md` |
 | Kit scripts | `tools/ingest.py` (mechanical toolbox), `validate.py` (contract type checker), `tools/build_site.py` (the mobile reader) | the only three frozen scripts; everything else is assembled per source |
@@ -501,6 +501,20 @@ Status; `log.md` chronology; every claim carrying a citation and naming a real t
 `claim N` naming a claim that exists**; unique ADR numbers with Status + Date; resolving relative
 links; balanced mermaid fences; no em dashes.
 
+**It also prints a `Coverage` block, which is counts and not checks.** Two numbers that nothing else
+in the kit surfaces: **`/verify` coverage** (how many sources carry a `verify.md`) and **dream
+staleness** (the last pass, and how many sources have been ingested since). Both are **informational
+and can never fail the run** - `--no-coverage` suppresses them.
+
+> **Why they are counts rather than checks, and this is the whole design of the block.** Whether 1 in
+> 26 sources verified is acceptable, or whether a dream pass is overdue, are **judgement calls**, and
+> a threshold in `validate.py` would launder judgement as a green check - the same line
+> [ADR-0004](brain/decisions/0004-validator-as-type-checker.md) draws everywhere else.
+> What the validator *can* honestly do is **make an invisible number visible at the one moment
+> somebody is already looking at the brain's health**, which is every compound pass. The stages were
+> never broken; they were unobservable, and a stage nobody can see the coverage of is a stage that
+> silently stops running. **Read both numbers comparatively, never against a target.**
+
 > **The validator is subordinate to this file.** If a check and `AGENTS.md` disagree, `AGENTS.md`
 > wins and the check is the bug. It enforces the contract; it does not define it.
 
@@ -629,6 +643,23 @@ cheap.
 **Trigger (never automatic).** The user says **"verify \<source>"** or runs `/verify`. Adopt
 **fact-checker**, alone - this stage has exactly one objective and composing it with `curator` would
 reintroduce the conflict it exists to remove.
+
+> **The stage's own coverage is the thing to watch, and it went badly wrong once already.** `/verify`
+> shipped on 2026-08-03. Over the next twelve days **fourteen sources were ingested and one was
+> verified.** The corpus nearly doubled and the evaluator ran once. **Nothing was broken** - the stage
+> works, and the design decision that it never fires automatically is correct, because an agent that
+> has held a source's argument for an hour has no independent vantage point on it. What was missing is
+> that **the coverage number appeared nowhere**, so nobody could notice it was 1 in 26 without running
+> `ls sources/*/verify.md`. That is this kit reproducing the defect it records against S7 (`d4`) and
+> S26 (`n13`): **the load-bearing step with no mechanism behind it.**
+>
+> **`python3 validate.py` now prints `/verify` coverage on every run** (see "Validating the
+> contract"). It is informational and **never fails the run**, because *how many sources should be
+> verified* is a judgement and encoding a threshold would launder judgement as a green check.
+> **100% is the wrong target** - verification costs a separate session and most sources will never
+> earn one. **The right reading is comparative**: a number that has not moved while ten sources landed
+> means the stage has quietly stopped existing, and the sources worth spending it on are the ones
+> whose claims are **most reused** (check `brain/claims.md`) rather than the most recent.
 
 **Scope: one source's distilled layer against its own gated evidence.** Read that source's
 `nodes.md`, `LEARNING.md`, `SOURCE.md` **and its `visuals/` frames** - and nothing else. Do not read
@@ -788,6 +819,8 @@ rather than arbitrary.
 | Situation | Do this |
 |---|---|
 | Video has no captions | Transcribe audio with `faster-whisper`; if that fails, note it and proceed transcript-light. |
+| **`yt-dlp` returns `HTTP 403` on every DASH format** | **A missing JavaScript runtime, not a blocked video.** YouTube's n-challenge needs one, and without it the *only* downloadable format is usually `18` - **progressive 360p**. Fix with **`brew install deno` AND `pip install yt-dlp-ejs`**: **both are required**, and deno alone still fails the challenge with `n challenge solving failed`. Then `-f 299` (1080p) downloads normally. |
+| **The only format that downloads is 360p** | **Do not gate a slide-heavy source at 360p.** Dense screens - a rendered document, a `SKILL.md`, a saved prompt - are **illegible** at that resolution, so the frames will look contentless and the source will degrade to transcript-only *for a reason that is not true*. **This is the false-`STATIC` failure arriving from a different direction** (ADR-0006) and it has the same asymmetry: the cost of re-extracting at 1080p is one download, and the cost of a wrong degrade is the source's entire second leg, which the degrade rule forbids you to reinstate later. Fix the runtime (row above) and re-extract **before** viewing anything. It happened on S26, where the whole payload was on screen. |
 | Talking-head video, no useful frames | The static probe catches this: <= 3 distinct frames after dedup -> **`view` the confirmation sheet it writes (ADR-0006)**, then auto-degrade to transcript-only and record `Visual leg: skipped (static probe)`. Nodes are `single-leg` (needs-check), never `corroborated`. |
 | **Probe says `STATIC` but the sheet shows changing slides** | A **false STATIC** - a templated deck defeating whole-frame scene detection (ADR-0006). **Override**: extract transcript-anchored frames, record `Visual leg: analysed (N frames kept) - static probe overridden` in `SOURCE.md`, and say why. Do **not** file a bug against the constants; the metric is wrong for this input class, not mis-tuned. |
 | User says "don't analyze video" / "transcript only" | Skip frame extraction **and the probe**; record `Visual leg: skipped (user)`; gate every node `single-leg`; say in one line that internal corroboration is now unavailable and deep research is the way back to two legs. |

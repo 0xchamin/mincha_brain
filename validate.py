@@ -542,9 +542,44 @@ CHECKS = [
 ]
 
 
+def coverage_report() -> list[str]:
+    """Counts, not judgements - the two coverage facts nothing else surfaces.
+
+    This is deliberately NOT a check and can never fail the run. Whether 4 of 26
+    sources verified is acceptable, or whether a dream pass is overdue, are
+    judgement calls that belong to the human and to `AGENTS.md` - encoding a
+    threshold here would launder judgement as a green check (ADR-0004). What the
+    validator can honestly do is make an invisible number visible at the one
+    moment somebody is already looking at the brain's health.
+    """
+    lines: list[str] = []
+
+    srcs = source_dirs()
+    verified = [d for d in srcs if (d / "verify.md").exists()]
+    lines.append(f"  /verify coverage: {len(verified)}/{len(srcs)} sources have a verify.md")
+
+    dreams = sorted(
+        p for p in (ROOT / "brain" / "dreams").glob("[0-9][0-9][0-9][0-9]-*.md")
+    )
+    if not dreams:
+        lines.append("  dream passes: none recorded")
+        return lines
+
+    last = dreams[-1]
+    stem = last.stem.split("-", 1)[1] if "-" in last.stem else ""
+    since = [d for d in srcs if d.name[:6] > stem] if len(stem) == 6 else []
+    lines.append(
+        f"  last dream pass: {last.name} ({len(dreams)} total); "
+        f"{len(since)} source(s) ingested since"
+    )
+    return lines
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Validate the Brain kit's conventions.")
     ap.add_argument("--strict", action="store_true", help="treat warnings as errors")
+    ap.add_argument("--no-coverage", action="store_true",
+                    help="suppress the informational coverage report")
     args = ap.parse_args()
 
     for name, fn in CHECKS:
@@ -571,6 +606,11 @@ def main() -> int:
     else:
         print(f"\n{n_src} sources, {n_topic} topics, {len(CHECKS)} checks: "
               f"{len(errors)} error(s), {len(warns)} warning(s).")
+
+    if not args.no_coverage:
+        print("\nCoverage (informational - never fails the run):")
+        for line in coverage_report():
+            print(line)
 
     return 1 if errors or (args.strict and warns) else 0
 
