@@ -202,30 +202,47 @@ uncited.>
 <Adopt PRESENTER (personas/presenter.md), which owns the full spec. Write this LAST, after
 everything above is complete. It is the final section in the file.
 
-Five to seven movements, source-shaped - the source's argument decides the count. One story:
+IT IS A TALK TRACK, NOT SLIDE NOTES. NO BULLETS ANYWHERE - prose only. A bulleted slide reads as
+notes nobody has turned into sentences yet; paragraphs read as somebody speaking. This is the single
+largest tonal lever.
+
+Open with an audience-facing framing note: what this track is, what it is derived from, and what it
+deliberately does NOT claim.
+
+Then five to seven SLIDES, source-shaped - the source's argument decides the count. Say "slide",
+never "movement"; movement already names the roadmap's groups of walkthrough sections. One story:
 problem -> the obvious answer and why it fails -> the architectural decision -> the delivered
-evidence -> the explicit boundary -> the decision that follows. Movements are stages in one
-argument, NOT independent summaries.
+evidence -> the explicit boundary -> the decision that follows. Slides are stages in one argument,
+NOT independent summaries.
 
 NOBODY GETS A SECOND WALKTHROUGH. Select the load-bearing reasoning; do not re-summarise. Delete
-any movement that restates a walkthrough section.
+any slide that restates a walkthrough section.
 
 Lead with the takeaway, then earn it - this deliberately inverts the punchline-opening ban that
 governs the walkthrough, because a presentation orders for someone who may leave after five minutes.
 
-A visual per movement, REUSING a frame the walkthrough already cites wherever possible. Synthesize
-a new diagram only where a movement's consequence has no existing visual. Present the diagram - the
-boundary, trade-off, failure mode it exposes - never narrate its arrows.
+TONE, all six rules: slide titles are CLAIMS not labels, so scanning the titles delivers the
+argument. One bolded declarative sentence opens each slide, then ordinary prose in the same
+paragraph. Name the audience out loud where the register shifts ("the leadership significance
+is...", "what engineers should take from this is..."). Pose and answer ("the question is therefore
+not whether X, it is whether Y"). First person plural for what was done, third for what was found.
+Citations ride in brackets at the end of a sentence.
+
+A visual per slide, REUSING a frame the walkthrough already cites wherever possible. Synthesize a
+new diagram only where a slide's consequence has no existing visual. Open each diagram explanation
+by naming what KIND of diagram it is and what it is not ("this is an ownership diagram, not a
+component diagram"), then the crux, then what the audience should protect or decide, then italic
+provenance. Never narrate arrows.
 
 Preserve evidence strength: same node IDs as the body, single-leg labelled where it is leaned on,
 internal agreement never presented as production readiness or external fact.
 
-Budget 700-1,200 words. Movement bullets are exempt from the Register rules; the explanations
-underneath them are not.>
+Budget 900-1,500 words. NO register carve-out - with the bullets gone, the Register rules apply in
+full, and a slide's bolded opening is a claim rather than the lead-in label they forbid.>
 
-### Movement 1 - <what this movement lands>
+### Slide 1 - <the claim this slide lands>
 
-<visual, then a presenter-style explanation with provenance>
+<one bolded declarative sentence, then prose; visual; then the presenter explanation with provenance>
 
 ### Key takeaway message
 

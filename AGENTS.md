@@ -1329,14 +1329,22 @@ claim verdicts.
 - **Every diagram carries a walkthrough (hard rule).** A diagram in a `LEARNING.md`, topic note or
   report is **teaching material**, and a picture dropped in without explanation teaches nobody - the
   reader who already understands it does not need it, and the reader who does not is no better off.
-  Write the walkthrough **as a mentor ramping up an engineer**, immediately after the diagram:
+  Write the walkthrough **as a mentor ramping up an engineer, in [presenter](personas/presenter.md)'s
+  voice** - mentor decides what the reader needs, presenter decides how it is said - immediately
+  after the diagram:
 
   1. **Orientation - one clause, and only where the notation is not self-evident.** If colour or
      shape carries meaning, give a legend, because a reader must never reverse-engineer your
      notation. **That is the whole of it.** Do **not** write "read it left to right" or "the flow runs
      top to bottom" - a reader can see which way the arrows point, and those sentences are the single
-     most common filler in this repo's diagrams. **Adopt [presenter](personas/presenter.md) for every
-     diagram walkthrough**: present the diagram, do not navigate it.
+     most common filler in this repo's diagrams - **31 instances across 12 notes when it was first
+     measured on 2026-08-15.**
+
+     > **The move that replaces it: name what *kind* of diagram it is, and what it is not.** *"This is
+     > an ownership diagram, not a component diagram."* *"This is a leverage diagram, not a component
+     > diagram."* One clause, and it does the orientation work properly - it tells the reader what
+     > question the picture answers and pre-empts the wrong reading, which no amount of describing
+     > arrow direction can. **Use it as the opening clause of every diagram walkthrough in the kit.**
   2. **The crux** (one bold sentence) - the single idea this diagram exists to convey. **If you
      cannot name it in one sentence, delete the diagram** - it is decoration.
   3. **Why it is shaped this way** (2-4 sentences) - the design rationale, and what would go wrong

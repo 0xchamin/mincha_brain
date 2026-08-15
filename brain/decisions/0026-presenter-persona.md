@@ -71,10 +71,27 @@ arithmetic. **A frame earning its place twice was well chosen.**
 that is what bullets are. **The explanations underneath them are not** - they are prose carrying an
 argument.
 
+> **Amended the same day, 2026-08-15, and both halves of this paragraph are now void.** A reference
+> artifact made it clear the section read as **slide notes rather than a talk track**, and the cause
+> was the bullets. They are now **banned outright**, so the carve-out has nothing left to exempt and
+> is **withdrawn** - the Register rules apply in full, and a slide's bolded opening sentence is a
+> *claim* rather than the lead-in label they forbid. **`Movement` is also renamed `Slide`** throughout
+> the presentation, because `movement` already names the roadmap's groups of walkthrough sections and
+> this decision created a collision inside one file. The word budget moved from 700-1,200 to
+> **900-1,500** on the precedent that this kit already accepts +25 to +30% words for register quality.
+> **Two statements under Consequences are also overtaken.** "Notes get 700-1,200 words longer" is now
+> 900-1,500, and **"No reference implementation exists" is false** - S26 has one, written the same day,
+> and it is what exposed both the tone problem and the movement/slide collision. **That is the ADR's
+> own prediction coming true faster than expected**: it warned the shape had been specified wrongly
+> twice before a worked example forced a rewrite, and this shape lasted hours.
+>
+> **The rest of this ADR stands**; only the register, naming and budget clauses changed. Current spec
+> lives in [`personas/presenter.md`](../../personas/presenter.md).
+
 ## Consequences
 
 **Good.** The brain gains an output aimed at transfer rather than storage. The per-source form doubles
-as a design check on the note: an argument you cannot present in seven movements is usually one you
+as a design check on the note: an argument you cannot present in seven slides is usually one you
 have not finished deriving, which is the same test the `1-minute version` already applies from a
 different angle.
 
@@ -92,4 +109,4 @@ different angle.
   is wrong, the contract is what changes.
 
 **Revisit when:** a topic-level presentation is actually needed (promote to `reports/`), or when
-enough per-source narratives exist to say whether five to seven movements was the right shape.
+enough per-source narratives exist to say whether five to seven slides was the right shape.

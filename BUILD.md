@@ -1,6 +1,6 @@
 # BUILD.md - build Brain from scratch, from this file alone
 
-> **Generated 2026-08-15 from commit `ff77868`** by `tools/make_build_doc.py`. Do not hand-edit: edit the
+> **Generated 2026-08-15 from commit `3cdde7f`** by `tools/make_build_doc.py`. Do not hand-edit: edit the
 > source files in the reference clone and regenerate, or your copy silently diverges from the kit
 > it claims to build.
 
@@ -1450,14 +1450,22 @@ claim verdicts.
 - **Every diagram carries a walkthrough (hard rule).** A diagram in a `LEARNING.md`, topic note or
   report is **teaching material**, and a picture dropped in without explanation teaches nobody - the
   reader who already understands it does not need it, and the reader who does not is no better off.
-  Write the walkthrough **as a mentor ramping up an engineer**, immediately after the diagram:
+  Write the walkthrough **as a mentor ramping up an engineer, in [presenter](personas/presenter.md)'s
+  voice** - mentor decides what the reader needs, presenter decides how it is said - immediately
+  after the diagram:
 
   1. **Orientation - one clause, and only where the notation is not self-evident.** If colour or
      shape carries meaning, give a legend, because a reader must never reverse-engineer your
      notation. **That is the whole of it.** Do **not** write "read it left to right" or "the flow runs
      top to bottom" - a reader can see which way the arrows point, and those sentences are the single
-     most common filler in this repo's diagrams. **Adopt [presenter](personas/presenter.md) for every
-     diagram walkthrough**: present the diagram, do not navigate it.
+     most common filler in this repo's diagrams - **31 instances across 12 notes when it was first
+     measured on 2026-08-15.**
+
+     > **The move that replaces it: name what *kind* of diagram it is, and what it is not.** *"This is
+     > an ownership diagram, not a component diagram."* *"This is a leverage diagram, not a component
+     > diagram."* One clause, and it does the orientation work properly - it tells the reader what
+     > question the picture answers and pre-empts the wrong reading, which no amount of describing
+     > arrow direction can. **Use it as the opening clause of every diagram walkthrough in the kit.**
   2. **The crux** (one bold sentence) - the single idea this diagram exists to convey. **If you
      cannot name it in one sentence, delete the diagram** - it is decoration.
   3. **Why it is shaped this way** (2-4 sentences) - the design rationale, and what would go wrong
@@ -1549,7 +1557,7 @@ persona owning the current primary stage wins. All personas inherit the global r
 | [synthesizer](synthesizer.md) | building a cross-source report / study material | routing, retrieval, assembling cited reports with visuals |
 | [mentor](mentor.md) | you want to *understand*, not just store | teach from fundamentals, `> 💡` term explainers, capture to `../brain/glossary.md` |
 | [architect](architect.md) | shaping the brain itself | topic taxonomy, when to split a topic note, structural decisions (ADR-style) |
-| [presenter](presenter.md) | the work has to be **told** to an audience, not read by one | the `## Presentation narrative` appended to a finished `LEARNING.md`; explaining diagrams; the decision story for mixed leadership + engineering audiences |
+| [presenter](presenter.md) | the work has to be **told** to an audience, not read by one | the `## Presentation narrative` appended to a finished `LEARNING.md`, **and the walkthrough of every diagram anywhere in the kit** - present the diagram, never narrate its arrows. Owns the decision story for mixed leadership + engineering audiences |
 
 **Why mentor + architect matter most here:** the whole point is to *learn* (mentor), and a
 compounding brain needs deliberate structure or it becomes a dump (architect). **curator** owns
@@ -4139,30 +4147,47 @@ uncited.>
 <Adopt PRESENTER (personas/presenter.md), which owns the full spec. Write this LAST, after
 everything above is complete. It is the final section in the file.
 
-Five to seven movements, source-shaped - the source's argument decides the count. One story:
+IT IS A TALK TRACK, NOT SLIDE NOTES. NO BULLETS ANYWHERE - prose only. A bulleted slide reads as
+notes nobody has turned into sentences yet; paragraphs read as somebody speaking. This is the single
+largest tonal lever.
+
+Open with an audience-facing framing note: what this track is, what it is derived from, and what it
+deliberately does NOT claim.
+
+Then five to seven SLIDES, source-shaped - the source's argument decides the count. Say "slide",
+never "movement"; movement already names the roadmap's groups of walkthrough sections. One story:
 problem -> the obvious answer and why it fails -> the architectural decision -> the delivered
-evidence -> the explicit boundary -> the decision that follows. Movements are stages in one
-argument, NOT independent summaries.
+evidence -> the explicit boundary -> the decision that follows. Slides are stages in one argument,
+NOT independent summaries.
 
 NOBODY GETS A SECOND WALKTHROUGH. Select the load-bearing reasoning; do not re-summarise. Delete
-any movement that restates a walkthrough section.
+any slide that restates a walkthrough section.
 
 Lead with the takeaway, then earn it - this deliberately inverts the punchline-opening ban that
 governs the walkthrough, because a presentation orders for someone who may leave after five minutes.
 
-A visual per movement, REUSING a frame the walkthrough already cites wherever possible. Synthesize
-a new diagram only where a movement's consequence has no existing visual. Present the diagram - the
-boundary, trade-off, failure mode it exposes - never narrate its arrows.
+TONE, all six rules: slide titles are CLAIMS not labels, so scanning the titles delivers the
+argument. One bolded declarative sentence opens each slide, then ordinary prose in the same
+paragraph. Name the audience out loud where the register shifts ("the leadership significance
+is...", "what engineers should take from this is..."). Pose and answer ("the question is therefore
+not whether X, it is whether Y"). First person plural for what was done, third for what was found.
+Citations ride in brackets at the end of a sentence.
+
+A visual per slide, REUSING a frame the walkthrough already cites wherever possible. Synthesize a
+new diagram only where a slide's consequence has no existing visual. Open each diagram explanation
+by naming what KIND of diagram it is and what it is not ("this is an ownership diagram, not a
+component diagram"), then the crux, then what the audience should protect or decide, then italic
+provenance. Never narrate arrows.
 
 Preserve evidence strength: same node IDs as the body, single-leg labelled where it is leaned on,
 internal agreement never presented as production readiness or external fact.
 
-Budget 700-1,200 words. Movement bullets are exempt from the Register rules; the explanations
-underneath them are not.>
+Budget 900-1,500 words. NO register carve-out - with the bullets gone, the Register rules apply in
+full, and a slide's bolded opening is a claim rather than the lead-in label they forbid.>
 
-### Movement 1 - <what this movement lands>
+### Slide 1 - <the claim this slide lands>
 
-<visual, then a presenter-style explanation with provenance>
+<one bolded declarative sentence, then prose; visual; then the presenter explanation with provenance>
 
 ### Key takeaway message
 

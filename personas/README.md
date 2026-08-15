@@ -21,7 +21,7 @@ persona owning the current primary stage wins. All personas inherit the global r
 | [synthesizer](synthesizer.md) | building a cross-source report / study material | routing, retrieval, assembling cited reports with visuals |
 | [mentor](mentor.md) | you want to *understand*, not just store | teach from fundamentals, `> 💡` term explainers, capture to `../brain/glossary.md` |
 | [architect](architect.md) | shaping the brain itself | topic taxonomy, when to split a topic note, structural decisions (ADR-style) |
-| [presenter](presenter.md) | the work has to be **told** to an audience, not read by one | the `## Presentation narrative` appended to a finished `LEARNING.md`; explaining diagrams; the decision story for mixed leadership + engineering audiences |
+| [presenter](presenter.md) | the work has to be **told** to an audience, not read by one | the `## Presentation narrative` appended to a finished `LEARNING.md`, **and the walkthrough of every diagram anywhere in the kit** - present the diagram, never narrate its arrows. Owns the decision story for mixed leadership + engineering audiences |
 
 **Why mentor + architect matter most here:** the whole point is to *learn* (mentor), and a
 compounding brain needs deliberate structure or it becomes a dump (architect). **curator** owns
