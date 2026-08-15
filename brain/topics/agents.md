@@ -1,12 +1,13 @@
 # Topic: Agents
 
-**Status:** established (15 sources / **14 independent** - S1 Uber closed-loop evals, S2 12-factor
+**Status:** established (16 sources / **15 independent** - S1 Uber closed-loop evals, S2 12-factor
 agents, S4 Anthropic harness design, S5 skills evals, S7 Anthropic memory and dreaming, S9 Microsoft
 Agent Framework, S10 tool search, S12 Google Cloud multi-tenant reference architecture, S13
 `karpathy/autoresearch`, S14 Stanford CS329A, **S15 CS329A lecture 2 - not independent of S14**,
 S17 indirect prompt injection, S18 CaMeL, S20 AgentDojo, S24 Hermes agent architecture, **S25
 cybersecurity eval survey - which supplies the largest measured scaffolding effect in this brain, and
-the bound on it**)
+the bound on it**, and **S26 LLM knowledge bases - a peripheral feeder** supplying the third position
+on the human-in-the-loop spectrum and the discovered-schema pattern)
 
 > **On S17's admission here, since its sibling S16 was declined.** S16 (AgentPoison) attacks a
 > retrieval store, which is a *component*, and was kept out of this note under
@@ -151,6 +152,43 @@ code, re-read the in-scope files, combine previous near-misses, try radical chan
 answerable from S13, which never records *why* an experiment was tried.
 
 Full argument in [`autonomous-research-loops.md`](autonomous-research-loops.md).
+
+#### A third position: review the accumulated diff afterwards
+
+S2 puts the human **inside** the run as a tool call, S13 **removes** them from it, and S26 supplies
+the position between the two that neither names. Its maintenance agent runs unattended overnight in a
+cloud sandbox and the human meets the work the next morning as a diff over the whole batch - "I wake
+up to a perfectly fresh wiki that I can review. It's like the daily paper, but it's your own"
+[S26 `n10`, `n13`].
+
+**The distinguishing variable is not autonomy, it is reversibility.** S2 asks before acting because a
+deployment cannot be recalled. S13 does not ask because nothing leaves the machine. S26 does not ask
+either, and its justification is different again - **the work is confined to files under version
+control**, so review can happen after the fact because the action can be undone after the fact. That
+makes batch review a legitimate third option wherever effects are contained and reversible, and
+useless wherever they are not. Sorting the three cases by *when* the human is consulted hides this;
+sorting them by *whether the action can be taken back* explains all three.
+
+**The gap is that S26 never examines the review step it depends on** [`n13`]. It is one sentence, and
+nothing reports how often a run produces a bad edit, whether one has ever been rejected, or what
+reverting looks like. **A review gate carrying an entire safety argument and never inspected is the
+same defect this brain records against S7's "verified" snapshot** (`d4` there): the load-bearing step
+with no mechanism behind it.
+
+#### Per-directory schema, discovered rather than registered
+
+A quieter S26 mechanism belongs here because it is about agent configuration rather than knowledge
+bases. Its scheduled job holds only generic instructions; each managed directory carries its **own
+`AGENTS.md`**, the job finds them with `find ... -name AGENTS.md`, and it is told to "follow that
+wiki's local schema over any generic instruction here" [S26 `n12`, `visuals/frame_980.jpg`,
+**figure-only**].
+
+**The consequence is that scope is declared by the thing being managed, not by the agent managing
+it.** One worker serves many targets it knows nothing about, and a new target is onboarded by creating
+a directory with a schema file in it - no registry, no redeploy, no edit to the worker. The generic
+instructions become a fallback rather than a specification. It is the same inversion this brain's own
+contract layer uses, and it is `single-leg`: visible in a screenshot of a saved prompt and never
+spoken aloud.
 
 ### Agents that improve themselves
 
@@ -537,6 +575,8 @@ covers, not just to the one that produced it.
 
 | **Scaffolding dominates the model on long-horizon work, and the bound is that it makes existing capability reliable rather than supplying missing capability.** Holding the model fixed, 3 of 40 networks became 37 of 40; all ten models tested scored **zero** on the old scaffolding and 6-9 of 10 on the new one. **Ablations make it a finding**: remove the abstraction layer and success drops to zero, remove the auxiliary services and it drops to 1-5. The bound comes from the same source, where no scaffolding got a public model past the sandbox-escape cliff. Claim 201. | S25 `n19`, `n20`, `n21` + `fig7_mhbench-equifax-chain.png` | corroborated, and **the best-evidenced claim from that source** - the only one resting on component-wise ablations |
 | **Guidance interventions are non-monotonic: the same upgrade helps one model and degrades another.** A pseudoterminal plus web search moved one model 17.5% to 20% and another 17.5% down to 10%; adaptive coaching lowered the best model's top-tier result, collapsed a third model across every tier, and raised a fourth's mid-tier count. **Measure per model, never assume.** Claim 205. | S25 `n7`, `n17` + `fig4`, `fig6` | **needs-check** - the tools half is corroborated, the coaching half is figure-only and the article never mentions that arm exists |
+| **What decides where the human sits in an agent loop is reversibility, not autonomy** - ask inside the run when the effect cannot be recalled, review the batch diff afterwards when it can, suppress the check-in when the decision carries no information the rule does not already encode. The three positions are S2, S26 and S13, and sorting them by *when* the human is consulted hides the variable that explains all three. Claim 208. | **S2 `&t=687s` + S13 `n9` + S26 `n10`, `n13`** | **needs-check - this brain's synthesis across three sources.** None of the three states the variable; each states only its own position |
+| **Scope an agent's behaviour with a schema file in the thing being managed, discovered at run time, overriding the worker's generic instructions.** One worker then serves many targets it knows nothing about, and onboarding a target means creating a directory with a schema file - no registry, no redeploy. Claim 209. | S26 `n12` + `visuals/frame_980.jpg` | **needs-check - `single-leg`, figure-only.** Visible in a screenshot of a saved prompt, never spoken |
 
 ## Key visuals
 
@@ -628,6 +668,15 @@ covers, not just to the one that produced it.
 
 ## Sources feeding this topic
 
+- **S26** - [LLM Knowledge Bases: a practical guide](../../sources/260815_llm-knowledge-bases/LEARNING.md)
+  (Ben Holmes, Warp, 2026-08-15). **A peripheral feeder contributing two things.** It supplies the
+  third position on this note's human-in-the-loop spectrum - batch review of a diff after an
+  unattended overnight run - which is what forced claim 208's reframing around reversibility rather
+  than autonomy. And it supplies the per-directory discovered-schema pattern (claim 209), which is
+  `single-leg` and figure-only. **The source is a knowledge-base talk, not an agent-architecture one,
+  and it measures nothing** (`n16`); its main event is in [`rag.md`](rag.md). Note that its review
+  gate - the step carrying its whole safety argument - is examined by nobody, which is why claim 208
+  is a synthesis and not a recommendation.
 - **S25** - [Patterns for Building Cybersecurity Evals](../../sources/260815_cybersecurity-evals/LEARNING.md)
   (Eugene Yan, 2026-06). Feeds this note on **two** things and nothing else. Claim 201 is the largest
   measured scaffolding effect in this brain and the only one with component-wise ablations under it,

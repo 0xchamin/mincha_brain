@@ -7,7 +7,10 @@ decoupled-curation claim, from outside agent memory entirely; **S16 "AgentPoison
 prompt injection" and S19 "memory poisoning, systematic study" - the adversarial feeders**, which
 design no memory and attack the shape all three of the others share, from three independent
 directions. **S19 is the one that makes this note uncomfortable rather than merely cautious**, because
-it measures the design direction itself as the attack surface.)
+it measures the design direction itself as the attack surface. **S26 "LLM Knowledge Bases",
+2026-08-15 - a partial feeder and deliberately not counted as a seventh source**: it is a talk *about*
+S8 by an implementer, so it is S8 again wearing an implementation, and it contributes only the
+scheduling trigger and the idempotence stamp that makes scheduling possible.)
 **Basis:** created under [ADR-0007](../decisions/0007-memory-topic.md); promoted to `established`
 under [ADR-0008](../decisions/0008-memory-established.md) on **two-vendor architectural
 convergence**.
@@ -133,6 +136,31 @@ the argument for it.
 > **The honest reading of S8's economics: LLM bookkeeping is cheap enough to be worth doing
 > repeatedly, not so reliable that doing it once is enough** [S8 `n13`, `d1`]. That is the weaker
 > claim, and the only one that implies a recurring pass.
+
+##### S26 supplies the trigger S8 left blank, and names its precondition
+
+The table's most conspicuous cell is S8's, and it is an absence: **"periodically", human-invoked, no
+reason given.** S26 is the first source in this brain to fill it in. One instance of S8's pattern runs
+the reconciliation **weekly for the wiki and daily for enrichment**, unattended in a cloud sandbox on
+a sync-down / run-skill / sync-up loop, with the human meeting the result as a morning diff rather
+than triggering it [S26 `n10`, `n13`]. The trigger row becomes a cron, and the human moves from
+invoker to reviewer.
+
+**But the mechanism underneath it is the transferable part, because it is what makes a timer safe.**
+S26's enrichment stamps each finished note with an `enrichedAt` timestamp and skips anything already
+stamped [`n5`]. Without that, "reconcile the store" is an operation over everything, whose cost grows
+with the corpus and therefore rises exactly as the store becomes more valuable - which is why "ask the
+LLM periodically" is phrased as a human decision in S8 and not as a schedule. **An unbounded pass is
+not something you put on a timer; a bounded one is.** So the ordering runs: idempotence first,
+automation second. Any decoupled curation loop that intends to run on a clock needs the equivalent of
+that stamp, and this topic did not previously have a name for it.
+
+**Weigh it as instantiability and nothing more.** S26 is a talk *about* S8, so it is not a fourth
+independent proponent - the display of a source is the same leg wearing a different hat, and no S8
+claim moved. What it independently shows is that someone other than the pattern's author built the
+thing and put it on a schedule. **It measures nothing** [S26 `n16`], and the review step carrying the
+entire safety argument for unattended operation is a single unexamined sentence [`n13`] - nobody
+reports whether a bad edit has ever been caught, rejected or reverted.
 
 #### Why decouple: the incentive argument, which only S7 states
 
@@ -470,6 +498,8 @@ task was a reusable skill. Full synthesis in [`agent-security.md`](agent-securit
 | **The moment a second writer exists, memory needs a versioned multi-writer store**: scoped read-only vs read-write attachment, optimistic concurrency via a `content_sha256` precondition, and per-session attribution. | S7 (`n5`-`n7`, corroborated by the running console) | emerging |
 | **Agents write instructions to their successors, not just facts** - making a shared store a coordination channel, where a wrong entry redirects every reader rather than degrading one answer. | S7 (`n20`, the demo store) | emerging |
 | **Curation is test-time compute with an asymmetric payer**: cost borne once by a process that completes no task, benefit paid to every downstream agent. | S7 (`n13`) | needs-check (single-leg) |
+| **A decoupled curation pass becomes schedulable only once it is incremental, and a per-item idempotence stamp is the mechanism.** Marking each item as processed and skipping the marked turns an O(store) pass into an O(new) one, so cost tracks the write rate rather than the accumulated size. **This is why S8 says "periodically, ask the LLM" and S26 says "daily"** - the ordering runs idempotence first, automation second. | S26 (`n5`, `n10`, `visuals/frame_404.jpg`) | **corroborated internally, unmeasured.** The consequence is this brain's reading; the source states only the agent-coordination half |
+| **Unattended curation puts the human on a review diff, and that review is the entire safety argument - which nobody has examined.** One instance runs maintenance overnight and the human reads the result in the morning. No source reports how often a run produces a bad edit, whether one has ever been rejected, or how a wrong write is reverted. | S26 (`n13`, `n10`) | **needs-check, `single-leg`.** Recorded because it is the load-bearing unexamined step, exactly the shape of S7's `d4` |
 
 ## Key visuals
 
@@ -583,10 +613,23 @@ task was a reusable skill. Full synthesis in [`agent-security.md`](agent-securit
   convergence. It supplies **no measurement**, no rationale for why periodic beats at-ingest, and one
   of its two efficacy claims contradicts its own operations section (`d1`).
 
-> **What the three sources do and do not establish.** Two vendors independently shipped the same
+- **S26** - [LLM Knowledge Bases: a practical guide](../../sources/260815_llm-knowledge-bases/LEARNING.md)
+  (Ben Holmes, Warp, 2026-08-15). **A partial feeder, and a narrower one than its enthusiasm
+  suggests.** It is a talk *about* S8 by someone who built it, so it is **not a fourth independent
+  proponent** of decoupled curation - displaying a source does not corroborate it, and no S8 claim
+  moved. It feeds exactly two threads here: the **trigger** S8 left blank, filled in as a daily and
+  weekly unattended schedule (`n10`), and the **idempotence stamp** that makes such a schedule
+  affordable (`n5`). **Nothing in it is measured** (`n16`), and its review step - the whole safety
+  argument for unattended operation - is one sentence (`n13`). Its main event is in
+  [`rag.md`](rag.md).
+
+> **What the sources do and do not establish.** Two vendors independently shipped the same
 > architecture under the same name, and a practitioner with nothing to sell described the same
 > operation two months earlier about documents rather than memory. That is strong evidence this design
 > is the natural answer to maintaining a knowledge store across sessions - **and it is still not
-> evidence that it works.** None of the three has published an experiment. Convergence would look
+> evidence that it works.** None of them has published an experiment. Convergence would look
 > identical if all three were wrong, and adding a third agreeing source does not change that; it only
-> removes "the vendors copied each other" as the explanation.
+> removes "the vendors copied each other" as the explanation. **S26 does not move this either**, and
+> is the cleanest illustration of why: a fourth name on the list that is really the third source
+> again, wearing an implementation. What it adds is that the design **survives being built by someone
+> who did not invent it** - real, and a different question from whether it works.

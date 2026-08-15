@@ -1,10 +1,13 @@
 # Topic: Skills
 
-**Status:** emerging (6 sources, but **only one of them is about skills** - S5 "Don't Ship Skills
+**Status:** emerging (7 sources, but **only one of them is about skills** - S5 "Don't Ship Skills
 Without Evals", Philipp Schmid / Google DeepMind, AI Engineer WF 2026; plus S7, S9, S11 and S13, each
-contributing a single peripheral observation, and **S19 memory poisoning, which supplies this note's
+contributing a single peripheral observation, **S19 memory poisoning, which supplies this note's
 first security material** by treating skill synthesis as a memory write channel with no validation
-step and an amplification vulnerability attached).
+step and an amplification vulnerability attached, and **S26 "LLM Knowledge Bases", 2026-08-15, which
+supplies the first skill here that maintains a corpus rather than performing a task** - and with it an
+idempotence contract, a mutable reference registry, and the first instance of the three-layer shape
+seen outside the vendor that documented it).
 
 > **The count-versus-evidence trap this note exists to warn about still applies, and S19 is the
 > honest test of it.** The source count moves 5 to 6 and S19 is **not** about skills either - it is
@@ -82,6 +85,36 @@ The clean case for a capability skill is a **knowledge gap the training cut-off 
 Interactions API shipped after training, and a skill with 117 test cases took valid-code generation
 from 39.2% to 91.6% on Gemini 3.1 Pro [S5 `&t=767s`, `&t=805s`, slide `frame_800`]. *Vendor
 measuring its own product - treat the shape as instructive and the magnitude as unreplicated.*
+
+### S26: a skill that maintains a corpus, and the first outside instance of the three-layer shape
+
+Every skill this note has seen until now helps a model **do a task**. S26 shows a different job:
+`enrich-note` is a maintenance operation that runs over a knowledge base, adding tags, source
+attribution and backlinks to notes, invoked by a human or by a nightly scheduler [S26 `n4`,
+`visuals/frame_404.jpg`]. It is worth recording as a shape rather than an anecdote, because two of its
+properties are things this note has only ever seen asserted by the source that invented the format.
+
+**The three-layer cost ladder appears in the wild, built by someone with no stake in it.** The skill
+is `.agents/skills/enrich-note/SKILL.md` with frontmatter carrying a name and a trigger description,
+a body of instructions, and **`references/tags.md` as a separately-loaded reference file** the body
+tells the agent to read first [`n6`]. That is claim 6's three layers exactly - frontmatter, body,
+references - instantiated by a practitioner at a different company for a non-coding task. **It does
+not corroborate the *prices*** (nothing here measures tokens), and it is a genuine independent
+instance of the *structure*, which is more than this note previously had.
+
+**And the reference file is doing something the ladder's framing does not anticipate.** In S5 the
+third layer is described as reference material that is free until read - documentation, examples,
+schemas. Here it is a **mutable registry the skill writes back to**: the agent must read `tags.md`
+before tagging, must prefer existing entries, and must append any new tag with a one-line definition
+so the next invocation can reuse it [`n6`]. The third layer is not a static appendix, it is **the
+skill's memory between invocations**, and it exists because each call sees one note and a taxonomy is
+a corpus-wide object. Any per-item skill that must stay globally consistent needs something in that
+slot.
+
+The other property worth naming is an **idempotence contract in the skill body itself** - "if the
+frontmatter already has `enrichedAt`, the note is done, skip it", with the stamp written on completion
+[`n5`]. That is what makes the skill safe to run repeatedly over a whole corpus and therefore safe to
+put on a timer. **Unmeasured, like everything in S26** (`n16`), and structurally clear.
 
 ### They measurably work, and badly-made ones measurably hurt
 
@@ -213,6 +246,9 @@ attack success on HERMES), not amplification across successive refinements.
 | **Keep the eval after retiring the skill** - it becomes a regression detector on the base model. | S5 `&t=1181s` | needs-check (single-leg) |
 | Gate skill diffs on evals in CI: no merge without proof of lift. | S5 `&t=1002s` (slide `frame_950` + narration) | emerging (self-reported practice) |
 | Grade outcomes, not paths; isolate runs (agents cheat); run multiple trials; test across harnesses. | S5 `&t=1091s`, `&t=1109s`, `&t=1146s`, `&t=1163s` | mixed - first two corroborated, last two single-leg |
+| **A skill that runs repeatedly over a corpus needs an idempotence contract in its own body** - check a per-item completion marker before working, write it after - which is what makes the skill safe to schedule rather than only safe to invoke. | S26 (`n5`, `visuals/frame_404.jpg`) | **corroborated internally, unmeasured** |
+| **A per-item skill that must stay globally consistent needs a mutable registry in its reference layer**, not a static appendix: read it first, prefer what exists, append new entries with a definition. Without it each call optimises locally and the vocabulary degenerates to one term per item. | S26 (`n6`, `visuals/frame_425.jpg`) | **corroborated internally, unmeasured.** The failure argument is this brain's reading; the source states the behavioural version |
+| **The three-layer skill shape occurs outside its originating vendor** - frontmatter, body, and a separately-loaded `references/` file - built by a practitioner at another company for a non-coding task. **Structure only: nothing here measures the layer prices.** | S26 (`n4`, `n6`) as an independent instance of claim 6 | emerging - one independent instance of the *shape*, no evidence about the *cost ladder* |
 
 ## Key visuals
 
@@ -256,6 +292,14 @@ attack success on HERMES), not amplification across successive refinements.
 
 ## Sources feeding this topic
 
+- **S26** - [LLM Knowledge Bases: a practical guide](../../sources/260815_llm-knowledge-bases/LEARNING.md)
+  (Ben Holmes, Warp, 2026-08-15). **The first skill in this note that maintains a corpus rather than
+  performing a task**, and the first instance of the three-layer shape observed outside the vendor
+  that documented it. Contributes the **idempotence contract** (`n5`) and the **mutable reference
+  registry** (`n6`), both of which exist because the skill runs repeatedly and unattended over many
+  items. **Not about skills either** - it is a knowledge-base talk, and skills are how its maintenance
+  happens to be packaged - so it corroborates none of S5's claims and **nothing in it is measured**
+  (`n16`). Its main event is in [`rag.md`](rag.md).
 - **S5** - [Don't Ship Skills Without Evals](../../sources/260726_dont-ship-skills-without-evals/LEARNING.md)
   (Philipp Schmid, Google DeepMind, AI Engineer World's Fair 2026). **T4 conference talk by a T2
   vendor employee.** The SkillsBench figures are third-party and are the strongest evidence; the

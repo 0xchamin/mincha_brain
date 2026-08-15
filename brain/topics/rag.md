@@ -1,11 +1,23 @@
 # Topic: RAG (Retrieval-Augmented Generation)
 
-**Status:** **emerging** (4 sources - S8 "LLM Wiki", Andrej Karpathy, 2026-04-04; S10 "Tool search",
+**Status:** **emerging** (5 sources - S8 "LLM Wiki", Andrej Karpathy, 2026-04-04; S10 "Tool search",
 Microsoft, 2026-07-29; S11 "agent-first data stack", LangChain, 2026-07-27; **S16 "AgentPoison",
 2026-08-04 - the topic's first T3 academic source and its first adversarial one**, contributing
-retrieval geometry as a control surface an attacker can write into). **Still `emerging`:** S16
-corroborates none of the other three, and chunking, embeddings, vector stores, hybrid search and
-grounding evals remain at zero.
+retrieval geometry as a control surface an attacker can write into; **S26 "LLM Knowledge Bases",
+Ben Holmes, 2026-08-15 - the first *independent instantiation* of S8**). **Still `emerging`:** S16
+corroborates none of the other three, chunking, embeddings, vector stores, hybrid search and
+grounding evals remain at zero, and **S26 raises the source count without raising the evidence** -
+see the warning immediately below.
+
+> ⚠️ **S26 is a talk *about* S8, and the two must never be counted as two votes for the pattern.**
+> Ben Holmes builds on Karpathy's gist, names it on stage and displays it in full. Under the
+> independence rule that display is **the same leg wearing a different hat** - same author, same
+> document, same revision - so **no S8 node moved and no S8 claim's confidence rose.** What S26
+> independently supplies is that **somebody other than the author built the pattern and ran it on a
+> real corpus**, which is evidence about **instantiability, not efficacy**: like S8, it measures
+> nothing at all (S26 `n16`). This is the exact trap [ADR-0012](../decisions/0012-a-mention-is-not-a-source.md)
+> was written for, arriving from a new direction - not a passing mention this time, but a **faithful
+> and enthusiastic re-display**, which is harder to spot and pulls in the same wrong direction.
 **Basis:** the topic's first source arrived from an unexpected direction - **it is an argument against
 query-time retrieval**, not a description of how to do it. That is still the right home for it: a
 claim about what to build *instead* of RAG belongs in the note that owns RAG, and splitting it into a
@@ -116,6 +128,20 @@ The architecture is an **ownership** diagram [S8 §Architecture, `n4`]:
 derived page can be walked back to something that did not move under it. Remove that constraint and
 the knowledge base becomes its own only witness - it can drift with nothing left to check it against.
 
+> **Refined by S26, which implemented this table and broke exactly this row** (S26 `d1`). The first
+> independent instance enriches notes by writing titles, frontmatter and backlinks **into the raw
+> files**, while the same talk displays the immutability rule and encodes it as a hard constraint in
+> its own scheduled job (S26 `n7`, `n11`). The reconciliation is in that job's wording and is never
+> said aloud: the constraint it actually enforces is *"do not edit original notes outside `wikis/`
+> **unless explicitly instructed by that wiki's `AGENTS.md`**"*, which is a different and weaker rule.
+> **What survives is "one declared writer per layer", not "nobody writes to raw"** - enrichment owns
+> raw's metadata, the wiki job owns the wiki, and neither crosses. The reason the strict version fails
+> is structural rather than sloppy: capture has to be frictionless, so notes arrive with no title and
+> no tags (S26 `n2`, `n3`), and the metadata has to land somewhere. **The cost of the weaker rule is
+> real and is exactly what this paragraph warns about** - the audit trail moves from "the agent could
+> not have edited this" to "git will tell you what it did". *(The refinement is this brain's reading;
+> S26 never notices the contradiction.)*
+
 **And the schema document, not the retrieval stack, is where the engineering goes**: it is "the key
 configuration file - it's what makes the LLM a disciplined wiki maintainer rather than a generic
 chatbot" [`n5`]. That is an unusual answer to *where does the difficulty live*, and it is the claim
@@ -211,6 +237,59 @@ neither a library nor a specification but **prose sized for an agent's context w
 underspecified so the agent fills in the particulars for its own harness and domain - with the schema
 document [`n5`] as where that instantiation lands and persists. It is also conveniently
 unfalsifiable: a document that specifies nothing cannot be wrong about an implementation.
+
+### S26: the pattern instantiated, and the four parts it turned out to need
+
+S8 ships prose and tells you to hand it to your agent [`n16`]. **S26 is the first record in this brain
+of someone doing that and living with the result**, and the useful content is not the agreement - it
+is the residue. Four mechanisms appear in the instance that appear nowhere in the pattern, and each
+one exists because something broke without it.
+
+**An idempotence stamp, which is what makes maintenance affordable at all** [S26 `n5`]. Every
+enriched note gets an `enrichedAt` timestamp in its frontmatter, and the enrichment skill's third line
+is *"if the frontmatter already has `enrichedAt`, the note is done - skip it"*. The instance's own
+framing is about agents coordinating across passes, and the larger consequence is economic: without
+the stamp, maintenance is an operation over the whole corpus whose cost grows with everything ever
+written, so it gets more expensive precisely as the knowledge base gets more valuable. With it, cost
+tracks the **writing rate** rather than the archive size. **This is the missing precondition for S8's
+own third operation** - "periodically, ask the LLM to health-check the wiki" [`n8`] assumes a human
+choosing when, and it assumes that because an unbounded pass over everything is not something you
+would put on a timer.
+
+**A controlled vocabulary with an explicit reluctance instruction** [S26 `n6`]. Tags live in a
+`references/tags.md` registry the agent must read before tagging; reuse is mandated, coinage requires
+appending a one-line definition, and the skill says in bold to *be reluctant* to add new tags. The
+stated reason is that the model otherwise invents - and the structural version of that is worth
+keeping, because it is not about model temperament. **Each enrichment call sees one note**, and a tag
+that is locally perfect is globally useless, since a taxonomy's whole value is that two notes land
+under one label. An agent with no view of the corpus produces one term per document, which is not a
+taxonomy but a restatement of the filenames. The registry is the mechanism that gives a per-note
+operation a corpus-wide memory. The quieter idea beside it is **faceting** - a separate source-medium
+axis (`book`, `podcast`, `video`, `article`) kept out of the topic vocabulary so the two cannot
+compete for one slot.
+
+**Unattended scheduling, which is the answer to this note's own standing question about "periodically"**
+[S26 `n10`]. The loop is deliberately unclever: sync the markdown into a cloud sandbox, run the skill,
+sync it back. Two schedules run, one weekly for wiki refresh and one daily for enrichment, and the
+human meets the output as a morning diff rather than triggering it. **Efficacy is unmeasured** and the
+review step that carries the entire safety argument is one sentence [`n13`] - nothing reports how
+often a run produces a bad edit or whether one has ever been rejected.
+
+**A plural schema layer** [S26 `n12`, figure-only]. S8 describes *a* schema document; the instance
+gives **each wiki directory its own `AGENTS.md`**, discovered with `find`, and instructs the scheduled
+job to *"follow that wiki's local schema over any generic instruction here"*. One maintainer serves
+many knowledge bases none of which it knows anything about, and a new wiki becomes maintained by
+creating a directory with a schema file in it. The generic instructions become a fallback rather than
+a specification.
+
+**One more thing transfers, and it is about trust rather than mechanism.** The generated entity pages
+carry **per-claim citations** - every bullet under "What the sources say" terminates in a link to the
+specific dated note behind it, not a source list at the foot of the page [S26 `n9`]. The difference
+shows up when a claim is wrong: page-level sourcing means re-reading four notes to find the error,
+claim-level means following one link. It makes a derived page debuggable one assertion at a time, and
+a generated artifact that cannot be debugged is one you eventually stop trusting wholesale. **Note
+that this brain reached the same rule independently**, which is a convergence rather than a
+corroboration, and both instances are single-author.
 
 ### S10: what happens when the retrieved corpus is the *tool catalog*
 
@@ -406,6 +485,11 @@ from opposite directions, which is the most useful thing this note can say about
 | **The binding constraint on a knowledge base is maintenance labour** - not storage, retrieval or linking. Bush's Memex was blocked on exactly this in 1945. | S8 §Why this works (`n13`, `n15`) | emerging (single-leg) |
 | **An index file may substitute for embedding-retrieval infrastructure at moderate scale (~100 sources).** | S8 §Indexing and logging (`n10`) | **needs-check - unmeasured.** The one falsifiable claim here, with no eval, baseline or derivation. Do not cite as a result |
 | **Defer search infrastructure until the index stops working**, then use a real engine; prefer one shipping both a CLI and an MCP server, so the harness chooses how to call it. | S8 §Optional: CLI tools (`n11`) | emerging (single-leg) |
+| **Corpus-wide maintenance needs an idempotence stamp, and the stamp is what makes it schedulable.** A per-item completion marker checked before work and written after turns an O(corpus) pass into an O(new) one, so cost tracks the writing rate rather than the archive size. | S26 `n5`, `visuals/frame_404.jpg` | **corroborated internally, unmeasured.** Mechanism is plain; nothing measures what it saves |
+| **A generated taxonomy needs a registry the agent reads first plus an explicit instruction to resist extending it** - otherwise each per-item call coins a locally perfect, globally useless label, and the vocabulary degenerates to one term per document. Coinages must ship a definition into the registry. | S26 `n6`, `visuals/frame_425.jpg`, `frame_404.jpg` | **corroborated internally, unmeasured.** The structural argument is this brain's; the source gives a behavioural one ("Claude loves to get creative") |
+| **Cite a derived page per claim, not per page** - every assertion links to the one input behind it, so a wrong claim is traced by following one link rather than re-reading the whole provenance list. | S26 `n9`, `visuals/frame_776.jpg` | **corroborated internally, unmeasured.** Convergent with this kit's own rule, which is not corroboration - both instances are single-author |
+| **Immutability of a raw layer is scoped per job, not per layer**: "one declared writer per layer, with the exception written down" is the rule that survives implementation, where "nobody writes to raw" does not. | S26 `d1` (`n7` + `n11` vs S8 `n4`) | **needs-check - this brain's reading.** The source never notices the contradiction it resolves. **The most reusable claim from S26 and the least corroborated** |
+| **The schema layer can be plural: a per-directory schema file that overrides the generic instruction** lets one scheduled maintainer serve many knowledge bases it knows nothing about. | S26 `n12`, `visuals/frame_980.jpg` | **needs-check - `single-leg`, figure-only.** Visible in a screenshot of a saved prompt, never spoken |
 | **A tuned sparse lexical pipeline was competitive with a GPU cross-encoder reranker** on two of three ToolRet categories (Recall@10 45.99 / 39.56 vs 45.94 / 38.23; behind by 8pp on the third), without serving-time GPU cost. | S10 Figure 3 (`n11`, `n12`) | **needs-check despite being measured** - the baselines are borrowed from another paper and the self-run used a different protocol (`d2`) |
 | **Retrieval quality is an editorial problem before it is an algorithmic one.** The dominant failure is descriptions written in implementer vocabulary; the first useful tuning pass is rewriting them, not changing the ranker. | S10 §Tuning the search space + §Try it (`n13`, `n19`) | emerging (single-leg, but it is an experience report about their own benchmark run) |
 | **Separate the indexed surface from the consumer-facing one.** An index-only alias field makes retrieval vocabulary and exposed schema independently tunable, and lets a third-party corpus be tuned for local vocabulary without forking it. | S10 §Tuning the search space (`n14`, prose vs code) | emerging |
@@ -426,10 +510,19 @@ from opposite directions, which is the most useful thing this note can say about
 > full walkthrough in the
 > [source note](../../sources/260801_tool-search-toolboxes/LEARNING.md).
 
+![A generated wiki entity page for Craig Blomberg, structured Who / What the sources say / Related / Sources, with every claim bullet ending in a link to a specific dated source note](../../sources/260815_llm-knowledge-bases/visuals/frame_776.jpg)
+> **What a derived page looks like when it can be audited.** Four claim bullets, each terminating in a
+> link to the one dated note behind it - sourcing at the granularity of the assertion rather than the
+> page. Note also what the page *is*: an **entity** assembled from four sources ingested separately
+> that never mention each other, so the page existed in none of its inputs. That is the accumulation
+> the pattern promises, made concrete. S26 `n9`; full walkthrough in the
+> [source note](../../sources/260815_llm-knowledge-bases/LEARNING.md).
+
 _**S8 contains no figures, diagrams, images or data of any kind** - which is why every S8 claim above
 is single-leg. The two generated diagrams for that source live in its
 [`LEARNING.md`](../../sources/260731_llm-wiki/LEARNING.md) and are labelled as synthesized, not
-sourced._
+sourced. **S26 supplies the pictures S8 never had, and they are pictures of a different system** -
+one instance's artifacts, not evidence about the pattern._
 
 ## Open questions / conflicts
 
@@ -446,7 +539,10 @@ sourced._
   with no derivation and no account of the failure past it. **The highest-value deep-research target
   in this topic**, and unlike most claims in this brain it is the sort of thing someone may genuinely
   have measured (index-based vs embedding retrieval at that scale).
-- **This brain is a live instance of the pattern and currently proves nothing.** It runs exactly the
+- **This brain is a live instance of the pattern and currently proves nothing** - and **as of S26 it
+  is no longer the only one this note knows about**, which changes the shape of the question rather
+  than answering it. Two independent single-author instances now run the design and neither measures
+  anything, so what has arrived is convergent practice, not evidence. It runs exactly the
   described design - immutable `raw/`, an agent-written `brain/`, `AGENTS.md` as the schema,
   `INDEX.md` read first, an append-only `log.md` - at **a source count still well over an order of
   magnitude below the claimed ceiling** (see `INDEX.md` for the live total; **the number was
@@ -473,9 +569,27 @@ sourced._
 - **Does the human keep their grip on knowledge they never wrote?** The division of labour [`n14`]
   hands the human taste and the LLM the writing. Nothing addresses what a reader retains of a corpus
   they have only ever read.
-- **What does the lint pass cost, and how often is "periodically"?** It reads everything by
-  construction. S8 neither budgets nor triggers it. The kit's own answer - on request, unbudgeted
-  ([ADR-0009](../decisions/0009-dreaming-reconciliation-pass.md)) - is a decision, not a finding.
+- ~~**What does the lint pass cost, and how often is "periodically"?**~~ **Partially closed by S26
+  (2026-08-15)**, and the mechanism is more interesting than the schedule. One instance runs it
+  **weekly for the wiki and daily for enrichment**, unattended in a cloud sandbox, with the human
+  meeting it as a morning diff [S26 `n10`, `n13`]. What made that affordable is the part S8 lacks -
+  an **idempotence stamp** turning the pass from O(corpus) into O(new) [`n5`]. **The cost question
+  itself is still open**: no token cost, wall-clock figure or failure rate is reported by anyone, and
+  the kit's own answer remains on-request and unbudgeted
+  ([ADR-0009](../decisions/0009-dreaming-reconciliation-pass.md)).
+- **What happens when the morning review finds a bad edit?** [S26 `n13`] Unattended maintenance is
+  safe if and only if bad output gets caught, and the entire safety argument for S26's schedule rests
+  on one sentence about reading a fresh wiki over breakfast. Nobody reports whether a run has ever
+  been rejected, what rejection looks like operationally, or how a wrong write is reverted. **The
+  highest-value open question S26 introduces**, because every attraction of unattended operation
+  depends on the answer.
+- **What is the precision of agent-judged backlinks?** [S26 `n8`] The relating of notes is explicitly
+  a judgement call given search tools rather than a similarity threshold, and **a wrong backlink is
+  invisible once written**, silently joining two things that are not related. Cheap to measure -
+  sample fifty generated links and have a human rate them - and nobody has.
+- **Where does a controlled tag registry stop working?** [S26 `n6`] The reluctance instruction defends
+  against sprawl at the scale shown. Nothing addresses a few hundred tags, when the registry itself
+  exceeds what can usefully be read before every single enrichment.
 
 ## Sources feeding this topic
 
@@ -490,6 +604,16 @@ sourced._
   schema descriptions (T2, claims 94 and 96), [arXiv:2408.04691](https://arxiv.org/abs/2408.04691)
   (T3), Spider 2.0 (T1/T3, the accuracy ceiling on enterprise text-to-SQL), Feigenbaum's knowledge
   acquisition bottleneck (T1, claim 98). Tiers and independence calls in the note.
+- **S26** - [LLM Knowledge Bases: a practical guide](../../sources/260815_llm-knowledge-bases/LEARNING.md)
+  (Ben Holmes, Warp, AI Engineer World's Fair, 2026-08-15). **The first independent instantiation of
+  S8, and the first pictures this topic has of the pattern running.** Read it for the four mechanisms
+  the pattern turned out to need - idempotence stamp, controlled tag registry, unattended scheduling,
+  per-directory schema - and for `d1`, where the instance breaks S8's immutability rule and forces the
+  "one declared writer per layer" refinement. **Read the independence warning at the top of this note
+  before citing it beside S8**: it is a talk *about* S8 and cannot corroborate it. **T4 practitioner
+  demo, nothing measured** (`n16`), with a **T2 commercial interest on its most novel section** (`d2`
+  - the scheduling half runs on the speaker's employer's product). Three of its most interesting
+  findings (`n11`, `n12`, `n15`) are **figure-only**, visible in screenshots and never spoken.
 - **S8** - [LLM Wiki](../../sources/260731_llm-wiki/LEARNING.md) (Andrej Karpathy, 2026-04-04).
   **T4 practitioner essay, ~1,960 words, no figures and no implementation.** Read it for the design
   argument, which stands on its own logic: you can follow "retrieval re-derives" to "so compile once
