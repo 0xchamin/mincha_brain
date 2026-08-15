@@ -543,13 +543,26 @@ one instance's artifacts, not evidence about the pattern._
   its author's corpus. See the two claims added above. **What replaced it is narrower and better:**
   nobody has measured a *summary-index* design, which is the one S8 describes and the one this brain
   runs.
-- **Does a one-line summary discriminate well enough to pick the right page?** [R4] The research pass
-  relocated `n10`'s failure mode. If an index-navigated store attends to a 2k-token catalog rather
-  than a 1.5M-token corpus, attention is not what breaks first - **catalog precision is**, which is
-  exactly the failure human directory editors had before the LLM removed the labour half of the
-  problem. **A curated catalog has two ceilings and the LLM removes only one.** No source in this
-  brain measures the remaining one, and this note's own `INDEX.md` is a live instance of the design
-  in question.
+- ~~**Does a one-line summary discriminate well enough to pick the right page?**~~ **Measured
+  2026-08-15 by [X2](../../experiments/260815_summary-index-ceiling/RESULTS.md)**, the experiment R4
+  said did not exist. Swept to **N=475** over this brain's own gated nodes. **Two answers, claims 215
+  and 216.** There is **no knee** - discriminability falls log-linearly at ~3 points per doubling for
+  rich summaries and ~4 for one-line ones - so "ceiling" was the wrong word and the ~100 crossover is
+  a **budget decision, not a capability limit**. And **richness buys slope rather than offset**: the
+  one-line curve is 28% steeper and the gap widens from 11 points to 18 across the range, which is a
+  direct correction to `n10`'s "one-line summary" specification. **Read the ADR-0024 ceiling with
+  both**: first-party, n=1 corpus, a lexical scorer rather than an agent, and **no source's
+  confidence moved.**
+- **What does an actual model do with the index, as against a lexical scorer?** [X2] The experiment
+  bounds the **information present in a summary** and deliberately used no model, per ADR-0024's
+  determinism rule. A real agent can match meaning where TF-IDF matches strings, and can also be
+  distracted in ways a scorer cannot. **The measured curve is therefore a floor whose distance from
+  the real thing is unknown**, and closing that gap needs an evaluator that is not the agent under
+  test - which is claim 34's problem arriving in a new place.
+- **Does the shape survive a corpus this brain did not write?** [X2] The confound was predicted in
+  advance and is real: queries and index entries share authorship and vocabulary. It inflates the
+  levels, and whether it also flattens the **slope** - the part that was promoted - is untested. **The
+  cheap next experiment is the same sweep over a corpus with independently-authored queries.**
 - **This brain is a live instance of the pattern and currently proves nothing** - and **as of S26 it
   is no longer the only one this note knows about**, which changes the shape of the question rather
   than answering it. Two independent single-author instances now run the design and neither measures
