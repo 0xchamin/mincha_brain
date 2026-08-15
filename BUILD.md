@@ -1,6 +1,6 @@
 # BUILD.md - build Brain from scratch, from this file alone
 
-> **Generated 2026-08-15 from commit `ef68ba6`** by `tools/make_build_doc.py`. Do not hand-edit: edit the
+> **Generated 2026-08-15 from commit `0616e46`** by `tools/make_build_doc.py`. Do not hand-edit: edit the
 > source files in the reference clone and regenerate, or your copy silently diverges from the kit
 > it claims to build.
 
@@ -294,6 +294,7 @@ framing. Understanding is the deliverable.)*
 | `## What to distrust in this note` | **Hard** - source-level trust, not claim-level caveats |
 | `## Open questions` | **Hard** - the deep-research backlog |
 | `## Feeds these topics` | **Hard** |
+| `## Presentation narrative` | **Hard for sources ingested from 2026-08-15 onward**, and the last section in the file. Adopt **presenter**. See below |
 
 ### The six properties the walkthrough must have
 
@@ -525,6 +526,56 @@ one claim, it belongs next to that claim.
 > **Reference implementation:** [`sources/260802_agent-data-stack/LEARNING.md`](sources/260802_agent-data-stack/LEARNING.md)
 > - the source that forced this section, and the fullest instance of the shape.
 > `sources/_TEMPLATE/LEARNING.md` carries the skeleton to copy.
+
+### The `Presentation narrative` (new sources only)
+
+> **Why this exists.** Every compressed form above answers a **reader's** question - what is this,
+> what does it say, what may I cite. None of them is a **speaking** artifact, and the notes run
+> 5,000-9,000 words tuned for a solo reader ramping up. **This is also the first artifact in the kit
+> written for people who will never open the repo**, which is the point: every other layer optimises
+> for the brain's correctness, and this one optimises for transfer.
+
+**Adopt [presenter](personas/presenter.md), which owns the full spec.** Placed **last, after
+`Feeds these topics`** - so it cannot disturb the ramp, and `build_site.py` (which lifts only `TL;DR`
+and `Key claims`) never pulls it onto the landing page. Five to seven movements, a visual each,
+closing on `### Takeaway message`. **Budget 700-1,200 words.**
+
+**Three rules are load-bearing and are restated here because they are the ones that will erode:**
+
+1. **Nobody gets a second walkthrough.** The presentation **selects** load-bearing reasoning; it does
+   not re-summarise. A movement restating a walkthrough section is deleted. This note already carries
+   three compressed forms and a fourth that merely summarises is waste.
+2. **It inverts the punchline-opening ban, deliberately.** The presentation leads with the takeaway
+   and then earns it, which the walkthrough is forbidden from doing. **Both are right** - a ramp orders
+   for someone who does not yet know, a presentation orders for someone who may leave after five
+   minutes. **This is why the section is appended rather than folded in**, and a future agent must not
+   read the two rules as a contradiction to resolve.
+3. **The null close is first-class.** The most common honest conclusion here is that nobody measured
+   the thing, and a persona told to end on what should be funded or changed **will manufacture
+   actionability the evidence does not support** in front of the audience most likely to act on it.
+   *"The decision is to not act yet, and here is precisely what would change that"* is the stronger
+   close, because it converts "we do not know" into a scoped experiment.
+
+**Reuse the curated frames.** A movement's visual should normally be one the walkthrough already
+cites; synthesize a new diagram only where a movement's consequence has no existing visual. **A note
+already struggles to keep three diagrams distinct** and five more would be decoration. This also keeps
+the frame-prune rule satisfiable, and a frame earning its place twice was well chosen.
+
+**Register carve-out, deliberately narrow.** Movement **bullets** are exempt from the Register rules
+(no bold lead-in labels, no colon-led lists, no semicolon chains) because that is what bullets are.
+**The presenter explanations underneath them are not exempt** - they are prose carrying an argument.
+
+> **Scoped to new ingests, and the reason is recorded in
+> [ADR-0026](brain/decisions/0026-presenter-persona.md).** Twenty-six notes predate this section and
+> making it retroactively mandatory would create twenty-six units of retrofit debt on the day it
+> landed - which is what happened with the register retrofit, still unpaid on S2. **`validate.py`
+> reports coverage instead of failing**, in the same informational block as `/verify` coverage and for
+> the same reason: whether an old note earns a presentation is judgement, and a threshold in the
+> validator would launder judgement as a green check. Retrofit on demand, highest-value sources first.
+
+> **No reference implementation yet, and that is a known risk.** This file records that the
+> `LEARNING.md` shape was twice specified wrongly before a worked example existed. **The next ingest is
+> the test**; if the shape is wrong, fix the contract rather than the note.
 
 ## `foundations/` - supplied background, uncited by construction
 
@@ -979,6 +1030,8 @@ rather than arbitrary.
    | "Explain / teach me this" | **mentor** | + curator or code-explorer |
    | "What do I know about X?" / build study material | **synthesizer** | + mentor when teaching |
    | Shape the brain: topic taxonomy, split a note | **architect** | - |
+   | **Finished a `LEARNING.md`** -> append the `Presentation narrative` | **presenter** | + fact-checker when a movement's evidence strength is in question. **Never with curator** - curator owns the ramp, presenter owns the argument |
+   | "How would I present this?" / explain a diagram to an audience | **presenter** | + mentor inside the technical body |
 3. **Follow the flow** - capture (`raw/` or clone into `repo/`) -> understand (`view` visuals /
    trace code) -> corroborate (`nodes.md`) -> *(optional, on request)* deep research (`context/`)
    -> distill (`LEARNING.md`) -> compound (`brain/`).
@@ -1431,6 +1484,7 @@ persona owning the current primary stage wins. All personas inherit the global r
 | [synthesizer](synthesizer.md) | building a cross-source report / study material | routing, retrieval, assembling cited reports with visuals |
 | [mentor](mentor.md) | you want to *understand*, not just store | teach from fundamentals, `> 💡` term explainers, capture to `../brain/glossary.md` |
 | [architect](architect.md) | shaping the brain itself | topic taxonomy, when to split a topic note, structural decisions (ADR-style) |
+| [presenter](presenter.md) | the work has to be **told** to an audience, not read by one | the `## Presentation narrative` appended to a finished `LEARNING.md`; explaining diagrams; the decision story for mixed leadership + engineering audiences |
 
 **Why mentor + architect matter most here:** the whole point is to *learn* (mentor), and a
 compounding brain needs deliberate structure or it becomes a dump (architect). **curator** owns
@@ -2295,6 +2349,20 @@ def coverage_report() -> list[str]:
     srcs = source_dirs()
     verified = [d for d in srcs if (d / "verify.md").exists()]
     lines.append(f"  /verify coverage: {len(verified)}/{len(srcs)} sources have a verify.md")
+
+    # Presentation narrative: mandatory for sources ingested from 260815 onward
+    # (ADR-0026). Reported, never enforced - whether an older note earns one is
+    # judgement, and retrofitting 26 notes on day one is how debt is created.
+    PRESENT_FROM = "260815"
+    scoped = [d for d in srcs if d.name[:6] >= PRESENT_FROM]
+    have = [d for d in scoped
+            if (d / "LEARNING.md").exists()
+            and "## Presentation narrative" in read(d / "LEARNING.md")]
+    older = len(srcs) - len(scoped)
+    lines.append(
+        f"  presentation narrative: {len(have)}/{len(scoped)} in-scope sources "
+        f"(from {PRESENT_FROM}); {older} older source(s) exempt, retrofit on demand"
+    )
 
     dreams = sorted(
         p for p in (ROOT / "brain" / "dreams").glob("[0-9][0-9][0-9][0-9]-*.md")
@@ -4000,6 +4068,44 @@ uncited.>
 ## Feeds these topics
 
 - `../../brain/topics/<topic>.md` - <which claims were promoted>
+
+## Presentation narrative
+
+<Adopt PRESENTER (personas/presenter.md), which owns the full spec. Write this LAST, after
+everything above is complete. It is the final section in the file.
+
+Five to seven movements, source-shaped - the source's argument decides the count. One story:
+problem -> the obvious answer and why it fails -> the architectural decision -> the delivered
+evidence -> the explicit boundary -> the decision that follows. Movements are stages in one
+argument, NOT independent summaries.
+
+NOBODY GETS A SECOND WALKTHROUGH. Select the load-bearing reasoning; do not re-summarise. Delete
+any movement that restates a walkthrough section.
+
+Lead with the takeaway, then earn it - this deliberately inverts the punchline-opening ban that
+governs the walkthrough, because a presentation orders for someone who may leave after five minutes.
+
+A visual per movement, REUSING a frame the walkthrough already cites wherever possible. Synthesize
+a new diagram only where a movement's consequence has no existing visual. Present the diagram - the
+boundary, trade-off, failure mode it exposes - never narrate its arrows.
+
+Preserve evidence strength: same node IDs as the body, single-leg labelled where it is leaned on,
+internal agreement never presented as production readiness or external fact.
+
+Budget 700-1,200 words. Movement bullets are exempt from the Register rules; the explanations
+underneath them are not.>
+
+### Movement 1 - <what this movement lands>
+
+<visual, then a presenter-style explanation with provenance>
+
+### Takeaway message
+
+<ONE paragraph: the problem, the decision, the delivered value, the boundary, the implication. No
+new claims. This answers "what should I now believe or do?" - it is NOT a fourth summary of the
+note. If the source is unmeasured, the honest close is "the decision is to not act yet, and here is
+precisely what would change that", naming which verdict the evidence supports: adopt, pilot, watch,
+or reject.>
 ``````
 
 #### `sources/_TEMPLATE/MAP.md`

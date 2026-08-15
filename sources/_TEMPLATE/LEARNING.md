@@ -196,3 +196,41 @@ uncited.>
 ## Feeds these topics
 
 - `../../brain/topics/<topic>.md` - <which claims were promoted>
+
+## Presentation narrative
+
+<Adopt PRESENTER (personas/presenter.md), which owns the full spec. Write this LAST, after
+everything above is complete. It is the final section in the file.
+
+Five to seven movements, source-shaped - the source's argument decides the count. One story:
+problem -> the obvious answer and why it fails -> the architectural decision -> the delivered
+evidence -> the explicit boundary -> the decision that follows. Movements are stages in one
+argument, NOT independent summaries.
+
+NOBODY GETS A SECOND WALKTHROUGH. Select the load-bearing reasoning; do not re-summarise. Delete
+any movement that restates a walkthrough section.
+
+Lead with the takeaway, then earn it - this deliberately inverts the punchline-opening ban that
+governs the walkthrough, because a presentation orders for someone who may leave after five minutes.
+
+A visual per movement, REUSING a frame the walkthrough already cites wherever possible. Synthesize
+a new diagram only where a movement's consequence has no existing visual. Present the diagram - the
+boundary, trade-off, failure mode it exposes - never narrate its arrows.
+
+Preserve evidence strength: same node IDs as the body, single-leg labelled where it is leaned on,
+internal agreement never presented as production readiness or external fact.
+
+Budget 700-1,200 words. Movement bullets are exempt from the Register rules; the explanations
+underneath them are not.>
+
+### Movement 1 - <what this movement lands>
+
+<visual, then a presenter-style explanation with provenance>
+
+### Takeaway message
+
+<ONE paragraph: the problem, the decision, the delivered value, the boundary, the implication. No
+new claims. This answers "what should I now believe or do?" - it is NOT a fourth summary of the
+note. If the source is unmeasured, the honest close is "the decision is to not act yet, and here is
+precisely what would change that", naming which verdict the evidence supports: adopt, pilot, watch,
+or reject.>

@@ -558,6 +558,20 @@ def coverage_report() -> list[str]:
     verified = [d for d in srcs if (d / "verify.md").exists()]
     lines.append(f"  /verify coverage: {len(verified)}/{len(srcs)} sources have a verify.md")
 
+    # Presentation narrative: mandatory for sources ingested from 260815 onward
+    # (ADR-0026). Reported, never enforced - whether an older note earns one is
+    # judgement, and retrofitting 26 notes on day one is how debt is created.
+    PRESENT_FROM = "260815"
+    scoped = [d for d in srcs if d.name[:6] >= PRESENT_FROM]
+    have = [d for d in scoped
+            if (d / "LEARNING.md").exists()
+            and "## Presentation narrative" in read(d / "LEARNING.md")]
+    older = len(srcs) - len(scoped)
+    lines.append(
+        f"  presentation narrative: {len(have)}/{len(scoped)} in-scope sources "
+        f"(from {PRESENT_FROM}); {older} older source(s) exempt, retrofit on demand"
+    )
+
     dreams = sorted(
         p for p in (ROOT / "brain" / "dreams").glob("[0-9][0-9][0-9][0-9]-*.md")
     )

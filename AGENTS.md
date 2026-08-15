@@ -173,6 +173,7 @@ framing. Understanding is the deliverable.)*
 | `## What to distrust in this note` | **Hard** - source-level trust, not claim-level caveats |
 | `## Open questions` | **Hard** - the deep-research backlog |
 | `## Feeds these topics` | **Hard** |
+| `## Presentation narrative` | **Hard for sources ingested from 2026-08-15 onward**, and the last section in the file. Adopt **presenter**. See below |
 
 ### The six properties the walkthrough must have
 
@@ -404,6 +405,56 @@ one claim, it belongs next to that claim.
 > **Reference implementation:** [`sources/260802_agent-data-stack/LEARNING.md`](sources/260802_agent-data-stack/LEARNING.md)
 > - the source that forced this section, and the fullest instance of the shape.
 > `sources/_TEMPLATE/LEARNING.md` carries the skeleton to copy.
+
+### The `Presentation narrative` (new sources only)
+
+> **Why this exists.** Every compressed form above answers a **reader's** question - what is this,
+> what does it say, what may I cite. None of them is a **speaking** artifact, and the notes run
+> 5,000-9,000 words tuned for a solo reader ramping up. **This is also the first artifact in the kit
+> written for people who will never open the repo**, which is the point: every other layer optimises
+> for the brain's correctness, and this one optimises for transfer.
+
+**Adopt [presenter](personas/presenter.md), which owns the full spec.** Placed **last, after
+`Feeds these topics`** - so it cannot disturb the ramp, and `build_site.py` (which lifts only `TL;DR`
+and `Key claims`) never pulls it onto the landing page. Five to seven movements, a visual each,
+closing on `### Takeaway message`. **Budget 700-1,200 words.**
+
+**Three rules are load-bearing and are restated here because they are the ones that will erode:**
+
+1. **Nobody gets a second walkthrough.** The presentation **selects** load-bearing reasoning; it does
+   not re-summarise. A movement restating a walkthrough section is deleted. This note already carries
+   three compressed forms and a fourth that merely summarises is waste.
+2. **It inverts the punchline-opening ban, deliberately.** The presentation leads with the takeaway
+   and then earns it, which the walkthrough is forbidden from doing. **Both are right** - a ramp orders
+   for someone who does not yet know, a presentation orders for someone who may leave after five
+   minutes. **This is why the section is appended rather than folded in**, and a future agent must not
+   read the two rules as a contradiction to resolve.
+3. **The null close is first-class.** The most common honest conclusion here is that nobody measured
+   the thing, and a persona told to end on what should be funded or changed **will manufacture
+   actionability the evidence does not support** in front of the audience most likely to act on it.
+   *"The decision is to not act yet, and here is precisely what would change that"* is the stronger
+   close, because it converts "we do not know" into a scoped experiment.
+
+**Reuse the curated frames.** A movement's visual should normally be one the walkthrough already
+cites; synthesize a new diagram only where a movement's consequence has no existing visual. **A note
+already struggles to keep three diagrams distinct** and five more would be decoration. This also keeps
+the frame-prune rule satisfiable, and a frame earning its place twice was well chosen.
+
+**Register carve-out, deliberately narrow.** Movement **bullets** are exempt from the Register rules
+(no bold lead-in labels, no colon-led lists, no semicolon chains) because that is what bullets are.
+**The presenter explanations underneath them are not exempt** - they are prose carrying an argument.
+
+> **Scoped to new ingests, and the reason is recorded in
+> [ADR-0026](brain/decisions/0026-presenter-persona.md).** Twenty-six notes predate this section and
+> making it retroactively mandatory would create twenty-six units of retrofit debt on the day it
+> landed - which is what happened with the register retrofit, still unpaid on S2. **`validate.py`
+> reports coverage instead of failing**, in the same informational block as `/verify` coverage and for
+> the same reason: whether an old note earns a presentation is judgement, and a threshold in the
+> validator would launder judgement as a green check. Retrofit on demand, highest-value sources first.
+
+> **No reference implementation yet, and that is a known risk.** This file records that the
+> `LEARNING.md` shape was twice specified wrongly before a worked example existed. **The next ingest is
+> the test**; if the shape is wrong, fix the contract rather than the note.
 
 ## `foundations/` - supplied background, uncited by construction
 
@@ -858,6 +909,8 @@ rather than arbitrary.
    | "Explain / teach me this" | **mentor** | + curator or code-explorer |
    | "What do I know about X?" / build study material | **synthesizer** | + mentor when teaching |
    | Shape the brain: topic taxonomy, split a note | **architect** | - |
+   | **Finished a `LEARNING.md`** -> append the `Presentation narrative` | **presenter** | + fact-checker when a movement's evidence strength is in question. **Never with curator** - curator owns the ramp, presenter owns the argument |
+   | "How would I present this?" / explain a diagram to an audience | **presenter** | + mentor inside the technical body |
 3. **Follow the flow** - capture (`raw/` or clone into `repo/`) -> understand (`view` visuals /
    trace code) -> corroborate (`nodes.md`) -> *(optional, on request)* deep research (`context/`)
    -> distill (`LEARNING.md`) -> compound (`brain/`).
