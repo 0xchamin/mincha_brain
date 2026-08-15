@@ -1,6 +1,6 @@
 # Topic: Evals
 
-**Status:** established (9 sources / **8 independent** - S1 Uber closed-loop evals, S4 Anthropic
+**Status:** established (10 sources / **9 independent** - S1 Uber closed-loop evals, S4 Anthropic
 harness design, S5 Google DeepMind skill evals, **S11 agent-first data stack - a *counter*-example, a
 production deployment with no evals whose authors concede the gap**, **S13 `karpathy/autoresearch`,
 which supplies the half this note was missing: how to *design* a metric that an optimizer cannot game,
@@ -8,7 +8,9 @@ and what an accept rule does with noise**, **S14 Stanford CS329A, which supplies
 *independent* statement of self-evaluation bias and the first case of the verifier being written by
 the thing it judges**, and **S15, CS329A lecture 2 - not independent of S14**, contributing the
 coverage-versus-`pass@1` reporting failure and a scaling law that reads as a diagnostic for your
-evaluation set).
+evaluation set, and **S25, the brain's first *survey* - seven cybersecurity benchmarks read at once,
+which is the first time this note has seen an eval design problem solved seven independent times and
+can say which parts converged**).
 **Basis:** all three independently arrive at *an independent checking stage that can fail the work* -
 S1's Swiss-cheese QA gates on a production pipeline, S4's evaluator agent with hard thresholds on a
 build loop, and S5's CI gate that blocks a skill diff from merging without proof of lift. **S5 is the
@@ -244,6 +246,73 @@ or the metric rewards the degenerate corner.
 
 Full synthesis in [`agent-security.md`](agent-security.md).
 
+### Seven benchmarks solving one problem, and what converged (S25)
+
+**Every source above this one describes an eval somebody built. S25 describes seven, which is the
+first opportunity this note has had to ask which design choices are convergent and which are
+idiosyncratic** ([S25](../../sources/260815_cybersecurity-evals/LEARNING.md)). It is a survey rather
+than a study, and [ADR-0025](../decisions/0025-a-secondary-source-corroborates-its-own-reading.md)
+governs what its corroboration is worth - **the gate here establishes that the summarizer read the
+papers correctly, never that the papers are right.**
+
+Three things converged across all seven, and the reason they converged is a single property of the
+domain rather than anything the designers agreed on. Exploitation has a free, perfect, mechanical
+verifier, because a sanitizer either fired or it did not and a flag string either was retrieved or it
+was not. **That is claim 124 seen from its good end** - verification sets the ceiling, verifiers are
+distributed unevenly across domains, and this is one of the domains that got lucky. Everything below
+follows from it.
+
+The first convergence is that **success is defined as a property of the environment rather than of
+the trajectory** (claim 198). Exploits are open-ended and the interesting ones are the ones nobody
+anticipated, so specifying the expected method would score a better-than-expected solution as a
+failure. CVE-Bench's answer is the cleanest instance: name eight acceptable end states, accept any of
+them, and have the grader continuously interrogate the target rather than read the submission. The
+consequence worth carrying out of the security domain is that **the grader then never needs to be as
+capable as the agent**, which is what makes determinism affordable at all. Whenever this note's other
+sources reach for an LLM judge, the question to ask first is whether success can instead be written
+as a world state checkable afterwards.
+
+The second is that **a binary outcome is scored as an ordered ladder** (claim 199). A pass/fail
+grader reports "found nothing" and "found the flaw, reproduced it, could not weaponise it"
+identically, and those two states have opposite implications for what happens next. Note how this
+relates to what S5 already contributes here. S5's ablation asks a *comparative* question to avoid
+needing a good grader; the ladder asks a *positional* one to avoid needing a fine-grained one. Both
+are ways of extracting signal from a metric you do not fully trust, and the ladder is the one that
+works when you cannot remove a component to test it.
+
+The third convergence is the uncomfortable one, and it is where this source stops agreeing with this
+note. Two of the seven put a **model on the scoring path** - a transcript auditor confirming the
+agent exploited the intended vulnerability rather than finding a shortcut - and the survey's own
+summary diagram lists "trace audit (LLM)" beside three deterministic checks while its prose says
+graders are "typically deterministic". Claim 164 argues that is unsound. The conflict is recorded
+below in Open questions rather than resolved, because the exposure is genuinely weaker than
+AgentDojo's in-loop judge and neither source addresses the other.
+
+**Then the finding that matters most to this note, and it is not about cybersecurity at all.** Read
+across all seven benchmarks and the scores are dominated by things that are not the model. Task
+decomposition moved a difficulty ceiling roughly elevenfold (claim 202). Swapping the scaffolding
+took one model from 3 of 40 networks to 37 of 40 (claim 201). Disabling vendor safety filters moved
+one model from zero to 120 exploits (claim 203). Information given, tooling and attempt budget each
+moved results by more than the gap between adjacent models. **Claim 197 states the generalisation: a
+capability number in an adversarial domain describes a configuration, and every published number has
+a setting for all five dials whether or not the author disclosed it.**
+
+That claim is this note's business rather than security's, because it is a statement about what a
+benchmark result *is*. It also supplies the fourth independent instance of claim 132 and a new
+variant of it. S14 and S15 overstated by reporting coverage as performance; S25 reports three
+different attempt budgets across three benchmarks and **discloses none of them**, with two of the
+three recoverable only from a figure caption and a chart title. The failure survived translation into
+a security context and into a secondary source, which is what earns it a fourth source rather than a
+footnote.
+
+One methodological note is worth keeping for this note's own practice. The single best-evidenced
+result in S25 is not the largest one, it is the one with **component-wise ablations** underneath it
+(claim 201) - remove the abstraction layer and success drops to zero, remove the auxiliary services
+and it drops to 1-5 environments. This note already holds ablation as an eval method from S5
+(claim 33). S25 is the first source here to show it used on an *architecture* rather than on an
+instruction artifact, and it is the reason a 3-to-37 jump reads as a finding rather than as an
+announcement.
+
 ## Key claims
 
 | Claim | Sources (cited) | Confidence |
@@ -287,6 +356,10 @@ Full synthesis in [`agent-security.md`](agent-security.md).
 | **"The agent succeeded" is not an operable completion model** - the chain runs event accepted, run owned, action completed, transcript committed, obligation recorded, send attempted, platform reports, reply available, and **every arrow is its own failure boundary**. Execution, persistence and delivery need separate evidence, because one flag cannot distinguish "nothing happened" from "everything happened except the last hop" - and an operator reading it wrong reruns a destructive tool. Claim 190. | S24 `n17`, `n18` + `fig3`, `fig4` | emerging (T4, unmeasured, internally corroborated) |
 | **Record the provider tuple that *served* the call, not the one selected at session start** - fallback can replace provider, model, endpoint, client and API mode together, so a start-of-session log line records an intention. Claim 193. | S24 `n15` + `fig3_gateway-message-flow.png` | emerging (unmeasured) |
 | **A runtime built on explicit identity and durable state is debuggable with no access to model internals** - across six documented production failures, not one piece of evidence to inspect names anything inside the model. Claim 194. | S24 `n22` + `fig4_six-failure-cases.png` | emerging. **A claim about a chosen set of six, not a survey** |
+| **A capability number in an adversarial domain describes a configuration, not a capability**, and the configuration moves the score further than the model does - five dials (information, decomposition, scaffolding, safeguards, attempt budget), each moving results by more than the model-to-model spread. Claim 197. | S25 `n6`, `n8`, `n9`, `n19`, `n25` + `fig4`, `fig5`, `fig6`, `fig8` | **needs-check as a synthesis** - the five dials are this brain's framing; each is separately gated |
+| **Make an open-ended task gradable by defining success as a checkable property of the environment, not of the trajectory** - eight named end states, a grader that interrogates the target rather than reading the submission, so **the grader never needs to be as capable as the agent**. Claim 198. | S25 `n5`, `n2` + `fig3_cvebench-standardized-goals.png` | corroborated (faithful summary - [ADR-0025](../decisions/0025-a-secondary-source-corroborates-its-own-reading.md)) |
+| **Score an open-ended capability as an ordered ladder, not a bit** - a binary grader reports "found nothing" and "found it and could not weaponise it" identically, and the rung where progress stops is the diagnostic. Claim 199. | S25 `n3` + `fig2_outcome-ladder.png` | corroborated (faithful summary). The reasoning is the article's own |
+| **A difficulty ceiling attributed to agents often belongs to the guidance regime** - 11 minutes unguided against 52 minutes and 2h03 subtask-guided, roughly elevenfold. Two readings of one benchmark support opposite conclusions about how far away the capability is. Claim 202. | S25 `n6`, `d1` + `fig4_cybench-guidance-ceiling.png` | corroborated **against the article**, which states only the unguided half - the figure is the stronger leg |
 
 ## Key visuals
 
@@ -295,6 +368,12 @@ Full synthesis in [`agent-security.md`](agent-security.md).
 
 ![Online tuning loop focused on drift](../../sources/260725_closed-loop-evals-multimodal-agent/visuals/frame_658.jpg)
 > Closed loop: live traffic -> route/verify/diagnose+tune/benchmark/ship, re-running on fresh data. S1 `&t=658s`.
+
+![CVE-Bench sandbox framework - general goal in, eight boolean checks against the target containers out](../../sources/260815_cybersecurity-evals/visuals/fig3_cvebench-standardized-goals.png)
+> **The cleanest instance of claim 198 in this brain.** The grader on the right asks eight independent
+> questions of the *environment* - is the service down, was a file created at a known path, did a row
+> change, did the app call a prohibited host - and never inspects what the agent did to get there.
+> That is what lets an unbounded space of methods be scored deterministically. S25 `n5`.
 
 ## Open questions / conflicts
 
@@ -335,8 +414,38 @@ Full synthesis in [`agent-security.md`](agent-security.md).
   **memory-domain results with an undisclosed method**, not evidence about eval design. What it
   contributes here is the decomposition move, and that is already stated above.
 
+- **Unresolved conflict: does claim 164 reach a post-hoc transcript auditor?** S20 argues a
+  model-based judge is unsound in an adversarial evaluation because the judge shares a vulnerability
+  with the system it grades. S25 documents two benchmarks doing it anyway - ExploitGym uses GPT-5.5
+  and Opus 4.6 as transcript auditors at 94% agreement across 313 tasks, and the survey's own summary
+  diagram lists "trace audit (LLM)" among four grader checks while its prose calls graders "typically
+  deterministic" (S25 `n13`, `d7`). **Two reasons the exposure is weaker than AgentDojo's**: this
+  judge reads a transcript after the fact rather than adjudicating utility inside the loop, and the
+  agent is a benchmark subject rather than an adversary trying to fool the grader. **One reason it is
+  not resolved**: 94% agreement between two model auditors measures how much they agree with each
+  other, and two judges sharing a failure mode agree enthusiastically. Neither source addresses the
+  other. Closing this needs a source that adversarially tests an auditor rather than reporting its
+  inter-rater agreement.
+- **The attempt budget is now the most reliably omitted number in this note's evidence base.** Three
+  benchmarks in S25 report at single-shot, best-of-three and best-of-eight, and the article states
+  none of them (claim 132, fourth instance). S5 recommends multiple trials and reporting reliability
+  rather than a single pass/fail, which is the correct practice and is stated nowhere else here.
+  Open: is there any source in this field that reports both a best-of-N and its pass@1 beside it?
+- **Where does claim 201's scaffolding effect stop?** S25 has scaffolding worth more than a ten-model
+  spread on long-horizon multi-step work, and a cliff in the same article that no scaffolding crossed
+  (claim 200). The boundary between "scaffolding makes existing capability reliable" and "scaffolding
+  cannot supply missing capability" is visible in one source and tested by nobody.
+
 ## Sources feeding this topic
 
+- **S25** - [Patterns for Building Cybersecurity Evals](../../sources/260815_cybersecurity-evals/LEARNING.md)
+  (Eugene Yan, 2026-06). **The brain's first survey source**, covering seven cybersecurity benchmarks
+  at once, which is why it can say what converged across independent designs rather than what one
+  team chose. Contributes claims 197-199 and 202, and a fourth instance of claim 132. **⚠️ Secondary
+  source - every number is second-hand and no primary was fetched**, so its gate establishes a
+  faithful reading and nothing more ([ADR-0025](../decisions/0025-a-secondary-source-corroborates-its-own-reading.md)).
+  Five of its eight divergences are the article understating its own figures. Full synthesis above;
+  the offensive-capability results live in [`agent-security.md`](agent-security.md).
 - **S24** - [Hermes Agent Architecture Part 1](../../sources/260814_hermes-agent-architecture-p1/LEARNING.md)
   (Vinoth Govindarajan, 2026-08-10). **The first source here on *operational* evidence rather than on
   offline evaluation**, and the distinction is worth keeping: it never scores anything, and it is

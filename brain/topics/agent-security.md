@@ -1,6 +1,15 @@
 # Topic: Agent security
 
-**Status:** **established** (**12 sources, with three independent corroborating groups.** **S24
+**Status:** **established** (**13 sources, with three independent corroborating groups.** **S25
+(2026-08-15) is the thirteenth and joins no group - it is the note's first source about *offensive*
+capability rather than about attacks on agents**, and the distinction matters: every other source here
+studies an adversary attacking an agent, while S25 surveys seven benchmarks measuring an agent
+attacking software. It contributes the note's first measurement of where that capability stops
+(claim 200), the first evidence that published offensive numbers describe a configuration users cannot
+reach (claim 203), and the first rate of change anyone here has put on any security capability
+(claim 204). **It corroborates nothing already present**, and it is a **secondary source** whose gate
+establishes a faithful reading rather than a fact
+([ADR-0025](../decisions/0025-a-secondary-source-corroborates-its-own-reading.md)). **S24
 (2026-08-14) is the twelfth and joins no group either** - it is an agent architecture write-up with no
 threat model, contributing the constructive premise under this note's structural defences (claim 188),
 an isolation primitive one layer below S12's (claim 185), and **an identification rather than a claim**:
@@ -366,6 +375,68 @@ through what looks to the user like independent retrieval.
 > shipped product by an unrelated team - and the commentary was written from architecture alone,
 > before this brain held any source that had tested it.
 
+### The other direction: measuring the agent as the attacker (S25)
+
+**Twelve sources in, every one of them studies an adversary attacking an agent. S25 is the first that
+measures an agent attacking software**
+([S25](../../sources/260815_cybersecurity-evals/LEARNING.md)), and the note needs the distinction
+kept sharp, because the two are not the same subject wearing different hats. Prompt injection,
+memory poisoning and tool filtering are all about what an attacker can make *your* agent do. This is
+about what an agent can do to *somebody else's* software when that is the explicit goal, which is the
+question every capability-threshold and responsible-disclosure decision in the field actually turns
+on. It is a survey of seven benchmarks rather than a study, and
+[ADR-0025](../decisions/0025-a-secondary-source-corroborates-its-own-reading.md) governs what its
+corroboration is worth.
+
+The most useful thing it supplies is a location rather than a number. Measured on the one benchmark
+that reports a full capability ladder, the numbers do not decay across the rungs, they **fall off a
+cliff between two specific ones** (claim 200). Reaching the buggy line of code is saturated at 41 of
+41 bugs for nearly every model tested including the cheapest, since that is a patch-reading exercise.
+Triggering a crash is broadly achievable. Then escaping the sandbox reads zero for eleven of eighteen
+agent configurations and arbitrary code execution reads zero for sixteen of them. **Finding bugs and
+crashing programs are commodity capabilities; converting a crash into control of a machine is not**,
+and the barrier holding is ordinary defensive engineering - ASLR, stack canaries, the V8 sandbox -
+rather than a limitation of the models.
+
+That should be read alongside what this note already holds about defences, because it is the same
+lesson from the opposite side. Enabling the mitigations real software ships with cut one model's
+exploit count by about 71%, from 157 instances to 45 (S25 `n14`). Every structural defence catalogued
+here - CaMeL's policies, the tool filter, spotlighting - is a bet that putting the security decision
+somewhere the untrusted component cannot reach beats asking a model to behave. **The exploitation
+benchmarks are that bet being paid out in the classical setting**, where decades of memory-safety
+mitigation are the reason the cliff sits where it does.
+
+Then the finding that should change how this note reads any offensive-capability figure, including
+the ones above. **A published number here describes a configuration end users cannot reach**
+(claim 203). The benchmark's own results table carries a caption saying safeguards were disabled and
+a footnote recording that with default safety filters enabled, *all* exploit attempts by a model
+scoring 120 in that same table are blocked. Zero and 120 are one model in one week under two
+settings. The survey's prose reports this as "some model refusals from standard alignment training
+still occurred", which describes a marginal effect where the footnote describes a total one. Two
+further confounds sit in the same table and neither is disclosed in the text: the two top-scoring
+rows were produced in collaboration with the vendor whose models they rank first, and model varies
+with harness throughout, so no row isolates either.
+
+**One consequence for this note's own reasoning is worth stating plainly.** Claim 165 records inverse
+scaling, that more capable models are easier to *attack* because a weak model fails at the attacker's
+goal too. S25 supplies a measurement pointing the other way on the offensive axis and it does not
+refute claim 165, it complicates the instrument: capability at exploitation is **non-monotonic in
+model version**, with one sibling scoring 7 against its predecessor's 15 and a later release sitting
+below an earlier one on a second benchmark (claim 203, `n24`). Refusal training is the obvious
+candidate and it moves opposite to capability in every such comparison. **Nothing here separates the
+two**, and any argument about whether models are getting more dangerous that rests on a single
+benchmark delta is reading an entangled signal.
+
+Which makes the last contribution the one to be careful with. Buried in a chart the article's prose
+never discusses is a log-linear fit putting the **doubling time for offensive capability at roughly
+1.3 months** (claim 204), measured in simulated stolen dollars on contracts exploited after each
+model's knowledge cutoff. It is the first rate of change anyone in this note has attached to any
+security capability, and this note has been describing a static landscape for twelve sources. It is
+also `single-leg`, figure-only, from a T2 vendor benchmark with five of eight plotted points being
+that vendor's own models, at best-of-eight, fitted to eight points against calendar release date
+rather than compute. **Cite the existence of a measured rate; do not cite 1.3 months as a fact about
+the field.**
+
 ## Key claims
 
 | Claim | Threat / mitigation | Sources (cited) | Confidence |
@@ -427,6 +498,9 @@ through what looks to the user like independent retrieval.
 | **A tool schema is a request format and proves nothing about authorization, isolation or approval** - the constructive premise under claims 152 and 167 | framework: why structural defences exist | S24 `n16` (claim 188) | emerging (T4, unmeasured, internally corroborated). The claim is a **distinction** and does not rest on the source's product facts |
 | **The isolation policy of a multi-tenant agent is the routing key's field list**, not a layer above it - claim 105 one level down, and its author refuses to call it a security guarantee | mitigation: structural | S24 `n2`, `n3` (claim 185) | emerging (T4, unmeasured) |
 | **Persist intent, re-resolve authority** - a session may remember non-secret provider and model intent, and credentials resolve through the auth path every run, so a rotation takes effect next turn | design rule | S24 `n13` (claim 192) | emerging (uncontroversial design argument, unmeasured) |
+| **Measured offensive capability falls off a cliff at one rung rather than decaying** - finding bugs and crashing programs are commodity, converting a crash into control is not, and **the barrier holding is ordinary memory-safety engineering** (ASLR, stack canaries, the V8 sandbox), which is also why enabling those mitigations cut one model's exploit count ~71% | offensive capability | S25 (claim 200, `n16`, `n14`, `fig6`) | corroborated (faithful summary). **The most perishable claim in this note** - a snapshot of where models stop, and claim 204 says the frontier moves monthly |
+| **A published offensive-capability number describes a configuration end users cannot reach** - safeguards disabled under trusted-access programmes, and the same model scoring 120 exploits has *all* attempts blocked with default filters on. Capability is also **non-monotonic in model version**, with refusal training an unresolved confound moving opposite to capability | measurement | S25 (claim 203, `n24`, `n25`, `d5`, `fig5`) | corroborated **against the article**, which reports a total effect as a partial one. Complicates claim 165's instrument without refuting it |
+| **The first rate of change attached to any security capability here: ~1.3-month doubling** in simulated exploitation revenue on contamination-controlled targets, R^2 = 0.828 over eight models | offensive capability | S25 (claim 204, `n23`, `d2`, `fig8`) | **needs-check.** `single-leg`, **figure-only** - the article's prose never mentions the trend. T2 vendor benchmark, five of eight points its own models, best-of-eight, calendar x-axis. **Cite that a rate was measured, not the number as a fact about the field** |
 | **The artifact S19 attacked now has an independent architecture description** - a first for this brain, and it is an identification rather than corroboration | provenance | S19 + S24 (claim 196) | **verified against S19's bibliography.** Moves neither claim 160 nor 161 - see `d5` |
 
 ## Key visuals
@@ -1035,6 +1109,14 @@ a property S24 does not claim and could not establish.
 
 ## Sources feeding this topic
 
+- **S25** - [Patterns for Building Cybersecurity Evals](../../sources/260815_cybersecurity-evals/LEARNING.md)
+  (Eugene Yan, 2026-06). **The note's first source on offensive capability rather than on attacks
+  against agents**, surveying seven benchmarks. Contributes claims 200, 203 and 204 - where
+  exploitation capability stops, why every published number describes an unreachable configuration,
+  and the first measured rate of change in this note. **⚠️ Secondary source, every number second-hand,
+  no primary fetched** ([ADR-0025](../decisions/0025-a-secondary-source-corroborates-its-own-reading.md)),
+  and its single most quotable finding (claim 204) is `single-leg` and figure-only. Full synthesis
+  above; the eval-design material lives in [`evals.md`](evals.md).
 - **S24** - [Hermes Agent Architecture Part 1](../../sources/260814_hermes-agent-architecture-p1/LEARNING.md)
   (Vinoth Govindarajan, "The Agent Stack", 2026-08-10). **Not a security source, and it feeds this note
   three times.** It supplies the constructive premise under claims 152 and 167 (a tool schema is not an

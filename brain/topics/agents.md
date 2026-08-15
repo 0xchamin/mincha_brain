@@ -4,7 +4,9 @@
 agents, S4 Anthropic harness design, S5 skills evals, S7 Anthropic memory and dreaming, S9 Microsoft
 Agent Framework, S10 tool search, S12 Google Cloud multi-tenant reference architecture, S13
 `karpathy/autoresearch`, S14 Stanford CS329A, **S15 CS329A lecture 2 - not independent of S14**,
-S17 indirect prompt injection, S18 CaMeL, S20 AgentDojo, S24 Hermes agent architecture)
+S17 indirect prompt injection, S18 CaMeL, S20 AgentDojo, S24 Hermes agent architecture, **S25
+cybersecurity eval survey - which supplies the largest measured scaffolding effect in this brain, and
+the bound on it**)
 
 > **On S17's admission here, since its sibling S16 was declined.** S16 (AgentPoison) attacks a
 > retrieval store, which is a *component*, and was kept out of this note under
@@ -533,6 +535,9 @@ covers, not just to the one that produced it.
 | **A mutual-exclusion guard may be memory-only and therefore process-local, and a component diagram cannot show it.** Read the durability column first. Claim 191. | S24 `n8`, `d1` + `fig2_ownership-split.png` | emerging. **Product-specific in its instance, general in its lesson** |
 | **"Remote" names three unrelated boundaries** - remote model API, remote execution backend, remote gateway - and none implies the others. Claim 195. | S24 `n6` + `fig1_model-inside-the-loop.png` | emerging (vocabulary, and load-bearing) |
 
+| **Scaffolding dominates the model on long-horizon work, and the bound is that it makes existing capability reliable rather than supplying missing capability.** Holding the model fixed, 3 of 40 networks became 37 of 40; all ten models tested scored **zero** on the old scaffolding and 6-9 of 10 on the new one. **Ablations make it a finding**: remove the abstraction layer and success drops to zero, remove the auxiliary services and it drops to 1-5. The bound comes from the same source, where no scaffolding got a public model past the sandbox-escape cliff. Claim 201. | S25 `n19`, `n20`, `n21` + `fig7_mhbench-equifax-chain.png` | corroborated, and **the best-evidenced claim from that source** - the only one resting on component-wise ablations |
+| **Guidance interventions are non-monotonic: the same upgrade helps one model and degrades another.** A pseudoterminal plus web search moved one model 17.5% to 20% and another 17.5% down to 10%; adaptive coaching lowered the best model's top-tier result, collapsed a third model across every tier, and raised a fourth's mid-tier count. **Measure per model, never assume.** Claim 205. | S25 `n7`, `n17` + `fig4`, `fig6` | **needs-check** - the tools half is corroborated, the coaching half is figure-only and the article never mentions that arm exists |
+
 ## Key visuals
 
 ![Routed multi-agent pipeline with per-stage QA and logging](../../sources/260725_closed-loop-evals-multimodal-agent/visuals/frame_1058.jpg)
@@ -623,6 +628,14 @@ covers, not just to the one that produced it.
 
 ## Sources feeding this topic
 
+- **S25** - [Patterns for Building Cybersecurity Evals](../../sources/260815_cybersecurity-evals/LEARNING.md)
+  (Eugene Yan, 2026-06). Feeds this note on **two** things and nothing else. Claim 201 is the largest
+  measured scaffolding effect in this brain and the only one with component-wise ablations under it,
+  and it arrives with its own counter-example attached, which is why the bound is written into the
+  claim rather than left for a later source to find. Claim 205 says guidance interventions have an
+  unpredictable sign. Everything else it teaches is eval design ([`evals.md`](evals.md)) or offensive
+  capability ([`agent-security.md`](agent-security.md)). **⚠️ Secondary source, second-hand numbers**
+  ([ADR-0025](../decisions/0025-a-secondary-source-corroborates-its-own-reading.md)).
 - **S13** - [`karpathy/autoresearch`](../../sources/260803_autoresearch/LEARNING.md) (Andrej
   Karpathy, code, snapshot `228791f`, 2026-03-26). Feeds this note **only** on autonomy as a
   suppressed default and the conditions that earn it (claim 119). Everything else it teaches - the
