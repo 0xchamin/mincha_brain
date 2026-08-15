@@ -504,7 +504,8 @@ structure is assembled from prose and may impose more shape than the author inte
   [`rag.md`](../../brain/topics/rag.md)). **n=1, and still inside the easy regime.** Worth saying
   before the coincidence gets mistaken for corroboration.
 - **The "Background, supplied" blocks are mine** - the compile/interpret trade and its staleness cost,
-  append-only-plus-derived-views and reconstructability. Uncited by construction.
+  append-only-plus-derived-views and reconstructability, and the generation effect under the last open
+  question. Uncited by construction.
 
 ## Open questions
 
@@ -515,8 +516,17 @@ structure is assembled from prose and may impose more shape than the author inte
   it in the periodic pass, with no account of why both are needed. The honest reading is that ingest's
   version is unreliable - which is `d1` again, and the document never says it.
 - **Does the human keep their grip on knowledge they never wrote?** `n14` hands the human taste and
-  the LLM the writing. Nothing addresses what a reader retains of a corpus they have only ever read -
-  and the generation effect in learning suggests the answer is "less than they think".
+  the LLM the writing. **Nothing in the source addresses what a reader retains of a corpus they have
+  only ever read.**
+
+  > **Background, supplied.** The **generation effect** is a long-standing finding in memory
+  > research: material you produce yourself is retained better than the same material read
+  > passively. The gist never mentions it, and it is what makes this question sharp rather than
+  > rhetorical - **if it transfers, then `n14`'s division of labour trades retention for throughput,
+  > and the trade is invisible to the person making it**, because a wiki you can navigate feels like
+  > a subject you know. **Whether it transfers to reviewing LLM-written prose is exactly what nobody
+  > has tested**, so this is a hypothesis worth checking and not an answer. *(Uncited by
+  > construction, and the direction is deliberately not asserted.)*
 - **What does the lint pass cost, and how often is "periodically"?** It reads everything by
   construction. The gist neither budgets nor triggers it. This kit's own answer - on request,
   unbudgeted ([ADR-0009](../../brain/decisions/0009-dreaming-reconciliation-pass.md)) - is a decision,

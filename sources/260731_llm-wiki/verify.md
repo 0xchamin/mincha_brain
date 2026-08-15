@@ -120,3 +120,29 @@ ceiling is still the best deep-research target in the source, and **`/research` 
 moves it, not this one.**
 
 > Inherits the global rules in `../../AGENTS.md`.
+
+---
+
+## Pass 1 - addendum, 2026-08-15 (same day)
+
+**The `judgement` finding was adopted by the human and applied.** Pass 1's entry above is left
+exactly as written - it is a log, and rewriting the record of what was proposed would destroy the
+thing the log is for.
+
+**What changed.** The Open questions bullet on whether a human keeps their grip on knowledge they
+never wrote no longer asserts a direction in passing. The generation effect is **kept**, because
+deleting it would have removed the reason the question is sharp rather than rhetorical, and is now
+carried in a marked `> **Background, supplied.**` block that states it is uncited by construction and
+that **the direction is deliberately not asserted**. The claim it makes is now the conditional one -
+*if* the effect transfers, `n14`'s division of labour trades retention for throughput and the trade is
+invisible to the person making it - followed by the plain statement that nobody has tested whether it
+transfers to reviewing LLM-written prose.
+
+**One consequential knock-on, worth recording because it is the kind of thing a fix creates.** Adding
+a third `Background, supplied` block made "What to distrust" wrong: it **enumerates the blocks by
+name** and listed two. That enumeration is itself an uncited factual assertion about the file, so
+leaving it stale would have opened a fresh check-3 inconsistency while closing another one. Updated to
+name all three. **A fix that satisfies a checker and breaks a neighbouring sentence is not a fix**, and
+this file's honesty rests on that enumeration being complete.
+
+No other finding was re-opened, no gate was touched, and no node changed.
