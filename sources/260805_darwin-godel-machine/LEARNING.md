@@ -22,6 +22,31 @@ is §5: **the builders state that if your benchmark does not capture every prope
 loop amplifies whatever it does not measure** (`n12`). That is S19's V-S5, said by the people running
 the loop.
 
+```mermaid
+flowchart TB
+    G["Schmidhuber's machine rewrites its own code<br/>only when it can <b>prove</b> the change good"]
+    W["which is why nobody built one"]
+    S["swap the proof for <b>empirical evidence</b><br/>on a benchmark - n1"]
+    C["and then handle everything that follows<br/>from being able to be <b>wrong</b>"]
+    A["an <b>archive</b> of every agent ever produced,<br/>parents chosen by score <i>and</i> by how<br/>little explored they are - n3, n4"]
+    R["20.0% -> 50.0% on SWE-bench<br/>over 80 iterations - n7"]
+
+    G --> W --> S --> C --> A --> R
+
+    style S fill:#dcfce7,stroke:#15803d,color:#14532d
+    style C fill:#e8f0fc,stroke:#4285f4,color:#1a3a6b
+```
+
+This is a substitution diagram, not an architecture diagram, and the box after the swap is where the
+real work is. **The crux is that replacing proof with evidence is one line of design and produces a
+system that can be wrong, so every subsequent choice - the archive, the exploration term, the frozen
+components - exists to survive being wrong rather than to improve anything.** It is drawn as a single
+descent because the paper reads that way: one substitution, then its consequences, then the numbers.
+The result is unglamorous by design, and section 9 carries the builders' own warning about what the
+loop does to whatever the benchmark fails to measure.
+
+*Synthesized from `n1`, `n3`, `n4` and `n7`.*
+
 ## The 1-minute version
 
 This article covers an ICLR 2026 paper - the strongest venue in this brain - that builds the first
@@ -132,7 +157,8 @@ flowchart TB
     style M2 fill:#f8b4b4,stroke:#c1121f,stroke-width:2px
 ```
 
-Four movements top to bottom. Movement 1 is short and establishes the one substitution everything else
+This is a reading-order diagram about the note rather than about the system. Movement 1 is short and
+establishes the one substitution everything else
 responds to. **Movement 2 is the payload for anyone building this**, because it is where the design
 decisions live: section 4 derives the archive from the failure of hill-climbing, and section 5 lists
 what the system is forbidden to touch - which is the part S13 already taught this brain to look for
@@ -142,7 +168,32 @@ section and it is where this source meets the security track** - the builders' s
 amplification hazard is the same mechanism S19 predicted adversarially, and reading it after section 5
 is what makes the freezes look like safety engineering rather than housekeeping.
 
-## 1. Why nobody built a Gödel machine
+## Movement 1 - the substitution
+
+```mermaid
+flowchart TB
+    P["1. proof: rewrite only when the<br/>change is <b>provably</b> beneficial"]
+    N["which is undecidable in practice,<br/>so nobody built one"]
+    E["2. evidence: rewrite when the change<br/><b>measures</b> better on a benchmark - n1"]
+    T["3. and self-improvement <b>is</b> the task<br/>it is measured on - n2"]
+
+    P --> N --> E --> T
+
+    style E fill:#dcfce7,stroke:#15803d,color:#14532d
+    style T fill:#e8f0fc,stroke:#4285f4,color:#1a3a6b
+```
+
+This is a substitution diagram, and the third box is the whole move. **The crux is that swapping proof
+for evidence converts an undecidable requirement into an empirical one, at the price of being able to
+be wrong - and the rest of the paper is about paying that price.** It is drawn as a straight
+replacement because there is no middle position available: either the criterion is a proof or it is a
+measurement. Section 3 is the elegant part and is easy to skim past. The system improves its own
+coding ability and is scored on coding, so the benchmark and the subject are the same object, which is
+what makes the loop closed rather than merely iterative.
+
+*Synthesized from `n1` and `n2`.*
+
+### 1. Why nobody built a Gödel machine
 
 > **Background, supplied.** Schmidhuber's **Gödel machine** (2007) is a theoretical design for a
 > self-improving program. It holds a proof searcher alongside its own source code, and it rewrites
@@ -164,7 +215,31 @@ what a proof would have to range over.
 So the requirement that made the Gödel machine safe is the requirement that made it impossible. That
 sets up the substitution the whole paper is built on.
 
-## 2. Proof becomes evidence
+### 2. Proof becomes evidence
+
+```mermaid
+flowchart TB
+    P["<b>proof</b><br/><i>certain, and unobtainable</i>"]
+    E["<b>evidence</b><br/><i>obtainable, and fallible</i>"]
+    C1["a proof-gated system<br/>never moves"]
+    C2["an evidence-gated system moves,<br/>and sometimes moves wrongly"]
+    D["so the design problem changes from<br/><b>how to be sure</b> to<br/><b>how to survive being wrong</b>"]
+
+    P --> C1 --> D
+    E --> C2 --> D
+
+    style D fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a trade diagram, not a critique of Schmidhuber. **The crux is that the substitution does not
+weaken the guarantee so much as relocate the entire engineering problem: a proof-gated machine needs
+no recovery mechanism because it never takes a bad step, and an evidence-gated one needs nothing
+else.** It is drawn as two paths reaching one reframing because the value is in the last box - every
+subsequent design decision in the paper, the archive included, is an answer to it. This also explains
+why the paper spends so little time on the improvement mechanism and so much on the search structure.
+
+*Synthesized from `n1`.*
+
 
 The DGM "relaxes the Gödel Machine's impractical requirement of theoretically *proving* that a change
 will improve the system, instead requiring **empirical evidence** from experiments to demonstrate that
@@ -190,7 +265,7 @@ does not measure**, which is section 9.
 
 The substitution also changes what the system is *for*, and that is section 3.
 
-## 3. Improving yourself is the task
+### 3. Improving yourself is the task
 
 The DGM is a **coding agent**, and its self-modifications are coding tasks performed on its own
 repository. That is not a convenience; it is what makes the loop measurable.
@@ -218,7 +293,32 @@ would need re-deriving for any other domain.
 So the loop is well-formed. The next question is what shape the search should take, and the answer is
 derived rather than assumed.
 
-## 4. Why a lineage fails, and an archive works
+## Movement 2 - the search, and its freezes
+
+```mermaid
+flowchart TB
+    L["a <b>lineage</b>: keep improving<br/>the latest agent"]
+    X["dead ends are permanent, and a<br/>bad step discards everything after it"]
+    A["4. an <b>archive</b>: keep every agent ever<br/>produced, and pick parents by score<br/><i>and</i> by how little explored - n3, n4"]
+    F["5. and freeze what must not be<br/>modifiable, or the loop edits its<br/>own scoreboard"]
+
+    L --> X --> A --> F
+
+    style X fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    style F fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a search-design diagram, not a data structure. **The crux is that an archive is not a
+convenience for rollback but the thing that makes exploration possible at all, since a lineage cannot
+revisit a branch it abandoned.** It is drawn with the failing alternative first because the archive
+reads as obvious bookkeeping otherwise, and it is not: the exploration term is what stops the search
+collapsing onto the current best. Section 5 is the one to read for your own build, and it is the same
+freeze discipline this brain records from autoresearch - the components the agent may not edit are
+what make its results mean anything.
+
+*Synthesized from `n3`, `n4` and `n5`.*
+
+### 4. Why a lineage fails, and an archive works
 
 The obvious search is hill-climbing. Hold the current best agent, ask it to improve itself, keep the
 child if it scores better. One agent, one lineage, forward only.
@@ -257,7 +357,33 @@ down it, and it produced an agent that "outperformed all of its predecessors" (`
 
 Keeping everything makes the search robust. What keeps it *alive* is a different mechanism.
 
-## 5. What must not be modifiable
+### 5. What must not be modifiable
+
+```mermaid
+flowchart TB
+    A["the agent may edit<br/>its own codebase"]
+    Q{"including the parts that<br/>decide whether it improved?"}
+    Y["if yes: the loop optimises<br/>its own scoreboard"]
+    N["if no: the benchmark, the harness<br/>and the scoring stay <b>frozen</b>"]
+    R["freezing is what makes the numbers<br/>mean anything at all"]
+
+    A --> Q
+    Q --> Y
+    Q --> N --> R
+
+    style Y fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    style R fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a containment diagram, and it is the section to read if you are building one of these. **The
+crux is that a self-modifying system needs a boundary it cannot cross, and the boundary has to include
+the measurement or the measurement stops being independent of the thing measured.** It is drawn as a
+single decision with two outcomes because there is no partial answer: any editable component on the
+scoring path reintroduces the problem in full. This is the same freeze discipline this brain records
+from autoresearch, arrived at independently by a different team on a different task.
+
+*Synthesized from `n5`; the cross-reference to autoresearch is this brain's.*
+
 
 Two things are frozen, and after S13 this is the first thing to look for in any self-modifying system.
 
@@ -295,7 +421,36 @@ conceded, where the optimizer searched within a hand-designed family.
 So the design is: evidence instead of proof, an archive instead of a lineage, a liveness gate, and a
 frozen meta-level. Does it work?
 
-## 6. The ablations
+## Movement 3 - does it work
+
+```mermaid
+flowchart TB
+    R["6. 20.0% -> 50.0% on SWE-bench,<br/>14.2% -> 30.7% on Polyglot - n7"]
+    A1["freeze the meta-agent<br/>-> progress plateaus"]
+    A2["keep only the latest agent<br/>-> plateaus lower"]
+    D["7. and what it discovered is unglamorous:<br/>better file editing, patch ranking,<br/>retry on empty patches - n10"]
+    T["8. and it <b>transfers</b> to held-out models,<br/>benchmarks and languages - n11"]
+
+    R --> A1
+    R --> A2
+    R --> D --> T
+
+    style A1 fill:#dcfce7,stroke:#15803d,color:#14532d
+    style A2 fill:#dcfce7,stroke:#15803d,color:#14532d
+    style T fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is an evidence diagram, and the two ablations are why the headline is citable. **The crux is that
+both components were removed individually and progress plateaued each time, which converts a large
+number into a finding about which parts are load-bearing.** It is drawn with the ablations branching
+off the result rather than following it because they are the result's support rather than its
+sequel. Note what was actually discovered: file editing, patch ranking and retrying on empty patches.
+That unglamorousness is worth stating, because a self-improving system finding boring engineering wins
+is more believable than one reporting insight.
+
+*Synthesized from `n7`, `n8`, `n10` and `n11`.*
+
+### 6. The ablations
 
 It does, and the evidence is better than anything else in this brain on the subject.
 
@@ -329,7 +484,29 @@ architecture this brain holds.
 
 The curves say the loop works. What it actually found is the reassuring part.
 
-## 7. What it actually discovered
+### 7. What it actually discovered
+
+```mermaid
+flowchart TB
+    E["what a reader expects:<br/><i>novel reasoning strategies,<br/>architectural insight</i>"]
+    A["what it found:<br/><i>better file editing, patch ranking,<br/>retry on empty patches</i> - n10"]
+    W["and that is the more<br/>believable result"]
+
+    E -.->|"the deflation worth noticing"| A --> W
+
+    style A fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is an expectation diagram, and the deflation is the point. **The crux is that a self-improving
+system discovering unglamorous engineering wins is stronger evidence than one reporting insight,
+because boring improvements are exactly what a real search over a real codebase would find.** It is
+drawn with the expected answer retained because the contrast carries the argument: a paper claiming
+its loop invented novel reasoning would deserve more scepticism, not less. What this also tells a
+builder is where the headroom in their own agent probably is, and it is unlikely to be the
+interesting part.
+
+*Synthesized from `n10`. The reading is this brain's.*
+
 
 Nothing exotic (`n10`). The annotations on the progress plot name the modifications that caused each
 step change, and they read like a competent engineer's backlog: **granular file viewing by line number
@@ -351,7 +528,7 @@ selection, and auto-summarisation at the context limit is S2's compaction.
 
 The obvious suspicion at this point is that the agent learned the benchmark. The paper tests it.
 
-## 8. Held-out transfer
+### 8. Held-out transfer
 
 ![Three transfer panels: across foundation models on SWE-bench, zero-shot between benchmarks, and across programming languages in Polyglot](visuals/fig4_transfer.png)
 
@@ -373,7 +550,31 @@ model generations, which is a different and more durable kind of asset than a fi
 
 That is the case for the method. The last section is the paper making the case against itself.
 
-## 9. What the loop amplifies
+## Movement 4 - the builders' own warning
+
+```mermaid
+flowchart TB
+    B["the benchmark defines<br/>what counts as better"]
+    U["anything you care about that it<br/>does not capture is invisible<br/>to the loop"]
+    A["and the loop <b>amplifies</b> whatever<br/>it does not measure - n12"]
+    S["which is S19's V-S5, said by the<br/>people running the loop"]
+
+    B --> U --> A --> S
+
+    style A fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    style S fill:#e8f0fc,stroke:#4285f4,color:#1a3a6b
+```
+
+This is a warning diagram, and its provenance is what gives it weight. **The crux is that this is not
+an outside criticism but the builders stating the failure mode of their own system, which is the
+strongest form this claim takes anywhere in this brain.** It is drawn as an unbranching consequence
+because there is no mitigation offered and none implied: the benchmark's blind spots are not a tuning
+problem. The last box is the cross-reference worth carrying, since S19 derives the same mechanism from
+an adversarial direction and neither source cites the other.
+
+*Synthesized from `n12`, read against S19.*
+
+### 9. What the loop amplifies
 
 Section 5 of the paper is a Safety Discussion, and it contains the sentence this note exists to carry
 into the security track.
@@ -541,3 +742,145 @@ cite one another; the observation that they describe one mechanism from three di
 - [`brain/topics/agent-security.md`](../../brain/topics/agent-security.md) - the builders' own
   statement of the amplification hazard, which corroborates S19's V-S5 from the opposite direction,
   plus four containment safeguards and the unmodifiable-supervisor proposal.
+
+## Presentation narrative
+
+*A talk track for a team considering a system that modifies its own code, derived entirely from the
+gated nodes above. The results are the authors' own on public benchmarks with ablations, which is
+stronger than most sources here, and the last slide carries the warning the builders themselves
+supply.*
+
+### Slide 1 - Swap the proof for evidence, and inherit a completely different problem
+
+**Schmidhuber's Godel machine rewrites its own code only when it can prove the change beneficial,
+which is why nobody has ever built one [n1].** The DGM's move is one line: replace the proof with
+empirical evidence on a benchmark.
+
+That substitution is easy to state and it changes what the engineering is about. A proof-gated system
+needs no recovery mechanism because it never takes a bad step. An evidence-gated one needs nothing
+else. So the design problem stops being how to be sure and becomes how to survive being wrong, and
+every subsequent choice in the paper is an answer to that.
+
+![The DGM loop: select a parent from the archive, self-modify by editing its own repo, evaluate on a benchmark, add back to the archive](visuals/fig1_dgm_loop.png)
+
+This is the loop, and the elegant part is easy to miss. **The crux is that self-improvement is the
+task it is scored on** - the system improves its own coding ability and is measured on coding, so the
+benchmark and the subject are one object [`n2`].
+
+### Slide 2 - An archive rather than a lineage, because exploration needs a memory
+
+**Keep every agent ever produced, and select parents by score and by how little explored they are
+[n3, n4].** That reads as bookkeeping and is the search design.
+
+A lineage - keep improving the latest agent - cannot revisit a branch it abandoned, so every dead end
+is permanent and a bad step discards everything after it. The archive makes backtracking free, and the
+exploration term is what stops the search collapsing onto the current best. For anyone who has run a
+hyperparameter search this is familiar, and the point is that self-modification is a search problem
+rather than a training problem.
+
+![The archive tree of generated agents beside the progress plot, with the lineage to the final best agent highlighted](visuals/fig3_archive_tree.png)
+
+This is the archive doing its job. **The crux is that the winning lineage is not a straight line** -
+the best agent descends from branches a greedy search would have discarded [`n3`].
+
+### Slide 3 - Freeze the scoreboard, or the loop optimises it
+
+**The agent edits its own codebase, and the benchmark, harness and scoring stay frozen [n5].** This
+is the section to read if you are building one of these, and it is a single decision with no partial
+answer.
+
+Any editable component on the scoring path reintroduces the problem in full. If the system can touch
+what decides whether it improved, then it will eventually improve that instead, and the numbers stop
+meaning anything. This brain records the same freeze discipline from an unrelated project on a
+different task, arrived at independently, which is about as much corroboration as a design principle
+gets.
+
+```mermaid
+flowchart TB
+    A["the agent edits its own repo"]
+    F["frozen: the benchmark,<br/>the harness, the scoring"]
+    R["so 'it improved' stays a claim<br/>about the world rather than<br/>about the scoreboard"]
+    A --> R
+    F --> R
+    style F fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a containment slide, not an architecture. **The crux is that the frozen set has to include the
+measurement**, because a self-modifying system with any editable component on the scoring path will
+eventually improve the scoring rather than itself [`n5`].
+
+### Slide 4 - It works, and the ablations are why that is citable
+
+**SWE-bench goes from 20.0% to 50.0% over 80 iterations, and Polyglot from 14.2% to 30.7% [n7].**
+Large numbers, and on their own they would be an announcement rather than a finding.
+
+What makes them citable is that both components were removed individually. Freeze the meta-agent and
+progress plateaus. Keep only the latest agent, discarding the archive, and it plateaus lower [n8].
+That tells you which parts are load-bearing, which is the thing a headline number never does.
+
+![SWE-bench and Polyglot scores over 80 iterations for the full DGM and two ablations](visuals/fig2_results_ablations.png)
+
+This is the result with its own controls attached. **The crux is the separation between the three
+curves** - that gap is the evidence, not the top line [`n7`, `n8`].
+
+### Slide 5 - What it discovered is boring, and that is the strongest signal in the paper
+
+**Better file editing, patch ranking, and retrying on empty patches [n10].** No novel reasoning
+strategy, no architectural insight.
+
+I want to argue that the deflation is the good news. A self-improving system reporting that it
+invented something clever would deserve more scepticism, not less. Unglamorous engineering wins are
+exactly what a genuine search over a real codebase would surface, and they also tell a builder where
+the headroom in their own agent probably is - which is unlikely to be the interesting part.
+
+It transfers, too: to held-out foundation models, zero-shot between benchmarks, and across programming
+languages [n11]. That is what separates a search that found general improvements from one that overfit
+its evaluation.
+
+![Three transfer panels: across foundation models on SWE-bench, zero-shot between benchmarks, and across programming languages](visuals/fig4_transfer.png)
+
+This is the overfitting check. **The crux is that improvements survive changing the model underneath**
+- which is the strongest available evidence that the loop found something real [`n11`].
+
+### Slide 6 - The builders' own warning is the thing to carry out of the room
+
+**If your benchmark does not capture every property you care about, the loop amplifies whatever it
+does not measure [n12].** That sentence is from the people who built and ran the system.
+
+Its provenance is what gives it weight. This brain holds the same mechanism from a security paper
+that derives it adversarially, and neither source cites the other - one arrives at it by attacking a
+self-improving loop and the other by running one. Agreement between a builder and an attacker who
+never spoke is about as good as corroboration gets here.
+
+So the decision is narrow and it is not about whether the technique works. Before running any
+self-improving loop, write down what you care about that the benchmark does not score, and treat that
+list as the thing the loop will erode. The archive, the exploration term and the frozen scoreboard are
+all worth copying. The warning is what determines whether copying them is safe in your setting.
+
+```mermaid
+flowchart TB
+    S["what you care about"]
+    M["what the benchmark scores"]
+    G["the gap"]
+    L["the loop optimises M,<br/>and erodes the gap - n12"]
+    W["so write the gap down<br/><b>before</b> you start the loop"]
+    S --> G
+    M --> G --> L --> W
+    style L fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    style W fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is the builders' own warning, drawn. **The crux is that the gap between what you value and what
+you score is not a measurement imperfection but the thing the loop actively works against**, so the
+mitigation is an inventory written in advance rather than vigilance during [`n12`].
+
+### Key takeaway message
+
+The Godel machine was never built because proof is unobtainable, and the DGM's whole move is to swap
+proof for empirical evidence - which relocates the engineering from how to be sure to how to survive
+being wrong. An archive rather than a lineage makes exploration possible, an exploration term stops
+the search collapsing onto the current best, and freezing the benchmark and scoring is what keeps the
+numbers meaningful. It takes SWE-bench from 20% to 50% with ablations showing both components are
+load-bearing, what it discovers is unglamorous file editing and patch ranking, and it transfers to
+held-out models and languages. The line to carry is the builders' own: the loop amplifies whatever the
+benchmark does not measure.
