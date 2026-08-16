@@ -29,6 +29,33 @@ and reports that result too (`n18`). The durable idea is the reason for that del
 **every harness component encodes an assumption about what the model cannot do, and those assumptions
 expire** (`n17`).
 
+```mermaid
+flowchart TB
+    G["the gap between the task and what<br/>the model can sustain on its own"]
+    C["each harness component exists to close<br/>one specific part of that gap"]
+    W["it works, and it costs 18x the wall clock<br/>and 22x the money - n15"]
+    S["the model gets stronger<br/>and the gap narrows"]
+    D["the component becomes pure overhead<br/><b>without anything about it getting worse</b>"]
+    R["so on a better model the author<br/>deletes half his own scaffolding - n18"]
+
+    G --> C --> W
+    S --> D --> R
+    C -.->|"the assumption it encodes"| D
+
+    style W fill:#fff4e5,stroke:#b45309,color:#78350f
+    style D fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    style R fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is an obsolescence diagram, not an architecture diagram, and the dashed edge is the whole
+argument. **The crux is that a harness component's worth is a property of the gap it was built to
+close rather than of the component itself, so good scaffolding expires without ever becoming bad
+scaffolding.** It is drawn as two chains meeting rather than as a build-then-teardown sequence because
+the two things are not stages in a project: the assumption is encoded on the day the component is
+written, and the model release that voids it arrives independently and on somebody else's schedule.
+The green terminal box is what makes this source unusual, since almost no vendor write-up publishes
+the deletion of its own machinery. *Synthesized from `n15`, `n17`, `n18` and `n19`.*
+
 ## The 1-minute version
 
 This article covers a vendor's account of building a harness around a coding model, pricing it
@@ -147,7 +174,7 @@ flowchart TB
     style D fill:#fbf1dc
 ```
 
-The diagram runs top to bottom in the order the argument runs, and every box is a numbered section
+This is a reading-order diagram about the note rather than about the harness, and every box is a numbered section
 below. The boxes are gathered into four movements. Blue marks the movement carrying the transferable
 technique, which is how to build a checking agent worth having, and amber marks the movement that
 makes this article unusual, where a vendor reports removing its own product's scaffolding and says
@@ -176,7 +203,33 @@ other gives the reason to expect it to expire.
 
 *Synthesized roadmap of this note - not from the source.*
 
-## 1. The ceiling that prompting will not break
+## Movement A - why one well-prompted agent is not enough
+
+```mermaid
+flowchart TB
+    P["improve the prompt"]
+    C["the same ceiling, again - n1"]
+    S["so ask the agent to check its own work"]
+    B["it confidently praises mediocre output - n3"]
+    R["because the generator reviews against the<br/>same understanding that produced the work"]
+    X["the flaws it could not see while writing are<br/>exactly the flaws it cannot see while reviewing"]
+
+    P --> C --> S --> B --> R --> X
+
+    style X fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+```
+
+This is a dead-end diagram, not a design, and its job is to close off the cheap fix before the
+expensive one is proposed. **The crux is that self-evaluation fails structurally rather than through
+weak prompting, so no amount of asking harder manufactures the second perspective the check
+requires.** It is drawn as a single unbranching descent because each step is what a competent engineer
+actually tries next, in order, and the value is in showing that the sequence terminates rather than
+loops. Everything the rest of the note spends money on is justified by the last box, so a reader who
+does not believe it will find Movement C's price tag indefensible.
+
+*Synthesized from `n1` and `n3`.*
+
+### 1. The ceiling that prompting will not break
 
 The article opens on an experience anyone who has pushed an agent hard will recognise. Prior
 long-running-agent work **plateaued despite continued prompt improvement**, and the plateau moved
@@ -191,7 +244,36 @@ it matches the mechanism the next section explains.
 
 So why would a second agent do what a better prompt could not?
 
-## 2. Self-evaluation bias: why "check your work" does not work
+### 2. Self-evaluation bias: why "check your work" does not work
+
+```mermaid
+flowchart TB
+    U["one understanding of the task"]
+    W["writes the work"]
+    R["reviews the work"]
+    B["the blind spots are the same blind spots"]
+    F["confident praise for mediocre output - n3"]
+    S["a <b>separate</b> evaluator, with its own context,<br/>is a second understanding - n2, n11"]
+
+    U --> W --> B
+    U --> R --> B
+    B --> F
+    F -.->|"the only structural fix"| S
+
+    style F fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    style S fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a causal diagram, not a workflow, and the single shared node at the top is the finding. **The
+crux is that reviewing and writing draw on the same understanding, so a self-check cannot surface the
+flaws that understanding caused.** It is drawn with one source feeding both activities because that is
+literally the defect: two boxes fed by two separate understandings would be a working review, and the
+whole argument for a second agent is buying that separation. Notice the fix is structural rather than
+instructional, which is why "ask it to be more critical" belongs to the failed branch and not the
+green one.
+
+*Synthesized from `n2`, `n3` and `n11`.*
+
 
 The obvious cheap fix is to tell the agent to review its own output, and it fails for a structural
 reason rather than a tuning one.
@@ -224,7 +306,34 @@ production pipeline, and S9 ships the split as a named SDK primitive called Auth
 So the answer is a separate evaluator. But an evaluator has to actually judge something, and most of
 the work this article does is on that word.
 
-## 3. Make subjectivity gradable by fixing the question, not the judge
+## Movement B - making a second agent actually worth having
+
+```mermaid
+flowchart TB
+    E["a separate evaluator"]
+    Q1{"how do you grade<br/>something subjective?"}
+    A1["3. fix the <b>question</b>, not the judge<br/><i>'does this follow our design principles'</i><br/><i>beats 'is this beautiful'</i> - n4"]
+    Q2{"how does it know what<br/>the artifact actually does?"}
+    A2["4a. give it tools. A browser through MCP,<br/>so it interacts with the running thing<br/>instead of inferring from source - n8"]
+    Q3{"how do you stop three good scores<br/>burying one real failure?"}
+    A3["4b. hard thresholds,<br/>never a weighted average - n13"]
+
+    E --> Q1 --> A1 --> Q2 --> A2 --> Q3 --> A3
+
+    style A3 fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a derivation diagram, not a checklist, and the questions are what make the three answers feel
+forced rather than chosen. **The crux is that a second agent is worthless by default, and each of
+these three moves closes one specific way an evaluator returns confident noise.** It is drawn as
+question-and-answer because the article presents the three as separate techniques and the ordering is
+not arbitrary: a fixed question is useless if the grader cannot perceive the artifact, and perception
+is useless if the aggregation rule hides what it found. The last box is the one most often skipped in
+practice, since averaging feels fairer and is precisely what lets a specific failure disappear.
+
+*Synthesized from `n4`, `n8` and `n13`.*
+
+### 3. Make subjectivity gradable by fixing the question, not the judge
 
 This is the technique most worth taking from the article, and it inverts the instinct. Faced with an
 evaluator that grades inconsistently on aesthetics, the reflex is to go looking for a better judge.
@@ -266,7 +375,33 @@ neutral description of what you wanted.
 You now have a well-posed question and an evaluator that can see. That still leaves whether the
 evaluator is any good at the job.
 
-## 4. The grader is not free, and you will build it twice
+### 4. The grader is not free, and you will build it twice
+
+```mermaid
+flowchart TB
+    O["an out-of-the-box model<br/>pointed at your artifact"]
+    L["lenient QA. It passes things<br/>a human would fail - n14"]
+    T1["round 1: fix the question<br/>so the criteria are checkable"]
+    T2["round 2: give it tools, so it<br/>perceives rather than infers - n8"]
+    T3["round 3: hard thresholds, so one real<br/>failure cannot be averaged away - n13"]
+    G["a grader worth having"]
+
+    O --> L --> T1 --> T2 --> T3 --> G
+
+    style L fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    style G fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a cost diagram disguised as a pipeline, and the section title is the point. **The crux is that
+the evaluator is a build rather than a configuration, and budgeting a harness as generator-plus-a-
+prompt underestimates it by the entire cost of tuning the grader.** It is drawn as sequential rounds
+because they genuinely are sequential in the source, and because each round is only diagnosable once
+the previous one is fixed: you cannot tell whether a grader lacks perception while its question is
+still unanswerable. The red box is the default state, and it is worse than no grader, because a lenient
+QA pass produces documented confidence in a broken artifact.
+
+*Synthesized from `n8`, `n13` and `n14`.*
+
 
 > **Out-of-the-box Claude is a poor QA engineer.** It took several tuning rounds, driven by reading
 > logs, to make the evaluator catch subtle bugs, probe edge cases, and stop being **lenient toward
@@ -291,7 +426,34 @@ failure**, which is precisely the thing a QA gate exists to prevent.
 
 Now the architecture, and its bill.
 
-## 5. Planner, generator, evaluator - talking through files
+## Movement C - the build, and the price it actually charges
+
+```mermaid
+flowchart TB
+    SOLO["one agent<br/>20 minutes, about $9"]
+    HARN["planner, generator, evaluator,<br/>communicating through files - n2, n11<br/>6 hours, about $200"]
+    R1["produced a categorically broken app:<br/>entities rendered, input did nothing,<br/>and nothing on screen said so - n16"]
+    R2["produced a working app - n15"]
+    M["18x the wall clock, 22x the money,<br/>and the cheap run is the broken one"]
+
+    SOLO --> R1 --> M
+    HARN --> R2 --> M
+
+    style R1 fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    style M fill:#fff4e5,stroke:#b45309,color:#78350f
+```
+
+This is a cost-comparison diagram, not an architecture diagram, and the important box is the failure
+mode rather than either price. **The crux is that the comparison is not expensive-versus-cheap but
+working-versus-silently-broken, which is the only framing in which a 22x multiplier is a discussable
+number.** It is drawn with both runs terminating in outcomes before the multiplier appears, because
+quoting 18x and 22x without the broken app attached is exactly how this figure gets misused. Note what
+the failure looked like: it rendered correctly and did nothing, with no error anywhere, which is the
+class of defect no test the generator would think to write is going to catch.
+
+*Synthesized from `n2`, `n11`, `n15` and `n16`.*
+
+### 5. Planner, generator, evaluator - talking through files
 
 The harness is three agents (`n11`, S4 §4a). ⚠️ `single-leg`, and worth noting that **the article
 contains no architecture diagram**, so the structure described below is assembled from prose.
@@ -311,7 +473,34 @@ files**, so state survives every handoff.
 
 That is the whole architecture, and it is unremarkable until you see what running it costs.
 
-## 6. The honest price, and what it bought
+### 6. The honest price, and what it bought
+
+```mermaid
+flowchart TB
+    A["what the 22x actually bought"]
+    B["not a better app"]
+    C["a <b>working</b> app instead of one that<br/>rendered perfectly and did nothing - n16"]
+    D["and later, finer accounting:<br/>QA at ~8% of total spend, catching core<br/>features shipped as display-only stubs - n21, n22"]
+    E["the multiplier is the price of catching<br/>failures that do not announce themselves"]
+
+    A --> B
+    A --> C --> E
+    D --> E
+
+    style B fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    style E fill:#fff4e5,stroke:#b45309,color:#78350f
+```
+
+This is a value diagram, not a cost breakdown, and the rejected branch is doing the work. **The crux is
+that the harness did not buy quality, it bought detection, and those are priced completely
+differently.** It is drawn with an explicitly wrong answer attached because "22x for a better app" is
+the reading a reader arrives with and it makes the number look absurd. Reframed as the cost of
+catching a silent failure, the same figure becomes a question about your tolerance for shipping
+something that looks finished and is not. The 8% QA line is the more useful number for anyone
+budgeting, and it is the one nobody quotes.
+
+*Synthesized from `n15`, `n16`, `n21` and `n22`.*
+
 
 The article does something rare and reports its baseline comparison on the same prompt (`n15`,
 S4 §4b). `corroborated (table)`.
@@ -340,7 +529,33 @@ option**, which n=1 cannot give you.
 ⚠️ **Every figure here is a single run of a single configuration by the vendor whose models are being
 measured.** The mechanism transfers, and the numbers are one observation.
 
-## 7. Context anxiety, and a remedy that is already dated
+## Movement D - the part almost no vendor publishes
+
+```mermaid
+flowchart TB
+    S7["7. context anxiety, and a remedy<br/>that has already expired - n5, n6"]
+    S8["8. on a stronger model, sprints removed<br/>and the evaluator demoted to one<br/>end-of-run pass - n18"]
+    S9["9. and QA, at ~8% of spend, still caught<br/>core features shipped as display-only<br/>stubs - n21, n22"]
+    C["Whether a component is load-bearing depends on<br/>the gap between task and model capability,<br/>not on the merit of the component - n19"]
+
+    S7 --> C
+    S8 --> C
+    S9 --> C
+
+    style C fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a conclusion diagram, not a sequence, and all three sections are evidence for one claim rather
+than three findings. **The crux is that this movement is the only place in the source where a vendor
+reports removing its own machinery and publishes the result, which is what makes the expiry claim
+evidence rather than a slogan.** It is drawn as three inputs converging because the argument needs all
+three and is weak with any two: section 7 shows a remedy expiring, section 8 shows the author acting on
+it, and section 9 stops the reader concluding that the whole harness was unnecessary all along. That
+last guard matters, since the easy misreading of this movement is "scaffolding was always overhead".
+
+*Synthesized from `n5`, `n6`, `n18`, `n19`, `n21` and `n22`.*
+
+### 7. Context anxiety, and a remedy that is already dated
 
 A distinct failure gets named here, and the naming is the contribution (`n5`, S4 §2). ⚠️
 `single-leg`.
@@ -370,7 +585,36 @@ file-passing arriving as a necessity rather than a convenience.
 > plus a technique, not as current guidance about any named model.** It is also a preview of the next
 > section: a remedy that expires because the model changed.
 
-## 8. The part almost no vendor publishes: deleting your own scaffolding
+### 8. The part almost no vendor publishes: deleting your own scaffolding
+
+```mermaid
+flowchart TB
+    C["a harness component"]
+    A["encodes an assumption about what<br/>the model cannot do - n17"]
+    M["a stronger model arrives"]
+    E["the assumption expires.<br/>The component is now overhead"]
+    D["delete it - sprints removed entirely,<br/>evaluator demoted to one pass - n18"]
+    R["and remove <b>one at a time</b>, because<br/>simultaneous cuts are uninterpretable - n20"]
+
+    C --> A
+    M --> E
+    A --> E
+    E --> D --> R
+
+    style E fill:#fff4e5,stroke:#b45309,color:#78350f
+    style R fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a lifecycle diagram, not a procedure. **The crux is that scaffolding has an expiry date set by
+somebody else's release schedule, so a harness needs a deletion practice and not only a build
+practice.** It is drawn with the model arriving on a separate arrow because that is the honest
+dependency: nothing about your component changed, and its value changed anyway. The green box is the
+methodological point and the easiest to skip under time pressure, since removing three components at
+once and observing that everything still works tells you nothing about which of the three was carrying
+weight.
+
+*Synthesized from `n17`, `n18` and `n20`.*
+
 
 Here the article turns on itself, and this is why it is worth reading despite its evidence problems.
 
@@ -409,7 +653,34 @@ worked (`n20`, S4 §4c). Delete four things and lose quality, and you have learn
 
 So the scaffolding shrinks. Does the evaluator survive the cut?
 
-## 9. What the evaluator still caught
+### 9. What the evaluator still caught
+
+```mermaid
+flowchart TB
+    D["after the deletion:<br/>sprints gone, evaluator demoted<br/>to a single end-of-run pass"]
+    Q{"was the whole harness<br/>unnecessary all along?"}
+    N["no. QA still caught core features<br/>shipped as display-only stubs - n21"]
+    C["at roughly 8% of total spend - n22"]
+    R["the expiry claim is about <b>which</b> components,<br/>not about whether any are needed"]
+
+    D --> Q
+    Q --> N --> R
+    N --> C --> R
+
+    style Q fill:#fff4e5,stroke:#b45309,color:#78350f
+    style R fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a guard diagram, not a result, and it exists to block a misreading rather than to add a
+finding. **The crux is that deleting half a harness is evidence about that half and not about the
+idea of harnesses**, and the section is here because the previous one invites exactly the wrong
+generalisation. It is drawn as a question with a refusal because that is the shape of the argument:
+the reader has just watched an author dismantle his own machinery, and the natural next thought is
+that it was never needed. What survived the cull is the cheapest component and the one catching the
+failures that look like success.
+
+*Synthesized from `n21` and `n22`, read against `n18` and `n19`.*
+
 
 It does, and the article shows its work (`n21`, `n22`, S4 §5). `corroborated (table)` - a
 phase-by-phase cost and duration table.
@@ -535,3 +806,120 @@ so this is assembled from prose and may impose more structure than the author in
 - `../../brain/topics/evals.md` - self-evaluation bias, making subjectivity gradable, hard
   thresholds, the grader needing tools and tuning, the modality ceiling.
 - `../../brain/topics/context-engineering.md` - context anxiety, and compaction versus reset.
+
+## Presentation narrative
+
+*A talk track for a room deciding whether to build a harness around a coding model, derived entirely
+from the gated nodes above. It reports one vendor's numbers from single runs, so treat every figure as
+one observation and the mechanisms as the transferable part. The visual leg of this source was skipped
+and every node is `single-leg` by construction.*
+
+### Slide 1 - Telling an agent to check its own work does not work, and the reason is structural
+
+**An agent asked to grade its own output confidently praises work a human would call obviously
+mediocre [n3].** That is not a prompting weakness and it does not respond to asking harder. The
+generator reviews against the same understanding that produced the work, so the flaws it could not see
+while writing are exactly the flaws it cannot see while reviewing.
+
+What makes this worth a room's attention rather than a footnote is where it leaves you. The author's
+earlier attempts kept improving the prompt and kept meeting the same ceiling, which moved only once
+the single agent was split into a generator and a separate evaluator [n1]. The question that reframes
+is not how to make the agent more self-critical. It is where a second, independent understanding is
+going to come from, because no instruction manufactures one.
+
+*Visual: the section 2 causal diagram, where one understanding feeds both writing and reviewing.
+Provenance: `n1`, `n2`, `n3`.*
+
+### Slide 2 - The split exists to defeat a conflict of interest, not to add capability
+
+**A planner, a generator and a separate evaluator communicating through files, each holding its own
+context [n2, n11].** I want to be precise about the justification, because this is the claim most
+easily inflated. The article does not argue that more agents are better, and nothing here supports a
+general multi-agent position. The extra machinery buys exactly one thing, which is an independent
+vantage point on the work.
+
+The leadership significance is that this is an organisational argument rather than a technical one,
+and it is the same reason you do not have an engineer sign off their own change. What engineers should
+take from it is the narrowness: if a proposed second agent is not resolving a conflict of interest,
+this source is not evidence for building it.
+
+*Visual: the Movement A dead-end diagram, which closes off the cheap fix before this one is proposed.
+Provenance: `n2`, `n11`.*
+
+### Slide 3 - A second agent is worthless by default, and making it useful is three separate moves
+
+**Most of the article's work goes into making the evaluator worth having, and each move closes a
+specific way a grader returns confident noise.** Subjective quality becomes gradable by fixing the
+question rather than the judge, so "does this follow our design principles?" beats "is this
+beautiful?" [n4]. The evaluator is given tools, a browser through MCP, so it interacts with the running
+artifact instead of reading source and inferring what it would do [n8]. And the gate is hard
+thresholds rather than a weighted average, so strong scores on three criteria cannot bury a real
+failure on the fourth [n13].
+
+The ordering matters and is not arbitrary. A fixed question is useless if the grader cannot perceive
+the artifact, and perception is useless if the aggregation rule hides what it found. Budget
+accordingly: an out-of-the-box model pointed at your work is lenient QA and needs tuning rounds [n14],
+which means the evaluator is a build rather than a configuration.
+
+*Visual: the Movement B derivation diagram. Provenance: `n4`, `n8`, `n13`, `n14`.*
+
+### Slide 4 - The harness cost 22x, and what it bought was detection rather than quality
+
+**On the same prompt, the full harness took six hours and about $200 where the solo agent took twenty
+minutes and about $9 [n15].** Quoted bare that number is indefensible, so it should never be quoted
+bare. The cheap run is the one that produced the categorically broken app, and the failure is the part
+to hold onto: it rendered its entities perfectly, did not respond to input at all, and showed nothing
+on screen to indicate anything was wrong [n16].
+
+Reframed, the multiplier is not the price of a better app. It is the price of catching a failure that
+does not announce itself, which is a different purchase with a different justification. For anyone
+budgeting, the more useful figure is from the later build, where QA ran at roughly 8% of total spend
+and caught core features that had shipped as display-only stubs [n21, n22]. Nobody quotes that one,
+and it is the one that makes the case.
+
+*Visual: the section 6 value diagram. Provenance: `n15`, `n16`, `n21`, `n22`.*
+
+### Slide 5 - On a stronger model the author deleted half his own scaffolding and published the result
+
+**Sprints were removed entirely, the evaluator was demoted to a single end-of-run pass, and the model
+then ran coherently for over two hours [n18].** Almost no vendor write-up does this, and it is what
+turns the next claim from a slogan into evidence.
+
+That claim is the most transferable thing in the source. Every harness component encodes an assumption
+about what the model cannot do, and those assumptions expire [n17]. Whether a component is load-bearing
+therefore depends on the gap between the task and the model's capability, not on the merit of the
+component [n19], which means a well-designed piece of scaffolding becomes pure overhead without
+anything about it getting worse. The operational corollary is small and easy to skip: remove one
+component at a time, because simultaneous cuts are uninterpretable [n20].
+
+And a guard against the easy misreading, because the source supplies it. What survived the cull still
+caught core features shipped as stubs. The expiry claim is about which components, not about whether
+any are needed.
+
+*Visual: the section 8 lifecycle diagram, with the section 9 guard beside it. Provenance: `n17`, `n18`,
+`n19`, `n20`, `n21`.*
+
+### Slide 6 - Adopt the mechanisms, treat every number as one run, and schedule the deletion review
+
+**This is a T2 vendor source with n equals one per configuration, no external replication, and a
+skipped visual leg, so every figure is a single observation by the party whose models are being
+measured.** The verdict the evidence supports is adopt the mechanisms and pilot the numbers, never
+cite 18x or 22x as a property of harnesses in general.
+
+The decision that follows is unusual and it is the one worth taking away. If you build a harness, put
+a recurring review on it, because the thing that invalidates your design is a model release rather
+than a bug, and it arrives on somebody else's schedule with no notification. Remove one component per
+review and keep the measurement after you remove it, so you find out when to put it back.
+
+*Visual: the TL;DR obsolescence diagram. Provenance: `n15`, `n17`, `n19`.*
+
+### Key takeaway message
+
+A harness is everything around the model, and the one in this article exists to defeat a conflict of
+interest rather than to add capability, because an agent cannot review work it produced from the same
+understanding that produced it. Making the second agent useful costs real engineering: fix the
+question, give it tools, and gate on hard thresholds. The honest price was 18x the time and 22x the
+money, and what it bought was catching a failure that rendered perfectly and did nothing. The durable
+idea is the one the author demonstrated by dismantling his own machinery: every component encodes an
+assumption that expires, so a harness needs a scheduled deletion review as much as it needs a build.
+Every number here is a single run by the vendor being measured.
