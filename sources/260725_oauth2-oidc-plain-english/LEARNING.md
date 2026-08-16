@@ -23,6 +23,32 @@ which it was never built for, and OAuth has no way to say *who you are*. Learn t
 flow and you have learned the protocol
 [&t=1323s](https://www.youtube.com/watch?v=996OiexHze0&t=1323s).
 
+```mermaid
+flowchart TB
+    F["<b>the security fact</b><br/>the browser can be trusted to talk to<br/>a human, but not to hold a secret"]
+    C["so the protocol splits into two channels:<br/>a <b>front</b> channel through the browser<br/>and a <b>back</b> channel between servers"]
+    O["one flow - authorization code -<br/>uses both"]
+    V["and the other three flows are that flow<br/>with a channel removed"]
+    I["OIDC is bolted on because OAuth has<br/>no way to say <i>who you are</i>,<br/>and the industry used it for login anyway"]
+
+    F --> C --> O --> V
+    C --> I
+
+    style F fill:#e8f0fc,stroke:#4338ca,color:#312e81
+    style V fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a derivation diagram, not a protocol diagram, and it draws why the specification has the shape
+it does rather than what the shape is. **The crux is that a single fact about browsers generates the
+entire structure, including the jargon and the flow count, so there is really only one flow and three
+degradations of it.** It is drawn descending from the security fact rather than starting at the flows
+because the usual failure with OAuth is meeting four flows as four options and trying to memorise
+which to pick. Read this way the choice stops being a lookup and becomes a question about which
+channels you actually have. OIDC hangs off the side deliberately: it is not part of the derivation,
+it is a patch for a use the protocol was never built for.
+
+*Synthesized from `n1`, `n6` and `n8`.*
+
 ## The 1-minute version
 
 This article covers a 2018 conference talk that explains OAuth 2.0 and OpenID Connect from first
@@ -150,8 +176,8 @@ flowchart TB
     style D fill:#fbf1dc
 ```
 
-The diagram runs top to bottom in the order of the argument, and every box is a numbered section
-below, gathered into four movements. Blue marks the protocol itself, and amber marks the age check
+This is a reading-order diagram about the note rather than about OAuth, and every box is a numbered
+section below, gathered into four movements. Blue marks the protocol itself, and amber marks the age check
 that a 2018 source needs before any of it is applied. **The crux is that there is only one flow, and
 the other three are it with a channel removed.**
 
@@ -176,7 +202,32 @@ recommendation the field has since reversed.
 
 *Synthesized roadmap of this note - not from the source.*
 
-## 1. The confusion is structural, and it is not your fault
+## Movement A - why the subject feels harder than it is
+
+```mermaid
+flowchart TB
+    C["the confusion is <b>structural</b><br/>and not the reader's fault"]
+    R1["the spec renames familiar things<br/>rather than adding new ones"]
+    R2["and it is routinely explained<br/>flow-first, as four options<br/>to choose between"]
+    P["meanwhile the actual problem is small:<br/>let an app act on your behalf<br/>without giving it your password"]
+
+    C --> R1
+    C --> R2
+    P --> D["everything else is machinery<br/>in service of that"]
+
+    style P fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is an orientation diagram, not protocol content, and this movement does no protocol work at all
+by design. **The crux is that the difficulty is presentational rather than conceptual: the problem
+OAuth solves fits in one sentence, and almost every explanation opens somewhere else.** It is drawn
+with the two sources of confusion separated from the problem statement because they are independent
+failures - renaming makes the vocabulary opaque, and flow-first teaching makes the structure look
+arbitrary. A reader who already knows what problem OAuth solves can move straight to Movement B.
+
+*Synthesized from `n1` and the sections below.*
+
+### 1. The confusion is structural, and it is not your fault
 
 Start here, because most people arrive at OAuth already convinced they are missing something obvious.
 
@@ -195,7 +246,7 @@ note does and why section 8 exists at all.
 
 So the question to answer first is what it was built for.
 
-## 2. The problem, in one screenshot
+### 2. The problem, in one screenshot
 
 In 2006, an app that wanted your contacts asked for your **password**. Here is what Yelp shipped.
 
@@ -233,7 +284,7 @@ not adopted OAuth [&t=765s](https://www.youtube.com/watch?v=996OiexHze0&t=765s).
 The pattern was obviously bad at the time. So why did a protocol take until 2010, and what did it
 deliberately *not* try to fix?
 
-## 3. What OAuth was aimed at, and what it left open
+### 3. What OAuth was aimed at, and what it left open
 
 ![Slide: Identity use cases pre-2010](visuals/frame_440.jpg)
 
@@ -251,7 +302,30 @@ For now, take the narrow reading, which is that OAuth is a delegated-authorizati
 nothing about who you are. That narrow reading is what the next section starts from, and it is also
 where most people stop before they have met any of the ideas.
 
-## 4. The vocabulary is renames, and that is the whole barrier
+## Movement B - the protocol, once
+
+```mermaid
+flowchart TB
+    V["4. the vocabulary is <b>renames</b>,<br/>not new concepts - and that is<br/>the whole barrier"]
+    F["5. the authorization code flow,<br/>which is the entire protocol"]
+    Q{"6. why is it two steps<br/>instead of one?"}
+    A["because the browser can be trusted to<br/>talk to a human but not to hold a secret,<br/>so the code goes through the <b>front</b> channel<br/>and the token through the <b>back</b>"]
+
+    V --> F --> Q --> A
+
+    style A fill:#e8f0fc,stroke:#4338ca,color:#312e81
+```
+
+This is a derivation diagram, not a sequence diagram, and section 6 is the payload of the whole note.
+**The crux is that the two-step dance is not bureaucracy: it exists because exactly one of the two
+parties in the exchange can be trusted with a secret, and it is not the one talking to the user.**
+It is drawn as a question arriving after the flow rather than before it because the question only
+becomes interesting once you have seen the extra round trip and wondered why it is there. Learn this
+movement and you have learned OAuth; everything in Movement C is this flow with something taken away.
+
+*Synthesized from `n4`, `n5` and `n6`.*
+
+### 4. The vocabulary is renames, and that is the whole barrier
 
 ![Slide: OAuth 2.0 terminology](visuals/frame_960.jpg)
 
@@ -280,7 +354,7 @@ intimidation is vocabulary rather than concept, which matters practically rather
 psychologically, because it means the diagram in the next section becomes readable the moment the
 labels stop throwing you.
 
-## 5. The authorization code flow, which is the entire protocol
+### 5. The authorization code flow, which is the entire protocol
 
 ![Slide: OAuth 2.0 authorization code flow, annotated with front channel](visuals/frame_1840.jpg)
 
@@ -323,7 +397,7 @@ security one.
 So the flow works. Look at it once more, though, and one thing should nag. Why does the app receive a
 *code* and then immediately have to trade it for a token, rather than simply being sent the token?
 
-## 6. The crux: front channel versus back channel
+### 6. The crux: front channel versus back channel
 
 This is the idea that makes everything else inevitable, and it is not OAuth terminology at all. It is
 network security terminology that the talk borrows
@@ -375,7 +449,35 @@ server cannot do. The server handles secrets, which a browser cannot be trusted 
 Every remaining flow is this same picture with one or both channels removed, which is what makes the
 next section short.
 
-## 7. The four flows are one question: which channels do you have?
+## Movement C - everything else is a variation
+
+```mermaid
+flowchart TB
+    Q{"which channels does this<br/>client actually have?"}
+    B["both front and back<br/><i>authorization code</i>"]
+    N["front only, no secret<br/><i>implicit - and now reversed, see<br/>What has aged</i>"]
+    S["back only, no user present<br/><i>client credentials</i>"]
+    O["8. and OIDC exists because OAuth<br/>cannot say <b>who you are</b>,<br/>while the industry used it for login"]
+
+    Q --> B
+    Q --> N
+    Q --> S
+    B --> O
+
+    style Q fill:#dcfce7,stroke:#15803d,color:#14532d
+    style N fill:#fbf1dc,stroke:#b45309,color:#78350f
+```
+
+This is a selection diagram, not a catalogue. **The crux is that the four flows are not four designs
+to compare but one design answered against one question, so choosing is a matter of reading your own
+architecture rather than memorising a table.** It is drawn as a single question fanning out because
+that is the move section 9 turns into a rule, and because a table of four flows invites exactly the
+memorisation this movement exists to replace. The amber branch is flagged because the 2018 advice on
+it has since reversed, which the age-check section handles.
+
+*Synthesized from `n7`, `n8` and `n9`.*
+
+### 7. The four flows are one question: which channels do you have?
 
 ![Slide: OAuth 2.0 flows](visuals/frame_2520.jpg)
 
@@ -417,7 +519,7 @@ Everything so far has been about *authorization*, meaning permission to act agai
 back at section 3's slide, where "mobile app login" also carried a `(???)`. The industry did not wait
 for a purpose-built answer to that one.
 
-## 8. Why OpenID Connect had to exist
+### 8. Why OpenID Connect had to exist
 
 OAuth became **a victim of its own success**. It was adopted so widely that people reached for it for
 **login**, which it was never designed for (`n11`,
@@ -480,7 +582,7 @@ is the piece OAuth never had.
 > signature, the issuer, the audience and the expiry. A JWT accepted without those checks is just a
 > JSON blob the client believed, which is a recurring source of real vulnerabilities.
 
-## 9. The rule for choosing
+### 9. The rule for choosing
 
 Having both tools on the table raises the question the talk closes on, which is when to reach for
 which.
@@ -640,3 +742,127 @@ the talk.*
 
 - `../../brain/topics/agent-security.md` - the delegated-authorization substrate: scopes as least
   privilege, consent as human-in-the-loop, channel separation, PKCE.
+
+## Presentation narrative
+
+*A talk track for engineers meeting OAuth properly for the first time, and for the architects who have
+to review their choices. Derived entirely from the gated nodes above. One thing governs how to read
+it: the source is from 2018, and one of its recommendations has since reversed, which the last slide
+handles rather than burying.*
+
+### Slide 1 - OAuth solves exactly one problem, and everything else is machinery
+
+**It lets an app act on your behalf without giving it your password.** That is the whole of it. The
+jargon, the four flows and the two-step token dance are all in service of that single sentence.
+
+The reason this needs saying out loud is that the difficulty people experience with OAuth is
+presentational rather than conceptual. The specification renames familiar things instead of adding new
+ones, and almost every explanation opens with the four flows as options to choose between. Meet it
+that way and the structure looks arbitrary. The confusion is structural and it is not the reader's
+fault.
+
+![Yelp's signup form asking for your Gmail password](visuals/frame_640.jpg)
+
+This is the problem, in one screenshot, and it dates from before the protocol existed. **The crux is
+that the alternative to OAuth is not a worse protocol, it is this** - handing your actual password to
+a third party [`n2`].
+
+### Slide 2 - One security fact generates the entire structure
+
+**The browser can be trusted to talk to a human, but not to hold a secret.** Every shape in the
+protocol follows from that, and it is the sentence to take away if you take away one.
+
+It is why there are two channels rather than one. The front channel runs through the browser, where a
+human can see and consent to what is being asked, and where nothing confidential can be kept. The back
+channel runs server to server, where a secret is safe but no human is present. Neither channel alone
+can do the job, which is why the authorization code flow has the extra round trip that looks like
+bureaucracy until you know what it is for.
+
+![Slide: OAuth 2.0 authorization code flow, annotated with front channel](visuals/frame_1840.jpg)
+
+This is the whole protocol, annotated by channel. **The crux is that the two-step dance is not
+overhead: the code travels where a human can consent, and the token travels where a secret can be
+kept** [`n6`].
+
+### Slide 3 - The vocabulary is renames, and that is the entire barrier
+
+**Resource owner is you. Client is the app. Authorization server is the thing that issues tokens.
+Resource server is the API holding your data.** Nothing in that list is a new concept, and the barrier
+people hit is almost entirely the mapping.
+
+What engineers should take from this is that time spent memorising the glossary is time well spent,
+because once the words resolve the flows read as ordinary engineering. What architects should take
+from it is that the jargon is a poor proxy for understanding, since somebody can use the terms
+fluently and still not know which channel their client has.
+
+![Slide: OAuth 2.0 terminology](visuals/frame_960.jpg)
+
+This is a rename table, not a concept map. **The crux is that every row is a familiar thing under an
+unfamiliar name** [`n4`].
+
+### Slide 4 - Scopes are what the consent screen is generated from
+
+**The scopes a client requests become the words the user is shown before agreeing.** That connection
+is worth making explicit in a mixed room, because it is where a protocol detail turns into a product
+decision somebody will be judged on.
+
+Ask for broad scopes and the consent screen asks the user for a lot, which costs conversion and
+invites refusal. Ask for narrow scopes and you may have to re-prompt later. The scope list is
+therefore not only a permissions decision, it is the copy on a screen that decides whether people
+complete signup.
+
+![Consent screen generated from the requested scopes](visuals/frame_1240.jpg)
+
+This is a product slide wearing protocol clothing. **The crux is that the permissions you request are
+rendered directly to the user**, so scope design and consent design are the same task [`n7`].
+
+### Slide 5 - The four flows are one question, not four designs
+
+**Which channels does this client actually have?** Answer that and the flow is chosen for you.
+
+A client with both a browser and a server keeps the authorization code flow, which is the full
+protocol. A client with only a front channel and nowhere to keep a secret historically got the
+implicit flow. A client with only a back channel and no user present gets client credentials. That is
+the entire selection rule, and it replaces the table people try to memorise.
+
+OpenID Connect then exists for a reason worth stating plainly: the industry started using OAuth for
+login, which it was never built for, and OAuth has no way to say *who you are*. OIDC is a thin layer
+bolted on to supply exactly that.
+
+![Slide: the OAuth 2.0 and OpenID Connect layer cake](visuals/frame_2985.jpg)
+
+This is a layering slide. **The crux is that OIDC is a patch for a use case rather than part of the
+derivation**, which is why identity questions do not have clean answers inside OAuth alone [`n8`].
+
+### Slide 6 - This source is from 2018, and one of its recommendations has reversed
+
+**The mechanics in this talk have aged well and one recommendation has not: the implicit flow, taught
+here as the answer for browser clients that cannot hold a secret, is now discouraged.** The
+replacement is the authorization code flow with PKCE.
+
+That divergence is worth generalising rather than just noting, because it is the pattern for reading
+any dated technical source. Mechanics describe how something works and tend to survive.
+Recommendations encode a trade-off against the alternatives available at the time, and those expire
+when the alternatives change. Read the channel argument as durable and the flow advice as dated.
+
+So the decision is straightforward. Learn the authorization code flow, because it is the protocol.
+Choose flows by asking which channels you have. And check any 2018-era OAuth advice against the
+current guidance before shipping it, since this source contains a worked example of exactly that going
+stale.
+
+![Slide: OAuth 2.0 implicit flow](visuals/frame_2660.jpg)
+
+This is the slide that aged. **The crux is that nothing about the mechanism shown here is wrong - what
+changed is the availability of a better option**, which is how technical recommendations usually
+expire.
+
+### Key takeaway message
+
+OAuth solves one problem, letting an app act on your behalf without your password, and every piece of
+its machinery follows from one security fact: the browser can talk to a human but cannot keep a
+secret. That fact produces the two channels, the two-step dance and the flow family, so there is
+really one flow and three versions of it with a channel removed. The vocabulary is renames rather than
+new concepts, and it is most of the difficulty. OpenID Connect is bolted on because OAuth cannot say
+who you are and the industry used it for login regardless. Learn the authorization code flow, choose
+by asking which channels you have, and treat this 2018 source's mechanics as durable and its
+recommendations as dated.
