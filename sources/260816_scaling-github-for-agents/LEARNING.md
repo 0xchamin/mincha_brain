@@ -29,6 +29,7 @@ flowchart TB
         T1["Grouped toolsets"]
         T2["Dynamic tool discovery"]
         T3["Semantic tool search"]
+        T1 ~~~ T2 ~~~ T3
     end
 
     subgraph N["Fixes that need nobody to act"]
@@ -37,6 +38,7 @@ flowchart TB
         D2["Tailored responses<br/>77 to 86 pct fewer output tokens"]
         D3["Intent encoded in the tool<br/>instead of an error returned"]
         D4["Scope filtering<br/>the credential already knows"]
+        D1 ~~~ D2 ~~~ D3 ~~~ D4
     end
 
     P --> U
@@ -406,6 +408,8 @@ flowchart TB
     REQ --> OUT
     REQ --> BEH
 
+    IN ~~~ OUT ~~~ BEH
+
     CAT --> F4["4. Smaller default<br/>minus 53 pct"]
     RESP --> F5["5. Tailored responses<br/>minus 77 pct"]
     FAIL --> F6["6. Encode intent<br/>in the tool"]
@@ -418,7 +422,7 @@ flowchart TB
 This is a cost-surface diagram, not a request-flow diagram, and it exists to show that a request
 spends context in three places while the industry argues about one of them. The crux is that **the
 red box is an order of magnitude larger than the box everyone optimises, and it is measured in the
-same units**. The shape deliberately puts the catalogue and the response side by side at the same
+same units**. The shape deliberately hangs the catalogue and the response off one request at the same
 level, because drawing the response as a downstream consequence of the catalogue would reproduce the
 error this movement corrects. The third column is there because two of the four reductions do not
 reduce anything directly. They stop turns being wasted, which is a context saving you can only see
