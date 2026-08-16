@@ -26,6 +26,34 @@ plus three operations: **ingest, query, lint** (`n4`, `n6`). The pattern is Vann
 (1945), which was blocked for eighty years on one thing: **who does the maintenance** (`n15`).
 `https://gist.github.com/karpathy` (revision `ac46de1`)
 
+```mermaid
+flowchart TB
+    Q{"which cost are you paying,<br/>and how often?"}
+    L["<b>lookup</b> - finding the documents<br/><i>better chunking, better embeddings,<br/>a reranker on top</i>"]
+    S["<b>synthesis</b> - relating them<br/>to each other<br/><i>happens after the right documents<br/>are already in hand</i>"]
+    R["retrieval re-pays it on every<br/>single question, then discards it - n1"]
+    C["compile it once at ingest,<br/>and keep it current - n2"]
+    W["and the whole rest of the design<br/>falls out of that one move"]
+
+    Q --> L
+    Q --> S --> R
+    S --> C --> W
+
+    classDef aimed fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    classDef right fill:#dcfce7,stroke:#15803d,color:#14532d
+    class L,R aimed
+    class C,W right
+```
+
+This is a diagnosis diagram, not an architecture diagram, and the left branch is what the industry
+spends its money on. **The crux is that this is not the usual complaint about retrieval, because it
+holds even when retrieval is perfect: what is being re-paid is the relating of documents rather than
+the finding of them.** It is drawn as a fork on a cost question rather than as a pipeline because the
+two branches are not stages you pass through, and the failure of the naive approach is not that it
+works badly but that it is aimed at the cheaper of the two costs. Everything the note describes after
+this, the three layers and the three operations, is a consequence of moving the right-hand cost from
+query time to ingest time. *Synthesized from `n1` and `n2`.*
+
 ## The 1-minute version
 
 This article covers a short gist that proposes replacing a retrieval-based knowledge base with a
@@ -144,7 +172,7 @@ flowchart TB
     style D fill:#fbf1dc
 ```
 
-The diagram runs top to bottom in the order the argument is made, gathered into four movements. Blue
+This is a reading-order diagram about the note rather than about the wiki, gathered into four movements. Blue
 marks the payload and amber marks the stretch to read most carefully, and it is worth saying at the
 outset why those two are different things. **The crux is that every property of this design falls out
 of a single choice, which is moving synthesis from query time to ingest time, and that includes the
@@ -166,7 +194,33 @@ to change at that boundary**, which is the reason the roadmap draws it as a boun
 
 *Synthesized roadmap of this note - not from the source.*
 
-## 1. The diagnosis: retrieval has no memory of having answered
+## Movement A - the diagnosis, which is not the usual RAG complaint
+
+```mermaid
+flowchart TB
+    U["the familiar complaint:<br/>retrieval returns the wrong chunks"]
+    T["this one:<br/>retrieval returns the <b>right</b> chunks<br/>and still re-derives the synthesis - n1"]
+    N["so the hundredth question costs<br/>exactly what the first one did"]
+    F["the fix cannot be a better retriever,<br/>because a perfect retriever does not<br/>change when synthesis happens"]
+
+    U -.->|"easy to mistake<br/>one for the other"| T
+    T --> N --> F
+
+    style U fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    style F fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a distinction diagram, not a problem statement, and the dashed edge is the confusion the
+movement exists to prevent. **The crux is that the two complaints sound identical and have opposite
+remedies, so a reader who collapses them will spend the next year improving a retriever that was never
+the bottleneck.** It is drawn with the wrong reading on top and explicitly labelled, rather than
+omitted, because the argument only lands once you have felt the pull of the familiar version. If you
+take one thing from this movement, take the test: does the problem survive a perfect retriever? Here it
+does, which is what makes it a different problem.
+
+*Synthesized from `n1` and `n2`.*
+
+### 1. The diagnosis: retrieval has no memory of having answered
 
 The gist opens on a complaint about RAG, and it is **not** the complaint you expect. The usual one is
 that retrieval returns the wrong chunks. This one holds **even when retrieval is perfect**:
@@ -188,7 +242,31 @@ it was: at query time, repeated, discarded.
 
 So if the expensive thing is being done at the wrong moment, when should it be done instead?
 
-## 2. Compile once, then keep it current
+### 2. Compile once, then keep it current
+
+```mermaid
+flowchart TB
+    INT["<b>interpreter</b><br/>re-derive on every question<br/><i>always current, always re-paid</i>"]
+    CMP["<b>compiler</b><br/>derive once at ingest<br/><i>paid once, and can go stale</i>"]
+    Q["the trade is not speed.<br/>It is <b>when</b> you pay and<br/><b>what</b> can rot"]
+
+    INT --> Q
+    CMP --> Q
+
+    style CMP fill:#dcfce7,stroke:#15803d,color:#14532d
+    style Q fill:#fff4e5,stroke:#b45309,color:#78350f
+```
+
+This is an analogy diagram, and the word "compiled" in the section title is meant literally rather than
+loosely. **The crux is that moving synthesis to ingest time buys exactly what a build step buys over an
+interpreter, and it also inherits the corresponding liability: a compiled artifact can be out of date
+in a way a freshly interpreted one cannot.** It is drawn as two options reaching one trade-off node
+rather than as a recommendation because the gist is not claiming the compiler is better in general,
+only that it is aimed at the cost that matters here. Staleness is the price, and the third operation in
+Movement C exists to pay it.
+
+*Synthesized from `n2`.*
+
 
 > "The knowledge is **compiled once and then *kept current***, not re-derived on every query."
 > (`n2`, §The core idea)
@@ -215,7 +293,32 @@ Every other property falls out of that single choice:
 **The right-hand column is where the third operation comes from**, and it is the half that
 retrieval-based designs get for free. Hold it - section 7 is where it is paid.
 
-## 3. The architecture is an ownership diagram, not a storage diagram
+## Movement B - the design that falls out of one choice
+
+```mermaid
+flowchart TB
+    C["compile once at ingest"]
+    Q1{"if an LLM writes the store,<br/>who may write what?"}
+    L["3. layer by <b>write access</b>:<br/>raw sources immutable, wiki LLM-owned,<br/>schema co-evolved by both - n4"]
+    Q2{"how does the LLM know<br/>what shape to write?"}
+    S["4. the schema document is the contract,<br/>and it is where the engineering goes -<br/>not the retrieval stack - n5"]
+
+    C --> Q1 --> L --> Q2 --> S
+
+    style S fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is an ownership diagram, not a storage diagram, and the distinction is the movement's whole
+content. **The crux is that once a machine is writing your knowledge base, the interesting axis stops
+being where bytes live and becomes who is permitted to change them**, which is a question no retrieval
+architecture has to answer. It is drawn as two questions descending from the compile decision because
+both are forced by it rather than chosen: nothing in a query-time system needs a write-permission model
+or a schema contract. The second box is the one practitioners under-invest in, since it looks like
+documentation and behaves like an interface definition.
+
+*Synthesized from `n4` and `n5`.*
+
+### 3. The architecture is an ownership diagram, not a storage diagram
 
 Most knowledge-base architectures are drawn by *what is stored where*. This one is drawn by **who is
 allowed to write** (`n4`, §Architecture), and that is the more interesting axis.
@@ -240,7 +343,31 @@ against.
 That leaves the middle layer as the odd one. The LLM owns it entirely - so what keeps the LLM
 disciplined?
 
-## 4. The schema document, not the retrieval stack, is where the engineering goes
+### 4. The schema document, not the retrieval stack, is where the engineering goes
+
+```mermaid
+flowchart TB
+    R["where a RAG team spends:<br/>chunker, embedding model,<br/>reranker, vector store"]
+    W["where this design spends:<br/>one markdown document describing<br/>how the wiki is structured - n5"]
+    B["it is the contract between<br/>you and the writer"]
+    C["and it is the one layer both<br/>parties co-evolve - n4"]
+
+    R -.->|"the budget moves"| W --> B --> C
+
+    style R fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    style W fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a budget-relocation diagram, not an architecture. **The crux is that the engineering does not
+disappear when you delete the retrieval stack, it moves into a prose document that looks like
+documentation and behaves like an interface definition.** It is drawn as a transfer rather than as a
+comparison because the failure mode is under-investment: a team that reads "no vector database" as
+"less work" will write a thin schema and get a wiki whose structure drifts every time the model is
+asked to extend it. The co-evolution property in the last box is what makes it a contract rather than
+a spec, since the writer is allowed to propose changes to the shape it writes into.
+
+*Synthesized from `n4` and `n5`.*
+
 
 > "a document (e.g. `CLAUDE.md` for Claude Code or `AGENTS.md` for Codex) that tells the LLM how the
 > wiki is structured, what the conventions are, and what workflows to follow... **This is the key
@@ -260,7 +387,34 @@ fixed on a page. A wrong *convention* has nowhere else to live.
 
 With the layers settled, the operations become the substance.
 
-## 5. Ingest integrates; it does not index
+## Movement C - three operations, and the third gives the design away
+
+```mermaid
+flowchart TB
+    I["5. <b>ingest</b> integrates a new source into<br/>pages that already exist, and may<br/><i>weaken</i> the synthesis already there - n3"]
+    Q["6. <b>query</b> files good answers back as<br/>new pages, so questions are an input<br/>of the same standing as sources - n7"]
+    L["7. <b>lint</b> is a periodic out-of-band pass<br/>hunting six named defect classes - n8"]
+    T["A store needing no repair<br/>would never have earned a lint pass"]
+
+    I --> T
+    Q --> T
+    L --> T
+
+    style L fill:#e8f0fc,stroke:#4338ca,color:#312e81
+    style T fill:#fff4e5,stroke:#b45309,color:#78350f
+```
+
+This is an admission diagram, not an operations manual. **The crux is that the third operation is a
+confession: a design that ships with a periodic repair pass is telling you it expects to drift, and
+that is the honest part of the gist rather than a weakness in it.** The three are drawn converging on
+a single inference rather than as a lifecycle because their sequence is not the point; what matters is
+what their existence jointly implies. Notice that ingest is the operation carrying the risk, since it
+is a wide write that may make the existing synthesis worse, and lint is the only thing standing between
+that and a store nobody trusts.
+
+*Synthesized from `n3`, `n7`, `n8` and `n17`.*
+
+### 5. Ingest integrates; it does not index
 
 > The pass "doesn't just index it for later retrieval. It reads it, extracts the key information, and
 > integrates it into the existing wiki - updating entity pages, revising topic summaries, **noting
@@ -278,7 +432,34 @@ edits per source, none reviewed in full, compounding over a hundred sources.
 
 Hold that number too. It is the arithmetic behind section 7.
 
-## 6. Queries are an input, not just a load
+### 6. Queries are an input, not just a load
+
+```mermaid
+flowchart TB
+    U["a user asks a question"]
+    A["the LLM composes a good answer"]
+    D1["<b>retrieval</b>: the answer is<br/>returned and discarded"]
+    D2["<b>this design</b>: the answer is filed<br/>back into the wiki as a new page - n7"]
+    R["so the store gets better because<br/>it was used, and a question has the<br/>same standing as a source"]
+
+    U --> A
+    A --> D1
+    A --> D2 --> R
+
+    style D1 fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    style R fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a comparison diagram, not a data flow, and the interesting claim is about standing rather than
+about caching. **The crux is that filing answers back makes usage a write channel, so the questions
+people actually ask become part of the knowledge base rather than a load on it.** It is drawn with both
+fates branching from the same answer because the difference is one decision at one moment, and it is
+cheap. Worth noting what this quietly implies and the gist does not: a question nobody asks never gets
+a page, so the store's shape ends up tracking demand, which is a good property for a working reference
+and a bad one for completeness.
+
+*Synthesized from `n7`; the demand-tracking consequence is this brain's reading.*
+
 
 This is the half of the pattern most designs skip, and the one most worth stealing.
 
@@ -298,7 +479,32 @@ achieve.
 
 So: ingest writes, query writes. What cleans up after both?
 
-## 7. Lint is a periodic, out-of-band pass - and it overturned a claim in this brain
+### 7. Lint is a periodic, out-of-band pass - and it overturned a claim in this brain
+
+```mermaid
+flowchart TB
+    I["each ingest is a <b>wide write</b>,<br/>touching 10-15 pages at once - n17"]
+    N["nobody reviews 15 edits per source"]
+    D["so drift is arithmetically inevitable,<br/>not a risk to be managed"]
+    L["lint: a periodic pass, invoked<br/><b>out of band</b>, hunting six<br/>named defect classes - n8"]
+    B["and it overturned a claim<br/>in this brain"]
+
+    I --> N --> D --> L --> B
+
+    style D fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    style B fill:#e8f0fc,stroke:#4338ca,color:#312e81
+```
+
+This is a necessity diagram, not a feature description, and the arithmetic in the first two boxes is
+what makes lint non-optional. **The crux is that drift here is not a failure mode to be avoided but a
+guaranteed output of the write pattern, so the design is only honest because it ships the repair pass
+alongside.** It is drawn as a forced chain because each step follows from the one before with no
+judgement involved: wide writes plus no review equals accumulated unreviewed change. The out-of-band
+property matters more than it looks, since a lint that runs inside an ingest would be grading work it
+had just done, which is the conflict of interest this brain records elsewhere as claim 34.
+
+*Synthesized from `n8` and `n17`.*
+
 
 > "**Periodically**, ask the LLM to health-check the wiki. Look for: contradictions between pages,
 > stale claims that newer sources have superseded, orphan pages with no inbound links, important
@@ -339,7 +545,36 @@ nothing with §Lint but the name** - it checks *form*, and every item on Karpath
 
 The operations are complete. What about finding anything?
 
-## 8. Split the catalog from the log
+## Movement D - navigation, scale, and where the argument overreaches
+
+```mermaid
+flowchart TB
+    S8["8. split the catalog from the log<br/><i>opposite requirements on the same bytes</i> - n9"]
+    S9["9. defer search infrastructure<br/>until the index breaks - n10"]
+    S10["10. Memex 1945: the pattern was blocked<br/>for eighty years on who does<br/>the bookkeeping - n15"]
+    A["so the LLM's contribution is<br/><b>economic</b>, not intellectual"]
+    W["and the one number offered - '~100 sources' -<br/>is assertion, contradicted by the gist's<br/>own operations section - n10, d1"]
+
+    S8 --> S9 --> W
+    S10 --> A
+    S9 --> A
+
+    style W fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    style A fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a claim-strength diagram, not a summary, and the two terminal boxes are the reason this
+movement is marked as the one to read carefully. **The crux is that the strongest and the weakest
+claims in the gist sit side by side in the same movement, and nothing in the text distinguishes
+them.** The Memex framing is well supported and reframes the whole pattern as a labour-economics
+result. The "~100 sources" threshold is a bare number with no measurement behind it, and it disagrees
+with the document's own description of how ingest works. Drawing them as separate terminals is the
+point, since a reader taking the movement as one block will carry the number with the same confidence
+as the history.
+
+*Synthesized from `n9`, `n10`, `n15` and divergence `d1`.*
+
+### 8. Split the catalog from the log
 
 Two files, two jobs, and the reason to keep them apart is sharper than it first appears (`n9`,
 §Indexing and logging).
@@ -362,7 +597,37 @@ engine.**
 
 Which raises the obvious scaling question: when does reading an index file stop working?
 
-## 9. Defer the search infrastructure until the index breaks
+### 9. Defer the search infrastructure until the index breaks
+
+```mermaid
+flowchart TB
+    S["start: no search infrastructure.<br/>An index file the model reads."]
+    G["the corpus grows"]
+    B{"has the index<br/>stopped working?"}
+    N["no: add nothing"]
+    Y["yes: <i>now</i> add retrieval"]
+    C["the gist says this happens at<br/>~100 sources - n10"]
+    W["that number is assertion, and it<br/>contradicts the document's own<br/>operations section - d1"]
+
+    S --> G --> B
+    B --> N --> G
+    B --> Y
+    C -.-> B
+    W -.-> C
+
+    style W fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+```
+
+This is a deferral diagram, not a scaling plan, and the loop is the recommendation. **The crux is that
+the advice is sound and the threshold attached to it is not, which is an unusually clean case of a good
+argument carrying a bad number.** It is drawn with the number dangling off the decision rather than
+inside it, because that is exactly its status: the practice of deferring infrastructure until it is
+needed stands on its own logic, and "~100" is a figure nobody measured. This brain later refined it
+through external research, and the short version is that what binds is the token volume the navigation
+ranges over rather than any count of sources.
+
+*Synthesized from `n10` and divergence `d1`.*
+
 
 The document's answer is its **one falsifiable, quantified claim**, and it arrives with nothing
 attached:
@@ -395,7 +660,34 @@ re-ranking, on-device, shipping **both a CLI and an MCP server**.
 
 Which leaves the question the document closes on, and it is the one it handles worst.
 
-## 10. Why now: the Memex, the labour constraint, and where the argument overreaches
+### 10. Why now: the Memex, the labour constraint, and where the argument overreaches
+
+```mermaid
+flowchart TB
+    M["Memex, 1945 - Bush proposes<br/>exactly this pattern"]
+    B["blocked for eighty years, and not<br/>on storage or on linking"]
+    W["blocked on <b>who does the bookkeeping</b> - n15"]
+    L["the LLM does the bookkeeping"]
+    E["so its contribution here is<br/><b>economic</b>, not intellectual"]
+    O["which is also where the argument overreaches:<br/>a labour constraint lifting is not<br/>evidence the result is good - n13"]
+
+    M --> B --> W --> L --> E --> O
+
+    style E fill:#dcfce7,stroke:#15803d,color:#14532d
+    style O fill:#fff4e5,stroke:#b45309,color:#78350f
+```
+
+This is a lineage diagram, not a history lesson, and the payoff is the reframe in the second-to-last
+box. **The crux is that the idea was never the hard part, so the LLM is not supplying insight here, it
+is supplying labour at a price that makes an eighty-year-old design newly affordable.** It is drawn as
+a single unbranching descent because the history genuinely runs that way and the value is in following
+it to the economic conclusion rather than stopping at the citation. The amber terminal is this note's
+own caution: removing the constraint that blocked a design tells you the design is now buildable, and
+says nothing whatever about whether it works, which is the gap every unmeasured claim in this gist
+sits in.
+
+*Synthesized from `n13` and `n15`; the overreach reading is this brain's.*
+
 
 The lineage is the most useful sentence for placing this whole idea:
 
@@ -559,3 +851,121 @@ structure is assembled from prose and may impose more shape than the author inte
   third and earliest proponent of the decoupled write.
 - `../../brain/topics/context-engineering.md` - the contract document as the persistent counterpart to
   owning the prompt, and the two-pass text-then-images constraint.
+
+## Presentation narrative
+
+*A talk track for a room deciding how to build an internal knowledge base, derived entirely from the
+gated nodes above. The source is a nineteen-hundred-word design argument with no figures, no code, no
+data and no worked example, so this presents a diagnosis and a pattern, never a result. Every node here
+is `single-leg` by construction: the document has no second leg to gate against.*
+
+### Slide 1 - This is not the usual complaint about retrieval, and the difference decides your budget
+
+**The familiar complaint is that retrieval returns the wrong chunks, and this one holds even when
+retrieval is perfect [n1].** Ask a question that needs five documents synthesised and the model finds
+and pieces the same fragments together every single time, while the user waits, and then the answer is
+discarded. Nothing accumulates, so the hundredth question costs exactly what the first one did.
+
+The test that separates the two is worth carrying out of the room. Does the problem survive a perfect
+retriever? Here it does, because what is being re-paid is the relating of documents rather than the
+finding of them, and relating happens after the right documents are already in hand. That matters
+commercially rather than academically: better chunking, a stronger embedding model and a reranker all
+genuinely improve which documents come back, and not one of them changes the moment synthesis happens.
+A team can spend a year on the cheaper of the two costs without noticing.
+
+*Visual: the TL;DR diagnosis diagram, which forks on exactly that question. Provenance: `n1`, `n2`.*
+
+### Slide 2 - Compile once at ingest, and inherit a build step's liability along with its speed
+
+**The idea is to move synthesis from query time to ingest time and then keep the result current
+[n2].** The word compiled is meant literally, and taking it literally is what makes the rest of the
+design predictable rather than a list of proposals. You get what a build step gets over an
+interpreter, and you also inherit the corresponding liability, which is that a compiled artifact can be
+out of date in a way a freshly interpreted one structurally cannot.
+
+That single trade is the whole architecture. Everything after it, the layers and the operations, is a
+consequence rather than an addition, which is the useful thing to tell a team evaluating this: if you
+accept the compile decision, you have mostly accepted the rest.
+
+*Visual: the section 2 analogy diagram. Provenance: `n2`.*
+
+### Slide 3 - Once a machine writes your knowledge base, the architecture is about write access
+
+**Layer the store by who may write to it: raw sources are immutable, the wiki is written by the LLM and
+only read by you, and the schema document is the one layer both parties co-evolve [n4].** This is an
+ownership diagram rather than a storage diagram, and no retrieval architecture has to answer the
+question it answers, because in a retrieval system nothing writes.
+
+What engineers should take from this is where the work actually lands. The engineering does not
+disappear when you delete the vector database, it relocates into a prose document describing how the
+wiki is structured [n5]. That document looks like documentation and behaves like an interface
+definition, and the predictable failure is a team reading "no retrieval stack" as "less work", writing
+a thin schema, and getting a wiki whose shape drifts every time the model extends it.
+
+*Visual: the Movement B ownership diagram, with the section 4 budget-relocation diagram beside it.
+Provenance: `n4`, `n5`.*
+
+### Slide 4 - The design ships with a repair pass, and that is the honest part
+
+**Three operations run over those layers, and the third one gives the design away.** Ingest integrates
+a new source into pages that already exist rather than indexing it for later, and may weaken the
+synthesis already written [n3]. Query files good answers back into the wiki as new pages, which makes
+questions an input of the same standing as sources [n7]. Lint is a periodic pass, invoked out of band,
+hunting six named defect classes [n8].
+
+The arithmetic behind the third one is the part to state plainly. An ingest is a wide write touching
+ten to fifteen pages at once [n17], and nobody reviews fifteen edits per source, so drift is not a risk
+to be managed but a guaranteed output of the write pattern. A store that needed no repair would never
+have earned a lint pass. The out-of-band property matters more than it looks: a lint running inside an
+ingest would be grading work it had just done, which is the conflict of interest this brain records
+separately as claim 34.
+
+*Visual: the Movement C admission diagram, with the section 7 necessity diagram. Provenance: `n3`,
+`n7`, `n8`, `n17`.*
+
+### Slide 5 - The pattern is eighty years old and was blocked on labour, not on ideas
+
+**The gist places itself as Vannevar Bush's Memex from 1945, a design blocked for eighty years not on
+storage and not on linking but on who does the bookkeeping [n15].** That reframe is the strongest
+thing in the source and it changes what the LLM is contributing here. It is not supplying the insight,
+which has been published since before computers. It is supplying labour at a price that makes an
+old design newly affordable.
+
+The leadership significance is that this is an economics argument, so it should be evaluated as one.
+The question is not whether the pattern is clever. It is whether the maintenance cost, now paid in
+tokens rather than in librarians, stays below the value of having synthesis already done. And the
+caution belongs in the same breath: a constraint lifting tells you a design is buildable and says
+nothing whatever about whether it works.
+
+*Visual: the section 10 lineage diagram. Provenance: `n13`, `n15`.*
+
+### Slide 6 - Take the pattern, leave the numbers, and note that nothing here was measured
+
+**This is one practitioner writing about a workflow he already prefers, with no eval, no baseline and
+no comparison against the retrieval systems the gist opens by dismissing.** Its two efficacy claims are
+pure assertion, and one of them contradicts the document's own operations section [d1].
+
+I want to give the source its due, because one thing about it is genuinely unusual in this brain:
+nothing is being sold. There is no product, no vendor position and no commercial interest pointing the
+argument anywhere. That is rarer than it sounds and it is why the diagnosis is worth taking seriously.
+It also changes nothing about the evidence, because an unmeasured claim from a disinterested expert is
+still unmeasured.
+
+So the verdict is adopt the diagnosis, pilot the pattern, and discard the one number on offer. The
+"~100 sources" threshold in particular should not be quoted [n10]. This brain later researched it
+externally, and what binds turns out to be the token volume the navigation ranges over rather than any
+count of sources, which makes the figure far too low for short notes and far too high for books.
+
+*Visual: the Movement D claim-strength diagram, where the best and worst claims in the gist sit side by
+side. Provenance: `n10`, `d1`.*
+
+### Key takeaway message
+
+Retrieval re-pays the cost of relating documents on every question and keeps none of it, and that
+problem survives a perfect retriever, which is why better chunking never touches it. The alternative is
+to compile the synthesis once at ingest and maintain it, accepting a build step's liability along with
+its speed: the artifact can now go stale. Layer the store by who may write, put the engineering into
+the schema document rather than the retrieval stack, and ship the repair pass, because wide writes with
+no review make drift arithmetic rather than risk. The pattern is Bush's Memex and it was always blocked
+on labour rather than on ideas, so what changed is a price. None of it is measured, so adopt the
+diagnosis and treat the single number in the document as the assertion it is.
