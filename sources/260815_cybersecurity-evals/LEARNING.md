@@ -209,7 +209,38 @@ a picture.
 
 ---
 
-## 1 - Why measuring this is different from measuring anything else
+## Movement 1 - the anatomy
+
+```mermaid
+flowchart TB
+    C["Exploitation is open-ended,<br/>so the method cannot be graded"]
+    V["But the end state can be.<br/>The security field had already built<br/>a free mechanical verifier"]
+    P["So every eval here has the same<br/>four parts: target, inputs, tools, grader"]
+    B["Score that pass/fail and 'found nothing'<br/>reads identically to<br/>'found it, could not weaponise it'"]
+    L["So partial credit runs a ladder:<br/>find, reproduce, execute, objective"]
+    G["And the goal is standardised rather<br/>than the path, which makes an unbounded<br/>space of methods gradable"]
+
+    C --> V --> P --> B --> L --> G
+
+    classDef good fill:#dcfce7,stroke:#15803d,color:#14532d
+    classDef bad fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    class V good
+    class B bad
+```
+
+This is a derivation diagram, not a component diagram, and every box after the first is forced by the
+one above it. **The crux is that this movement contains no design choices at all, only consequences of
+a single fact about exploits: you cannot grade the method, so you must grade the end state.** It is
+drawn as an unbranching chain because that is the honest shape. A diagram with alternatives at each
+step would suggest the benchmark authors picked from a menu, and the reason all seven independent
+benchmarks converged on the same anatomy is that there was nothing to pick. The green box is the
+domain's unearned gift, built by security engineers decades before anyone wanted to benchmark a model,
+and the red box is the one place the obvious answer fails and has to be replaced. Hold the green box
+in particular, because section 10 turns it into the note's most uncomfortable conclusion.
+
+*Synthesized from `n1`, `n2`, `n3` and `n5`.*
+
+### 1 - Why measuring this is different from measuring anything else
 
 Start with the thing that makes this domain awkward, because it is not the difficulty. It is that
 the measurement is symmetric and nobody gets to choose which half they perform. The article opens by
@@ -243,7 +274,7 @@ here and why they can agree on their scoring even when they disagree about every
 to that, because it returns in section 10 with an uncomfortable consequence attached. The immediate
 question is simpler, and it is what all seven actually look like on the inside.
 
-## 2 - The four primitives, and the one that is doing the work
+### 2 - The four primitives, and the one that is doing the work
 
 The author's claim is that these seven benchmarks are one design, and he draws it.
 
@@ -278,7 +309,7 @@ and it is worth noticing now rather than being told later. Three of the four gra
 mechanical, and the fourth reads "trace audit (LLM)". Hold onto it. Section 8 pays it off against a
 claim this brain already holds.
 
-## 3 - Why a pass/fail score throws away most of what happened
+### 3 - Why a pass/fail score throws away most of what happened
 
 Having a deterministic grader is necessary and it is not sufficient, which the article demonstrates
 with the cleanest piece of reasoning in it. Suppose two models both score zero on a task requiring
@@ -314,7 +345,7 @@ Keep the pyramid in mind, because section 5 puts real numbers on each rung and t
 not what a smooth-difficulty reading of this picture would predict. First, though, there is a
 problem the ladder does not solve.
 
-## 4 - Standardise the goal, because you cannot enumerate the methods
+### 4 - Standardise the goal, because you cannot enumerate the methods
 
 The ladder tells you how far an agent got. It does not tell you what "got there" means when the
 target is a real web application and the attack could take any form at all. This is the practical
@@ -357,7 +388,37 @@ you let it be smart instead, which section 8 returns to.
 
 The design work is now done. What happens when these things are run?
 
-## 5 - The cliff: capability does not fade, it stops
+## Movement 2 - what it finds
+
+```mermaid
+flowchart TB
+    R["5 - capability stops at a rung.<br/>Coverage 41/41, code execution 0<br/>for every deployed model - n16"]
+    Q{"Is that rung a property<br/>of the model?"}
+    G["6 - no. Decompose the task and the<br/>ceiling moves from 11 minutes<br/>to 2h03 - n6"]
+    S["7 - no. Change the scaffolding and one<br/>model moves from 3 of 40 networks<br/>to 37 of 40 - n19"]
+    C["The cliff is real.<br/>Its location belongs to the<br/>configuration, not the agent"]
+
+    R --> Q
+    Q --> G --> C
+    Q --> S --> C
+
+    classDef payload fill:#dcfce7,stroke:#15803d,color:#14532d
+    class C payload
+```
+
+This is a refutation diagram, not a results summary, and the question in the middle is doing the work
+rather than the measurements on either side. **The crux is that section 5 establishes a hard limit and
+sections 6 and 7 then demonstrate, twice and independently, that the limit is not where the model
+ends.** It is shaped as one question with two converging answers because that is what makes the
+finding safe to carry: a single counter-example would be an anecdote about one benchmark, and two
+counter-examples arriving from unrelated directions, task decomposition and harness design, is a
+property of the measurement itself. Notice that both branches move the number further than any
+model-to-model gap reported anywhere in the article, which is the fact the leaderboard format is
+structurally unable to show.
+
+*Synthesized from `n6`, `n16`, `n19` and `n20`.*
+
+### 5 - The cliff: capability does not fade, it stops
 
 ExploitBench reports the full ladder for every model it tested, which makes it the one table in the
 article that answers the question section 3 set up. The article summarises it in three sentences. The
@@ -404,7 +465,7 @@ regression on a task the model had already saturated. It did raise GPT-5.5's `T3
 honest summary is that guidance is a real intervention with an unpredictable sign, which is worth
 holding against the next section, where guidance produces the single largest effect in the article.
 
-## 6 - The ceiling is a property of the guidance regime, not of the agent
+### 6 - The ceiling is a property of the guidance regime, not of the agent
 
 Cybench measures difficulty in an unusually good unit. Rather than rating tasks itself, it uses First
 Solve Time, the wall-clock time the first human team took to solve that challenge in the original
@@ -454,7 +515,7 @@ on the model. That is a small result on its own. Put beside the coaching arm in 
 ceiling shift here, it starts to look like the same result three times, which the next section states
 in its strongest form.
 
-## 7 - Scaffolding beats the model, and it is not close
+### 7 - Scaffolding beats the model, and it is not close
 
 Everything so far has varied information and guidance. MHBench varies the system around the model,
 on the hardest task in the article - autonomously compromising a network of 22 to 50 hosts, modelled
@@ -513,7 +574,38 @@ tooling and scaffolding, in every case by more than it depends on the model. Whi
 question the last movement exists to answer, and it is the one a reader should have been getting
 uneasy about for several sections. What, exactly, is a published number in this field measuring?
 
-## 8 - The four confounds, all in one table
+## Movement 3 - what the number is worth
+
+```mermaid
+flowchart TB
+    N["A published capability number"]
+    LV["Its <b>level</b><br/>vendor collaboration, safety filters off,<br/>attempt budget undisclosed, harness<br/>varying with the model - n8, n25"]
+    SL["Its <b>slope</b><br/>doubling every ~1.3 months,<br/>R2 = 0.828 over eight models - n23"]
+    R["So the leaderboard is<br/>not evidence about capability"]
+    D["So the doubling time is the only<br/>durable quantity in the article,<br/>and it exists only inside a picture"]
+    X["10 - four reading rules,<br/>which are what leaves the domain"]
+
+    N --> LV --> R --> X
+    N --> SL --> D --> X
+
+    classDef bad fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    classDef payload fill:#dcfce7,stroke:#15803d,color:#14532d
+    class LV,R bad
+    class SL,D payload
+```
+
+This is a separation diagram, not a critique, and the split down the middle is the entire point.
+**The crux is that all four confounds attack the level of the number and not one of them touches its
+slope, which is why the article's least prominent finding is its only durable one.** The two branches
+are drawn as equals rather than as a claim and its caveat because treating the confounds as a footnote
+is exactly the reading error this movement exists to prevent: a reader who discounts the article for
+being unreliable throws away the trend along with the leaderboard, and the trend is the part that
+survives every objection raised against the rest. That the durable half is also the half printed
+nowhere in the prose is the note's sharpest single observation about how survey writing fails.
+
+*Synthesized from `n8`, `n23`, `n25` and divergences `d2` and `d5`.*
+
+### 8 - The four confounds, all in one table
 
 ExploitGym's results table answers that question almost completely, mostly in its caption and
 footnotes.
@@ -581,7 +673,7 @@ the incentive is identical, and 94% agreement between two model auditors is a me
 they agree with each other, not of how often they are right. Two judges sharing a failure mode agree
 enthusiastically. **Recorded as an open conflict, resolved by neither source.**
 
-## 9 - The rate of change, which the article prints and does not read
+### 9 - The rate of change, which the article prints and does not read
 
 Everything to this point has been about what a number means at one moment. SCONE-Bench asks a
 different question, and the article's treatment of it is the reason this ingest was worth doing.
@@ -643,10 +735,43 @@ Sonnet 4.5 and GPT-5 at 2,849 newly deployed contracts with no known vulnerabili
 reports the result (`d8`). On a page about whether models can find genuinely novel vulnerabilities,
 the one experiment aimed squarely at that question is announced and dropped.
 
-## 10 - What transfers out of the domain
+### 10 - What transfers out of the domain
 
 The security material is not the durable part of this article. Four reading rules are, and each one
 was earned by a specific divergence above.
+
+```mermaid
+flowchart TB
+    V["Exploitation has a perfect mechanical<br/>verifier - established in section 1"]
+    C124["claim 124 - verification, not generation,<br/>sets the ceiling on self-improvement"]
+    M["So exploitation is among the few domains<br/>where an unattended loop could actually run"]
+    D["A measured doubling time<br/>of ~1.3 months - n23"]
+    C177["claim 177 - a self-improving loop compounds<br/>whatever its benchmark cannot see"]
+    G["Nobody has tested the loop.<br/>The article measures the capability<br/>and is silent on the mechanism"]
+
+    V --> M
+    C124 --> M
+    M --> G
+    D --> G
+    C177 --> G
+
+    classDef open fill:#fef3c7,stroke:#b45309,color:#78350f
+    class G open
+```
+
+This is an inference diagram, not a finding, and it is the only diagram in this note whose conclusion
+the source does not contain. **The crux is that the property making this domain easy to benchmark is
+the same property that would make it easy to self-improve in, and the article supplies a measured rate
+of change while saying nothing whatever about the loop.** It is drawn with three arrows converging on
+an empty result because the shape of the gap matters more than any of the inputs: two claims this
+brain already holds and one number this article prints all point at a question none of them asks. The
+amber box is deliberately not a claim and must not be cited as one, which is why it is stated here as
+an open question rather than promoted. This is the brain's reading, and the honest status of it is
+that it is a well-supported reason to go looking rather than a result.
+
+*Synthesized from `n23` joined to claims 124 and 177. The conclusion is this brain's inference and is
+not stated by the source.*
+
 
 The first is that a capability number in an adversarial domain is a description of a configuration,
 and the configuration has at least five settings - information given, decomposition, tooling,
@@ -871,3 +996,134 @@ directory is empty. Every open question below is genuinely open.
   ([`self-improvement`](../../brain/topics/self-improvement.md),
   [`autonomous-research-loops`](../../brain/topics/autonomous-research-loops.md)) via section 10's
   verifier argument, and claim 164 ([`evals`](../../brain/topics/evals.md)) via `d7`.
+
+## Presentation narrative
+
+*A talk track for a mixed room of security leadership and engineers, derived entirely from the gated
+nodes above. It claims nothing about whether any specific model is dangerous, and it deliberately does
+not rank vendors. Its subject is how to read a capability number in this field, and its conclusion is
+a measurement decision rather than a security one. Every figure here is second-hand: this note is
+built on a survey whose author ran none of the experiments.*
+
+### Slide 1 - The number you were about to quote describes a configuration, not a capability
+
+**Five separate settings move a cybersecurity score further than the difference between one frontier
+model and the next, and almost none of them get published alongside the number.** The evidence is in
+the article's own pages, and it is only visible once you line the figures up, which the article never
+does. Giving the agent a public patch to reverse-engineer rather than a bare codebase moves the score
+[n9]. Decomposing the task into subtasks moves the difficulty ceiling by roughly elevenfold [n6].
+Changing the harness around an unchanged model moves success from 3 of 40 networks to 37 [n19].
+Turning the vendor's safety filters back on takes a model from 120 exploits to zero [n25]. And the
+reported figures are maxima over three or eight attempts rather than single-shot rates, which the
+prose states nowhere at all [n8].
+
+The question for this room is therefore not which model is most capable. It is whether any published
+number in this field is currently answering that question, and the honest answer is that it is not.
+What engineers should take from this is that a capability figure here is a five-tuple reported as a
+scalar. The leadership significance is that procurement and risk decisions taken off these
+leaderboards are being taken on the configuration rather than on the technology.
+
+*Visual: the five-dial diagram in this note's TL;DR, which is the only place in the source material
+where all five settings appear together. Provenance: synthesized from `n6`, `n8`, `n9`, `n19`, `n25`.*
+
+### Slide 2 - Capability does not fade out, it stops at an identifiable rung
+
+**Grading these tasks pass or fail hides the single most useful thing the data contains, which is
+exactly where competence terminates.** A model scoring zero might have found the vulnerability,
+reproduced it, and failed only at weaponisation, or it might have found nothing whatever. A binary
+grader reports those two states identically, and they are not remotely the same risk. Every benchmark
+in the survey therefore awards partial credit along a ladder: find the flaw, reproduce it, execute
+code, achieve the objective [n3].
+
+Run that ladder and the shape is stark rather than gradual. Reaching the buggy line of code is
+saturated at 41 of 41 bugs for nearly every model tested, triggering a crash is common, escaping the
+sandbox is close to zero, and arbitrary code execution is zero for every publicly deployed model [n16].
+The competence is real, it is broad, and it ends at a specific rung. For leadership that is the most
+decision-relevant sentence in the note, because it says the current gap is not a matter of degree.
+
+*Visual: `fig2_outcome-ladder.png` for the ladder, `fig6_exploitbench-capability-ladder.png` for where
+it terminates. Provenance: `n3`, `n16`.*
+
+### Slide 3 - That rung belongs to the guidance regime, not to the agent
+
+**The cliff is real, and its position is not a property of the model.** Left unguided, no agent in the
+Cybench results solved a task that had taken a human longer than eleven minutes to first solve. Given
+the same tasks broken into subtasks, the same agents reached fifty-two minutes and one reached two
+hours and three minutes [n6]. Nothing about the model changed between those two numbers.
+
+This is where the survey and its own figure part company, and it is worth saying plainly to a
+technical audience: the article's prose states only the unguided half, and the subtask-guided result
+is recorded here as a divergence between the figure and the text [`d1`]. The reason it matters beyond
+this one article is that task decomposition is not an exotic research technique. It is what any
+competent operator does, which means the unguided number is the one least representative of a real
+adversary.
+
+*Visual: `fig4_cybench-guidance-ceiling.png`. Provenance: `n6`, divergence `d1`.*
+
+### Slide 4 - Scaffolding beats the model, and it is not close
+
+**The largest single effect in this entire article comes from changing the system around a model that
+was itself held constant.** On a fifty-host network replica, one model went from succeeding on 3 of 40
+networks to 37 of 40 when the scaffolding was replaced. Every one of the ten models tested scored zero
+on the old harness and between six and nine out of ten on the new one [n19].
+
+The reason this is gated as strongly as it is has nothing to do with the size of the jump, and I want
+to be precise about that, because a large number is not evidence. It is that the authors removed each
+component individually and the result collapsed each time [n20]. Ablation is what separates a finding
+from an announcement, and it is the reason this claim carries weight while several larger-sounding
+figures elsewhere in the article do not. The leadership significance is that defensive posture built
+against a model is built against the wrong object. The threat scales with harness engineering, which
+is cheap, public, and improving independently of any model release.
+
+*Visual: `fig7_mhbench-equifax-chain.png`, the multi-host attack chain these agents are being scored
+against. Provenance: `n19`, `n20`.*
+
+### Slide 5 - Every confound attacks the level of the number and none of them touches its slope
+
+**Four separate problems make the absolute figures untrustworthy, and the trend underneath survives
+all four.** The strongest results were produced with vendor safety filters disabled under trusted
+access. The two best rows of one table were produced in collaboration with the vendor whose models
+they rank first. Model and harness vary together in that same table, so no row isolates either. And
+the attempt budgets differ across benchmarks and are never stated [n8, n25].
+
+So discount the leaderboard, and notice what that leaves standing. One chart carries an annotated
+log-linear fit of simulated exploitation revenue against model release date across eight models, with
+a doubling time of roughly 1.3 months at an R-squared of 0.828 [n23]. That quantity is unaffected by
+every objection just raised, because a confound that shifts all points similarly does not change a
+slope. It is also, and this is the part worth sitting with, the single most consequential number in
+the article and it appears nowhere in the prose. It exists only inside the image.
+
+I should label the evidence honestly: `n23` is `single-leg` and figure-only, read off a chart by this
+brain rather than stated by the author. It is the strongest claim here and the least corroborated one,
+and those two facts are uncomfortable together.
+
+*Visual: `fig8_scone-doubling-time.png`. Provenance: `n23`, divergence `d2`; confounds from `n8`,
+`n25` and `fig5_exploitgym-results.png`.*
+
+### Slide 6 - The decision is not to act on the leaderboard, and to instrument the slope instead
+
+**The honest conclusion is that this article does not support a procurement decision, a model ban, or
+a capability threshold, and pretending otherwise would be manufacturing actionability the evidence
+cannot carry.** Every number is second-hand, no primary was fetched, the level is confounded four ways
+and the one durable quantity is a single-leg reading of a picture. Of the four verdicts available,
+this is a watch rather than an adopt, a pilot, or a reject.
+
+What converts that into something useful is naming precisely what would change it. Fetch the SCONE
+primary and confirm the doubling fit against the underlying data rather than the rendered chart. Ask
+any vendor quoting a cybersecurity figure for all five configuration settings, and treat a refusal as
+information. And track the slope rather than the level, because the level is what the configuration
+controls and the slope is what the technology is doing.
+
+*Visual: the separation diagram at the head of Movement 3, which is the argument of this slide in one
+picture. Provenance: synthesized from `n8`, `n23`, `n25`.*
+
+### Key takeaway message
+
+Cybersecurity capability figures are currently reports about experimental configuration wearing the
+appearance of reports about models, and the five settings that dominate them are usually undisclosed.
+Underneath that noise sits one quantity nobody is quoting, because it lives inside a chart rather than
+a sentence: offensive capability denominated in simulated stolen dollars, doubling roughly every 1.3
+months. The decision this supports is not to act on any published ranking, and to start measuring the
+rate rather than the level. The boundary is that the rate itself rests on a single figure this brain
+read off an image, which is precisely why confirming it against the primary is the first thing worth
+funding.
