@@ -173,7 +173,8 @@ flowchart TB
     style S7 fill:#fca5a5,stroke:#b91c1c
 ```
 
-Read it top to bottom, because each movement supplies the vocabulary the next one spends. Movement A
+This is a reading-order diagram about the note rather than about Hermes, and each movement supplies
+the vocabulary the next one spends. Movement A
 does the work most agent writing skips, which is establishing that the problem exists at all, and a
 reader who already builds messaging infrastructure can skim it without losing the thread. Movement B
 is where the article earns its keep and should not be skimmed, since sections 3 and 4 carry the two
@@ -193,7 +194,35 @@ not it.*
 
 ---
 
-## 1. A message is not a request, and the difference is where all the work is
+## Movement A - why this is harder than it looks
+
+```mermaid
+flowchart TB
+    R["An HTTP request<br/><i>stateless, self-describing</i>"]
+    M["An inbound message<br/><i>a continuation of something</i>"]
+    Q["So the system must decide what it<br/>continues before it can do anything"]
+    N["And no process survives between<br/>your two messages - n10"]
+    B["Continuity is therefore <b>reconstructed</b><br/>from durable state, every single turn"]
+    S["Every identifier involved must be written<br/>down, and can be written down wrongly"]
+    F["And the failure is silent: a message routed<br/>into the wrong conversation produces<br/>a perfectly valid conversation - n1"]
+
+    R -.->|"the instinct"| M
+    M --> Q --> N --> B --> S --> F
+
+    style F fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+```
+
+This is a problem-statement diagram, not a design, and the dashed edge at the top is the mistake the
+rest of the note is written against. **The crux is that continuity is rebuilt rather than remembered,
+which converts an apparently administrative question into a distributed-state problem with no error
+channel.** It is drawn as a single unbranching descent because each step is forced by the one above
+and there is no point at which a different choice was available. The red terminal box is why the two
+sections in this movement exist at all: a failure that raises no exception must be prevented by
+naming things correctly in advance, since nothing downstream will ever tell you it happened.
+
+*Synthesized from `n1` and `n10`.*
+
+### 1. A message is not a request, and the difference is where all the work is
 
 Start with the framing the article chooses, because it is a good one and because what it leaves out
 matters later. The author wants a task so boring that the architecture becomes visible through it.
@@ -242,7 +271,7 @@ to find it again?
 > continues. That translation is a lookup against durable state, which is why so much of this article
 > is about tables rather than about models. This block is background and is uncited by construction.
 
-## 2. One identifier cannot do four jobs, so derive the ones you need
+### 2. One identifier cannot do four jobs, so derive the ones you need
 
 The naive design has one thing called "the session". Rather than list what Hermes uses instead, let us
 ask what a single identifier structurally cannot answer, and let each unanswerable question name the
@@ -297,7 +326,35 @@ Hold onto one cell in particular. Six rows down, in the row named "Active-run gu
 reads **memory only**. We will come back to that in section 7, and it is the sharpest thing in the
 article.
 
-## 3. The isolation policy is the key schema, which is the claim worth stealing
+## Movement B - the boundaries
+
+```mermaid
+flowchart TB
+    K["3. the routing key's field list<br/><b>is</b> the isolation policy - n2"]
+    E["4. the entry surface owns the door<br/>and almost nothing else - n4"]
+    W["5. 'remote' names three unrelated<br/>boundaries and none implies another - n6"]
+    T["Each one is a separation that costs<br/>nothing to state and is expensive to discover"]
+
+    K --> T
+    E --> T
+    W --> T
+    T --> P["and all three survive losing<br/>the product name"]
+
+    style P fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is an ownership diagram, not a component diagram, and the three boxes are answers to three
+different "who is responsible for this?" questions rather than three parts of a system. **The crux is
+that this movement contains the only claims in the article that are portable, because each is a
+statement about where a boundary belongs rather than about how Hermes happens to be built.** The three
+are drawn as peers converging rather than as a sequence because they are independent: you can get the
+routing key right and the entry surface wrong, and conflating the three meanings of "remote" is
+orthogonal to both. Section 3 is the one to keep if you keep only one, since it collapses an
+access-control layer people usually build separately into a field list they already have.
+
+*Synthesized from `n2`, `n4` and `n6`.*
+
+### 3. The isolation policy is the key schema, which is the claim worth stealing
 
 Section 2 left the session key described but not specified. What is actually in it? The article
 enumerates the candidate fields, and they are a profile namespace, the platform, the chat type, the
@@ -350,7 +407,7 @@ is involved, because the model gets no vote in what its own key contains.**
 Having established which conversation a message belongs to, the next question is what the thing that
 received it is still responsible for.
 
-## 4. The entry surface owns the door, and almost nothing else
+### 4. The entry surface owns the door, and almost nothing else
 
 Here is the picture the author says to keep if you keep only one.
 
@@ -392,7 +449,33 @@ live, as section 6 will show.
 
 With the planes separated, one piece of vocabulary can be cleaned up before we look inside a turn.
 
-## 5. Three unrelated things are called "remote", and conflating them is expensive
+### 5. Three unrelated things are called "remote", and conflating them is expensive
+
+```mermaid
+flowchart TB
+    R["the word 'remote'"]
+    A["a remote <b>model API</b><br/>inference happens elsewhere"]
+    B["a remote <b>tool-execution backend</b><br/>your shell commands run elsewhere"]
+    C["a remote <b>gateway</b><br/>messages arrive from elsewhere"]
+    N["none of the three implies<br/>either of the others - n6"]
+
+    R --> A --> N
+    R --> B --> N
+    R --> C --> N
+
+    style B fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+```
+
+This is a disambiguation diagram, not an architecture diagram. **The crux is that one word names three
+boundaries that vary independently, and the middle one is the only one with a blast radius**, so a
+conversation in which somebody says "it is all remote anyway" has communicated nothing about where
+code executes. It is drawn as a fan with a single joining denial because the error being prevented is
+an inference rather than a misunderstanding: people do not confuse the three definitions, they assume
+one implies another, and the arrow that does not exist is the content. Using a remote model tells you
+nothing whatever about whether an agent can run a destructive command on your laptop.
+
+*Synthesized from `n6`.*
+
 
 This section is short because the point is a definition, and it is included because the definition is
 load-bearing. In an agent system, "remote" can describe at least three boundaries `n6`. The model may
@@ -419,7 +502,36 @@ distinct is a precondition for saying anything true about blast radius.
 Now the entry point is resolved, the conversation is identified, and the planes are named. What
 actually happens when the turn runs?
 
-## 6. Inside one turn, and the two things that move under you
+## Movement C - the turn itself
+
+```mermaid
+flowchart TB
+    T["One turn, walked end to end - n4"]
+    A["what moves under you #1<br/>parallel tool results return in<br/>model-call order, not side-effect order - n14"]
+    B["what moves under you #2<br/>the active-run guard is in memory,<br/>so it is process-local - n8, d1"]
+    C["Transcript validity is not<br/>execution truth"]
+    D["A restart, or a second gateway process,<br/>silently removes the guarantee"]
+
+    T --> A --> C
+    T --> B --> D
+
+    style B fill:#fca5a5,stroke:#b91c1c,color:#7f1d1d
+    style D fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+```
+
+This is a guarantee diagram, not a sequence diagram, and it draws what is *not* promised rather than
+what happens. **The crux is that both things moving under you during a turn are places where a
+structure that looks authoritative is only locally true**, and in each case the appearance of order is
+produced by the recording rather than by the execution. The two branches are drawn separately because
+they fail differently and a single node would hide that: the ordering issue is permanent and by design,
+while the memory-only guard is an implementation property that a deployment change silently removes.
+The pink box is the note's single most valuable finding, and it is worth saying how it was found. The
+prose never states it. A table cell gives it away, which is why this brain reads figures and tables
+before prose.
+
+*Synthesized from `n8`, `n14` and divergence `d1`.*
+
+### 6. Inside one turn, and the two things that move under you
 
 The article gives the turn as thirteen steps, and the sequence diagram gives it as a picture with
 thirteen participants. The picture is the better teacher.
@@ -486,7 +598,36 @@ permission to make it.
 
 So the turn is understood. What of the state it leaves behind?
 
-## 7. The state that is not durable, which the prose never tells you
+### 7. The state that is not durable, which the prose never tells you
+
+```mermaid
+flowchart TB
+    G["the guard stopping two turns from<br/>mutating one live conversation"]
+    M["held in memory - n8"]
+    P1["does not survive a restart"]
+    P2["does not hold across two<br/>gateway processes"]
+    S["so it is a single-process invariant<br/>presented as a system invariant"]
+    W["and the prose never says so.<br/>A table cell gives it away - d1"]
+
+    G --> M
+    M --> P1 --> S
+    M --> P2 --> S
+    S --> W
+
+    style W fill:#fca5a5,stroke:#b91c1c,color:#7f1d1d
+```
+
+This is a scope diagram, not a mechanism diagram, and the whole finding is the difference between two
+scopes that are easy to read as one. **The crux is that a correctness guarantee is only as durable as
+the thing storing it, and this one is stored in a place that disappears exactly when you scale out or
+restart.** It is drawn with two separate consequences because they are met by different people at
+different times: the restart case bites an operator immediately, and the two-process case bites an
+architect a quarter later when horizontal scaling is proposed and nobody remembers this cell. The
+finding is `single-leg` in the sense that matters here, since one table cell is the only place it
+appears and the surrounding prose implies something stronger.
+
+*Synthesized from `n8` and divergence `d1`.*
+
 
 This is the payoff of the cell you were asked to hold in section 2.
 
@@ -532,7 +673,35 @@ finding their sharpest material in figures rather than prose.
 
 The same instinct - asking what is actually written down - is what makes the last movement work.
 
-## 8. Eight stages, six failures, and a mitigation that is a warning
+## Movement D - when success stops being one fact
+
+```mermaid
+flowchart TB
+    S["'the agent succeeded'"]
+    E["eight stages, and every arrow<br/>between them is its own<br/>failure boundary - n17"]
+    X["execution, persistence and delivery<br/>each need separate evidence - n18"]
+    R["because collapsing them makes an<br/>operator's rerun look safe when it<br/>will duplicate an external action"]
+    D["delivery is at-least-once and explicitly<br/>not exactly-once, so an ambiguous crash<br/>is resolved by warning a human - n19"]
+
+    S --> E --> X --> R
+    E --> D
+
+    style S fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    style R fill:#fef3c7,stroke:#b45309,color:#78350f
+```
+
+This is an operational diagram, not an architecture one, and it is the part of the note you would
+actually be reading at three in the morning. **The crux is that "it worked" is not an operable
+completion model, because the single word hides eight independent things that can each be true or
+false.** It is shaped as one claim decomposing rather than as a pipeline because the stages are not
+interesting individually and the arrows are: the article's contribution is naming the boundaries, not
+naming the steps. The amber box is the consequence that matters to whoever holds the pager, since a
+rerun is the standard remedy and it is exactly the remedy that duplicates a side effect when execution
+and delivery were collapsed into one fact.
+
+*Synthesized from `n17`, `n18` and `n19`.*
+
+### 8. Eight stages, six failures, and a mitigation that is a warning
 
 "The agent succeeded" is too vague to operate on, and the article replaces it with a chain `n17`:
 
@@ -625,7 +794,34 @@ this way is debuggable with ordinary distributed-systems tooling**, and the mode
 dominates most discussion of agent reliability, turns out to be irrelevant to six of six realistic
 production failures.
 
-## 9. What survives losing the product name
+### 9. What survives losing the product name
+
+```mermaid
+flowchart TB
+    SRC["everything the article says"]
+    ARCH["<b>arguments</b> - survive<br/>routing key is the isolation policy,<br/>the model is a callee,<br/>a tool schema is not an authorization,<br/>success is eight facts"]
+    PROD["<b>product facts</b> - do not survive<br/>five delivery states, this key's field list,<br/>this table's columns, pinned to v0.19.1"]
+
+    SRC --> ARCH
+    SRC --> PROD
+    ARCH --> U["reusable on a system that shares<br/>none of Hermes' code"]
+    PROD --> V["true on the day it was written,<br/>and the author says so"]
+
+    style ARCH fill:#dcfce7,stroke:#15803d,color:#14532d
+    style PROD fill:#fef3c7,stroke:#b45309,color:#78350f
+```
+
+This is a durability diagram, not a summary, and it sorts the article by shelf life rather than by
+topic. **The crux is that an architecture write-up ages along one seam, with the arguments surviving
+and the specifics expiring, and the reader's job is to know which side of that seam each sentence sits
+on.** It is drawn as a single split rather than as a ranked list because the distinction is binary in
+practice: either a claim depends on a fact about this version or it does not, and there is no useful
+middle. This generalises past this note and is the reason the kit records a pinned version at all,
+since a claim that survives losing the product name can be cited years later and one that does not
+must be re-checked against the code.
+
+*Synthesized from `n2`, `n4`, `n16`, `n17` against `d4`. The seam is this brain's framing.*
+
 
 Almost everything in this article is scoped to Hermes v0.19.1, and the author says so, closing with a
 version note that pins the release, the tag `v2026.7.30`, the commit `cc4cab2` and the platform, and
@@ -666,7 +862,34 @@ runtime belong, this is the most useful thing this brain has ingested on the sub
 free of the commercial position that discounts most architecture writing here. As evidence about one
 program, it is a careful description with the demonstration missing.
 
-## 10. A note this brain can make and the article cannot
+### 10. A note this brain can make and the article cannot
+
+```mermaid
+flowchart TB
+    H["Hermes' session store<br/>durable, reconstructed each turn,<br/>larger than the prompt - n7, n10"]
+    S19["S19's memory-poisoning channels<br/>writes into persistent state with<br/>no validation step"]
+    J["The same object, described<br/>by two sources that never met"]
+    O["The article treats the store as an<br/>engineering concern and never as<br/>an attack surface"]
+
+    H --> J
+    S19 --> J
+    J --> O
+
+    style O fill:#fef3c7,stroke:#b45309,color:#78350f
+    style J fill:#e0e7ff,stroke:#4338ca,color:#312e81
+```
+
+This is a cross-source diagram, not a finding from the article, and it exists because this brain holds
+a source the author did not. **The crux is that the durable session store this article carefully
+designs is precisely the write channel another source treats as an attack surface, and neither
+source can see the other.** It is drawn as a join rather than as a critique because the article is not
+wrong about anything here, it is simply answering a different question, and the value is entirely in
+the adjacency. The amber box is an open question rather than a claim and must not be cited as one:
+nothing here tests whether Hermes is vulnerable, only that the object it describes is the object S19
+describes.
+
+*Synthesized from `n7` and `n10` joined to S19. The join is this brain's and appears in neither source.*
+
 
 Everything above reads the article on its own terms. One thing is worth adding from outside it, and it
 is flagged as this brain's cross-reference rather than as anything the author claims.
@@ -872,3 +1095,120 @@ is public code pinned to a commit the author names.
   for credentials.
 - [`brain/topics/evals.md`](../../brain/topics/evals.md) - what operational evidence an agent run must
   emit, and why "succeeded" is not a measurable outcome.
+
+## Presentation narrative
+
+*A talk track for engineers and their leadership on what it takes to run an agent as a service, derived
+entirely from the gated nodes above. It is about boundaries rather than about prompting or model
+quality, and it makes no claim that this architecture performs well, because nothing in the source is
+measured. The product specifics are pinned to one version and the author says so.*
+
+### Slide 1 - An inbound message is not a request, and everything expensive follows from that
+
+**A request is stateless and self-describing, while a message is a continuation of something, so the
+first thing the system must do is decide what it continues [n1].** The instinct is to treat the two the
+same, and that instinct is wrong in one specific way rather than generally.
+
+The reason it is hard rather than fiddly is that no process stays alive between a user's two messages
+[n10]. Continuity is not remembered, it is reconstructed from durable state on every single turn, which
+means every identifier involved has to be written down somewhere and every one of them can be written
+down wrongly. The question this reframes for the room is not how to make the agent smarter. It is
+whether your system can name, correctly and from disk, what each arriving message belongs to.
+
+What makes it dangerous is that the failure is silent. Routing a message into the wrong conversation
+raises no error, because both conversations are perfectly valid.
+
+*Visual: the Movement A diagram. Provenance: `n1`, `n10`.*
+
+### Slide 2 - Your isolation policy is the routing key's field list, not a layer above it
+
+**This is the most transferable sentence in the article and it deletes a component most teams build
+separately [n2].** A session key is assembled from fields such as profile, platform, chat, thread and
+sometimes participant. Put participant identity in the key and you have isolated by participant. Leave
+it out and the lane is shared. There is no access-control layer doing that work; the field list is the
+policy.
+
+The leadership significance is that a multi-tenancy decision people expect to find in a security review
+is actually made in a data-structure definition, probably by one engineer, probably without a review.
+What engineers should take from it is the corollary the article is careful about: the author refuses to
+call the default per-participant behaviour a security guarantee, and calls it a routing policy [n3].
+That distinction is worth preserving, because a routing policy that happens to isolate is not the same
+promise as one that is enforced to.
+
+*Visual: `visuals/fig2_ownership-split.png`, the ownership table. Provenance: `n1`, `n2`, `n3`.*
+
+### Slide 3 - A tool schema is a request format and proves nothing about permission
+
+**A tool schema tells the model how to ask for a capability, and establishes nothing about whether the
+caller may use it, whether the backend is isolated, or whether a destructive action was approved
+[n16].** This gets conflated constantly, and the article's most useful adjacent observation is that the
+word "remote" is doing the same damage: it names a remote model API, a remote tool-execution backend
+and a remote gateway, and none of the three implies either of the others [n6].
+
+The practical form of that is worth stating plainly to a mixed room. Using a hosted model tells you
+nothing whatever about whether an agent can run a destructive command on your machine. Those are
+different boundaries with different blast radii, and only one of them is about where inference happens.
+
+*Visual: the section 5 disambiguation diagram, alongside `visuals/fig1_model-inside-the-loop.png` for
+where the model actually sits. Provenance: `n4`, `n6`, `n16`.*
+
+### Slide 4 - The guarantee stopping two turns from corrupting one conversation is memory-only
+
+**This is the single most valuable finding in the note, and the article's prose never states it. A
+table cell gives it away [n8, d1].** The guard providing mutual exclusion over an active conversation
+is held in memory, which makes it process-local. It does not survive a restart, and it does not hold
+across two gateway processes.
+
+I want to be precise about who this bites and when. An operator meets the restart case immediately. An
+architect meets the second case a quarter later, when horizontal scaling is proposed and nobody
+remembers this cell, and by then it is a single-process invariant that has been presented as a system
+invariant for months. Alongside it sits a second thing that moves under you: parallel tool results are
+restored in model-call order, which is transcript validity and explicitly not side-effect ordering
+[n14]. Both are cases where a structure that looks authoritative is only locally true.
+
+*Visual: the Movement C diagram, with `visuals/fig3_gateway-message-flow.png` for the turn itself.
+Provenance: `n8`, `n14`, divergence `d1`.*
+
+### Slide 5 - "The agent succeeded" is not an operable completion model
+
+**The chain has eight stages and every arrow between them is its own failure boundary, so success is
+not one fact but eight in a row [n17].** Execution, persistence and delivery each need separate
+evidence, and the reason is entirely practical rather than theoretical: collapsing them makes an
+operator's rerun look safe when it will in fact duplicate an external action [n18].
+
+The delivery ledger is where the article is most honest, and it is worth holding up as a model of how
+to write this kind of thing. Five states buy at-least-once recovery and explicitly not exactly-once, so
+an ambiguous crash mid-send is resolved by warning a human rather than by guessing [n19]. That is a
+mitigation that is a warning, stated as such. For whoever holds the pager, the actionable sentence is
+that your runbook's standard remedy is the thing that breaks when these three are collapsed into one.
+
+*Visual: `visuals/fig4_six-failure-cases.png`. Provenance: `n17`, `n18`, `n19`.*
+
+### Slide 6 - Take the boundaries, hold the product facts loosely, and note nobody measured any of it
+
+**Nothing in this article is measured, at all, and six of its recommendations rest on no outcome
+whatever.** There is no latency figure, no error rate, and no comparison against another design. So the
+verdict this evidence supports is adopt-the-arguments and watch-the-rest, not adopt.
+
+Two things make it better than that sounds. The author is analysing somebody else's open-source project
+rather than selling his own, which removes the commercial position that discounts most architecture
+writing, and he pins a version, a tag and a commit. Against that, the piece opens by constructing a
+deterministic test task and then never shows it running [d3], and this brain did not clone the
+repository [n24].
+
+The clean way to use it is the seam the note names: the arguments survive losing the product name and
+the specifics do not. Routing key as isolation policy, model as callee, tool schema as request format,
+success as eight facts. Those are reusable on a system sharing none of this code. Five delivery states
+and this particular field list are true of v0.19.1.
+
+*Visual: the section 9 durability diagram. Provenance: `d3`, `d4`, `n24`.*
+
+### Key takeaway message
+
+The interesting engineering in an agent service is not the loop, it is the boundaries on either side of
+it, and every failure worth naming here comes from writing two objects as one. Routing identity is not
+conversation identity, session state is not prompt context, a tool schema is not an authorization, and
+succeeded is not one fact. The finding to carry out of the room is that the guarantee preventing two
+turns from corrupting one conversation lives in memory, so it is process-local and quietly stops
+holding the moment you restart or scale out. Nothing here is measured, so treat the boundaries as
+arguments worth adopting and the product details as true of one pinned version on one day.
