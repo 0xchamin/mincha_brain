@@ -26,6 +26,33 @@ context and no controls will still produce a poor result"* (`n8`). **It also con
 on** - S2 says own your loop, this says let the SDK own it - and never acknowledges the position
 exists (`d1`).
 
+```mermaid
+flowchart TB
+    L["<b>agent loop</b><br/>the only mandatory layer - n1"]
+    W["<b>workflows</b><br/>for when you do not want autonomy"]
+    H["<b>harness</b><br/>tools, context, planning, middleware"]
+    N["<b>not a stack</b> - you may take the loop<br/>without either of the others - n9"]
+    C["and it contradicts claim 12 head on,<br/>without ever acknowledging<br/>the position exists - d1"]
+
+    L --> N
+    W --> N
+    H --> N
+    N --> C
+
+    style N fill:#dcfce7,stroke:#15803d,color:#14532d
+    style C fill:#fbf1dc,stroke:#b45309,color:#78350f
+```
+
+This is a factoring diagram, not a product diagram, and the negative claim in the green box is the
+whole reason to read the post. **The crux is that three things routinely sold as one are separable,
+and the summary figure says so by not stacking them - the loop is mandatory and the other two are
+optional in either order.** It is drawn with all three feeding the separability claim rather than
+layered, because drawing them as a stack would reproduce exactly the error the note exists to correct.
+The amber box is the note's own finding rather than the source's: S2 says own your loop and this says
+let the SDK own it, and the post never acknowledges that anybody disagrees.
+
+*Synthesized from `n1`, `n9` and divergence `d1`.*
+
 ## The 1-minute version
 
 This note covers a design post written by the team behind the Microsoft Agent Framework, and what is
@@ -138,7 +165,7 @@ flowchart TB
     style D fill:#fbf1dc
 ```
 
-The diagram runs top to bottom in the order of the argument, gathered into four movements, and every
+This is a reading-order diagram about the note rather than about the SDK, gathered into four movements, and every
 box below a movement is a numbered section further down this note. Blue marks the block carrying the
 contribution, which is the taxonomy and specifically the claim that its three parts are independently
 declinable. Amber marks the block you have to supply yourself, because this source has a structural
@@ -161,7 +188,33 @@ elsewhere in this brain, which is exactly the point being made about the missing
 
 *Synthesized roadmap of this note - not from the source.*
 
-## 1. Three different things wearing one word
+## Movement A - three things wearing one word
+
+```mermaid
+flowchart TB
+    W["'agent framework'"]
+    A["the <b>loop</b> that calls a model<br/>and dispatches tools"]
+    B["the <b>workflow</b> engine that runs<br/>a fixed sequence"]
+    C["the <b>harness</b> of tools, context,<br/>planning and middleware"]
+    D["three separable concerns, and most<br/>arguments about frameworks are<br/>people meaning different ones"]
+
+    W --> A --> D
+    W --> B --> D
+    W --> C --> D
+
+    style D fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a vocabulary diagram, not an architecture, and it is a movement of one section for a reason.
+**The crux is that the word is overloaded, so a team can hold a long disagreement about whether to use
+a framework while meaning three different things by it.** It is drawn as one word fanning into three
+because that is the disambiguation the rest of the note depends on: every later claim is about one of
+these boxes and is false about the others. Read this movement even if you skip the rest, because the
+distinction is what makes the vendor's own figure interesting.
+
+*Synthesized from `n1`.*
+
+### 1. Three different things wearing one word
 
 Most disagreements about "agent design" turn out to be people arguing about different layers without
 noticing that they are. The article's contribution is to name those layers apart, and the three names
@@ -180,7 +233,31 @@ and each answer lives somewhere different.
 The interesting part is not the three names, though, since a list of three concerns is the sort of
 thing any vendor could have written. It is how they are arranged.
 
-## 2. The shape is the argument: not a stack
+## Movement B - the shape is the argument
+
+```mermaid
+flowchart TB
+    S["what you expect:<br/>a <b>stack</b>, each layer<br/>resting on the one below"]
+    F["what the figure draws:<br/>workflows and harness <b>side by side</b><br/>above the loop alone - n9"]
+    M["so the loop is the only mandatory part,<br/>and you may take either of the<br/>others without the other"]
+    D["3. and the loop is drawn small<br/>deliberately - the substrate around it<br/>is most of the picture"]
+
+    S -.->|"the reading to discard"| F --> M --> D
+
+    style F fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a shape diagram, and the argument is carried by a layout rather than by a sentence. **The
+crux is that the vendor's own summary figure makes a claim the prose never states: these are not
+layers, so adopting one commits you to none of the others.** It is drawn with the stack reading
+retained and struck because that is the default assumption a reader brings, and the whole value of the
+figure is that it contradicts it. Section 3 then makes the second point of the same kind - the loop
+box is small and the substrate around it is large, which is an argument about where the engineering
+actually goes.
+
+*Synthesized from `n9` and `n2`.*
+
+### 2. The shape is the argument: not a stack
 
 ![Three boxes in one container: Workflows and Harness side by side above Agent Loop alone](visuals/fig_AgentFramework.png)
 
@@ -211,7 +288,7 @@ take all three.
 That accounts for the two boxes you may decline. It says nothing yet about the one you may not, and
 the figure for that box has a second argument hidden in its proportions.
 
-## 3. The loop is drawn small, and that is deliberate
+### 3. The loop is drawn small, and that is deliberate
 
 ![The agent loop: a small MAF AIAgent box above a much larger substrate of models, tools, hosting and agent providers](visuals/fig_AgentLoop.png)
 
@@ -243,7 +320,31 @@ protocol**.
 So much for the mandatory base. The two optional surrounds are the rest of the source's substance, and
 the first of them answers a question the loop cannot.
 
-## 4. Workflows: the answer to "what if I do not want autonomy?"
+## Movement C - the two optional layers, enumerated
+
+```mermaid
+flowchart TB
+    W["4. <b>workflows</b>: five named orchestration<br/>patterns, including Author/Critic - n6"]
+    H["5. <b>the harness</b>, enumerated - common tools,<br/>context, planning, middleware - n7"]
+    V["and this is the brain's only enumerated<br/>harness inventory, which is why a<br/>catalog post earns a note at all"]
+
+    W --> V
+    H --> V
+
+    style V fill:#e8f0fc,stroke:#4338ca,color:#312e81
+```
+
+This is an inventory diagram, not a design. **The crux is that the value here is taxonomic rather than
+architectural: nothing in this movement is measured or compared, and it is still the most complete
+naming of harness components this brain holds.** It is drawn as two catalogs converging on that
+observation because it is the honest reason to keep the source - a vendor listing what its own product
+contains is weak evidence about what works and strong evidence about what the category contains.
+Author/Critic is the pattern worth carrying, since it is the same generator-evaluator separation this
+brain records from three other directions.
+
+*Synthesized from `n6` and `n7`.*
+
+### 4. Workflows: the answer to "what if I do not want autonomy?"
 
 ![Five orchestration patterns drawn as labelled panels: Sequential, Handoff, Author/Critic, Magentic, Custom](visuals/fig_Workflows.png)
 
@@ -270,7 +371,7 @@ made visually.
 Workflows are one of the two surrounds, and the one this brain already had vocabulary for. The other
 surround is where the source supplies something nothing else here does.
 
-## 5. The harness, enumerated - which nothing else here does
+### 5. The harness, enumerated - which nothing else here does
 
 ![The harness panel: preset harnesses above four named columns - Common Tools, Context, Planning, Middleware](visuals/fig_AgentHarness.png)
 
@@ -300,7 +401,32 @@ sentence lands as a design constraint rather than as a platitude.
 An inventory tells you what may go in. It does not tell you what to take out, and that second question
 is where this source stops being useful.
 
-## 6. What the catalog will never tell you: what to remove
+## Movement D - what a catalog cannot tell you
+
+```mermaid
+flowchart TB
+    C["6. a catalog lists what you may add,<br/>and never what to <b>remove</b>"]
+    A["which is the question that decides<br/>whether a harness helps"]
+    D["7. and the post carries a conflict it<br/>never acknowledges: S2 says own your<br/>loop, this says let the SDK own it - d1"]
+    R["so read it for vocabulary,<br/>never for a decision"]
+
+    C --> A --> R
+    D --> R
+
+    style A fill:#fbf1dc,stroke:#b45309,color:#78350f
+    style R fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a limits diagram, and both sections here are about what the format cannot do. **The crux is
+that a catalog is structurally incapable of answering the only question that matters when assembling a
+harness, which is what to leave out.** It is drawn with two independent limitations reaching one
+reading instruction because they compound: a post that cannot tell you what to remove and does not
+know it is taking a side on loop ownership is a vocabulary source and nothing more. That is not a
+criticism of the post so much as a statement of what genre it belongs to.
+
+*Synthesized from `n8` and divergence `d1`.*
+
+### 6. What the catalog will never tell you: what to remove
 
 Here is the gap, and it is structural rather than an oversight.
 
@@ -327,7 +453,31 @@ of them contains.**
 Subtraction is the half this source omits quietly. There is a second half it omits loudly, and that
 one is a direct disagreement with something this brain already holds.
 
-## 7. The conflict it never acknowledges
+### 7. The conflict it never acknowledges
+
+```mermaid
+flowchart TB
+    A["<b>S2</b>: an agent is a prompt, a switch<br/>statement, a context builder and a loop -<br/><b>own all four</b>"]
+    B["<b>this post</b>: the loop is the layer<br/>the SDK provides - <b>let it</b>"]
+    C["both are arguing about the same object"]
+    D["and neither acknowledges the other<br/>exists - d1"]
+
+    A --> C
+    B --> C --> D
+
+    style D fill:#fbf1dc,stroke:#b45309,color:#78350f
+```
+
+This is a conflict diagram, and it is this brain's finding rather than the source's. **The crux is
+that two credible sources give opposite advice about the single most consequential decision in agent
+architecture, and the disagreement is invisible because neither names the other.** It is drawn
+converging before the divergence because the first thing to establish is that they are talking about
+the same thing - a reader could otherwise assume the two use "loop" differently and reconcile them
+falsely. The conflict is kept rather than resolved, which is what this brain's gate asks for when two
+sources disagree and both are unmeasured.
+
+*Synthesized from divergence `d1`, against S2's claim 12. Neither source states this.*
+
 
 This is the sharpest reason to read the post alongside S2 rather than instead of it (`d1`).
 
@@ -474,3 +624,121 @@ with the missing discipline added and marked.*
   per-call authoring.
 - `../../brain/topics/skills.md` - `skills` filed under Context beside prompts and memory, by an
   independent vendor.
+
+## Presentation narrative
+
+*A talk track for a team arguing about whether to adopt an agent framework, derived entirely from the
+gated nodes above. This is a vendor design post about its own SDK with nothing measured, nothing
+compared and no baseline, so it is a source of vocabulary and taxonomy and never of efficacy.*
+
+### Slide 1 - Three different things are wearing one word, and that is why the argument never ends
+
+**"Agent framework" names the loop that calls a model and dispatches tools, the workflow engine that
+runs a fixed sequence, and the harness of tools, context, planning and middleware [n1].** Those are
+separable concerns.
+
+Most disagreements about whether to adopt a framework are people meaning different ones of these.
+Somebody objecting to ceding control of the loop and somebody advocating for prebuilt middleware are
+not disagreeing, and they will argue for an hour before finding that out. Getting the three names on a
+whiteboard is the cheapest thing this post offers.
+
+![Three boxes in one container: Workflows and Harness side by side above Agent Loop alone](visuals/fig_AgentFramework.png)
+
+This is the summary figure, and the layout is the claim. **The crux is that these are drawn side by
+side rather than stacked** - so adopting one commits you to none of the others [`n9`].
+
+### Slide 2 - The loop is small on purpose, and the substrate around it is most of the picture
+
+**The agent loop is drawn as a small box above a much larger substrate of models, tools, hosting and
+agent protocols.** That proportion is an argument, and it is the one that justifies the whole layering.
+
+The sentence the post rests on is worth quoting exactly: a strong model with poor tools, weak context
+and no controls will still produce a poor result [n8]. For leadership that reframes where the
+engineering investment goes. The model is a procurement decision and the substrate is a build
+decision, and the second is larger than the first.
+
+![The agent loop: a small MAF AIAgent box above a much larger substrate of models, tools, hosting and agent protocols](visuals/fig_AgentLoop.png)
+
+This is where the work is. **The crux is the size ratio** - the box everyone argues about is the small
+one [`n2`, `n8`].
+
+### Slide 3 - Workflows are the answer to "what if I do not want autonomy?"
+
+**Five named orchestration patterns, of which Author/Critic is the one to carry [n6].** A workflow
+engine is what you use when the sequence is known and you want determinism rather than judgement.
+
+Author/Critic deserves attention because this brain reaches the same shape from three unrelated
+directions - a generator and a separate evaluator, because a generator has no independent vantage
+point on its own work. Seeing it arrive here as a named orchestration pattern in a vendor SDK is weak
+evidence that it works and good evidence that it has become standard vocabulary.
+
+![Five orchestration patterns drawn as labelled panels: Sequential, Handoff, Author/Critic, Magentic, Custom](visuals/fig_Workflows.png)
+
+This is the pattern catalog. **The crux is that these are named rather than measured** - useful as
+shared vocabulary, and not as a ranking [`n6`].
+
+### Slide 4 - This is the brain's only enumerated harness inventory
+
+**Common tools, context, planning, middleware - the post lists what a harness contains, which nothing
+else here does [n7].** That is the reason a catalog post earns a note at all.
+
+I want to be precise about what that is worth. A vendor listing its own product's components is weak
+evidence about what works and strong evidence about what the category contains. If you are assembling
+a harness and want a checklist of the slots to consider filling, this is the best list available. If
+you want to know which slots matter, nothing in this post addresses that.
+
+![The harness panel: preset harnesses above four named columns - Common Tools, Context, Planning, Middleware](visuals/fig_AgentHarness.png)
+
+This is the inventory. **The crux is that four of these items exist only in this figure** and are
+never discussed in the prose, which is worth knowing before citing them [`n7`].
+
+### Slide 5 - A catalog cannot tell you what to remove, and that is the question that matters
+
+**Every item here is something you may add, and assembling a harness is decided by what you leave
+out.** A catalog is structurally incapable of answering that.
+
+This connects to something this brain holds from elsewhere: every harness component encodes an
+assumption about what the model cannot do, and those assumptions expire. So the useful discipline is a
+deletion practice rather than an addition practice, and a vendor catalog is exactly the wrong artifact
+to build one from - it has no incentive to tell you which of its components you have outgrown.
+
+```mermaid
+flowchart LR
+    C["a catalog: what you may <b>add</b>"]
+    Q["the real question:<br/>what to <b>remove</b>"]
+    C -.->|"cannot answer"| Q
+    style Q fill:#fbf1dc,stroke:#b45309,color:#78350f
+```
+
+This is a genre limitation, not a criticism. **The crux is that the format determines what the post
+can possibly tell you**, and additions are the only direction a catalog runs [`n8`].
+
+### Slide 6 - It takes a side on loop ownership and never says so
+
+**This post says the loop is the layer the SDK provides. Another source in this brain says an agent is
+a prompt, a switch statement, a context builder and a loop, and that you should own all four [d1].**
+
+Both are credible, both are unmeasured, and neither acknowledges the other exists. That is the single
+most consequential decision in agent architecture, and the disagreement is invisible unless you have
+read both - which is precisely the kind of thing this brain exists to surface.
+
+So the verdict is narrow. Take the three-way factoring, take the harness inventory, take Author/Critic
+as vocabulary. Do not take the loop-ownership position, because the post does not argue for it - it
+assumes it. And do not take any efficacy claim, because there are none: nothing here is measured,
+compared or baselined.
+
+![Three boxes in one container: Workflows and Harness side by side above Agent Loop alone](visuals/fig_AgentFramework.png)
+
+This is the figure again, read for what it concedes. **The crux is that the loop being mandatory is a
+claim about the SDK's design and not about yours** [`n1`, `d1`].
+
+### Key takeaway message
+
+Three separable things wear the phrase "agent framework": the loop, the workflow engine and the
+harness. The vendor's own summary figure says they are not a stack, so the loop is the only mandatory
+part and adopting one commits you to none of the others. The loop is drawn small deliberately, because
+a strong model with poor tools, weak context and no controls still produces a poor result, which is
+where the engineering investment goes. This is the brain's only enumerated harness inventory and that
+is its real value, since a catalog can tell you what to add and never what to remove. It also takes a
+side on whether you should own your loop, opposite to another source here, and never acknowledges the
+question exists. Read it for vocabulary and taxonomy, never for efficacy.
