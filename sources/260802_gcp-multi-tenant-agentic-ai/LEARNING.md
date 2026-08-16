@@ -21,6 +21,40 @@ write** - and the sharpest instance is a cost recommendation that quietly delete
 PII filter the security section calls essential. Vendor reference architecture, T2, **no measurement
 of any kind**: read it as a well-argued shape, never as a result.
 
+```mermaid
+flowchart TB
+    F{"Twelve business units<br/>need agents"}
+    O1["twelve teams build twelve stacks<br/><i>silos, duplicated ops, governance gaps</i>"]
+    O2["one shared agent keeps twelve<br/>datasets apart by being careful<br/><i>one prompt away from failing</i>"]
+    A["Neither. Make the tenant boundary the<br/>platform's own coarsest one:<br/>a project per business unit, with the agent's<br/>authority capped on the <b>principal</b>"]
+    P1["cross-tenant access becomes<br/>structurally impossible"]
+    P2["one unit's incident stays<br/>inside that unit"]
+    P3["one unit's spike cannot<br/>starve another"]
+    C["and every cheaper variant the document offers<br/>gives one of these back, to be re-enforced<br/>in software you now have to write - n14"]
+
+    F --> O1
+    F --> O2
+    F --> A
+    A --> P1 --> C
+    A --> P2 --> C
+    A --> P3 --> C
+
+    classDef bad fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    classDef good fill:#dcfce7,stroke:#15803d,color:#14532d
+    class O1,O2 bad
+    class A,P1,P2,P3 good
+    class C bad
+```
+
+This is a decision diagram, not an architecture diagram, and it draws the note's thesis rather than
+the system. The crux is that **one tenancy decision buys three separate guarantees at once, and the
+whole second half of the document consists of ways to sell them back individually**. It is drawn as a
+rejected fork feeding a single answer that fans into three payoffs and then reconverges on one warning,
+because the reconvergence is the argument: a reader who takes the architecture and skips the
+alternatives has read the easy half. The closing red box is the sharpest thing in the source and the
+reason it is worth reading at all, since the cost section quietly deletes a control the security
+section calls essential. *Synthesized from `n2`, `n4`, `n13`, `n14` and divergence `d2`.*
+
 ## The 1-minute version
 
 This article covers a Google Cloud reference architecture for running agents on behalf of many
@@ -126,8 +160,8 @@ flowchart TB
     style C fill:#e8f0fc
 ```
 
-The diagram runs top to bottom in reading order, and each box is a numbered section below, gathered
-into four movements. The one shaded movement is the one carrying the payload. **The crux is that the
+This is a reading-order diagram about the note rather than about the architecture, and each box is a
+numbered section below, gathered into four movements. The one shaded movement carries the payload. **The crux is that the
 architecture is movement B and the lesson is movement C**, because the shape stays unremarkable cloud
 multi-tenancy until you watch what each cheaper option removes from it.
 
@@ -142,7 +176,32 @@ worth slowing down for. D is short, and it is the part most likely to matter to 
 *Synthesized roadmap of this note, not of the source - the source's own order is architecture,
 alternatives, then four design pillars.*
 
-## Walkthrough
+## Movement A - why agent tenancy is not ordinary tenancy
+
+```mermaid
+flowchart TB
+    T["Ordinary multi-tenancy<br/>an engineer writes the query,<br/>a data access layer appends the tenant predicate"]
+    A1["but an agent composes its own data<br/>access at run time, so the set of<br/>queries is no longer finite"]
+    A2["and the input steering it is<br/>attacker-influenceable text, so a predicate<br/>the model was persuaded to omit<br/>is not a predicate"]
+    C["Isolation has to live somewhere<br/>the model has no vote"]
+
+    T --> A1 --> C
+    T --> A2 --> C
+
+    style C fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a refutation diagram, not a design, and its job is to disqualify an answer the reader already
+believes before the architecture arrives. **The crux is that the thing inside the tenant boundary is
+not a service but a model, and a model decides for itself what it will go and fetch**, which breaks
+the standard SaaS answer in two independent places rather than one. Both branches are drawn because
+either alone could be patched: a finite query set could be reviewed, and a trusted input could be
+sanitised. Together they force the conclusion, and the conclusion is the sentence the rest of the note
+spends. This movement exists for the reader who knows cloud multi-tenancy and would otherwise skim
+Movement B convinced they have read it before.
+
+*Synthesized from `n1`; the two-collapse argument is derived, and the source states it less directly.*
+
 
 ### 1. The problem is not running an agent. It is running twelve of them for people who do not trust each other
 
@@ -168,6 +227,34 @@ problem the answer would be ordinary too. **The reason it is not is the subject 
 section:** the thing you are putting inside the tenant boundary is not a service. It is a model.
 
 ### 2. A tenant ID in a query is the wrong layer, because the query is no longer written by an engineer
+
+```mermaid
+flowchart TB
+    L1["application layer<br/><i>a tenant predicate the model can omit</i>"]
+    L2["identity layer<br/><i>a principal the model cannot re-issue</i>"]
+    L3["platform layer<br/><i>a project boundary the model cannot cross</i>"]
+    M["where the model gets a vote"]
+    N["where it does not"]
+
+    L1 --> M
+    L2 --> N
+    L3 --> N
+
+    classDef bad fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    classDef good fill:#dcfce7,stroke:#15803d,color:#14532d
+    class L1,M bad
+    class L2,L3,N good
+```
+
+This is a layering diagram, not a stack, and the only line that matters is the one between the two
+right-hand nodes. **The crux is that a control is worth exactly as much as the model's inability to
+influence it**, which disqualifies every application-level isolation mechanism the moment the caller
+composing the query is the thing you are defending against. It is drawn with the verdict on the right
+rather than the layer names on the left doing the work, because engineers routinely reach for the top
+row out of habit and the habit is correct in every system where a person writes the query.
+
+*Synthesized from `n2` and `n4`; the vote framing is this brain's.*
+
 
 > **Background, supplied.** *Skip this if you have built multi-tenant SaaS.* The standard playbook is
 > **logical** isolation: one deployment, one database, a tenant identifier on every row, and a data
@@ -197,6 +284,33 @@ by code you control is fine, and a predicate the model was persuaded to omit is 
 In short, the isolation has to sit somewhere the model has no vote at all, below the application, and
 enforced by something that does not read the prompt. **That requirement is what picks the boundary**,
 and it is what the next section is about.
+
+## Movement B - the architecture, derived once
+
+```mermaid
+flowchart TB
+    Q1{"where does the wall go?"} --> S3["3. the platform's coarsest boundary:<br/>one project per business unit"]
+    S3 --> Q2{"what does that one<br/>decision actually buy?"}
+    Q2 --> S4["4. three payoffs from one boundary:<br/>security, failure, quota isolation"]
+    S4 --> Q3{"what has to happen<br/>before a request gets in?"}
+    Q3 --> S5["5. an ingress filter chain, each filter<br/>catching what the previous one cannot"]
+    S5 --> Q4{"and who is the caller,<br/>once they are in?"}
+    Q4 --> S6["6. identity established once at the<br/>front door and then spent three times"]
+    S6 --> S7["7. one request, traced end to end"]
+
+    style S7 fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a derivation diagram, not a component map, and the questions are what make the architecture
+feel forced rather than chosen. **The crux is that this whole movement is one decision and its
+consequences, so a reader who understands section 3 can predict most of what follows.** It is drawn as
+a question-and-answer descent because the source presents these as parallel design pillars, and
+parallel presentation hides the dependency: the filter chain exists in that order because each filter
+catches what the one before it structurally cannot, which is not obvious from a list. Section 7 is
+green because tracing one request end to end is where the design stops being a diagram, and it is the
+place to check whether you actually believe the preceding four sections.
+
+*Synthesized from `n2`, `n4`, `n5`, `n6`, `n8`, `n9`.*
 
 ### 3. The boundary they chose is the platform's coarsest one, and that is the point
 
@@ -254,6 +368,32 @@ outside it [`d1`].
 This all looks expensive. **The next section is why it is cheaper than it looks.**
 
 ### 4. You pay for the boundary once and it pays out three times
+
+```mermaid
+flowchart TB
+    B["One project per business unit"]
+    S["<b>security</b> isolation<br/>cross-tenant access is<br/>structurally impossible"]
+    F["<b>failure</b> isolation<br/>one unit's incident stays<br/>inside that unit"]
+    Q["<b>quota</b> isolation<br/>one unit's traffic spike<br/>cannot starve another"]
+    O["Three properties usually bought<br/>from three different budgets"]
+
+    B --> S --> O
+    B --> F --> O
+    B --> Q --> O
+
+    style B fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a leverage diagram, not a component diagram. **The crux is that the same boundary read three
+different ways answers three questions that are normally owned by three different teams**, which is
+what makes an expensive-looking decision defensible on a spreadsheet. It is drawn as one cause fanning
+out rather than as three features because the fan is the argument: nobody would fund project-per-tenant
+on security grounds alone, and the case only closes when the reliability and capacity arguments are
+counted against the same line item. The source states these three in three separate places and never
+adds them up, so the addition is this brain's.
+
+*Synthesized from `n13`, which is this brain's synthesis of three separate statements in the source.*
+
 
 The document spreads this across three separate pillars and never says it in one place, so it is easy
 to read the tenancy decision as a purely security-driven cost. Put the three statements side by side
@@ -334,6 +474,32 @@ is not redundant.
 
 ### 6. Identity is established once at the front door and then spent three times
 
+```mermaid
+flowchart TB
+    U["the human caller"]
+    I["identity established once,<br/>at the edge, by IAP"]
+    A["spend 1 - which tenant project<br/>does this request route to?"]
+    B["spend 2 - what may the agent's<br/>own principal reach at all?"]
+    C["spend 3 - what may this user see<br/>inside that tenant's data?"]
+
+    U --> I --> A
+    I --> B
+    I --> C
+
+    style I fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is an authority diagram, not a sequence diagram. **The crux is that one authentication event is
+consumed by three different authorization decisions, and each one fails differently if it is skipped**,
+so treating identity as a single check at the door is what produces systems where being logged in is
+mistaken for being permitted. It is drawn as one establishment fanning into three spends because the
+spends are independent: the routing decision can be right while the principal boundary is too wide,
+and both can be right while the user sees another user's rows inside the correct tenant. The third
+spend is the one the shared-component variants in Movement C quietly make your problem.
+
+*Synthesized from `n4`, `n8` and `n9`.*
+
+
 The chain has authenticated a person. Now the portal has to decide which of twelve agents gets the
 request, and the document's answer is one clause long. It "Extracts the user's identity, such as the
 user's business unit or tenant ID", and "Uses a **dynamically maintained registry** to identify the
@@ -407,6 +573,38 @@ architecture.** Everything else, meaning Cloud Armor, IAP, PAB and the perimeter
 or what the agent may reach. Exactly one component inspects what leaves, which is why §8 begins with
 the recommendation to move it out of the tenant.
 
+## Movement C - the variations, read as deletions
+
+```mermaid
+flowchart TB
+    B["The architecture from Movement B"]
+    V1["shared model endpoint"]
+    V2["shared MCP server"]
+    V3["a single Model Armor instance"]
+    V4["private ingress"]
+    T["Each one converts a <b>structural</b> guarantee<br/>into one you must now enforce<br/>in software you own - n14"]
+    D["and two of them contradict the document's<br/>own security section - d2, d3"]
+
+    B --> V1 --> T
+    B --> V2 --> T
+    B --> V3 --> T
+    B --> V4 --> T
+    T --> D
+
+    classDef bad fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    class T,D bad
+```
+
+This is a trade diagram, not a menu of options, and the point is that the four boxes are one box. **The
+crux is that every cost saving on offer is the same move in different clothing, so the real decision is
+not which variant to pick but how much enforcement you are willing to write and own.** They are drawn
+as four parallel paths collapsing into a single consequence because the document presents them
+separately, across different sections, in a way that makes each look like an independent engineering
+judgement. Seeing them as one trade is what turns the second half of the source from a cost appendix
+into its actual lesson, and it is why this movement is the payload rather than Movement B.
+
+*Synthesized from `n10`, `n11`, `n14`, and divergences `d2` and `d3`.*
+
 ### 8. Every alternative in the second half is the same trade, and the plant now pays off
 
 Movement B is over. What follows in the document is four "design alternatives" and four "design
@@ -464,6 +662,30 @@ long, and its absence is the most consequential editing failure in the document.
 transferable idea in the source.** It is §9.
 
 ### 9. When you move a component out of the tenant, isolation stops being structural and becomes something you enforce
+
+```mermaid
+flowchart TB
+    I["component inside the tenant<br/><i>the perimeter does the work</i>"]
+    O["component shared across tenants<br/><i>you do the work</i>"]
+    R["'you securely propagate<br/>the end-user identity'"]
+    M["and no mechanism is named - n10, n11"]
+
+    I -->|"move it out"| O --> R --> M
+
+    classDef bad fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    class O,M bad
+```
+
+This is an obligation diagram, not an architecture diagram, and the last box is the finding. **The
+crux is that sharing a component does not remove a security requirement, it relocates it from the
+platform into code you have not written yet**, and the document's phrasing hides the transfer inside
+a verb. It is drawn as a single transformation rather than as a comparison because the two states are
+not alternatives you weigh on equal terms: one is enforced by infrastructure you are already paying
+for, and the other is a sentence in a design document. "Securely propagate" is doing an enormous
+amount of work here, and naming no mechanism is exactly the kind of absence Movement D is about.
+
+*Synthesized from `n10` and `n11`.*
+
 
 Look again at what the local MCP server gets for free. The document is unusually clear about it [§Design
 alternatives, MCP servers, `n10`]:
@@ -524,6 +746,31 @@ per-tenant or shared" argument you have next.
 
 ### 10. Where the document's headline guarantee quietly stops holding
 
+```mermaid
+flowchart TB
+    G["'even if an agent identity<br/>is compromised...'"]
+    T["holds for the topology<br/>the figure draws"]
+    V["does not hold for the shared variants<br/>recommended three sections later - d3"]
+    P["and the cost section deletes the tenant-local<br/>PII filter the security section calls<br/>essential, in a sentence that concedes<br/>the two-layer design is what ensures<br/>data sovereignty - d2"]
+
+    G --> T
+    G --> V --> P
+
+    classDef bad fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    class V,P bad
+```
+
+This is a scope diagram, not a criticism, and it marks where a promise silently narrows. **The crux is
+that the document's strongest guarantee is stated unconditionally and is true only of one
+configuration, and the configuration it is not true of is the one the same document recommends on cost
+grounds.** It is drawn as a single claim splitting because that is literally what happens across the
+source: nothing retracts the guarantee, and no sentence connects it to the variants. These are the two
+internal contradictions this note gates as divergences, and they are the reason Movement C is worth
+slowing down for rather than skimming as a cost appendix.
+
+*Synthesized from divergences `d2` and `d3`.*
+
+
 Two more findings close movement C, and they are of the same species. Each is a claim that is true of
 the drawn architecture and not of the recommended one.
 
@@ -552,6 +799,34 @@ different objects that happen to share three letters. But the consequence is not
 engineer building from the picture ships project isolation plus PAB and no exfiltration control at
 all**, and would not notice, because the picture looks complete. Recorded as a divergence, not
 resolved.
+
+## Movement D - what the document does not contain
+
+```mermaid
+flowchart TB
+    C["11. two cost controls that are<br/>really safety controls in disguise"]
+    A["12. three absences"]
+    N["No latency figure, no cost figure,<br/>no incident, no named deployment"]
+    R["Two authors, 21 contributors,<br/>a Terraform implementation"]
+    V["The strongest available form<br/>of unmeasured"]
+
+    C --> V
+    A --> N --> V
+    R --> V
+
+    style V fill:#fef3c7,stroke:#b45309,color:#78350f
+```
+
+This is an evidence diagram, not a summary, and it is the shortest movement and the one most likely to
+matter in six months. **The crux is that the absences in a reference architecture are load-bearing
+information, because what a vendor declines to specify is usually what it has not solved.** It is
+drawn with the credentials and the absences feeding the same node deliberately: the contributor count
+and the Terraform module are real and they are exactly what makes this document easy to over-trust,
+so putting them on the same footing as the missing numbers is the honest shape. Both legs of this
+kit's corroboration gate here are the same team's prose and the same team's diagram, which is worth
+remembering before citing anything from it.
+
+*Synthesized from `n18` and the source-level assessment in "What to distrust in this note".*
 
 ### 11. What it costs to run, and two cost controls that are really safety controls
 
@@ -589,6 +864,32 @@ FinOps, but it is the first time any source in this brain has asked who funds sh
 infrastructure, and the answer determines whether business units adopt the platform or route around it.
 
 ### 12. Three absences, which tell you more than the components do
+
+```mermaid
+flowchart TB
+    D["What a reference architecture<br/>declines to specify"]
+    A1["no measurement of any kind"]
+    A2["no named deployment"]
+    A3["no mechanism for the obligations<br/>the shared variants create"]
+    C["is usually what has not been solved,<br/>rather than what was too obvious to write"]
+
+    D --> A1 --> C
+    D --> A2 --> C
+    D --> A3 --> C
+
+    style C fill:#fef3c7,stroke:#b45309,color:#78350f
+```
+
+This is a reading-rule diagram, not a finding about Google. **The crux is that absences in vendor
+architecture writing are evidence, and the specific absence worth hunting is a named mechanism behind
+a reassuring verb.** It is drawn with three inputs reaching one conclusion because no single absence
+would justify the inference: a document can omit latency figures and still be rigorous, and it can
+lack a named customer for ordinary commercial reasons. The three together, in a document with 23
+contributors and a Terraform implementation, are what make the pattern legible. This rule leaves the
+source entirely and is the most portable thing in the note.
+
+*Synthesized from `n11` and `n18`. The generalisation is this brain's.*
+
 
 A reference architecture is a statement about what its author considers settled. So finish by reading
 what is not in it.
@@ -740,3 +1041,116 @@ construction.** So are the "delete this component and..." column in §7 and ever
   times (claim 107) and agent-shaped failure semantics (claim 108).
 - [`../../brain/topics/context-engineering.md`](../../brain/topics/context-engineering.md) - the token cap
   as a loop guard rather than a cost control (claim 109).
+
+## Presentation narrative
+
+*A talk track for a room deciding where the wall goes between one organisation's agent tenants,
+derived entirely from the gated nodes above. It presents a shape rather than a result: this is a
+vendor reference architecture with no measurement of any kind, and the closing slide says what that
+does and does not permit you to conclude.*
+
+### Slide 1 - The thing inside your tenant boundary reasons for itself, and that breaks the standard answer
+
+**Ordinary multi-tenancy assumes an engineer writes the query, and an agent composes its own data
+access at run time.** The usual answer is one application, a tenant ID on every row, and a data access
+layer that appends the tenant predicate. That collapses in two independent places here. The set of
+queries is no longer finite, so nobody wrote the query that could have been reviewed. And the input
+steering the agent is attacker-influenceable text, so a predicate the model was persuaded to omit was
+never a predicate at all.
+
+Either failure alone could be patched, which is why both matter. A finite query set could be audited,
+and a trusted input could be sanitised. Together they force one conclusion, and it is the sentence the
+whole architecture spends: isolation has to live somewhere the model has no vote.
+
+*Visual: the Movement A refutation diagram. Provenance: `n1`, `n2`; the two-collapse framing is
+derived and the source states it less directly.*
+
+### Slide 2 - One tenancy decision buys three guarantees, and that is what makes it fundable
+
+**The boundary is the platform's own coarsest one, a cloud project per business unit, with the agent's
+authority capped on the principal rather than by care in the code [n2, n4].** A Principal Access
+Boundary bounds what that identity can reach at all, whatever the agent decides to do with the
+permissions it holds.
+
+The leadership significance is arithmetic rather than architectural. That single decision delivers
+security isolation, failure isolation and quota isolation, which are three properties normally bought
+from three different budgets by three different teams [n13]. Nobody funds project-per-tenant on
+security grounds alone, and the case only closes when reliability and capacity are counted against the
+same line item. I should be clear that the addition is this brain's: the source states the three in
+three separate places and never puts them together.
+
+*Visual: `visuals/fig1b_two-tenants.png`, two tenant projects with no edge between them, plus the
+section 4 leverage diagram. Provenance: `n2`, `n4`, `n13`.*
+
+### Slide 3 - Identity is established once and then spent three times
+
+**One authentication event at the edge is consumed by three different authorization decisions, and
+each fails differently if it is skipped.** The first decides which tenant project the request routes
+to. The second decides what the agent's own principal may reach at all. The third decides what this
+particular user may see inside that tenant's data [n4, n8, n9].
+
+What engineers should take from this is that being logged in and being permitted are three separate
+questions here, not one. The routing decision can be correct while the principal boundary is too wide,
+and both can be correct while a user sees another user's rows inside the right tenant. Hold onto the
+third spend in particular, because it is the one the cost-saving variants quietly make your problem.
+
+*Visual: `visuals/fig1a_ingress-chain.png` for the edge, and the section 6 authority diagram for the
+three spends. Provenance: `n4`, `n6`, `n8`, `n9`.*
+
+### Slide 4 - Every cost-saving option on offer is the same trade wearing different clothes
+
+**A shared model endpoint, a shared MCP server, a single Model Armor instance and a private ingress
+look like four independent engineering judgements, and they are one move [n14].** Each takes a
+guarantee that was structural and converts it into one you must now enforce in software you own and
+maintain.
+
+The document's phrasing is where this hides. Moving the MCP server out of the tenant is described as
+"you securely propagate the end-user identity", and no mechanism is named anywhere [n10, n11]. That
+verb is carrying an enormous amount of work. The question for the room is therefore not which variant
+to choose. It is how much enforcement code you are prepared to write, own and keep correct, because
+that is the actual currency the saving is denominated in.
+
+*Visual: the Movement C trade diagram. Provenance: `n10`, `n11`, `n14`.*
+
+### Slide 5 - The document's headline guarantee stops holding in the configuration it recommends
+
+**The promise that isolation survives "even if an agent identity is compromised" is stated
+unconditionally and is true only of the topology the figure draws, not of the shared variants
+recommended three sections later [d3].** Nothing retracts it, and no sentence connects the two.
+
+The sharper instance sits in the cost section, and it is the single most useful finding in this
+source. That section deletes the tenant-local PII filter, keeping only the shared one, while conceding
+in the same sentence that the two-layer design is what "helps to ensure data sovereignty" [d2]. A cost
+recommendation quietly removes a control the security section calls essential, and the document never
+notices. This is why the second half is the payload and not an appendix.
+
+*Visual: the section 10 scope diagram. Provenance: divergences `d2` and `d3`.*
+
+### Slide 6 - Adopt the shape, and understand that nobody has run this
+
+**This is a T2 vendor document and the strongest available form of unmeasured, which is a genuinely
+awkward combination.** It carries two named authors, 21 further contributors and a Terraform
+implementation. It carries not one latency figure, not one cost figure, no incident report and no
+named deployment. Both legs of this kit's corroboration gate are the same team's prose and the same
+team's diagram, so internal agreement here means very little.
+
+The verdict the evidence supports is adopt the reasoning and pilot the topology, never cite the
+document as evidence that it works. What would change that is the thing most obviously missing: one
+named organisation running this at a stated scale with a stated cost. Until then the portable part is
+a reading rule rather than an architecture, and it is this. What a reference architecture declines to
+specify is usually what has not been solved, and the specific absence worth hunting is a named
+mechanism behind a reassuring verb.
+
+*Visual: the Movement D evidence diagram, alongside `visuals/fig1_architecture.png` for the topology
+being assessed. Provenance: `n18`, and the source-level assessment in "What to distrust in this note".*
+
+### Key takeaway message
+
+When the thing inside a tenant boundary reasons for itself, application-level isolation stops being
+isolation, so the wall has to sit where the model gets no vote: a cloud project per business unit,
+with authority capped on the principal. That one decision pays out three times, which is what makes an
+expensive boundary defensible. The document's real lesson is in its second half, where every cheaper
+option hands one of those guarantees back to be re-enforced in code you now own, and where a cost
+recommendation deletes a PII control the security section calls essential. Adopt the shape and the
+reading rule, pilot before you commit, and remember that this well-argued document contains no
+measurement of any kind.
