@@ -18,6 +18,31 @@ something the prose undersells: the tool-search curve is roughly **flat** as the
 (`n9`, `n10`). The reframing is the real payload - **tool names and descriptions become ranking
 features**, so the first tuning pass is **editorial, not algorithmic** (`n19`, `n13`).
 
+```mermaid
+flowchart TB
+    C["a tool catalog as a<br/><b>schema-management</b> problem"]
+    X["crossover at roughly<br/>ten to fifteen tools"]
+    S["a tool catalog as a<br/><b>search</b> problem"]
+    T["two meta-tools replace the manifest:<br/>tool_search and call_tool - n3, n6"]
+    R["541k tokens -> 15k at 1,180 tools,<br/>and the curve is roughly <b>flat</b><br/>as the catalog grows 24x - n9, n10"]
+    E["so names and descriptions become<br/><b>ranking features</b>, and the first<br/>tuning pass is <b>editorial</b> - n19, n13"]
+
+    C --> X --> S --> T --> R --> E
+
+    style S fill:#dcfce7,stroke:#15803d,color:#14532d
+    style E fill:#e8f0fc,stroke:#4338ca,color:#312e81
+```
+
+This is a reframing diagram, not an architecture diagram, and the last box is the payload rather than
+the token saving. **The crux is that once retrieval sits between the agent and its tools, tool names
+and descriptions stop being documentation and become ranking features - which relocates the first
+tuning pass from engineering to editing.** It is drawn as one descent with the crossover marked
+because the reframe is conditional: below ten or fifteen tools a manifest is simply better, and the
+whole argument only starts above that line. Notice that the flatness of the curve says more than the
+36x headline, since flatness is a claim about how this scales rather than about one measurement.
+
+*Synthesized from `n3`, `n6`, `n9`, `n10`, `n13` and `n19`.*
+
 ## The 1-minute version
 
 This article covers a preview feature in Microsoft Foundry that stops handing an agent its tool
@@ -143,7 +168,7 @@ flowchart TB
     style D fill:#fbf1dc
 ```
 
-Read the diagram top to bottom, in four movements, each holding two of the eight numbered sections
+This is a reading-order diagram about the note rather than about the product, in four movements, each holding two of the eight numbered sections
 below. Only two of the movements are coloured, and the colours mark the two things worth carrying
 away rather than the two things that are longest. Blue marks where the evidence lives, and it is
 split in half because the source answers one of its two questions well and the other one badly. Amber
@@ -171,7 +196,31 @@ source is weakest and the other is where it is most useful.
 
 *Synthesized roadmap of this note - not from the source.*
 
-## 1. The tax you are already paying, and it is charged per turn
+## Movement A - the tax, and why the obvious relief does not remove it
+
+```mermaid
+flowchart TB
+    M["the full tools/list manifest sits in<br/>context on <b>every single turn</b>"]
+    T["names, descriptions, JSON schemas,<br/>argument definitions - before the<br/>question is even asked"]
+    C["2. caching makes it ~90% cheaper"]
+    A["and cached context still competes<br/>for the model's <b>attention</b>"]
+
+    M --> T
+    C --> A
+
+    style A fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+```
+
+This is a cost diagram, and the distinction in the last box is the movement's whole job. **The crux is
+that caching lowers the price and not the cost: the tokens get cheaper and they still occupy the
+window and still dilute attention.** It is drawn as two separate chains because the relief and the
+problem are genuinely independent - a team that has enabled prompt caching has addressed the invoice
+and not the mechanism. That distinction is what makes the rest of the note necessary rather than an
+optimisation, and it is the sentence most likely to be waved away in a design review.
+
+*Synthesized from `n1` and `n2`.*
+
+### 1. The tax you are already paying, and it is charged per turn
 
 > "Every tool you give an agent is both a **capability** and a **distraction**." (§intro)
 
@@ -189,7 +238,28 @@ requests that touch no tool at all.
 Which raises the objection any engineer reaches for first, and it deserves a straight answer before
 anything else is built.
 
-## 2. Caching lowers the price, not the cost
+### 2. Caching lowers the price, not the cost
+
+```mermaid
+flowchart LR
+    T["the tool manifest, resident<br/>on every turn"]
+    P["<b>price</b>: ~90% cheaper<br/>with prompt caching"]
+    C["<b>cost</b>: unchanged -<br/>it still occupies the window and<br/>still competes for attention"]
+    T --> P
+    T --> C
+    style P fill:#dcfce7,stroke:#15803d,color:#14532d
+    style C fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+```
+
+This is a distinction diagram, and the two words are doing all the work. **The crux is that caching
+addresses the invoice and not the mechanism, so a team that has enabled it has bought a discount
+rather than a fix.** It is drawn as one input with two divergent outcomes because they are genuinely
+independent effects of the same fact, and conflating them is the single most common way this whole
+line of argument gets dismissed in a design review. Attention is the resource that does not cache, and
+it is the one the next four sections are about.
+
+*Synthesized from `n2`. The price-versus-cost framing is this brain's.*
+
 
 Prompt caching was already on in the baseline, because it is the Azure OpenAI default, and cached
 tokens are roughly 90% cheaper. The article does not overclaim from that, and this is the sentence to
@@ -211,7 +281,30 @@ The consequence is that price and cost have come apart. Caching pays down the in
 behavioural cost untouched, so the manifest has to not be in the window at all. But you cannot simply
 delete it either, because the model has to find out what it can do somehow.
 
-## 3. Two tools instead of a hundred
+## Movement B - the mechanism
+
+```mermaid
+flowchart TB
+    A["3. expose exactly <b>two</b> meta-tools:<br/>tool_search(query, limit)<br/>and call_tool(name, arguments) - n3"]
+    B["the rest of the catalog stays<br/><b>indexed but never listed</b> - n6"]
+    Q{"4. does this need a new<br/>protocol primitive?"}
+    N["no - the two meta-tools are<br/>ordinary tools, so every existing<br/>client works unchanged"]
+
+    A --> B --> Q --> N
+
+    style N fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a mechanism diagram, and section 4's answer is why the design is interesting rather than
+merely sensible. **The crux is that the whole reframe is implemented inside the existing protocol,
+because a search endpoint is itself just a tool - so nothing about the client, the transport or the
+spec has to change.** It is drawn ending on the negative answer because that is the load-bearing
+property: a design requiring a protocol extension would be a proposal, and one that does not is
+something you can deploy this week. The indexed-but-never-listed line is the trick in five words.
+
+*Synthesized from `n3`, `n6` and `n7`.*
+
+### 3. Two tools instead of a hundred
 
 ![Figure: tools/list putting 100 resident tool schemas in context, versus tool_search and call_tool over a toolbox index with the rest of the catalog indexed but never listed](visuals/fig_tool-search-figure.png)
 
@@ -245,7 +338,7 @@ native tools all sit behind one index, described as "indexed, never listed" (`n6
 four heterogeneous sources is a strong hint about where this mechanism lives, and it explains why the
 whole thing needed no protocol change at all.
 
-## 4. Why it needs no new protocol primitive
+### 4. Why it needs no new protocol primitive
 
 ![Foundry portal: a toolbox with tool search as a plain toggle, four attached MCP servers, and connection details showing an MCP endpoint with a bearer token](visuals/fig_image-6.png)
 
@@ -276,7 +369,32 @@ providers (`n5`).
 So the mechanism is cheap to build and cheap to adopt. Whether it works is two questions rather than
 one, and they have very different answers.
 
-## 5. Does it save tokens? Yes, and the figure says more than the prose
+## Movement C - does it work, in two halves
+
+```mermaid
+flowchart TB
+    A["5. <b>tokens</b>: 541k -> 15k at 1,180 tools,<br/>and the curve is roughly flat<br/>as the catalog grows 24x - n9, n10"]
+    B["6. <b>retrieval</b>: does it return the<br/><b>right</b> tool? This half is<br/>largely unexamined"]
+    C["so one half is measured well<br/>and the other is asserted"]
+
+    A --> C
+    B --> C
+
+    style A fill:#dcfce7,stroke:#15803d,color:#14532d
+    style B fill:#fbf1dc,stroke:#b45309,color:#78350f
+    style C fill:#fbf1dc,stroke:#b45309,color:#78350f
+```
+
+This is an evidence diagram, not a results tour. **The crux is that the question splits cleanly in
+two and only one half has numbers behind it: saving tokens is worthless if the search returns the
+wrong tool, and that is the half nobody measured.** It is drawn as two branches converging on an
+asymmetry because reading the movement as a single "does it work" produces false confidence - the
+token figure is genuinely strong and it answers a question nobody was really worried about. Section 6
+is where a reader deciding whether to adopt this should spend their attention.
+
+*Synthesized from `n9`, `n10` and `n12`.*
+
+### 5. Does it save tokens? Yes, and the figure says more than the prose
 
 ![Chart: baseline context climbing to 541k tokens at 1,180 tools while the tool-search series stays roughly flat near 15k](visuals/fig_tokens-chart.png)
 
@@ -304,7 +422,33 @@ implies.
 That is the first of the two questions, and it is the one the source answers well. The second is
 where this source is weakest.
 
-## 6. Does it retrieve the right tool? This is the unexamined half
+### 6. Does it retrieve the right tool? This is the unexamined half
+
+```mermaid
+flowchart TB
+    Q["does it return the <b>right</b> tool?"]
+    A["if yes: the token saving<br/>is a pure win"]
+    B["if no: you have saved tokens and<br/>broken the agent, which is worse<br/>than paying the tax"]
+    M["and this is the half<br/>nobody measured"]
+
+    Q --> A
+    Q --> B
+    Q --> M
+
+    style B fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    style M fill:#fbf1dc,stroke:#b45309,color:#78350f
+```
+
+This is a gap diagram, not a criticism of the product. **The crux is that retrieval quality is not a
+secondary concern here but the thing the entire design depends on, and a false negative is strictly
+worse than the problem being solved - a tool that exists and cannot be found is a tool you do not
+have.** It is drawn with both outcomes shown because the asymmetry matters: the upside is a cost
+saving and the downside is a capability loss, and those are not comparable quantities. Anyone
+evaluating this should measure recall on their own catalog before believing the token figure means
+anything.
+
+*Synthesized from `n12`. The asymmetry argument is this brain's.*
+
 
 The measure here is Recall@10 on ToolRet, reported across three slices of the benchmark (`n11`,
 Figure 3). Two definitions make the numbers legible before we walk them.
@@ -359,7 +503,32 @@ sentence beside its own table.
 So the retrieval half is the weak half, which makes the next question the productive one. Why does
 retrieval fail here at all? The answer is the best thing in the article.
 
-## 7. The real finding: tool curation is an information-retrieval problem
+## Movement D - the reframe, and what to do with it
+
+```mermaid
+flowchart TB
+    R["7. tool curation is an<br/><b>information-retrieval</b> problem - n19"]
+    N["so names and descriptions are<br/><b>ranking features</b>, and the first<br/>tuning pass is editorial - n13"]
+    P["8. and the practical shape is<br/><b>pin the head, retrieve the tail</b>"]
+    W["which is a decision about your traffic<br/>distribution rather than about<br/>your catalog size"]
+
+    R --> N --> P --> W
+
+    style N fill:#e8f0fc,stroke:#4338ca,color:#312e81
+    style W fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a consequence diagram, and it is the payload of the note. **The crux is that reclassifying
+tool curation as retrieval hands you a whole discipline's worth of technique, and the first thing that
+discipline says is that your text is a feature rather than documentation.** It is drawn as a straight
+consequence chain because each step follows without a design choice: if retrieval is the frame, then
+descriptions rank; if descriptions rank, then editing them is tuning; and if some tools are always
+needed, then pinning them beats retrieving them. The last box is what turns the note into something
+you can act on without adopting the product.
+
+*Synthesized from `n13`, `n19` and `n20`.*
+
+### 7. The real finding: tool curation is an information-retrieval problem
 
 What broke was not the ranker.
 
@@ -406,7 +575,31 @@ The generalisation survives all of that, and it is the thing the authors say sur
 If descriptions are ranking features, then the remaining question is which tools should be subject to
 ranking at all.
 
-## 8. Pin the head, retrieve the tail
+### 8. Pin the head, retrieve the tail
+
+```mermaid
+flowchart TB
+    D["your tool traffic is a<br/>distribution, not a set"]
+    H["the <b>head</b>: a handful of tools used<br/>constantly -> pin them, always resident"]
+    T["the <b>tail</b>: hundreds used rarely<br/>-> index them, retrieve on demand"]
+    R["so the design question is about your<br/><b>traffic shape</b>, not your catalog size"]
+
+    D --> H --> R
+    D --> T --> R
+
+    style R fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a strategy diagram, and it is the most portable thing in the note. **The crux is that
+all-or-nothing is a false choice: pinning the head removes the retrieval risk exactly where it would
+hurt most, and retrieving the tail captures nearly all the token saving.** It is drawn from a
+distribution rather than from a catalog because that is the reframe - two teams with identical tool
+counts can need opposite designs if one has a flat usage profile and the other a steep one. This also
+softens section 6's problem without solving it, since the tools most likely to be mis-retrieved are
+the ones you pinned.
+
+*Synthesized from `n20`.*
+
 
 The last piece is a distribution argument, and it is the shape worth keeping (`n16`, §Search is for
 the long tail). The catalog splits in two, and the two halves reach the model by different routes.
@@ -548,3 +741,151 @@ with the measured recall gap added, which the source's own figure does not show.
 - `../../brain/topics/context-engineering.md` - the manifest as a measured budget line item, and
   caching as a price cut that is not an attention cut.
 - `../../brain/topics/agents.md` - pin the head, retrieve the tail; descriptions as index entries.
+
+## Presentation narrative
+
+*A talk track for a team whose agent has outgrown its tool manifest, derived entirely from the gated
+nodes above. The token measurements are strong and public; the retrieval-quality half is essentially
+unmeasured, which the fifth slide addresses rather than skips.*
+
+### Slide 1 - You are already paying this tax, and caching did not remove it
+
+**The full tool manifest sits in context on every single turn - names, descriptions, JSON schemas and
+argument definitions, before the question is even asked.** At 1,180 tools that is 541k tokens of
+resident context.
+
+Most teams have already reached for prompt caching, and it is worth being precise about what that
+bought. Caching lowers the price by roughly 90% and does not lower the cost. The tokens still occupy
+the window and still compete for the model's attention, and attention is the resource that does not
+cache. That distinction is the one most likely to be waved away, and everything after this slide
+depends on it.
+
+```mermaid
+flowchart LR
+    T["manifest, resident every turn"]
+    P["price: ~90% cheaper with caching"]
+    C["cost: unchanged - window<br/>and attention"]
+    T --> P
+    T --> C
+    style C fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+```
+
+This is a distinction slide, not a cost model. **The crux is that a discount is not a fix**: the two
+branches are independent consequences of the same fact, and conflating them is how this whole argument
+gets dismissed in a design review. Attention is the resource that does not cache, and it is what the
+next five slides are about [`n2`].
+
+### Slide 2 - Above ten or fifteen tools, this stops being schema management and becomes search
+
+**That crossover is the whole claim, and it is worth stating as a threshold rather than a direction.**
+Below it a manifest is simply better: listing everything is cheap, exact and needs no retrieval to go
+right. Above it the manifest is a resident tax that scales with your catalog rather than your task.
+
+The mechanism follows immediately. Expose exactly two meta-tools - `tool_search(query, limit)` and
+`call_tool(name, arguments)` - and keep the rest of the catalog indexed but never listed [n3, n6].
+
+![Figure: tools/list putting 100 resident tool schemas in context, versus tool_search and call_tool over a tool index](visuals/fig_tool-search-figure.png)
+
+This is the swap, drawn. **The crux is "indexed but never listed"** - the catalog does not shrink, it
+stops being resident [`n3`, `n6`].
+
+### Slide 3 - It needs no new protocol primitive, which is why you could ship it this week
+
+**The two meta-tools are ordinary tools, so every existing client works unchanged.** No spec
+extension, no transport change, no client update.
+
+That property is easy to skim past and it is what separates this from a proposal. A design requiring a
+protocol change is a roadmap item that depends on other people; a design implemented inside the
+existing primitives is a decision your team can make alone. For anyone evaluating the idea rather than
+the vendor, this is the reason it is worth taking seriously as a pattern.
+
+![Foundry portal: a toolbox with tool search as a plain toggle, four attached MCP servers, and connection details](visuals/fig_image-6.png)
+
+This is what it looks like as a product decision. **The crux is that it is a toggle** - which is the
+visible consequence of needing no new primitive [`n7`].
+
+### Slide 4 - The token result is strong, and the flat curve says more than the 36x
+
+**541k tokens down to 15k at 1,180 tools [n9].** That is the headline, and the shape of the curve is
+the more useful finding.
+
+The tool-search series stays roughly flat while the catalog grows twenty-fourfold [n10]. A ratio is a
+measurement at one point; flatness is a claim about how the thing scales. It means the design's cost
+is governed by how many tools you retrieve per turn rather than by how many exist, which is what makes
+a large catalog viable at all.
+
+![Chart: baseline context climbing to 541k tokens at 1,180 tools while the tool-search series stays roughly flat](visuals/fig_tokens-chart.png)
+
+This is the result, and the flat line is the part to quote. **The crux is that the two series have
+different shapes, not just different values** [`n9`, `n10`].
+
+### Slide 5 - The other half of the question is essentially unmeasured
+
+**Saving tokens is worthless if the search returns the wrong tool, and that half has no numbers behind
+it.** This is where anyone deciding whether to adopt the pattern should spend their attention.
+
+The asymmetry matters. If retrieval works, the token saving is a pure win. If it does not, you have
+saved tokens and broken the agent, which is worse than paying the tax - a tool that exists and cannot
+be found is a tool you do not have. Those two outcomes are a cost saving and a capability loss, and
+they are not comparable quantities.
+
+So the concrete recommendation before adopting is to measure recall on your own catalog with your own
+query distribution. The published token figure tells you nothing about whether that will hold.
+
+```mermaid
+flowchart TB
+    Q["does it return the right tool?"]
+    A["yes -> token saving is a pure win"]
+    B["no -> you saved tokens and<br/>broke the agent"]
+    Q --> A
+    Q --> B
+    style B fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+```
+
+This is the unexamined half. **The crux is that the downside is a capability loss rather than a cost**,
+and the two outcomes are therefore not comparable quantities you can trade off. It is drawn as a
+single question with both branches shown because presenting only the upside is what makes the token
+figure look decisive when it settles nothing [`n12`].
+
+### Slide 6 - The real finding is that your tool descriptions are now ranking features
+
+**Reclassifying tool curation as an information-retrieval problem is the payload, and it hands you a
+whole discipline's worth of technique [n19].** The first thing that discipline says is that your text
+is a feature rather than documentation.
+
+That makes the first tuning pass editorial rather than algorithmic [n13]. Before anyone touches an
+embedding model, someone rewrites tool names and descriptions so they rank well against the queries
+your agents actually produce. That is cheap, it is unglamorous, and it is where the gains are.
+
+And the practical shape is not all-or-nothing. Pin the head and retrieve the tail: a handful of tools
+used constantly stay resident, hundreds used rarely get indexed. That removes the retrieval risk
+exactly where it would hurt most while capturing nearly all the saving - and it makes the design
+question about your traffic distribution rather than your catalog size.
+
+```mermaid
+flowchart TB
+    D["tool traffic is a distribution"]
+    H["head: pin, always resident"]
+    T["tail: index, retrieve on demand"]
+    D --> H
+    D --> T
+    style H fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is the strategy, and it is the portable part. **The crux is that two teams with identical tool
+counts can need opposite designs**, because the shape of the traffic decides rather than the size of
+the catalog. It is drawn from a distribution rather than a list for exactly that reason, and it
+softens the previous slide's risk without removing it, since the tools most likely to be mis-retrieved
+are the ones you would have pinned [`n20`].
+
+### Key takeaway message
+
+A tool manifest is resident context charged on every turn, and prompt caching lowers its price without
+lowering its cost, because attention does not cache. Somewhere around ten to fifteen tools the problem
+stops being schema management and becomes search, at which point two meta-tools replace the manifest
+and the catalog stays indexed but never listed - inside the existing protocol, so every client works
+unchanged. Context falls from 541k tokens to 15k at 1,180 tools and, more importantly, the curve is
+flat as the catalog grows. The unmeasured half is whether retrieval returns the right tool, and its
+failure is a capability loss rather than a cost, so measure recall on your own catalog first. The
+finding worth carrying is that tool names and descriptions have become ranking features, which makes
+the first tuning pass editorial. Pin the head, retrieve the tail.
