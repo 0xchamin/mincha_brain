@@ -97,6 +97,12 @@ def markdown_files() -> list[Path]:
     staged research modules produced 1,485 style errors on 2026-08-03, not one of them about a
     kit file. site/ is generated, disposable output, checked at its source like BUILD.md.
     raw/ and repo/ are the same class one level down, inside a source.
+
+    .claude/RESUME.md is the same class again: a checkpoint file the harness writes when a
+    session nears its usage limit, git-ignored via .git/info/exclude, and not a kit file at
+    all. It turned the run red on 2026-08-16 for containing an em dash the kit never wrote.
+    Only that one path is excluded - .claude/commands/*.md are committed kit files and stay
+    linted.
     """
     skip = {".git", ".venv", "__pycache__", "node_modules",
             "raw", "repo", "staging", "site"}
@@ -105,6 +111,7 @@ def markdown_files() -> list[Path]:
         if not any(part in skip for part in p.parts)
         and not p.is_symlink()
         and p != ROOT / "BUILD.md"
+        and p != ROOT / ".claude" / "RESUME.md"
     )
 
 
