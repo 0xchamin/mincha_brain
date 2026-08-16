@@ -31,6 +31,45 @@ more on real warehouses (+16pp) than on public benchmarks (+2pp). The enterprise
 closest to this stack tops out around **65.6%**. **The mechanism is well corroborated. The result is
 not.**
 
+```mermaid
+flowchart TB
+    C["The article's claim:<br/>'a big architectural shift'"]
+
+    subgraph SHOWN["What the architecture figure actually shows - d1"]
+        direction TB
+        P1["Fivetran, Airbyte, Segment"]
+        P2["BigQuery, dbt, reporting"]
+        P3["no agent, no semantic model,<br/>no feedback loop"]
+        P1 ~~~ P2 ~~~ P3
+    end
+
+    subgraph REAL["Where the agent-first-ness actually lives - all of it prose"]
+        direction TB
+        R1["column definitions rewritten<br/>as instructions - n3"]
+        R2["five context stores, one per<br/>question asked - n2"]
+        R3["a loop whose output is a write<br/>to the store, never an answer - n8"]
+        R1 ~~~ R2 ~~~ R3
+    end
+
+    C --> SHOWN
+    C --> REAL
+    SHOWN --> V["the plumbing was never the problem"]
+    REAL --> W["the deliverable is English,<br/>and it costs three permanent people"]
+
+    style SHOWN fill:#fdeaea,stroke:#dc3545,color:#7f1d1d
+    style REAL fill:#e8f4ea,stroke:#28a745,color:#14532d
+```
+
+This is a claim-versus-artifact diagram, not an architecture diagram, and the two columns are the same
+system described by two different parts of the same article. The crux is that **an "agent-first data
+stack" turns out to be a documentation layer wrapped around an entirely unchanged stack**, and the
+strongest evidence for that is the article's own figure, which is captioned as the architectural shift
+and contains none of the things that make the stack agent-first. The columns are drawn as siblings
+under one claim rather than as before-and-after because they are simultaneous: both are true
+descriptions of the same company on the same day. What follows from the shape is the cost line on the
+right, since a deliverable made of prose is bounded by how fast people can write it rather than by
+anything you can provision. *Synthesized from `n2`, `n3`, `n8` and divergence `d1`.*
+
 ## The 1-minute version
 
 This article covers how a company of roughly 290 people put a data agent in front of its own
@@ -139,6 +178,47 @@ with warehouses daily, skip **Part 1**.
 > marked scaffolding and is uncited by construction**: it is background I am supplying, not
 > knowledge from this source. Everything from Part 2 onward carries a node ID (`n1`, `d1`) or an
 > external reference (`F1`), and where a conclusion is mine rather than the article's, it says so.
+
+```mermaid
+flowchart TB
+    P0["Part 0 - the problem,<br/>before any technology"]
+    P1["Part 1 - foundations<br/><i>scaffolding, uncited - skip if you<br/>work with warehouses daily</i>"]
+    P2["Part 2 - the naive agent,<br/>and precisely how it fails"]
+
+    subgraph CORE["The derivation - the reusable part"]
+        direction TB
+        P3["Part 3 - the five stores,<br/>derived one residual question at a time"]
+        P4["Part 4 - one question,<br/>traced end to end"]
+        P5["Part 5 - a definition is a prompt"]
+        P3 --> P4 --> P5
+    end
+
+    subgraph LIVE["Keeping it alive - where the costs are"]
+        direction TB
+        P6["Part 6 - the second-order problems"]
+        P7["Part 7 - how would you know<br/>any of this works?"]
+        P6 --> P7
+    end
+
+    P8["Part 8 - what you would build first"]
+
+    P0 --> P1 --> P2 --> CORE --> LIVE --> P8
+
+    style CORE fill:#e8f4ea,stroke:#28a745,color:#14532d
+    style LIVE fill:#fff4e5,stroke:#b45309,color:#78350f
+    style P1 fill:#eef2ff,stroke:#4338ca,color:#312e81
+```
+
+This is a reading-order diagram about the note rather than about LangChain, and the colours mark three
+different kinds of material rather than three topics. Green is the derivation and it is what transfers
+to a company that is not this one, so a reader with limited time should spend it there. Blue is
+scaffolding, supplied by this brain and cited to nothing by construction, and it is the one part that
+is safe to skip outright. Amber is where the article stops being a design description and starts
+being an operating report, which is also where its evidence gets thinnest. Part 8 sits outside every
+grouping because it is the only part that tells you what to do rather than what is true, and it
+carries the note's one direct disagreement with another source in this brain.
+
+*Generated from the structure of this note - a diagram the article does not contain.*
 
 ---
 
@@ -285,6 +365,33 @@ answers, namely what exactly has to be written down.
 
 ## Part 3 - Deriving the context layer, one residual question at a time
 
+```mermaid
+flowchart TB
+    Q1{"the agent picked the<br/>wrong table"} --> S1["1. table and column definitions<br/><i>what the data is</i>"]
+    S1 --> Q2{"it picked the right table<br/>and the wrong formula"}
+    Q2 --> S2["2. the semantic model<br/><i>what a metric means</i>"]
+    S2 --> Q3{"right formula, and it still<br/>answered a different question"}
+    Q3 --> S3["3. workspace guides<br/><i>how the business works</i>"]
+    S3 --> Q4{"two assets both look right"}
+    Q4 --> S4["4. the trust signal<br/><i>which source to believe</i>"]
+    S4 --> Q5{"the number still does not<br/>match the board deck"}
+    Q5 --> S5["5. computation lineage<br/><i>how the number is actually made</i>"]
+
+    style S5 fill:#e8f4ea,stroke:#28a745,color:#14532d
+```
+
+This is a derivation diagram, not a taxonomy, and the diamonds matter more than the boxes. **The crux
+is that each store exists because of a specific failure the previous four cannot explain**, which is
+what makes five the right number rather than an arbitrary one and gives you a stopping condition you
+can apply to your own stack. It is drawn as an alternating failure-and-answer chain because the
+article presents these as a list, and a list hides which items are load-bearing: a reader handed five
+boxes cannot tell that dropping the third one reintroduces a failure the other four are blind to. The
+rule that falls out is the portable part and it doubles as a test - a layer that cannot name a
+question only it answers is a duplicate, and duplicated context is worse than missing context because
+the copies drift apart silently.
+
+*Synthesized from `n2`. The residual-question framing is this brain's; the article lists the five.*
+
 This is the heart of the source, and it is much more useful derived than listed. The method is simple.
 Give the agent what we have so far, ask **"what can it still not know?"**, and let each answer name
 the next store. The five that fall out are exactly the five in the article's own figure [S11 §How we
@@ -395,6 +502,40 @@ Derived one at a time the five feel inevitable, so it is worth watching them all
 ---
 
 ## Part 4 - One question, traced end to end
+
+```mermaid
+flowchart TB
+    Q["'How many active customers<br/>did we add last quarter?'"]
+    A["definitions: which table holds<br/>accounts, and which is legacy"]
+    B["semantic model: what 'added'<br/>counts as, and from which date"]
+    C["guides: that 'customer' excludes<br/>internal and trial accounts"]
+    D["trust signal: which of two<br/>candidate tables is endorsed"]
+    E["lineage: how the number was<br/>computed the last time"]
+    R["a number somebody can<br/>put in a board deck"]
+
+    Q --> A --> B --> C --> D --> E --> R
+
+    F["remove any one of these and the<br/>agent still returns a confident number,<br/>wrong by exactly the amount you omitted"]
+    A -.-> F
+    B -.-> F
+    C -.-> F
+    D -.-> F
+    E -.-> F
+
+    style F fill:#fdeaea,stroke:#dc3545,color:#7f1d1d
+    style R fill:#e8f4ea,stroke:#28a745,color:#14532d
+```
+
+This is a trace diagram, not a pipeline, and the dashed edges carry the teaching rather than the solid
+ones. **The crux is that every store is consulted on a single ordinary question, and omitting any one
+of them produces not an error but a plausible wrong answer**, which is the failure mode that makes
+context a safety property here rather than a quality one. It is drawn with one shared failure node
+because drawing five separate failures would suggest they are distinguishable in practice, and the
+whole problem is that they are not: there is no traceback for a wrong assumption, so all five omissions
+look identical from the outside, like a confident number arriving on time.
+
+*Synthesized from `n2`, `n3` and `n6`. The traced request is this brain's construction, following the
+contract's "trace one concrete instance end to end".*
 
 Watch all five fire on a single realistic question:
 
@@ -596,6 +737,14 @@ the same paper found LLM generation falls down. Put the demand signal, the store
 one picture and the shape of the whole system becomes visible.
 
 ### The loop, and the human the diagram forgets
+
+![LangChain's agent feedback loop: agent conversations feeding observability, usage trends flowing back into the context layer, with the five context stores feeding the agent](visuals/fig3_feedback-loop.png)
+
+*What it teaches:* the source's own drawing of the maintenance loop, and the object the rest of this
+section is about. *Corroborated by:* the surrounding prose describing the loop [`n7`, `n8`]. **Shown
+here because the criticism below is about what this figure omits, and a reader cannot check that
+against a figure they have not seen.**
+
 
 ```mermaid
 flowchart LR
@@ -802,3 +951,148 @@ protocol.
   answers it (claim 47).
 - **Does the social human gate hold at scale?** `n12` and `d2`: the escalation rule is written for the
   agent to relay, not enforced. Fine at 290 people; the failure at 3,000 would be silent.
+
+## Feeds these topics
+
+- [`brain/topics/context-engineering.md`](../../brain/topics/context-engineering.md) - the primary
+  home. Contributes the decomposition of a context layer by the question each store answers rather
+  than by the tool holding it (`n2`), the duplicate test that falls out of it, the definition-as-
+  instruction move (`n3`), and context as a **safety** property rather than a quality one, since a
+  missing assumption produces a confident wrong number rather than an error.
+- [`brain/topics/rag.md`](../../brain/topics/rag.md) - the trust signal as a retrieval-time ranking
+  input, and its saturation failure: an endorsement flag needs an access-controlled writer because
+  "if everything is endorsed, the signal stops being useful" (`n6`).
+- [`brain/topics/evals.md`](../../brain/topics/evals.md) - the adoption-versus-trustworthiness gap
+  (`d4`, `n10`), which is this brain's cleanest instance of a source measuring the thing that is easy
+  to measure while claiming the thing that is not.
+- [`brain/topics/skills.md`](../../brain/topics/skills.md) - versioned prose documents that the author
+  herself calls "like skills for the data agent" (`n5`), a non-coding instance of the family.
+
+## Presentation narrative
+
+*A talk track for a room deciding whether to put an agent in front of its own warehouse, derived
+entirely from the gated nodes above. It is about what has to be written down before that is safe, and
+it deliberately does not claim the approach works, because the source does not measure that. Where
+weight is carried here it comes from the deep-research pass rather than from the article.*
+
+### Slide 1 - The failure mode is a correct query answering the wrong question
+
+**An agent pointed at your warehouse will write valid SQL and return a technically correct answer
+based on the wrong business interpretation, which is the failure that looks exactly like success.**
+Compare it to a coding agent, because the contrast is the whole argument. When a coding agent guesses
+wrong, a test fails or the process throws, and the wrongness surfaces by itself. When a data agent
+does not know that churned customers are normally excluded, nothing errors and nothing hedges. It
+returns a confident number that is wrong by exactly the size of your churn, and hands it to somebody
+who puts it in a board deck.
+
+The leadership significance is that this is a safety property rather than a quality one, because
+there is no traceback for a wrong assumption. What engineers should take from it is that the usual
+signal you rely on to catch a bad agent is structurally absent here. Before this system existed,
+three people held the context that would have prevented the error, and every question queued behind
+them [n1].
+
+*Visual: the Part 4 trace diagram, where omitting any single store produces a plausible wrong answer
+rather than a failure. Provenance: `n1`, `n2`.*
+
+### Slide 2 - It was never a plumbing problem, and the article's own figure proves it
+
+**The article calls its migration "a big architectural shift" and then publishes an architecture
+diagram containing no agent, no semantic model and no feedback loop [d1].** That figure is a stock ELT
+pipeline: Fivetran and Airbyte and Segment into BigQuery, dbt on top, reporting at the end. Everything
+that makes the stack agent-first lives in a second figure and in prose.
+
+I want to be careful about how that is read, because it sounds like a criticism and it is really the
+strongest evidence in the piece. The gap between the caption and the drawing is what tells you the
+plumbing was never the thing that changed. What changed is the reporting tier and the English written
+around the warehouse. For a room evaluating a similar project, the question this reframes is the
+budget question: you are not buying infrastructure, you are commissioning documentation, and those
+have very different cost curves.
+
+*Visual: `visuals/fig2_data-stack-architecture.png`, the figure in question, alongside the TL;DR
+diagram. Provenance: divergence `d1`, `n1`.*
+
+### Slide 3 - Five context stores, each earning its place by a failure the other four cannot explain
+
+**The useful decomposition is by the question each store answers, not by the tool that happens to hold
+it [n2].** One store says what the data is, a second what a metric means, a third how the business
+works, a fourth which source to trust, and a fifth how a number is actually computed. Presented as a
+list that is five boxes and a reader cannot tell which are load-bearing. Derived as a chain it becomes
+inevitable: the agent picked the wrong table, so you need definitions; it then picked the right table
+and the wrong formula, so you need a semantic model; it then used the right formula and still answered
+a different question, so you need guides.
+
+The rule that falls out is the portable part and it doubles as a stopping condition. A layer that
+cannot name a question only it answers is a duplicate, and duplicated context is worse than missing
+context, because two copies drift apart and nothing tells you which one the agent read.
+
+*Visual: the Part 3 derivation diagram. Provenance: `n2`; the residual-question framing is this
+brain's, and the article presents the five as a list.*
+
+### Slide 4 - A column definition stops being a description and becomes an instruction
+
+**This is the single most transferable move in the article, and it fits on one line.**
+`account_status: The status of the account.` becomes a paragraph that spells out what each lifecycle
+value means in business terms and then issues an imperative: *"For customer reporting, filter to
+Active unless the analysis explicitly includes churned or prospective accounts"* [n3]. That is not
+documentation. It is a default policy stored in metadata, positioned so the agent meets it at exactly
+the moment it matters.
+
+What engineers should notice is where the instruction lives. It is not in a system prompt, not in a
+retrieval corpus, and not in a wrapper. It is in the schema field the agent already reads in order to
+do its job, which means it cannot be skipped and does not compete for context budget with anything
+else. This claim is `single-leg` on the article's own content, and it is the one place where external
+evidence is strongest: schema documentation is measured to help, and considerably more on real
+warehouses than on public benchmarks.
+
+*Visual: reuses the Part 3 derivation diagram, since the definition layer is its first box. Provenance:
+`n3`, plus F1 from the research pass.*
+
+### Slide 5 - The loop's output is a write back to the store, never an answer to a user
+
+**Observability over the agent's own conversations becomes the demand signal for what to document, and
+that inverts what the data team is for [n7, n8].** Conversations show where context is missing, the
+team writes the missing context, and the deliverable is a change to the store rather than a report to
+a person. The one guardrail is a writer restriction on the trust flag, because if everything is
+endorsed the signal stops being useful [n6].
+
+The cost of this is three permanent people, and the reason is older than the technology. The model
+collapsed the encoding cost of expert knowledge, since the target formalism is now English prose
+rather than production rules. It left the elicitation cost completely untouched, because somebody
+still has to sit with the go-to-market team and find out what they mean by "pipeline". That is a
+45-year-old diagnosis arriving on schedule, and it is why this is standing headcount rather than a
+project. There is also a gap in the source's own picture worth naming: the feedback figure routes
+usage trends straight back into the context layer with no human in the path, and the human is the
+part that costs three salaries.
+
+*Visual: `visuals/fig3_feedback-loop.png`, with the corrected loop that follows it. Provenance: `n6`,
+`n7`, `n8`, `n12`, F5.*
+
+### Slide 6 - Adopt the mechanism, and do not believe the results, because nobody measured them
+
+**Every number this article reports measures adoption while its thesis is about trustworthiness, which
+it never measures at all, and the authors concede exactly that and file evals under "next" [d4, n10].**
+Two thousand two hundred conversations, forty times the throughput, a hundred percent migration in six
+weeks: all of those describe how much the thing is used, and none of them describes whether its answers
+are right. The headline forty-times figure compares mismatched units and should never be quoted bare
+[d3].
+
+So the verdict is pilot rather than adopt, and the split is unusually clean. The mechanism is
+externally corroborated by the research pass and is worth borrowing today. The result is not
+corroborated by anything, including the article. What would change that is the one thing the authors
+say they have not built: an eval that scores answers rather than counting conversations. If you run
+this pattern, build that first, because without it you will be measuring the same thing they did and
+concluding something they did not.
+
+*Visual: the TL;DR diagram's right-hand column, which is what is well evidenced, against the absence
+of any correctness figure. Provenance: `d3`, `d4`, `n9`, `n10`.*
+
+### Key takeaway message
+
+An agent-first data stack is a documentation layer wrapped around a stack you already have, and the
+article's own architecture figure is the proof, since it contains no agent. The transferable move is
+that a column definition becomes an instruction, placed where the agent already looks. The
+decomposition worth copying is by the question each store answers, with the duplicate test as its
+stopping condition. The cost is three permanent people, because the model collapsed the encoding cost
+of expert knowledge and left the elicitation cost untouched. And the boundary is firm: everything
+reported here measures adoption, correctness is measured nowhere, so pilot this with an answer-quality
+eval attached and treat any claim about trustworthiness as untested.
