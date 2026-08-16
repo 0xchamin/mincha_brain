@@ -24,6 +24,37 @@ you (`n5`). `https://www.youtube.com/watch?v=8kMaTybvDUw`
 > well-argued pattern language from someone who has clearly built this, **not** as a survey result.
 > Full accounting in "The evidence, weighed".
 
+```mermaid
+flowchart TB
+    A["an agent is four things"]
+    P["a <b>prompt</b>"]
+    S["a <b>switch statement</b>"]
+    C["a <b>context-window builder</b>"]
+    L["a <b>loop</b>"]
+    F["hand any one of the four<br/>to a framework..."]
+    R["...and your reliability problems<br/>trace back to exactly that one - n5"]
+    W["which is why the agents that work in<br/>production are <b>barely agentic</b>:<br/>ordinary deterministic software with<br/>small, tightly-scoped LLM steps inside - n1"]
+
+    A --> P --> F
+    A --> S --> F
+    A --> C --> F
+    A --> L --> F
+    F --> R --> W
+
+    style F fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    style W fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is an ownership diagram, not an architecture diagram, and the question it answers is which parts
+you must not delegate. **The crux is that the four components are the complete list of things an agent
+is, so every framework convenience is a decision to stop owning one of them.** It is drawn with all
+four converging on a single hand-off node because the failure mode does not depend on which one you
+give away; it depends only on having given one away. The green terminal is the talk's headline finding
+and reads as a paradox until the diagram above it is accepted: barely agentic is what you get when you
+keep all four.
+
+*Synthesized from `n1` and `n5`.*
+
 ## The 1-minute version
 
 This article covers a conference talk in which Dex Horthy reports interviewing more than a hundred
@@ -127,7 +158,71 @@ The same argument, compressed for reference rather than for reading:
 - **Make contacting a human a tool call**, not a structural branch. `n11` `&t=687s`
 - **Not every problem needs an agent.** `n17` `&t=71s` `single-leg`
 
+## What you will learn, and in what order
+
+```mermaid
+flowchart TB
+    subgraph A["A. Why this matters before any technique"]
+        S1["Why you should care:<br/>the 70-80% wall"]
+        S2["Foundations<br/><i>scaffolding, uncited</i>"]
+    end
+    subgraph B["B. The derivation - the payload"]
+        S3["The naive attempt,<br/>and precisely how it fails"]
+        S4["The crux, derived:<br/>four parts, each named by a question<br/>the previous one cannot answer"]
+    end
+    subgraph C["C. What it looks like running"]
+        S5["One instance traced<br/>end to end"]
+        S6["Second-order problems:<br/>what breaks once it is running"]
+    end
+    subgraph D["D. Judging it"]
+        S7["How would you<br/>know it works?"]
+        S8["Where this sits"]
+    end
+
+    A --> B --> C --> D
+
+    style B fill:#dcfce7,stroke:#15803d,color:#14532d
+    style S2 fill:#e8f0fc,stroke:#4338ca,color:#312e81
+```
+
+This is a reading-order diagram about the note rather than about agents, and the colours mark two
+different kinds of material. Green is the derivation and it is the part that transfers, because it
+arrives at the four components by asking what the previous one structurally cannot answer rather than
+by listing them. Blue is scaffolding supplied by this brain, uncited by construction, and it is the
+one block safe to skip outright if you already build LLM applications. Group A does no technique work
+at all and exists to make the derivation feel necessary rather than elaborate; a reader who already
+believes agents stall around 70-80% can move straight to B. Group C is where the design stops being a
+diagram, and group D is where the note stops describing and starts judging, including the accounting
+for a talk whose entire empirical basis cannot be checked.
+
+*Generated from the structure of this note - a diagram the source does not contain.*
+
 ## Why you should care: the 70-80% wall
+
+```mermaid
+flowchart TB
+    D["a demo, built in a weekend"]
+    G["70-80% of the way there,<br/>fast, and genuinely impressive"]
+    W["<b>the wall</b>"]
+    Q["and the last 20% does not yield<br/>to more prompting, a better model,<br/>or a bigger framework"]
+    R["because what remains is not a<br/>capability problem - it is the parts<br/>you stopped owning"]
+
+    D --> G --> W --> Q --> R
+
+    style W fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    style R fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a trajectory diagram, not a benchmark, and the shape rather than the numbers is the argument.
+**The crux is that the wall is not where capability runs out but where delegated control starts
+costing you**, which is why the usual responses aim at the wrong thing. It is drawn as a flat run into
+a stop because the experience being described is discontinuous: progress is fast and then it is not,
+with no gradual slowing to warn you. Everything the note proposes is an answer to the last box, so a
+reader who has not met this wall will find the derivation over-engineered and a reader who has will
+find it obvious.
+
+*Synthesized from `n1` and `n5`. The trajectory is this brain's rendering of the talk's framing.*
+
 
 You will hit this personally, and the shape of it is specific enough that you can learn to recognise
 it in advance.
@@ -154,6 +249,30 @@ leaves the question the rest of the talk answers, namely what those pieces actua
 > measured failure rate, and no failure rate appears anywhere in this talk.
 
 ## Foundations (scaffolding, not from the source)
+
+```mermaid
+flowchart LR
+    T["<b>tool call</b><br/>structured JSON the model emits,<br/>which your code decides<br/>what to do with"]
+    C["<b>context window</b><br/>everything the model sees<br/>on this one call"]
+    L["<b>the loop</b><br/>who decides there is<br/>a next step, and what it is"]
+    N["none of these is magic,<br/>and all three are yours to own"]
+
+    T --> N
+    C --> N
+    L --> N
+
+    style N fill:#e8f0fc,stroke:#4338ca,color:#312e81
+```
+
+This is a vocabulary diagram and it is **scaffolding, supplied by this brain and uncited by
+construction** - the source assumes all three. **The crux is that each term names a thing you write
+rather than a thing you receive**, which is the mental shift the rest of the note depends on. It is
+drawn flat rather than as a pipeline because these are not stages in a sequence, they are three
+independent surfaces, and the note's argument is about who owns each. Skip this block entirely if you
+have built an LLM application before; nothing in it comes from the talk.
+
+*Background, supplied. Uncited by construction.*
+
 
 **Uncited by construction** - this section is background *I* am supplying so the rest reads. The
 source assumes all of it. Every sentence outside this section carries a node ID.
@@ -391,6 +510,32 @@ complete enough to ask the question nobody in the talk asks.
 
 ## How would you know it works?
 
+```mermaid
+flowchart TB
+    Q["'the agent works'"]
+    A["<b>does it recover?</b><br/>can a failed step be retried<br/>without redoing everything?"]
+    B["<b>can you pause it?</b><br/>is state serialisable mid-run,<br/>and resumable elsewhere?"]
+    C["<b>can a human enter?</b><br/>is contacting a person a tool call<br/>rather than an exception path?"]
+    D["<b>can you read the trace?</b><br/>is every step an event you can<br/>replay and inspect?"]
+
+    Q --> A
+    Q --> B
+    Q --> C
+    Q --> D
+
+    style Q fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+```
+
+This is a test diagram, not a metric, and it replaces an unanswerable question with four answerable
+ones. **The crux is that "does it work" cannot be evaluated on a long-running agent, while each of
+these four can be checked by reading your own code.** It is drawn as one vague claim decomposing into
+four concrete checks because that is the section's whole move, and because the four are independent:
+an agent can be perfectly resumable and still have no path for a human to intervene. Notice that none
+of the four is about model quality, which is consistent with the note's central argument.
+
+*Synthesized from the factors discussed in this section; the four-question framing is this brain's.*
+
+
 **This source measures nothing.** There is no benchmark, no ablation, no failure rate and no A/B
 test, neither for the factors individually nor for the framework as a whole (`nodes.md` standing
 caveat). That is the honest headline, and it should shape how you use the talk rather than whether
@@ -617,3 +762,121 @@ Read this before citing anything above.
   flow, pause/resume, structured output).
 - `../../brain/topics/context-engineering.md` - n4, n8, n9, n10 (context window ownership,
   event-thread rendering, error compaction, token budget as the reliability lever).
+
+## Presentation narrative
+
+*A talk track for a team deciding how much of their agent to build themselves, derived entirely from
+the gated nodes above. One caveat shapes everything: the talk's empirical basis is 100+ interviews
+with no names, no method and no counts, so this is a well-argued pattern language from somebody who
+has clearly built the thing, and not a survey result.*
+
+### Slide 1 - The agents that work in production are barely agentic
+
+**Dex Horthy reports interviewing more than a hundred people building agents, and found that the ones
+running in production are ordinary deterministic software with small, tightly-scoped LLM steps inside
+[n1].** That is the headline and it reads as a paradox until you see what it is arguing against.
+
+The pattern most teams follow is the opposite: hand the whole problem to a loop and let the model
+decide everything. That gets you a demo in a weekend and roughly 70 to 80% of the way there. Then it
+stops, and the remaining 20% does not yield to more prompting, a better model or a bigger framework.
+
+I should be precise about the evidence, because this is the number everyone quotes. The interviews are
+the entire empirical basis of the talk and **you cannot check them** - no names, no method, no counts.
+Take the shape as instructive and do not cite the sample.
+
+![Materialised DAG: determine next step fans out to call api / kickoff pipeline / update DB, each producing a result that loops back, until a final answer](visuals/frame_378.jpg)
+
+This is the naive shape, drawn honestly. **The crux is that this diagram is correct and it is also the
+thing that stalls**, because every arrow is a decision you have delegated [`n1`].
+
+### Slide 2 - An agent is four things, and every framework convenience takes one of them from you
+
+**A prompt, a switch statement, a context-window builder, and a loop [n5].** That is the complete
+list. Reliability problems trace back to letting something else own one of the four.
+
+What makes this useful rather than purist is that it turns an open-ended architectural argument into
+an inventory. You can walk a codebase and answer, for each of the four, who owns it. The question for
+this room is not whether to use a framework. It is which of the four you have handed over without
+deciding to, because that is where the last 20% is hiding.
+
+![Typed classes: class Issue with title/description/team_id/assignee_id; class CreateIssue with intent "create_issue"; class SearchIssues with intent "search_issues" and a query field](visuals/frame_290.jpg)
+
+This is what owning the switch statement looks like. **The crux is that a tool call is just structured
+JSON your code decides what to do with** - there is no magic in it, and treating it as ordinary data
+is what lets you keep control [`n6`].
+
+### Slide 3 - Context engineering is the part that is actually yours
+
+**Prompt, memory and retrieval are all the same activity: deciding what the model sees on this one
+call.** Once the context window is a thing you build rather than a thing that accumulates, a whole
+class of failure becomes addressable.
+
+The concrete form in the talk is worth showing engineers, because it is unglamorous. A thread is a
+list of typed events, and rendering it to a prompt is a function you wrote. That is the entire
+mechanism. It means you can drop, reorder, summarise or replay any part of the history, which is not
+available to you when a framework owns the transcript.
+
+![class Thread with events List[Event]; Event.type as a Literal of list_git_tags / deploy_backend / deploy_frontend / request_more_information / done_for_now; event_to_prompt renders XML-ish blocks; thread_to_prompt joins events](visuals/frame_590.jpg)
+
+This is ownership made concrete. **The crux is that the context window is a data structure you build,
+not a log that happens to you** [`n8`].
+
+### Slide 4 - What ships is micro agents inside deterministic code
+
+**Three to ten steps of LLM work, wrapped in ordinary software that decides when to call it.** The
+deploy pipeline in the talk is the worked example: deterministic code handles the merge, the dev
+deploy and the end-to-end test, and the model is invoked for the narrow judgement in the middle.
+
+The leadership significance is a scoping rule you can apply immediately. The right size for an agentic
+step is the smallest span where the path is genuinely unknown. Everywhere the path is known,
+determinism is cheaper, faster and correct every time, and using inference there buys nothing but
+variance.
+
+![HumanLayer deploy pipeline: github PR merged, deploy to dev, e2e test dev (deterministic code)](visuals/frame_620.jpg)
+
+This is the shape that ships. **The crux is how little of the picture is the agent** [`n10`].
+
+### Slide 5 - Contacting a human is a tool call, not an exception path
+
+**Pause and resume, and human contact, are the same design problem: state you can serialise mid-run
+and hand to somebody else.** Model it as an interrupt with a state ID and both fall out.
+
+This is the factor most often skipped and the one that decides whether the thing survives contact with
+production. If asking a person is an error path, every approval becomes a special case. If it is a
+tool call like any other, the agent can request input, stop, and be resumed by a Slack reply hours
+later, with the trace showing exactly what was asked and what was approved.
+
+![Trace showing slack_message from @alex, then request_human_input with intent/question/context/options, then human_response approved true, then deploy_backend with tag v1.2.3](visuals/frame_712.jpg)
+
+This is the payoff of the previous three slides. **The crux is that the human turn is just another
+event in the thread**, which is only possible because you own the event type and the renderer [`n14`].
+
+### Slide 6 - Judge it by four questions, and treat the source as a pattern language
+
+**"Does the agent work" is not answerable, so replace it with four things you can check by reading
+your own code.** Does it recover from a failed step without redoing everything? Can you pause it
+mid-run and resume elsewhere? Can a human enter without it being an exception? Can you replay the
+trace? None of the four is about model quality.
+
+On how far to trust the source: the factors are well argued and clearly come from somebody who has
+built this, and the empirical claim underneath them cannot be checked at all. So the verdict is adopt
+the pattern language and do not cite the survey. The decision that follows is cheap and specific -
+before adding a framework, write down who owns the prompt, the switch statement, the context builder
+and the loop, and treat any answer that is not "us" as the place your last 20% will hide.
+
+![Quote: "I feel like consistently, the most magical moments out of AI building come about for me when I'm really, really, really just close to the edge of the model capability" - Usama Bin Shafqat, NotebookLM team, Latent Space](visuals/frame_855.jpg)
+
+This is the closing tension, and it cuts against the rest deliberately. **The crux is that owning the
+four components is what lets you sit close to the edge safely** - the discipline is not the opposite
+of ambition, it is what makes ambition survivable [`n20`].
+
+### Key takeaway message
+
+The agents that work in production are barely agentic: ordinary deterministic software with small,
+tightly-scoped LLM steps inside. An agent is exactly four things - a prompt, a switch statement, a
+context-window builder and a loop - and reliability problems trace back to whichever of the four you
+stopped owning. Tool calls are structured JSON your code interprets, the context window is a data
+structure you build, and contacting a human is a tool call rather than an exception path. Judge the
+result by whether it recovers, pauses, admits a human and replays, none of which is about model
+quality. And hold the evidence honestly: the hundred interviews cannot be checked, so this is a
+pattern language rather than a survey.
