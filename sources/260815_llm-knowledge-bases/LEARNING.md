@@ -184,7 +184,7 @@ its source, and section 7 is the single most valuable page here - skipping it co
 correction this instance forces. Movement IV takes the human out of the loop and then puts the ceiling
 on everything above it, and a reader who reads only section 10 will at least not misquote the source.
 
-### Movement I - the ground you already hold
+## Movement I - the ground you already hold
 
 ```mermaid
 flowchart TB
@@ -206,7 +206,7 @@ pass through - they are alternatives, and choosing the red one feels like progre
 notice the synthesis is still being paid for on every question. Sections 1 and 2 walk the two branches
 in order. *Synthesized from S8 `n1` and `n2`.*
 
-## 1. The pile, and why pointing search at it does not help
+### 1. The pile, and why pointing search at it does not help
 
 Start with the artifact, because the whole design is a response to it.
 
@@ -240,7 +240,7 @@ discarded [S8 `n1`]. Ask the same question twice and you pay twice. **Nothing ac
 Which raises the question the pattern answers: if the synthesis is the expensive part and it keeps
 being thrown away, why is it being done at query time at all?
 
-## 2. Compile once - the pattern, and why it is S8's rather than this talk's
+### 2. Compile once - the pattern, and why it is S8's rather than this talk's
 
 It is not being done at query time in this design, and the alternative is displayed on stage.
 
@@ -278,7 +278,7 @@ have edited, and it is the rule this implementation breaks in section 7.
 So the pattern is settled and this brain already held it. What it never held was anyone running one,
 and running one turns out to require parts the pattern does not mention.
 
-### Movement II - what running it actually takes
+## Movement II - what running it actually takes
 
 ```mermaid
 flowchart TB
@@ -301,7 +301,7 @@ each is a constraint the pipeline consults, which is why a reader skimming the t
 sequential steps and misses both. Sections 3 and 4 set up why enrichment is a separate pass at all.
 *Synthesized from `n2`, `n3`, `n4`, `n5`, `n6`.*
 
-## 3. Capture, the constraint nobody budgets for
+### 3. Capture, the constraint nobody budgets for
 
 The first of those parts is upstream of everything the pattern describes, which is presumably why the
 pattern does not describe it.
@@ -329,7 +329,7 @@ Structure has not been abandoned here, and that is the whole trick. It has been 
 machine pass**, which is only an affordable decision because something downstream reliably performs
 it. That something is the next section.
 
-## 4. Enrichment as a separate pass, not a capture-time discipline
+### 4. Enrichment as a separate pass, not a capture-time discipline
 
 ![the enrich-note SKILL.md](visuals/frame_404.jpg)
 
@@ -352,7 +352,7 @@ notes. What is worth study is the two things wrapped around them, because those 
 were invented rather than inherited, and they are the difference between a system that works in a demo
 and one that works in a year.
 
-## 5. The stamp that turns a corpus-wide sweep into an incremental one
+### 5. The stamp that turns a corpus-wide sweep into an incremental one
 
 The first is three lines long and easy to read past.
 
@@ -406,7 +406,7 @@ One thing it does not solve, and the talk does not raise: a stamped note is skip
 enriched under an early version of the skill never gets revisited when the skill improves. The stamp
 records that work happened, not which version did it.
 
-## 6. The registry that stops the taxonomy sprawling
+### 6. The registry that stops the taxonomy sprawling
 
 The second wrapper addresses a failure you would not predict from the pattern and would certainly hit
 by month two.
@@ -447,7 +447,7 @@ vocabulary in which `podcast` and `founders` compete for the same slot.
 Both mechanisms so far are about the process. What they produce is the subject of the next section,
 and it is where the design stops agreeing with itself.
 
-### Movement III - the payoff, and the crack in it
+## Movement III - the payoff, and the crack in it
 
 ```mermaid
 flowchart TB
@@ -469,7 +469,7 @@ does; seen separately each looks correct. Section 7 is where the frames prove it
 section 8 is the payoff that makes the derived layer worth trusting anyway.
 *Synthesized from `n7`, `n9`, `n11`, `d1`.*
 
-## 7. Before and after, and the rule the system breaks
+### 7. Before and after, and the rule the system breaks
 
 Here is the same file from section 1, after the pass has run.
 
@@ -517,7 +517,7 @@ history".
 Which makes it fair to ask what the derived layer looks like when it is done well, since it is now
 trusted on weaker grounds than the pattern intended.
 
-## 8. What a good derived page looks like
+### 8. What a good derived page looks like
 
 ![a generated wiki entity page](visuals/frame_776.jpg)
 
@@ -550,7 +550,7 @@ accumulation the pattern promised in section 2, made concrete: the page did not 
 
 The remaining question is who runs all this, and how often.
 
-### Movement IV - taking the human out of the trigger
+## Movement IV - taking the human out of the trigger
 
 ```mermaid
 flowchart TB
@@ -572,7 +572,7 @@ recorded case of anything being sent back. Section 9 covers the mechanism and th
 that makes it general; section 10 is the ceiling on all of it. *Synthesized from `n10`, `n12`, `n13`,
 `n16`.*
 
-## 9. Taking the human out, and the scoping that makes that safe
+### 9. Taking the human out, and the scoping that makes that safe
 
 The honest answer in most personal-knowledge-base systems is that nobody runs it, which is why they
 die. Ben's answer is to remove the human from the trigger entirely.
@@ -619,9 +619,41 @@ it. The generic instructions become a fallback rather than a specification.
 So the human is out of the trigger and into the review seat. Which raises the question that decides
 whether any of this is trustworthy, and the source does not answer it.
 
-## 10. What none of this tells you
+### 10. What none of this tells you
 
 Nothing in this talk is measured [`n16`].
+
+```mermaid
+flowchart TB
+    A["Four mechanisms, fully specified<br/>capture, enrichment, the stamp, the registry"]
+    B["One gate, barely specified<br/>'read a fresh wiki in the morning' - n13"]
+    C["A nightly job with write access<br/>to your own corpus - n12"]
+    Q{"Is the corpus still<br/>trustworthy by morning?"}
+    M["Unanswerable from this source.<br/>No bad-edit rate, no rejection ever reported,<br/>no revert path, no corpus size - n16"]
+
+    A --> C
+    B --> C
+    C --> Q --> M
+
+    classDef weak fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    classDef open fill:#fef3c7,stroke:#b45309,color:#78350f
+    class B weak
+    class M open
+```
+
+This is an evidence-weight diagram, not an architecture diagram, and the thing to read off it is how
+much detail each box got rather than how the parts connect. **The crux is that the specification
+effort in this talk runs inversely to the load each component bears: four mechanisms are described
+well enough to reimplement, and the single gate the whole unattended design depends on gets one
+sentence.** It is drawn with the mechanisms and the gate entering from the same level because they
+are not a system and its caveat, they are two halves of one safety argument, and the talk treats only
+one half as engineering. Notice that the failure this shape predicts is silent rather than loud: a
+wrong backlink is invisible once written [`n8`], so the morning review is being asked to catch
+precisely the class of error it is least able to see.
+
+*Synthesized from `n8`, `n12`, `n13` and `n16`. The inverse relationship between specification detail
+and load is this brain's reading, not a claim the source makes.*
+
 
 That sentence is worth stating plainly because everything above is attractive, and attractive
 unmeasured systems are how this brain gets into trouble. Across twenty-one minutes there is no
