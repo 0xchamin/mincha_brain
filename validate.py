@@ -596,6 +596,25 @@ def coverage_report() -> list[str]:
         f"(from {PRESENT_FROM}); {older} older source(s) exempt, retrofit on demand"
     )
 
+    # Provisional rules: rows in AGENTS.md's register of new, under-tested rules.
+    # Reported so a list nobody prunes shows up as a number that stops falling.
+    agents = read(ROOT / "AGENTS.md").splitlines()
+    rows, dates, inside = [], [], False
+    for ln in agents:
+        if ln.startswith("## Provisional rules"):
+            inside = True
+            continue
+        if inside and ln.startswith("## "):
+            break
+        if inside and ln.startswith("| **"):
+            rows.append(ln)
+            d = re.search(r"\|\s*(\d{6})\s*\|", ln)
+            if d:
+                dates.append(d.group(1))
+    if rows:
+        oldest = f", oldest {min(dates)}" if dates else ""
+        lines.append(f"  provisional rules: {len(rows)} still under-tested{oldest}")
+
     dreams = sorted(
         p for p in (ROOT / "brain" / "dreams").glob("[0-9][0-9][0-9][0-9]-*.md")
     )

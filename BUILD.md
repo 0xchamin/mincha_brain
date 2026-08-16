@@ -1,6 +1,6 @@
 # BUILD.md - build Brain from scratch, from this file alone
 
-> **Generated 2026-08-15 from commit `0378376`** by `tools/make_build_doc.py`. Do not hand-edit: edit the
+> **Generated 2026-08-16 from commit `903d78c`** by `tools/make_build_doc.py`. Do not hand-edit: edit the
 > source files in the reference clone and regenerate, or your copy silently diverges from the kit
 > it claims to build.
 
@@ -170,6 +170,29 @@ durable, cited, compounding knowledge.
 
 **Adding a term here is cheap and renaming one is not.** If you need a word that is already in this
 table, use a different word.
+
+## Provisional rules - new, under-tested, and safe to push back on
+
+> **Why this exists.** A rule written yesterday and a rule that has survived twenty sources look
+> identical in this file, and they should not. On 2026-08-15 a human had to tell a fresh session by
+> hand which rules were new and untested - **which means the contract was not carrying its own
+> state**, and the human was doing a job the document should do. This table is that job.
+
+**Read this before starting work. If a rule here feels wrong while you are using it, that is the
+signal it was put here for: fix the contract, not the artifact**, and record what happened in
+`brain/log.md`. A provisional rule has no seniority over your judgement.
+
+| Rule | Since | Instances | Graduates when | Where |
+|---|---|---|---|---|
+| **`## Presentation narrative`** - slides, prose-only, no bullets, null close | 260815 | **1** ([S26](sources/260815_llm-knowledge-bases/LEARNING.md)), and it was rewritten once within hours of being specified | 3 sources have one and the shape has not moved | [`personas/presenter.md`](personas/presenter.md) |
+| **Movement + gap-fill diagrams** in the walkthrough | 260815 | **1**, and on a **slide-heavy** source where 8 of 10 sections already had a frame | one **transcript-only** source has run it - that is the untested path, where *every* section triggers gap-fill | "Diagrams for a visual reader" below |
+| **Presentation budget 900-1,500 words** | 260815 | **1 measurement**, widened from 700-1,200 on a single draft | a second and third instance land in the band without trimming | [`personas/presenter.md`](personas/presenter.md) |
+| **Stage specs in [`stages/`](stages/)** rather than inline | 260815 | **0 stage runs since the move** | `/verify`, `/research`, `/conjecture` and `/dream` have each fired once and found their spec | [ADR-0027](brain/decisions/0027-stage-specs-leave-the-contract.md) |
+| **Reserved terms registry** (above) | 260815 | n/a - it is a preventative | the next few contract changes produce no new collisions | [ADR-0027](brain/decisions/0027-stage-specs-leave-the-contract.md) |
+
+**Graduating a rule means deleting its row**, not marking it done. `validate.py` reports how many rows
+are here, so a list nobody prunes shows up as a number that stops falling - the same reason `/verify`
+coverage is printed rather than enforced.
 
 ## Scope: topics are open
 
@@ -663,9 +686,11 @@ lead-in label the register forbids.
 > the same reason: whether an old note earns a presentation is judgement, and a threshold in the
 > validator would launder judgement as a green check. Retrofit on demand, highest-value sources first.
 
-> **No reference implementation yet, and that is a known risk.** This file records that the
-> `LEARNING.md` shape was twice specified wrongly before a worked example existed. **The next ingest is
-> the test**; if the shape is wrong, fix the contract rather than the note.
+> **The reference implementation is [S26](sources/260815_llm-knowledge-bases/LEARNING.md), and it
+> earned its keep immediately** - writing it exposed both a word-budget failure and a naming collision
+> within hours of the shape being specified. **One instance is not a settled shape**, which is why this
+> rule sits in "Provisional rules" above. If the next one fights the spec, fix the contract, not the
+> note.
 
 ## `foundations/` - supplied background, uncited by construction
 
@@ -2801,6 +2826,25 @@ def coverage_report() -> list[str]:
         f"  presentation narrative: {len(have)}/{len(scoped)} in-scope sources "
         f"(from {PRESENT_FROM}); {older} older source(s) exempt, retrofit on demand"
     )
+
+    # Provisional rules: rows in AGENTS.md's register of new, under-tested rules.
+    # Reported so a list nobody prunes shows up as a number that stops falling.
+    agents = read(ROOT / "AGENTS.md").splitlines()
+    rows, dates, inside = [], [], False
+    for ln in agents:
+        if ln.startswith("## Provisional rules"):
+            inside = True
+            continue
+        if inside and ln.startswith("## "):
+            break
+        if inside and ln.startswith("| **"):
+            rows.append(ln)
+            d = re.search(r"\|\s*(\d{6})\s*\|", ln)
+            if d:
+                dates.append(d.group(1))
+    if rows:
+        oldest = f", oldest {min(dates)}" if dates else ""
+        lines.append(f"  provisional rules: {len(rows)} still under-tested{oldest}")
 
     dreams = sorted(
         p for p in (ROOT / "brain" / "dreams").glob("[0-9][0-9][0-9][0-9]-*.md")
@@ -7037,7 +7081,7 @@ _(Diagrams/slides across sources, embedded with caption + citation.)_
 
 | Date | Source | Entry |
 |---|---|---|
-| 2026-08-15 | brain (kit) | Kit built from `BUILD.md` (a generated bundle of the reference clone). Empty brain: 6 seed topics, no sources, no claims. |
+| 2026-08-16 | brain (kit) | Kit built from `BUILD.md` (a generated bundle of the reference clone). Empty brain: 6 seed topics, no sources, no claims. |
 ``````
 
 #### `reports/README.md`
