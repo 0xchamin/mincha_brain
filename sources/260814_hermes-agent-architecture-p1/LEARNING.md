@@ -1118,7 +1118,20 @@ whether your system can name, correctly and from disk, what each arriving messag
 What makes it dangerous is that the failure is silent. Routing a message into the wrong conversation
 raises no error, because both conversations are perfectly valid.
 
-*Visual: the Movement A diagram. Provenance: `n1`, `n10`.*
+```mermaid
+flowchart LR
+    R["a request<br/>self-describing"] --> S1["serve it"]
+    M["a message<br/>a continuation"] --> Q{"of what?"}
+    Q --> D["reconstruct from<br/>durable state"]
+    D --> W["get it wrong and you get<br/>a <b>valid</b> conversation,<br/>with no error"]
+
+    style W fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+```
+
+This is a contrast slide, not an architecture slide. **The crux is the last box: the failure produces
+something that looks correct**, so there is nothing to alert on.
+
+*Synthesized from `n1`, `n10`.*
 
 ### Slide 2 - Your isolation policy is the routing key's field list, not a layer above it
 
@@ -1135,7 +1148,12 @@ call the default per-participant behaviour a security guarantee, and calls it a 
 That distinction is worth preserving, because a routing policy that happens to isolate is not the same
 promise as one that is enforced to.
 
-*Visual: `visuals/fig2_ownership-split.png`, the ownership table. Provenance: `n1`, `n2`, `n3`.*
+![Ownership split - state, owner, scope, durable form and failure symptom](visuals/fig2_ownership-split.png)
+
+This is an ownership table, not a component list, and the column that matters to this audience is the
+last one. **The crux is that every row names a piece of state, who owns it, and what you see when that
+ownership is wrong** - which is what turns an architecture diagram into something an on-call engineer
+can use. *Corroborated by the surrounding prose [`n1`, `n2`, `n3`].*
 
 ### Slide 3 - A tool schema is a request format and proves nothing about permission
 
@@ -1149,8 +1167,24 @@ The practical form of that is worth stating plainly to a mixed room. Using a hos
 nothing whatever about whether an agent can run a destructive command on your machine. Those are
 different boundaries with different blast radii, and only one of them is about where inference happens.
 
-*Visual: the section 5 disambiguation diagram, alongside `visuals/fig1_model-inside-the-loop.png` for
-where the model actually sits. Provenance: `n4`, `n6`, `n16`.*
+```mermaid
+flowchart TB
+    R["'it is all remote anyway'"]
+    A["remote <b>model API</b><br/>inference elsewhere"]
+    B["remote <b>tool backend</b><br/>your commands run elsewhere"]
+    C["remote <b>gateway</b><br/>messages arrive from elsewhere"]
+    N["none implies either of the others - n6"]
+    R --> A --> N
+    R --> B --> N
+    R --> C --> N
+    style B fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+```
+
+This is a disambiguation slide, not an architecture slide. **The crux is that only the red box has a
+blast radius.** Treating a tool schema as a permission is the same error wearing a different
+costume.
+
+*Synthesized from `n6`, `n16`.*
 
 ### Slide 4 - The guarantee stopping two turns from corrupting one conversation is memory-only
 
@@ -1166,8 +1200,23 @@ invariant for months. Alongside it sits a second thing that moves under you: par
 restored in model-call order, which is transcript validity and explicitly not side-effect ordering
 [n14]. Both are cases where a structure that looks authoritative is only locally true.
 
-*Visual: the Movement C diagram, with `visuals/fig3_gateway-message-flow.png` for the turn itself.
-Provenance: `n8`, `n14`, divergence `d1`.*
+```mermaid
+flowchart TB
+    G["the guard against two turns<br/>mutating one conversation"]
+    M["held in memory - n8"]
+    P1["a restart removes it"]
+    P2["a second gateway process<br/>never had it"]
+    S["a single-process invariant,<br/>presented as a system invariant"]
+    G --> M --> P1 --> S
+    M --> P2 --> S
+    style S fill:#fca5a5,stroke:#b91c1c,color:#7f1d1d
+```
+
+This is a scope slide, not a sequence. **The crux is that the guarantee is real and its scope is
+smaller than the sentence describing it.** The restart bites an operator this week; the second process
+bites an architect the quarter you scale out.
+
+*Synthesized from `n8`, divergence `d1`.*
 
 ### Slide 5 - "The agent succeeded" is not an operable completion model
 
@@ -1182,7 +1231,13 @@ an ambiguous crash mid-send is resolved by warning a human rather than by guessi
 mitigation that is a warning, stated as such. For whoever holds the pager, the actionable sentence is
 that your runbook's standard remedy is the thing that breaks when these three are collapsed into one.
 
-*Visual: `visuals/fig4_six-failure-cases.png`. Provenance: `n17`, `n18`, `n19`.*
+![Six failure cases - failure, boundary, what the user sees, evidence to inspect, recovery](visuals/fig4_six-failure-cases.png)
+
+This is an operations table, not a taxonomy, and the useful columns are "what the user sees" and
+"recovery". **The crux is that each row is a different thing hiding behind the word succeeded**, and
+the recovery column is where the rerun hazard lives: the standard remedy duplicates an external action
+when execution and delivery were collapsed into one fact. *Corroborated by the surrounding prose
+[`n17`, `n18`, `n19`].*
 
 ### Slide 6 - Take the boundaries, hold the product facts loosely, and note nobody measured any of it
 
@@ -1192,16 +1247,30 @@ verdict this evidence supports is adopt-the-arguments and watch-the-rest, not ad
 
 Two things make it better than that sounds. The author is analysing somebody else's open-source project
 rather than selling his own, which removes the commercial position that discounts most architecture
-writing, and he pins a version, a tag and a commit. Against that, the piece opens by constructing a
-deterministic test task and then never shows it running [d3], and this brain did not clone the
-repository [n24].
+writing, and he pins a version, a tag and a commit. Against that, the piece never shows the
+deterministic test task it opens with actually running [d3].
 
 The clean way to use it is the seam the note names: the arguments survive losing the product name and
 the specifics do not. Routing key as isolation policy, model as callee, tool schema as request format,
 success as eight facts. Those are reusable on a system sharing none of this code. Five delivery states
 and this particular field list are true of v0.19.1.
 
-*Visual: the section 9 durability diagram. Provenance: `d3`, `d4`, `n24`.*
+```mermaid
+flowchart TB
+    S["everything this article says"]
+    A["<b>arguments</b><br/>routing key is the isolation policy;<br/>the model is a callee; a tool schema is<br/>not an authorization; success is eight facts"]
+    P["<b>product facts</b><br/>five delivery states, this key's field list,<br/>pinned to v0.19.1"]
+    S --> A --> U["reusable on a system sharing<br/>none of this code"]
+    S --> P --> V["true on the day it was written"]
+    style A fill:#dcfce7,stroke:#15803d,color:#14532d
+    style P fill:#fef3c7,stroke:#b45309,color:#78350f
+```
+
+This is a shelf-life slide, not a summary. **The crux is that the article ages along one seam, and
+knowing which side a sentence sits on is the whole skill.** Green survives losing the product name;
+amber was true of one version on one day.
+
+*Synthesized from `n2`, `n4`, `n16`, `n17` against `d4`.*
 
 ### Key takeaway message
 
