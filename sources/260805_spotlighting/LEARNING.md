@@ -20,6 +20,33 @@ the system prompt has leaked, therefore randomise the marker (`n9`) - and **the 
 the best cross-domain framing in this brain's security set** (`n12`). Read `d3` first: **every
 experiment is document summarization or Q&A, with no agent and no tools.**
 
+```mermaid
+flowchart TB
+    P["make the <b>provenance</b> of untrusted input<br/>continuously visible to the model,<br/>then tell the model about it - n2"]
+    D["<b>delimiting</b><br/>halves attack success -<br/>and the authors recommend <b>against</b> it - n4"]
+    M["<b>datamarking</b><br/>~50% -> <b>3.1%</b>, and costs nothing<br/>measurable on the task - n5, n6"]
+    E["<b>encoding</b><br/>best number, and wrecks accuracy<br/>on weaker models - n7"]
+    C["1.06x input tokens,<br/>against CaMeL's 2.82x"]
+
+    P --> D
+    P --> M
+    P --> E
+    M --> C
+
+    style D fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    style M fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a pricing diagram, not a technique diagram, and the ordering of the three variants is the
+content. **The crux is that the cheapest defence in this brain has a variant its own authors tell you
+not to use and a variant that is nearly free, and telling them apart is the entire value of reading
+the paper rather than the abstract.** It is drawn with all three hanging off one idea because they are
+the same transformation at different strengths, and with the cost attached only to datamarking because
+that is the one worth deploying. Read `d3` first: every experiment is document summarization or Q&A,
+with no agent and no tools.
+
+*Synthesized from `n2`, `n4`, `n5`, `n6` and `n7`.*
+
 ## The 1-minute version
 
 This article covers a 2024 Microsoft paper proposing the cheap, prompt-level defence against indirect
@@ -130,7 +157,29 @@ this source earns its place in a brain that already holds two stronger defences*
 authors explaining the limit of their own method through fifty-year-old telephony, and section 8 is
 where this note places all four defences you now hold on one axis.
 
-## 1. Why the cheap defence deserves a note
+## Movement 1 - the problem, and the answer everyone tries
+
+```mermaid
+flowchart TB
+    C["1. the cheap defence deserves a note<br/>because it is the one most teams<br/>actually ship - 1.06x tokens"]
+    T["2. and the first thing everyone tries is<br/>telling the model to be careful"]
+    R["which helps, and offers<br/>no guarantee at all"]
+
+    C --> T --> R
+
+    style R fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+```
+
+This is a framing diagram, not a design. **The crux is that this note exists because of deployment
+reality rather than strength: it is the weakest family of defence in this brain and the one running in
+the most production systems.** It is drawn ending on the absence of a guarantee because that is the
+honest frame for everything after it - the variants differ in how much they help, and none of them
+converts into a bound. Section 2 closes off defensive instructions specifically, which is what makes
+the transformations in Movement 2 read as engineering rather than as more of the same.
+
+*Synthesized from `n1` and `n3`.*
+
+### 1. Why the cheap defence deserves a note
 
 On evidential quality this is the weakest source in this brain's security set - a vendor preprint with
 no venue, no code and no dataset. It is here for three reasons.
@@ -156,7 +205,7 @@ equivalent to executing code* is worth more than either statement alone.
 So the diagnosis is agreed. The question is what to do about it, and the first answer everyone reaches
 for turns out to be measurable.
 
-## 2. Telling the model to be careful
+### 2. Telling the model to be careful
 
 Before any technique, the paper measures the thing that costs nothing and requires no thought: add a
 line to the system prompt telling the model not to obey instructions found in the document.
@@ -180,7 +229,33 @@ with more traffic on the channel.**
 Which is why the third bar is different in kind. It is not another instruction; it is a change to the
 input itself.
 
-## 3. Delimiting, and why they disown it
+## Movement 2 - three transformations, priced
+
+```mermaid
+flowchart TB
+    Q{"how visible can you make<br/>provenance, and at what cost?"}
+    D["3. <b>delimiting</b>: halves attack success,<br/>and the authors recommend against it -<br/>an adversary who learns your system<br/>prompt writes their own delimiters - n4"]
+    M["4. <b>datamarking</b>: interleave a marker<br/>throughout. ~50% -> 3.1%, and no<br/>measurable task cost - n5, n6"]
+    E["5. <b>encoding</b>: the best number, and it<br/>wrecks accuracy on weaker models - n7"]
+
+    Q --> D
+    Q --> M
+    Q --> E
+
+    style D fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    style M fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a comparison diagram, and the ordering matters more than any single number. **The crux is
+that the strongest-looking variant and the disowned one bracket the one you should actually deploy, so
+a reader who takes only the headline figure will pick wrong twice.** It is drawn as one question with
+three answers because they are the same transformation at three strengths rather than three
+techniques. Datamarking is the recommendation: it does the most per unit of cost, and its cost is
+close enough to zero that the usual security-versus-utility argument does not arise.
+
+*Synthesized from `n4`, `n5`, `n6` and `n7`.*
+
+### 3. Delimiting, and why they disown it
 
 The first transformation is the obvious one: wrap the untrusted input in special tokens and tell the
 model never to obey instructions between them.
@@ -200,7 +275,7 @@ that lives only at the edges of untrusted text has that weakness.
 
 The fix follows from naming the weakness: stop marking the edges.
 
-## 4. Datamarking: the one that works, and is free
+### 4. Datamarking: the one that works, and is free
 
 Datamarking interleaves a marker token throughout the *body* of the text rather than at its ends.
 Replace every whitespace with a signifier, so "In this manner Cosette traversed the labyrinth of"
@@ -232,7 +307,7 @@ blocks of text, while also not obscuring the text in any impactful way".
 So one technique halves attacks and is disowned, and the next one nearly eliminates them for free.
 The third is where the trade-off returns.
 
-## 5. Encoding: the best number, and the real cost
+### 5. Encoding: the best number, and the real cost
 
 Encoding transforms the input with a standard algorithm - base64 in the paper's example - so the
 untrusted block is not natural language at all. It produces the lowest attack rates of the three:
@@ -259,7 +334,31 @@ capability prerequisite - **your defence budget here is denominated in model qua
 Three techniques, priced. The section that makes the paper worth keeping is what happens when you
 assume the attacker has read all of this.
 
-## 6. Assume your system prompt has leaked
+## Movement 3 - designing against a real adversary
+
+```mermaid
+flowchart TB
+    A["assume your system prompt<br/><b>has leaked</b>"]
+    D["then a fixed delimiter is<br/>known to the attacker"]
+    R["so <b>randomise the marker</b> - n9"]
+    G["which is the best piece of defensive<br/>engineering in the paper, and it<br/>generalises past this technique"]
+
+    A --> D --> R --> G
+
+    style A fill:#e8f0fc,stroke:#4338ca,color:#312e81
+    style G fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a threat-modelling diagram, not a parameter choice. **The crux is the assumption in the first
+box: designing as though the system prompt is already public converts a defence that works until
+somebody looks into one that works after they have.** It is drawn as a short forced chain because the
+randomisation is not a clever idea in itself - it is the only thing that survives the assumption, and
+the assumption is the contribution. This is a movement of one section and it earns the space, since
+the same move applies to any defence with a secret in it.
+
+*Synthesized from `n9`.*
+
+### 6. Assume your system prompt has leaked
 
 The adversary analysis in §5.4 is the best engineering in the paper, and both of its findings
 generalise past spotlighting.
@@ -292,7 +391,30 @@ transformation must be one-way with respect to the attacker's ability to choose 
 Both fixes are good, and both are still fixes *within* an approach whose limits the authors then
 describe better than anyone else in this brain's security set.
 
-## 7. The telecom analogy
+## Movement 4 - the ceiling
+
+```mermaid
+flowchart TB
+    T["7. the authors explain their own limit<br/>through fifty-year-old telephony:<br/>this is an <b>in-band</b> signal - n12"]
+    I["a marker travelling in the same channel<br/>as the data can, in principle,<br/>be forged by the data"]
+    S["8. so it sits in the <b>behavioural</b> class,<br/>below structural defences and above<br/>detection - this brain's taxonomy"]
+
+    T --> I --> S
+
+    style I fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    style S fill:#e8f0fc,stroke:#4338ca,color:#312e81
+```
+
+This is a limits diagram, and its provenance is unusual. **The crux is that the authors supply the
+ceiling on their own method, and they do it by naming a fifty-year-old failure mode from telephony
+rather than by hedging.** It is drawn ending in the taxonomy because that is where this note places
+the finding: in-band signalling is exactly what separates a behavioural defence from a structural one,
+and the classification is this brain's synthesis rather than any source's. This is the movement that
+earns the note its place beside two stronger defences.
+
+*Synthesized from `n12`; the taxonomy in section 8 is this brain's.*
+
+### 7. The telecom analogy
 
 Section 6 of the paper opens with an admission and then earns it back.
 
@@ -337,7 +459,35 @@ common language models, however, this is not feasible in any straightforward way
 > paper named the requirement before anyone met it. Neither paper cites the other. *(The connection
 > is this brain's.)*
 
-## 8. Where this sits among your defences
+### 8. Where this sits among your defences
+
+```mermaid
+flowchart TB
+    D["<b>detection</b><br/>classify the input<br/><i>fails: weak-signal payloads<br/>carry no anomaly</i>"]
+    B["<b>behavioural</b><br/>mark provenance, ask the model<br/>to honour it<br/><i>fails: in-band, no guarantee</i>"]
+    S["<b>structural</b><br/>constrain what a value may do<br/><i>fails: bounded by the 17%, and by<br/>what has no data-flow consequence</i>"]
+    A["the axis is <b>what the defence<br/>asks of the model</b>"]
+
+    A --> D
+    A --> B
+    A --> S
+
+    classDef weak fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    class D weak
+    style B fill:#fbf1dc,stroke:#b45309,color:#78350f
+    style S fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a placement diagram, not a ranking, and the axis is the content. **The crux is that the three
+classes are distinguished by how much they need the model to cooperate: detection asks it to be
+correct about inputs, behavioural asks it to honour a convention, and structural asks it for
+nothing.** It is drawn as one axis fanning into three rather than as a ladder because the failure modes
+are not degrees of the same weakness - each class fails for its own reason, and knowing which reason
+applies is what tells you whether stacking two of them helps. This taxonomy is this brain's synthesis
+and none of the four sources draws it.
+
+*Synthesized across S18, S19, S20 and this source. The axis is this brain's.*
+
 
 With four defensive sources now in hand, they sort onto one axis, and the axis is **what the defence
 asks of the model**. *(This taxonomy is this brain's synthesis; none of the four sources draws it.)*
@@ -469,3 +619,137 @@ defensive sources draws it, and the placement of each defence in it is my readin
   a property of the tokens themselves** rather than of the prompt structure. This note has held "which
   tokens reach the model" as the question; here the answer is that *how they are written* carries
   security meaning independent of what they say.
+
+## Presentation narrative
+
+*A talk track for a team that has to ship a prompt-injection defence this quarter, derived entirely
+from the gated nodes above. One boundary governs every number here and is on the last slide: every
+experiment is document summarization or Q&A, with no agent and no tools.*
+
+### Slide 1 - This is the defence most teams actually ship, and it costs almost nothing
+
+**Spotlighting runs at 1.06x input tokens, against CaMeL's 2.82x.** That price difference is why it
+is worth a serious look even though it is the weakest family of defence in this brain.
+
+The idea is one sentence: transform untrusted input so its provenance is continuously visible to the
+model, then tell the model about the transformation [n2]. It is not asking the model to detect
+anything. It is making the boundary between your instructions and somebody else's data impossible to
+lose track of mid-document.
+
+![Attack success rate for baseline, plus defensive instructions, and plus instructions with delimiters](visuals/fig3_delimiters.png)
+
+This is the baseline and the obvious answer. **The crux is that telling the model to be careful helps
+and guarantees nothing** - which is the honest frame for everything that follows [`n3`].
+
+### Slide 2 - The variant with the best-known name is the one the authors tell you not to use
+
+**Delimiting halves attack success, and the authors recommend against it [n4].** That is unusual
+enough to be worth pausing on, and the reason is a threat-model argument rather than a performance
+one.
+
+An adversary who learns your system prompt writes their own delimiters. Since delimiting depends on a
+token the attacker must not know, it works exactly until somebody looks - and system prompts leak
+routinely. So a defence measured as effective in the lab has a failure condition that is a matter of
+time rather than of probability.
+
+```mermaid
+flowchart LR
+    D["a fixed delimiter"] --> L["the system prompt leaks"]
+    L --> F["the attacker writes<br/>their own delimiters"]
+    style F fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+```
+
+This is a failure-condition slide. **The crux is that the failure is not probabilistic but scheduled**
+- it happens whenever the prompt leaks, which is a when rather than an if [`n4`].
+
+### Slide 3 - Datamarking is the one to deploy, and it is close to free
+
+**Interleaving a marker token throughout the untrusted text drops attack success from roughly 50% to
+3.1%, and costs nothing measurable on the underlying task [n5, n6].** That is the recommendation, and
+the second half is what makes it easy to sell internally.
+
+Most security decisions are a trade against utility, and this one substantially is not. The task
+accuracy comparison holds across SQuAD Q&A, IMDB sentiment and two SuperGLUE benchmarks, which is
+enough breadth to believe the null result rather than to suspect the benchmark was chosen.
+
+![Task accuracy with and without datamarking across SQuAD Q&A, IMDB Sentiment, SuperGLUE WiC and SuperGLUE Boolq](visuals/fig7_datamarking_no_task_cost.png)
+
+This is the cost side, and the finding is the absence of a gap. **The crux is that the bars are the
+same height** - which is what turns a security measure into an easy decision [`n6`].
+
+### Slide 4 - Encoding gives the best number and only works on strong models
+
+**It produces the best attack-success figure and wrecks accuracy on weaker models [n7].** So the
+strongest-looking variant is model-dependent in a way that matters if you run a mixed fleet or expect
+to downgrade for cost.
+
+The general shape is worth naming for a room evaluating any defence. A technique that consumes model
+capability to work will look excellent on your frontier model and quietly fail on the cheaper one you
+switch to next quarter. Datamarking does not have that property, which is a second reason to prefer
+it over the better headline.
+
+![Task accuracy with and without encoding, for GPT-4 above and GPT-3.5-Turbo below, across four benchmarks](visuals/fig8_encoding_task_cost.png)
+
+This is the model dependence, in two rows. **The crux is the difference between the top and bottom
+panels** - the same defence, two models, opposite verdicts [`n7`].
+
+### Slide 5 - Assume the system prompt has leaked, and randomise the marker
+
+**This is the best piece of defensive engineering in the paper and it generalises well past this
+technique [n9].** Design as though your system prompt is already public, and a fixed marker becomes
+obviously wrong while a randomised one survives.
+
+What engineers should take from this is the assumption rather than the parameter. Any defence with a
+secret in it inherits the question of what happens when the secret is out, and most defences answer
+it by not asking. The authors ask it explicitly and their recommendation falls out in one step.
+
+![Attack success rate with and without datamarking on a document summarization task, for GPT-3.5-Turbo and GPT-4](visuals/fig4_datamarking.png)
+
+This is the defence working. **The crux is that these numbers assume a randomised marker** - the same
+mechanism with a fixed one is measuring an adversary who has not looked yet [`n5`, `n9`].
+
+### Slide 6 - The authors name their own ceiling, and it decides where this sits
+
+**Spotlighting is an in-band signal, and the authors explain the limit through fifty-year-old
+telephony [n12].** A marker travelling in the same channel as the data can in principle be forged by
+the data, which is precisely the failure that took telephone signalling out of band decades ago.
+
+That places it. Across the four defensive sources this brain now holds, the axis is what the defence
+asks of the model. Detection asks the model to be correct about inputs and fails on weak-signal
+payloads. Behavioural, which is this one, asks the model to honour a convention and offers no
+guarantee. Structural asks the model for nothing and is bounded instead by the 17% of tasks whose own
+tools suffice for the attack. That taxonomy is this brain's synthesis; none of the four sources draws
+it.
+
+So the decision is: deploy datamarking now, because it is nearly free and it is a real reduction, and
+do not let it occupy the slot a structural defence should have. And read every figure here knowing
+that no experiment involved an agent or a tool call [d3], which is exactly the setting the numbers
+would be used to justify.
+
+```mermaid
+flowchart TB
+    A["what does the defence<br/>ask of the model?"]
+    D["detection: be correct<br/>about inputs"]
+    B["behavioural: honour<br/>a convention"]
+    S["structural: nothing"]
+    A --> D
+    A --> B
+    A --> S
+    style B fill:#fbf1dc,stroke:#b45309,color:#78350f
+    style S fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is where spotlighting sits. **The crux is that the amber class is the one that depends on model
+compliance**, which is why it is worth deploying and not worth relying on [`n12`].
+
+### Key takeaway message
+
+Spotlighting makes the provenance of untrusted input continuously visible and then tells the model
+about it, at 1.06x input tokens against CaMeL's 2.82x. Of its three variants, delimiting is disowned
+by its own authors because an attacker who learns your system prompt writes their own delimiters,
+encoding has the best number and wrecks weaker models, and datamarking drops attack success from
+roughly 50% to 3.1% at no measurable task cost. Assume the system prompt has leaked and randomise the
+marker, which is the paper's best engineering and generalises to any defence holding a secret. The
+authors name their own ceiling through fifty-year-old telephony: this is an in-band signal, so it asks
+the model to honour a convention and offers no guarantee. Deploy it, and do not let it occupy the slot
+a structural defence should have.
