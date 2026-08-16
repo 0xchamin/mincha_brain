@@ -25,6 +25,30 @@ causes 50%+ of all failures**. Length follows an **inverted U peaking at 200-500
 keep the eval afterwards as a regression detector on the bare model.
 `https://www.youtube.com/watch?v=0vphxNt4wyk`
 
+```mermaid
+flowchart TB
+    R["you ran the task with the skill<br/>loaded, and it failed"]
+    Q{"was the skill bad,<br/>or the task too hard?"}
+    N["non-determinism means a second run<br/>tells you little more than the first - n2"]
+    T["and no amount of looking harder at one<br/>trace separates them, because the<br/>information is not in the trace"]
+    C["so what is missing is a <b>control</b>,<br/>not a closer look"]
+    A["run the same task <b>without</b> the skill.<br/>The difference is the skill."]
+    B["and the same procedure answers<br/>'is this any good?' and<br/>'should I delete it?' - n20"]
+
+    R --> Q --> N --> T --> C --> A --> B
+
+    style C fill:#e8f0fc,stroke:#4285f4,color:#1a3a6b
+    style B fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is an attribution diagram, not a workflow, and the question in the second box is the one the
+whole talk exists to answer. **The crux is that a skill's value is a difference rather than a level,
+so a single run cannot measure it no matter how carefully you read the trace.** It is drawn as an
+unbranching descent because each step closes off the response an engineer would naturally reach for
+next, ending at the only move that works. The final box is why this reframing earns its keep: treating
+a skill as an intervention rather than a document collapses two questions people usually answer with
+different methods into one procedure. *Synthesized from `n2`, `n9` and `n20`.*
+
 ## The 1-minute version
 
 This note covers a conference talk about a gap that is easy to state and much harder to explain away.
@@ -157,8 +181,8 @@ flowchart TB
     style E fill:#fbf1dc
 ```
 
-The diagram runs top to bottom in the order of the argument, gathered into five movements, and every
-box below it is a numbered section. Two of the movements are coloured. Blue marks the measured
+This is a reading-order diagram about the note rather than about skills, gathered into five movements,
+and every box below it is a numbered section. Two of the movements are coloured. Blue marks the measured
 evidence, which is the only part of this talk backed by a public third-party benchmark and therefore
 the only part that travels unchanged into your system. Amber marks the payoff, because the eval you
 build in movement E is what makes every claim in C and D checkable where you work rather than
@@ -188,7 +212,33 @@ backwards and the technique that answers the problem movement A raised.
 
 *Synthesized roadmap of this note - not from the source.*
 
-## 1. Forty-seven thousand skills, and almost no tests
+## Movement A - why nobody tests skills, and why that is a measurement problem
+
+```mermaid
+flowchart TB
+    S["47,000+ skills across 6,300 repos,<br/>almost none carrying evals - n1"]
+    F["a bad skill does not crash.<br/>It quietly corrupts the output."]
+    N["no stack trace, no red build,<br/>nobody raising a hand"]
+    W["the only symptom is a slow drift<br/>in quality nobody can attribute"]
+    A["and the author of a skill is its most<br/>forgiving user, structurally unable to<br/>observe the failure rate - n3, n4"]
+
+    S --> F --> N --> W
+    F --> A
+
+    style W fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+```
+
+This is a diagnosis diagram, not a complaint, and it argues that the gap is self-sustaining rather
+than careless. **The crux is that the defect a test would catch is precisely the defect that produces
+no signal**, so the absence of tests and the absence of visible failures reinforce each other. It is
+drawn with two consequences hanging off the same failure mode because they compound: silent corruption
+means nobody is alerted, and the person best placed to notice is the one repairing failures by reflex
+without ever counting them. That second point is what makes "it worked for me" worth a whole section
+rather than a sentence.
+
+*Synthesized from `n1`, `n3` and `n4`.*
+
+### 1. Forty-seven thousand skills, and almost no tests
 
 ![Slide "Vibe Checks Fail in Production": SkillsBench indexed 47k+ unique skills across 6,300 repos, almost none have tests. Bad skills don't crash; they quietly corrupt outputs](visuals/frame_60.jpg)
 
@@ -211,7 +261,7 @@ That explains why the gap persists without anyone deciding to leave it open, and
 objection worth taking seriously rather than dismissing. People do check their skills, in the sense
 that they try them and look at the result. So why does trying not count?
 
-## 2. Why "it worked for me" is not evidence
+### 2. Why "it worked for me" is not evidence
 
 The reason is that trying tells you an outcome and never tells you what caused it. Run a task with a
 skill loaded and watch it fail, and "you might not know if your task fails because your skill is bad
@@ -251,7 +301,34 @@ So the conclusion is automated evals rather than closer looking. But evals of *w
 is doing a great deal of work as a word, and what it names has a shape that turns out to decide
 everything after it.
 
-## 3. A skill is a cost ladder, not a document
+## Movement B - what the thing you are testing actually is
+
+```mermaid
+flowchart TB
+    F["<b>frontmatter</b> - name and description<br/>loaded on <b>every model call</b>,<br/>whether the skill fires or not"]
+    B["<b>body</b> - SKILL.md<br/>paid on trigger"]
+    R["<b>references and scripts</b><br/>free until the agent reads them"]
+    C["so the description is the most expensive<br/>real estate in the artifact - n5, n6"]
+
+    F --> C
+    B --> C
+    R --> C
+
+    style F fill:#fff4e5,stroke:#b45309,color:#78350f
+    style C fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a cost diagram, not a file layout, and the three layers are priced rather than described.
+**The crux is that one layer is billed unconditionally and the other two are not, which is what turns
+a question of style into a question of budget.** It is drawn with all three converging on a single
+consequence because the ladder is only interesting for what it implies: the part of a skill you pay
+for on every request your agent ever serves is also the part that decides whether it fires at all.
+That single fact is what makes movement D's writing advice feel forced rather than stylistic, which is
+why this movement is short and hard to skip.
+
+*Synthesized from `n5` and `n6`.*
+
+### 3. A skill is a cost ladder, not a document
 
 ![Slide "Keep It Lean (Layer Information)": Layer 1 Frontmatter always loaded, Layer 2 SKILL.md body loaded on trigger, Layer 3 references and scripts loaded on demand](visuals/frame_500.jpg)
 
@@ -285,7 +362,34 @@ That is what makes the description the most expensive real estate in the artifac
 section 6 spends its entire length on a single line of frontmatter. Before optimising that line,
 though, a prior question deserves an answer. Does any of this work at all?
 
-## 4. Do skills work? The one part backed by a public benchmark
+## Movement C - the measured evidence, and its two surprises
+
+```mermaid
+flowchart TB
+    H["curated skills: 33.9% -> 50.5%<br/><b>+16.6 points</b> across models<br/>and harnesses - n9"]
+    S1["<b>surprise 1</b><br/>AI-written skills are a <i>negative</i><br/>intervention: -8.1 to -11.5 points - n10"]
+    S2["<b>surprise 2</b><br/>length is an inverted U, peaking at<br/>200-500 lines. Shorter is measurably<br/>worse; over 1000 is a no-op - n11"]
+    P["and this is the only part of the talk<br/>backed by a public third-party benchmark"]
+
+    H --> S1
+    H --> S2
+    S1 --> P
+    S2 --> P
+
+    style P fill:#e8f0fc,stroke:#4285f4,color:#1a3a6b
+```
+
+This is an evidence diagram, not a results table, and its placement before the writing advice is
+deliberate. **The crux is that both surprises point opposite to what a careful engineer would guess,
+which is exactly why they need a benchmark rather than an argument.** Nobody predicts that letting the
+model write its own skill makes things worse, and "as short as possible" is the natural reading of a
+cost ladder and is wrong. The blue terminal is the note's most important trust boundary: these figures
+come from SkillsBench and travel to your system, while the DeepMind-internal numbers elsewhere in the
+talk are a vendor reporting on itself and must never be quoted alongside them.
+
+*Synthesized from `n9`, `n10` and `n11`.*
+
+### 4. Do skills work? The one part backed by a public benchmark
 
 ![Slide "Do Skills Work? (SkillsBench 1.1)": curated skills jump resolution rate from 33.9% to 50.5%, +16.6 points, with a per-model bar chart](visuals/frame_265.jpg)
 
@@ -309,7 +413,7 @@ forward now rather than meeting it at the end.
 So skills work. The same benchmark run, however, produced two findings considerably more useful than
 the headline, because both of them contradict what a reasonable engineer would guess.
 
-## 5. Two surprises in the same data
+### 5. Two surprises in the same data
 
 ![Slide "Self-Generated & Bloated Skills Fail": self-generated skills hurt accuracy by 8.1 to 11.5 points, with a SKILL LENGTH VS PERFORMANCE LIFT panel showing four bands](visuals/frame_310.jpg)
 
@@ -350,7 +454,35 @@ Two rules come out of this section, then. Write the skill yourself, and keep it 
 band. That settles how long it should be and who should write it, and leaves open the more
 interesting question of what actually goes in it.
 
-## 6. The description is the trigger, and it causes half of all failures
+## Movement D - writing one that fires when it should
+
+```mermaid
+flowchart TB
+    D["the description is the trigger,<br/>and triggering causes <b>50%+</b><br/>of all skill failures - n12"]
+    W1["write directives, not passive prose"]
+    W2["declare the cases that must <b>not</b><br/>fire it - a broad description hijacks<br/>unrelated work"]
+    W3["give goals and constraints,<br/>not a procedure"]
+    E["and if the path is fully determined,<br/>write a <b>script</b>, not a skill - n15"]
+
+    D --> W1
+    D --> W2
+    W3 --> E
+
+    style D fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    style E fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a derivation diagram, not a style guide, and every item hangs off a measured failure rate
+rather than taste. **The crux is that half of all skill failures happen before the skill's body is
+ever read, which means most of the craft belongs in two sentences of frontmatter.** It is drawn with
+the boundary case as a separate terminal because it is the advice most often skipped: a skill is the
+wrong artifact whenever the steps are known in advance, since a script is cheaper, faster and correct
+every time. Notice the asymmetry the movement is built on. Effort spent on the description is paid
+back on every call, and effort spent on the body is paid back only when the thing fires.
+
+*Synthesized from `n12` and `n15`.*
+
+### 6. The description is the trigger, and it causes half of all failures
 
 ![Slide "Nail the Description (The Trigger)": the trigger mechanism causes 50%+ of all skill failures; a Too Vague versus Specific and Actionable comparison; rewriting the description alone fixed 5 of 7 failures](visuals/frame_425.jpg)
 
@@ -389,7 +521,7 @@ unrelated work, so the description has to say what must *not* fire it (`n17`, `&
 The description settles *when* the skill fires. That leaves the body, and the question of how much it
 should dictate once firing has already happened.
 
-## 7. Give goals, not procedures - and know when not to write a skill at all
+### 7. Give goals, not procedures - and know when not to write a skill at all
 
 ![Slide "Set the Right Level of Freedom": dictating every step strips an agent's ability to adapt, recover from errors, or find better approaches; provide constraints, not procedures; if exact step-by-step execution is required, write a script instead of a skill](visuals/frame_560.jpg)
 
@@ -423,7 +555,7 @@ You now know how to produce a well-formed skill that fires when it should and le
 to work. But not every skill is the same kind of object, and the difference between the two kinds
 decides what its eval is ultimately *for*.
 
-## 8. Two kinds of skill, opposite lifespans
+### 8. Two kinds of skill, opposite lifespans
 
 ![Slide "Capability vs. Preference Skills": capability skills teach what models cannot do consistently yet and are temporary; preference skills encode team workflows and conventions and are durable; evals tell you when to retire a capability skill](visuals/frame_200.jpg)
 
@@ -445,7 +577,36 @@ that section 3 described.
 
 Both jobs need exactly the same machinery, which is what the talk builds next.
 
-## 9. The eval harness is smaller than you think, and the gate is what has teeth
+## Movement E - evaluating it, and knowing when to delete it
+
+```mermaid
+flowchart TB
+    H["the harness is small: a file of cases<br/>plus a script, run in an<br/>isolated workspace"]
+    G["the <b>gate</b> is what has teeth:<br/>no skill PR merges without<br/>proof of positive lift"]
+    A["<b>ablation</b> - run the eval with and<br/>without the skill loaded - n20"]
+    K1["94% with, 32% without<br/><i>keep it</i>"]
+    K2["96% with, 95% without<br/><i>the base model absorbed it.<br/>Retire it.</i>"]
+    R["and <b>keep the eval</b> afterwards.<br/>It becomes a regression detector<br/>on the bare model - n21"]
+
+    H --> G --> A
+    A --> K1
+    A --> K2 --> R
+
+    style G fill:#fbf1dc,stroke:#b45309,color:#78350f
+    style R fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a lifecycle diagram, not a test plan, and the last box is the note's most reusable idea. **The
+crux is that the same measurement that justifies a skill is the one that eventually retires it, and it
+keeps working after the skill is gone.** It is shaped as a funnel narrowing to a decision because the
+harness and the gate are cheap and unremarkable while the ablation is the part almost nobody runs. The
+green terminal answers a question the talk's title never asks: what do you do with the eval once the
+model has caught up? Keeping it converts sunk work into a detector that tells you when the capability
+regresses and the skill should come back.
+
+*Synthesized from `n20` and `n21`.*
+
+### 9. The eval harness is smaller than you think, and the gate is what has teeth
 
 ![Slide "How we eval skills at Google DeepMind": isolated clean workspace per test run, YAML config with setup files, CLI checks and LLM judge criteria, and proof of positive Skill Lift required before any skill PR is merged](visuals/frame_950.jpg)
 
@@ -508,7 +669,7 @@ pattern across all its eval sources.
 The machinery is cheap, then, and the gate is enforceable. What does all of it actually buy? The talk
 offers one worked case.
 
-## 10. What it bought: the ideal capability skill, measured
+### 10. What it bought: the ideal capability skill, measured
 
 ![Slide "Gemini Interactions API Skill": a knowledge-gap resolution table showing valid code generation rising from 39.2% to 91.6% on Gemini 3.1 Pro and 4.8% to 93.2% on Gemini 3.0 Pro, with an eval suite of 117 test cases](visuals/frame_800.jpg)
 
@@ -531,7 +692,7 @@ construction.** The next model trained after that API shipped will already know 
 91.6% stops being an achievement and becomes the baseline, and the skill is paying frontmatter tax
 for nothing. Which raises the last question the talk answers, and the best one.
 
-## 11. Retirement by ablation - the test that is also the control
+### 11. Retirement by ablation - the test that is also the control
 
 ![Slide "Retire Skills When Base Models Catch Up": an ablation decision table showing an active skill at 94% with versus 32% without, and a redundant skill at 96% versus 95%](visuals/frame_720.jpg)
 
@@ -669,3 +830,135 @@ except from your users.
   paths.
 - `../../brain/topics/agents.md` - a skill as a harness component with an expiring assumption
   (claim 31), and the script-not-a-skill boundary (claim 17).
+
+## Presentation narrative
+
+*A talk track for a team writing or reviewing agent skills, derived entirely from the gated nodes
+above. One boundary governs everything here and is stated on the last slide: the benchmark figures are
+public and third-party, and the vendor-internal figures are not, and the two must never be quoted as
+one.*
+
+### Slide 1 - Skills are shipped at enormous scale and almost never tested, and the reason is not carelessness
+
+**SkillsBench indexed more than 47,000 unique skills across 6,300 repositories, and almost none of
+them carry evals [n1].** The interesting question is why that gap sustains itself, and the answer is
+in how a bad skill fails.
+
+It does not crash. It quietly corrupts the output, producing plausible work that is subtly wrong, so
+there is no stack trace, no red build and nobody raising a hand. The only symptom is a slow drift in
+quality that nobody can attribute to anything in particular. That is precisely the defect a test
+exists to catch, and it is also precisely the defect that generates no signal telling you to write
+one.
+
+![Slide "Vibe Checks Fail in Production": SkillsBench indexed 47k+ unique skills across 6,300 repos, almost none have tests. Bad skills do not crash; they quietly corrupt outputs](visuals/frame_60.jpg)
+
+This is a scale slide, and the second line is the one that matters. **The crux is that silent
+corruption removes the feedback that would otherwise create demand for testing.** *Corroborated by the
+narration [`n1`].*
+
+### Slide 2 - "It worked for me" cannot be evidence about a non-deterministic system
+
+**Run a task with the skill loaded and watch it fail, and you still cannot say what caused what
+[n2].** The task may have been too hard for the model, or the skill may have been bad. You observed
+one outcome produced by two variables you never separated, and non-determinism means a second run
+tells you little more than the first. No amount of looking harder at a single trace resolves it,
+because the information is not in the trace.
+
+There is a second failure in "trying it", and it is about who does the trying. In agents we *use*, an
+engineer is in the loop, notices a mis-trigger within seconds and repairs it by reprompting without
+ever counting the failure. In agents we *build*, the end user does not know skills exist, will never
+ask for one by name, and leaves on the first failure [n3, n4]. The author of a skill is therefore its
+most forgiving possible user, and is structurally unable to observe the failure rate they are
+implicitly claiming is low.
+
+![Slide "Agents We Use vs. Agents We Build": human fallback and recovery on one side, end users who leave on the first failure on the other](visuals/frame_110.jpg)
+
+This is an audience slide, not an architecture slide. **The crux is that the reliability bar rises
+with your user's distance from the mechanism**, and so does the need for the checking to be automated
+[`n3`].
+
+### Slide 3 - A skill is a three-layer cost ladder, which decides where the craft goes
+
+**Frontmatter is loaded on every model call whether the skill fires or not, the body is paid on
+trigger, and references cost nothing until the agent reads them [n5, n6].** That makes the
+description the most expensive real estate in the artifact, and it is also the most dangerous, because
+the description is the trigger mechanism.
+
+What engineers should take from this is a budgeting fact rather than a style preference. Effort spent
+on the description is paid back on every request your agent ever serves. Effort spent in the body is
+paid back only when the skill actually fires, which for a well-scoped skill may be one request in a
+hundred.
+
+![Slide "Keep It Lean (Layer Information)": the three-layer loading model, frontmatter always, body on trigger, references on demand](visuals/frame_500.jpg)
+
+This is a cost slide, not a file layout. **The crux is that one layer is billed unconditionally**,
+which is what turns writing advice into an economic argument. *Corroborated by the narration [`n5`,
+`n6`].*
+
+### Slide 4 - They measurably work, and the same data carries two findings people get backwards
+
+**Curated skills raised task resolution from 33.9% to 50.5%, a gain of 16.6 points across models and
+harnesses [n9].** That is the headline and it is the part backed by a public third-party benchmark.
+
+The two surprises sit in the same run and both point against intuition. Self-generated skills are a
+*negative* intervention, costing 8.1 to 11.5 accuracy points against human-written ones [n10]. And
+length follows an inverted U peaking at 200-500 lines, so a skill under 200 lines is measurably worse
+than one in the peak band, and anything over 1000 lines is statistically a no-op [n11]. "As short as
+possible" is the natural reading of a cost ladder and it is wrong.
+
+I should label that second one precisely: the length curve appears only on the slide, and the speaker
+says only "keep it below 500 lines".
+
+![Slide "Self-Generated & Bloated Skills Fail": self-generated skills hurt accuracy by 8.1 to 11.5 points, with a skill-length-versus-performance panel showing four bands](visuals/frame_310.jpg)
+
+This is the counterintuitive slide, and it is the last place to skim. **The crux is that both findings
+would be guessed wrong by a careful engineer**, which is exactly why they needed a benchmark rather
+than an argument [`n10`, `n11`].
+
+### Slide 5 - Half of all skill failures happen before the body is ever read
+
+**The description is the trigger, and triggering causes more than 50% of all skill failures [n12].**
+Rewriting the description alone fixed five of seven failures in their own suite. So most of the craft
+belongs in two sentences of frontmatter rather than in the instructions.
+
+Three rules follow from that rather than from taste. Write directives instead of passive information.
+Declare the cases that must *not* fire the skill, because a broad description hijacks unrelated work.
+Give goals and constraints rather than a procedure, since dictating every step strips the agent's
+ability to adapt or recover. And there is a boundary case worth stating to any room that likes
+skills: if the workflow is fully determined, write a script instead, because it is cheaper, faster and
+correct every time [n15].
+
+![Slide "Set the Right Level of Freedom": dictating every step strips an agent's ability to adapt, recover from errors, or find better approaches; provide constraints, not procedures; if exact step-by-step execution is required, write a script instead of a skill](visuals/frame_560.jpg)
+
+This is a boundary slide. **The crux is the last line: the correct number of skills is not as many as
+possible**, and determinism is cheaper than inference wherever the path is already known [`n15`].
+
+### Slide 6 - Ablation retires the skill, and the eval outlives it
+
+**Run the eval with the skill loaded and without it. 94% versus 32% means keep it; 96% versus 95%
+means the base model has absorbed it and the skill is now pure context cost [n20].** That is the same
+procedure that answered "is this any good?" on slide 2, pointed at a different question.
+
+Then keep the eval after the skill is gone, where it becomes a regression detector on the bare model
+and tells you when to bring the skill back [n21]. That is the most reusable idea in the talk and it is
+`single-leg`, so I flag it as the speaker's practice rather than a measured result.
+
+The decision this supports is narrow and cheap. Before writing another skill, build the ten to twenty
+case harness, gate it in CI so nothing merges without proof of lift, and put ablation on a schedule.
+And keep the two evidence classes apart: SkillsBench travels to your system, while the
+DeepMind-internal figures are a vendor reporting on itself, single-case and unreplicated.
+
+![Slide "Retire Skills When Base Models Catch Up": an ablation decision table showing an active skill at 94% with versus 32% without, and a redundant skill at 96% versus 95%](visuals/frame_720.jpg)
+
+This is a decision table, and the second row is the one nobody runs. **The crux is that a skill can
+stop earning its place without anything about it getting worse** [`n20`].
+
+### Key takeaway message
+
+A skill is an intervention rather than a document, and an intervention you cannot measure is one you
+cannot keep, improve or retire. Measuring it needs a control rather than a closer look, because
+non-determinism makes a single run unattributable. The shape that follows is a three-layer cost
+ladder whose top rung is billed on every call, which is why the description carries both the trigger
+and half of all failures. The public benchmark says curated skills are worth 16.6 points, that
+AI-written ones are actively harmful, and that length peaks at 200-500 lines rather than at zero.
+Build the harness, gate it in CI, retire by ablation, and keep the eval afterwards.
