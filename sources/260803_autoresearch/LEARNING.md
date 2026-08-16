@@ -20,6 +20,42 @@ bare comparison with no notion of run-to-run variance - which is why the fifteen
 worked example of building an unattended optimizer, and read the results chart as a warning about
 what such a loop will confidently bank.
 
+```mermaid
+flowchart TB
+    subgraph FR["Frozen before the loop starts, and it holds"]
+        direction TB
+        A["the editable surface<br/>one file, train.py"]
+        B["the budget<br/>wall-clock seconds, not steps or tokens"]
+        C["the metric's units<br/>bits per byte, at a fixed sequence length"]
+        D["the holdout<br/>pinned inside the read-only file"]
+        A ~~~ B ~~~ C ~~~ D
+    end
+
+    subgraph OP["Never frozen, and both failures are here"]
+        direction TB
+        E["who prints the score<br/>the file the agent rewrites - n5"]
+        G["what counts as an improvement<br/>a bare comparison, no variance - n11"]
+        E ~~~ G
+    end
+
+    FR --> R["~100 experiments overnight,<br/>ten files, no framework, no agent code"]
+    OP --> R
+    R --> S["15 kept improvements, and the last<br/>one is a change of random seed"]
+
+    style FR fill:#e8f4ea,stroke:#28a745,color:#14532d
+    style OP fill:#fdeaea,stroke:#dc3545,color:#7f1d1d
+    style S fill:#fdeaea,stroke:#dc3545,color:#7f1d1d
+```
+
+This is a containment diagram, not an architecture diagram, and it sorts the repository by one
+question: was this decided before the agent started running? The crux is that **every property this
+design gets right is something frozen in advance, and both places it fails are places where nothing
+was frozen at all**, which is why the failures are not bugs and cannot be patched without adding a
+fifth freeze. The two columns are drawn as peers rather than as a design and its caveats because they
+are the same kind of object, and the closing box is the author's own published result rather than a
+criticism of it: a loop with no variance model banked a random seed as an improvement, exactly as the
+right-hand column predicts. *Synthesized from `n1`-`n5` and `n11`.*
+
 ## The 1-minute version
 
 This article covers a ten-file repository that lets a coding agent run its own research programme
@@ -132,9 +168,9 @@ flowchart TD
     style MD fill:#fdeaea,stroke:#dc3545,stroke-width:2px
 ```
 
-The diagram runs top to bottom in reading order, and every box is a numbered section below. The boxes
-are gathered into four movements. Green marks the movement carrying the core technique, and red marks
-the movement that undercuts it. **The crux is that sections 2 to 5 are the reusable design, and
+This is a reading-order diagram about the note rather than about the repository, and every box is a
+numbered section below, gathered into four movements. Green marks the movement carrying the core
+technique and red marks the movement that undercuts it. **The crux is that sections 2 to 5 are the reusable design, and
 section 9 is the reason to stay sceptical of anything that design produces.**
 
 The note opens with a single section that does no design work at all. Its only job is to show that
@@ -166,7 +202,34 @@ its word.
 
 ---
 
-## 1. Why "let an agent do research overnight" is not just a for-loop
+## Movement A - why unattended changes the problem
+
+```mermaid
+flowchart TB
+    U["Nobody is watching the loop"]
+    P1["no one asks whether any single<br/>result is meaningful"]
+    P2["the agent may rewrite the very<br/>thing being measured"]
+    P3["a hundred iterations must fit<br/>through one context window"]
+    B["So every guarantee has to exist<br/>in the setup, before the loop starts"]
+
+    U --> P1 --> B
+    U --> P2 --> B
+    U --> P3 --> B
+
+    style B fill:#e8f4ea,stroke:#28a745,color:#14532d
+```
+
+This is a problem-decomposition diagram, not a design, and nothing in it is specific to machine
+learning. **The crux is that removing the human does not make the work harder, it moves every decision
+earlier**, converting three ongoing judgement calls into three things that must be settled in advance
+and then cannot be revisited. It is drawn as one cause fanning into three because the three problems
+are usually met separately and solved separately, and meeting them as consequences of a single choice
+is what makes the four freezes in the next movement feel inevitable rather than arbitrary. Notice that
+only one of the three is about the model at all.
+
+*Synthesized from `n1` and the section below.*
+
+### 1. Why "let an agent do research overnight" is not just a for-loop
 
 Start with the pitch, because it is genuinely simple. You have a training script. An agent edits it,
 runs it, looks at the score, keeps the edit if the score improved, and repeats. Five minutes per
@@ -204,7 +267,33 @@ So: if the agent may change almost anything, the first question is what "almost"
 
 ---
 
-## 2. The first freeze: what may the agent change?
+## Movement B - the four freezes, derived rather than listed
+
+```mermaid
+flowchart TB
+    Q2{"2. What may<br/>the agent change?"} --> A2["one file: train.py"]
+    A2 --> Q3{"3. Then what is held<br/>constant while it changes?"}
+    Q3 --> A3["wall-clock time, so a faster kernel,<br/>a better optimizer and a longer<br/>schedule compete on one axis"]
+    A3 --> Q4{"4. Then what is a comparable<br/>measurement, once the<br/>model itself keeps moving?"}
+    Q4 --> A4["bits per byte, at a fixed sequence<br/>length, so a bigger vocabulary<br/>cannot flatter the score"]
+    A4 --> Q5{"5. Then is anything<br/>still open?"}
+    Q5 --> A5["yes. The protected score reaches the<br/>scoreboard through the editable file"]
+
+    style A5 fill:#fdeaea,stroke:#dc3545,color:#7f1d1d
+```
+
+This is a derivation diagram, not a feature list, and the questions are load-bearing while the answers
+are almost incidental. **The crux is that each freeze is forced by the residue the previous one left,
+so the design has no arbitrary choices in it until section 5 finds the residue nobody closed.** It is
+drawn as an alternating question-and-answer chain because a plain list of four freezes reads as taste,
+and taste does not transfer; the questions do, and they are the part you can ask about a system that
+has nothing to do with language models. The red box is where the chain stops rather than terminates,
+and it is the reason this movement is the payload and section 5 is one of the two sections to read if
+you read only two.
+
+*Synthesized from `n1`, `n2`, `n3`, `n4` and `n5`.*
+
+### 2. The first freeze: what may the agent change?
 
 One file. `train.py`. Everything in it is fair game - architecture, optimizer, hyperparameters,
 batch size, model size - and nothing outside it may be touched
@@ -253,7 +342,34 @@ constant so that they are?
 
 ---
 
-## 3. The second freeze: hold time constant, not work
+### 3. The second freeze: hold time constant, not work
+
+```mermaid
+flowchart TB
+    Q["What should an experiment<br/>be allowed to spend?"]
+    S["fixed steps<br/><i>rewards shrinking the model</i>"]
+    T["fixed tokens<br/><i>makes efficiency invisible</i>"]
+    W["fixed wall-clock seconds<br/><i>puts a faster kernel, a better optimizer<br/>and a longer schedule on one axis</i>"]
+    R["efficiency becomes part of the objective<br/>without being part of the metric"]
+
+    Q --> S
+    Q --> T
+    Q --> W --> R
+
+    classDef bad fill:#fdeaea,stroke:#dc3545,color:#7f1d1d
+    classDef good fill:#e8f4ea,stroke:#28a745,color:#14532d
+    class S,T bad
+    class W good
+```
+
+This is a choice diagram, not a mechanism, and the two rejected branches carry the teaching. **The
+crux is that the budget's unit silently decides what the agent is rewarded for**, so choosing seconds
+rather than steps or tokens is not an implementation detail but the point at which optimizing the
+kernel and optimizing the architecture become the same competition. It is drawn as three siblings
+because the alternatives are genuinely available and each looks reasonable in isolation, which is what
+makes the failure modes worth naming: a step budget quietly pays an agent to build a smaller model,
+and a token budget quietly refuses to pay it for going faster. *Synthesized from `n3`.*
+
 
 Every run trains for exactly five minutes
 ([`prepare.py:31`](https://github.com/karpathy/autoresearch/blob/228791fb499afffb54b46200aca536f79142f117/prepare.py#L31),
@@ -304,7 +420,33 @@ being rewritten?
 
 ---
 
-## 4. The third freeze: a metric that survives the agent changing everything
+### 4. The third freeze: a metric that survives the agent changing everything
+
+```mermaid
+flowchart TB
+    A["The agent may change<br/>the tokenizer, the vocabulary<br/>and the sequence length"]
+    L["loss per token<br/><i>a bigger vocabulary flatters it</i>"]
+    B["bits per <b>byte</b><br/><i>the denominator is the raw text,<br/>which the agent cannot redefine</i>"]
+    F["evaluated always at one fixed<br/>sequence length, whatever<br/>the model trained at"]
+    C["the score means the same thing<br/>in experiment 1 and experiment 83"]
+
+    A --> L
+    A --> B --> F --> C
+
+    classDef bad fill:#fdeaea,stroke:#dc3545,color:#7f1d1d
+    classDef good fill:#e8f4ea,stroke:#28a745,color:#14532d
+    class L bad
+    class B,F,C good
+```
+
+This is an invariance diagram, not a metric definition. **The crux is that a metric is only protected
+if its denominator sits outside everything the agent may edit**, and bytes qualify because raw text is
+the one quantity in the experiment the agent has no way to redefine. It is drawn with the threat on
+top rather than the metric on top because the design is a response, not a preference: each element
+exists to close one specific route by which a rewrite could move the number without improving the
+model. Notice this is the same move as the wall-clock budget one section earlier, applied to the
+measurement rather than the resource. *Synthesized from `n4`.*
+
 
 The metric is `val_bpb` - validation bits per byte, lower is better
 ([`README.md:17`](https://github.com/karpathy/autoresearch/blob/228791fb499afffb54b46200aca536f79142f117/README.md#L17), `n4`).
@@ -364,7 +506,7 @@ hop, not a property you declare at the top of a file.
 
 ---
 
-## 5. Where the design leaks: the producer prints its own grade
+### 5. Where the design leaks: the producer prints its own grade
 
 Here is the trace, and it is four lines of code (`n5`):
 
@@ -432,7 +574,34 @@ live?
 
 ---
 
-## 6. Git is the experiment database
+## Movement C - the three resources an unattended loop actually runs out of
+
+```mermaid
+flowchart TB
+    N["A hundred iterations,<br/>nobody present"]
+    R1["6. memory<br/>git is the database: branch per run,<br/>commit per experiment, reset as discard"]
+    R2["7. context<br/>each 5-minute run compressed to<br/>about two grepped lines"]
+    R3["8. momentum<br/>NEVER STOP, written into program.md<br/>because stopping is the default"]
+    X["and the ledger lives OUTSIDE git,<br/>because the loop rewinds the tree<br/>and would erase the failure - n7"]
+
+    N --> R1 --> X
+    N --> R2
+    N --> R3
+
+    style X fill:#e8f4ea,stroke:#28a745,color:#14532d
+```
+
+This is a resource diagram, not a workflow, and the choice of which three resources to draw is the
+whole content. **The crux is that none of the scarce resources in an unattended loop is compute**, and
+a team that has built overnight batch jobs will have solved memory before and will not have met the
+other two. The three are drawn as siblings rather than as a sequence because they are not stages and
+you cannot trade one against another. The green box is the movement's best single idea and it is a
+consequence rather than a component: in any loop whose failure mode is rollback, the audit trail must
+not itself be rollback-able, which is a rule that leaves this repository entirely.
+
+*Synthesized from `n6`, `n7`, `n8` and `n16`.*
+
+### 6. Git is the experiment database
 
 There is no experiment tracker. No database, no MLflow, no run registry. The mechanism is
 ([`program.md:96-104`](https://github.com/karpathy/autoresearch/blob/228791fb499afffb54b46200aca536f79142f117/program.md#L96-L104), `n6`):
@@ -478,7 +647,31 @@ The experiment is bounded, scored and recorded. Can the loop actually run a hund
 
 ---
 
-## 7. Two lines per experiment: the resource nobody budgets for
+### 7. Two lines per experiment: the resource nobody budgets for
+
+```mermaid
+flowchart TB
+    R["one 5-minute run<br/>a full training log"]
+    M1["print only what the ledger needs"]
+    M2["grep the run down to its last lines"]
+    M3["keep the ledger outside the context,<br/>re-read on demand"]
+    O["about two lines re-enter<br/>the agent's context"]
+    W["x 100 experiments, inside<br/>one context window"]
+
+    R --> M1 --> M2 --> M3 --> O --> W
+
+    style O fill:#e8f4ea,stroke:#28a745,color:#14532d
+```
+
+This is a budget diagram, not a data flow, and the number at the end is the design parameter. **The
+crux is that context, not compute, is what caps how long an unattended loop can run**, so the
+compression is not tidiness but the thing that makes a hundred iterations possible at all. It is drawn
+as a funnel because the mechanisms are cumulative rather than alternative, and each one alone would
+leave the loop short of the horizon it needs. This is the section that batch-job experience does not
+prepare you for, which is why the roadmap singles it out of an otherwise skimmable movement.
+
+*Synthesized from `n8`.*
+
 
 A five-minute training run produces a lot of text. A hundred of them produce a lot more. The scarce
 resource in this system is **not** the GPU - the GPU is busy exactly 300 seconds per iteration
@@ -528,7 +721,7 @@ The loop can now run a hundred times cheaply. Will it?
 
 ---
 
-## 8. NEVER STOP, and why it has to be written down
+### 8. NEVER STOP, and why it has to be written down
 
 This is the instruction, in capitals in the original
 ([`program.md:112`](https://github.com/karpathy/autoresearch/blob/228791fb499afffb54b46200aca536f79142f117/program.md#L112), `n9`):
@@ -573,7 +766,37 @@ The loop now runs all night and comes back with fifteen improvements. Are they r
 
 ---
 
-## 9. The loop banks noise, and the author's own run shows it
+## Movement D - reading the author's own run against the author's own design
+
+```mermaid
+flowchart TB
+    D["The design from Movement B"]
+    RUN["The author's published run<br/>83 experiments, 15 keeps"]
+    N9["9. the 15th and final kept improvement<br/>is a change of random seed - n11"]
+    N10["10. ~18% yield, front-loaded, then a<br/>plateau of ~22 experiments - n14"]
+    V["The accept rule is a bare scalar comparison<br/>with no notion of run-to-run variance"]
+    N11["11. so what the design does not buy<br/>is confidence in any individual keep"]
+
+    D --> RUN
+    RUN --> N9 --> V
+    RUN --> N10 --> V
+    V --> N11
+
+    style V fill:#fdeaea,stroke:#dc3545,color:#7f1d1d
+```
+
+This is an audit diagram, not a results summary, and it runs in the opposite direction to the rest of
+the note. **The crux is that the published run is not a demonstration of the design, it is the only
+available test of it, and the design fails that test at exactly one point.** It is shaped as two
+independent observations converging on one cause because either alone would be an anecdote: a seed
+counted as an improvement could be bad luck, and a long plateau could be a hard problem, while both
+together identify a missing variance model rather than a missing idea. The finding is also free, which
+is worth saying plainly. The seed experiment measures the loop's own noise floor at no extra cost, and
+by that floor at least three other accepted changes are unresolved.
+
+*Synthesized from `n11`, `n12` and `n14`, read against `n1`-`n4`.*
+
+### 9. The loop banks noise, and the author's own run shows it
 
 ![The end of the run: a plateau, a staircase, and a seed](visuals/progress_endgame.png)
 
@@ -650,7 +873,7 @@ That is the accept rule. What about the search it drives?
 
 ---
 
-## 10. What the frontier's shape tells you about the method
+### 10. What the frontier's shape tells you about the method
 
 ![The full 83-experiment frontier](visuals/progress_full.png)
 
@@ -724,7 +947,7 @@ made it; nobody reading only the image would know.
 
 ---
 
-## 11. What this design deliberately does not buy
+### 11. What this design deliberately does not buy
 
 It is worth ending on scope rather than on a to-do list, because the repo's minimalism is a position
 and not an oversight - "the repo is deliberately kept small"
@@ -893,3 +1116,133 @@ repository.
   per-iteration context budget, and empty output as a zero-cost error signal.
 - [`brain/topics/skills.md`](../../brain/topics/skills.md) - `program.md` as a 115-line markdown
   artifact the author himself calls "a super lightweight skill" (`n16`).
+
+## Presentation narrative
+
+*A talk track for a room deciding whether to let agents run unattended work, derived entirely from the
+gated nodes above. It is about a containment design rather than about language-model training, and the
+distinction matters because the design transfers and the training code does not. One caveat governs
+everything here: the mechanism is fully inspectable and the results are a single unreproducible chart
+from one author on one GPU.*
+
+### Slide 1 - Removing the human does not make the work harder, it moves every decision earlier
+
+**The moment nobody is watching a loop, three separate systems problems appear at once, and only one
+of them is about the model.** Nobody is asking whether an individual result is meaningful, and there
+is no later point at which anybody will. The agent is permitted to rewrite the very thing being
+measured, which in an ordinary review loop is exactly where a human sits. And a hundred iterations
+have to survive inside one context window, which is a constraint that simply does not exist when a
+person is reading the output.
+
+The question for this room is therefore not whether the agent is capable enough. It is whether every
+guarantee you care about has been written into the setup before the loop starts, because after it
+starts there is no mechanism to add one. What engineers should take from this is that unattended
+execution converts ongoing judgement into advance specification. The leadership significance is that
+the review cost does not disappear when you remove the reviewer, it gets paid up front in design.
+
+*Visual: the Movement A diagram. Provenance: synthesized from `n1`.*
+
+### Slide 2 - The design is four freezes, and each one is forced by the last
+
+**This repository contains no agent code at all, and what it actually teaches is which four things you
+must hold still before an agent can be trusted to change everything else.** Start by asking what the
+agent may edit, and the answer is one file. That immediately forces the next question, which is what
+is held constant while that file changes, and the answer is wall-clock seconds rather than steps or
+tokens. Seconds are the choice that makes a faster kernel, a better optimizer and a longer schedule
+compete on a single axis, so efficiency becomes part of the objective without ever becoming part of
+the metric.
+
+That in turn forces a harder question: what is a comparable measurement once the model itself keeps
+moving? The answer is bits per byte, evaluated always at a fixed sequence length, because bytes are
+the one denominator the agent cannot redefine. The fourth freeze is the holdout, pinned inside the
+read-only file so that train and validation separation is the single rule the agent structurally
+cannot break [n1, n2, n3, n4].
+
+I want to be precise about why this is worth your attention, because a list of four settings is not
+interesting. The derivation is. Each freeze exists because the previous one left a residue, which
+means you can run the same four questions against a system that has nothing to do with language models
+and get four different answers that are correct for it.
+
+*Visual: the Movement B diagram. Provenance: `n1` through `n4`.*
+
+### Slide 3 - The resources an unattended loop runs out of are memory, context and momentum, and none of them is compute
+
+**A team that has built overnight batch jobs has solved exactly one of the three problems this loop
+faces.** Memory is handled with git and nothing else: one branch per run, one commit per experiment,
+and `git reset` standing in for discard [n6]. Context is handled by compressing each five-minute run
+down to roughly two grepped lines before it re-enters the agent's window, which is what makes a
+hundred iterations fit at all [n8]. Momentum is handled by writing "never stop" into a markdown file,
+because an agent's default behaviour is to finish and report.
+
+The best idea in this movement is a consequence rather than a component, and it generalises well past
+this repository. The results ledger is deliberately kept outside git, because the loop rewinds the
+tree and would otherwise erase the record of the experiment that just failed [n7]. Stated generally:
+in any loop whose failure mode is rollback, the audit trail must not itself be rollback-able. The
+source gives the instruction and never gives that reason, so the generalisation is this brain's.
+
+*Visual: the Movement C diagram. Provenance: `n6`, `n7`, `n8`.*
+
+### Slide 4 - The containment is a declaration, not an enforcement, and the design says so
+
+**There is no sandbox, no import hook and no checksum anywhere in this repository, so the boundary
+between editable and protected exists in a banner comment and a markdown instruction [n1].** That is
+worth stating to a technical audience without softening it, and it is also worth saying that it is
+not obviously wrong. For a single-agent loop on your own hardware, a declared boundary that the agent
+respects is cheap and sufficient, and the alternative costs real engineering.
+
+The sharper problem is one level in. The protected metric is computed by a frozen function, and then
+the file that calls it, formats it and prints it is the file the agent rewrites, with the agent's
+score read from that print [n5]. Generator and evaluator can be perfectly separated at the function
+level while the evaluator's output still travels through the generator's hands, and nothing in the
+repository compares the two. This is the seam the first three freezes leave open, and it is the reason
+section 5 is one of the two sections worth reading if you read only two.
+
+*Visual: the TL;DR containment diagram, whose right-hand column is exactly this slide. Provenance:
+`n1`, `n5`.*
+
+### Slide 5 - The loop banked a random seed as its final improvement, and that is the accept rule working correctly
+
+**The fifteenth and last kept improvement in the author's own published eighty-three-experiment run is
+a change of random seed [n11].** That is not a failure of the agent's judgement. The accept rule is a
+bare scalar comparison with no repetition, no seed averaging, no threshold and no error bar, and it
+executed correctly on an input it has no way to recognise.
+
+What makes this the most useful result in the source is that it is free. The seed experiment measures
+the loop's own noise floor at no additional cost, and by that floor at least three other accepted
+changes are unresolved [n12]. There is a compounding consequence worth naming for anyone considering
+this pattern: every accept permanently moves the baseline and nothing ever re-tests a kept change, so
+a lucky accept raises the bar for every genuine improvement after it.
+
+I should label this evidence honestly. The noise floor rests on a single experiment, and the deltas
+behind it were read off a rendered chart by eye at a scale where the quantity of interest is roughly
+one pixel. It is gated `needs-check` and deliberately not promoted harder.
+
+*Visual: `visuals/progress_endgame.png`, the plateau, the staircase and the seed. Provenance: `n11`,
+`n12`.*
+
+### Slide 6 - Adopt the shape, do not cite the numbers, and add the one thing it is missing
+
+**The decision this supports is to borrow the containment design and to treat the published results as
+an illustration rather than as evidence.** The mechanism is fully inspectable and the documentation
+matches the code almost everywhere, which is why the four freezes are safe to reuse. The results are
+one unreproducible chart from one author on one H100, with the underlying ledger untracked by design,
+and the author's published results cannot be reproduced from the repository at all [n12, n14].
+
+If you build on this, the missing piece is named precisely and it is small: an accept rule that knows
+about variance. Repetition, or seed averaging, or a threshold set from a measured noise floor. That
+single addition is what separates a loop that compounds real improvements from one that compounds
+whatever its benchmark cannot see, and the source hands you the measurement you would need to set the
+threshold without ever using it itself.
+
+*Visual: `visuals/progress_full.png`, the full frontier, with `visuals/progress_early.png` for the
+front-loaded yield. Provenance: `n12`, `n14`.*
+
+### Key takeaway message
+
+The transferable object in this repository is not an agent and not a training script, it is a
+containment design: four things frozen in advance, after which an agent can be trusted to change
+everything else. The four questions it answers transfer to any unattended loop, and the answers do
+not. Its two failures are both places where nothing was frozen, and the more consequential one is an
+accept rule with no notion of variance, which its own published run demonstrates by banking a random
+seed as an improvement. Adopt the freezes, add a variance-aware accept rule before you run anything
+overnight, and do not quote a single number from the chart.
