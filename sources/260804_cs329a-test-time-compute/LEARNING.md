@@ -1032,8 +1032,8 @@ than not doing it at all** [`n18`].
 ### Slide 6 - Stop selecting, start synthesizing, and read the last movement suspiciously
 
 **Fusing an answer out of all the candidates beats even a perfect oracle selector [n25].** That is
-only possible because synthesis is not doing selection's job: an oracle picks the best candidate a
-fuser can produce something none of the candidates contained.
+only possible because synthesis is not doing selection's job: an oracle picks the best candidate,
+while a fuser can produce something none of the candidates contained.
 
 So the decision this supports is narrow and concrete. If you have cheap automatic verification and
 offline work, sample hard and fuse rather than vote. If verification is a judgement call or the work
