@@ -21,6 +21,34 @@ judged by comparison against its own input. Stack the gates so their holes do no
 close the loop - sample production traffic, re-label it, and let the system rewrite its own configs
 as the world drifts. `https://www.youtube.com/watch?v=31GUkCBD-Uc`
 
+```mermaid
+flowchart TB
+    Q["<b>'is the agent good?'</b><br/><i>unanswerable, and it hides<br/>where the failure was</i>"]
+    D["decompose the pipeline,<br/>then judge each stage by<br/>the metric that fits its job"]
+    R["a <b>router</b> is a classifier<br/>-> recall"]
+    G["a <b>generator</b> has no single<br/>right answer -> pass@k"]
+    E["an <b>editor</b> has a free reference,<br/>its own input -> pairwise"]
+    L["and then close the loop: sample live<br/>traffic, re-label it, let the system<br/>rewrite its own configs as the world drifts"]
+
+    Q -.->|"the question to stop asking"| D
+    D --> R --> L
+    D --> G --> L
+    D --> E --> L
+
+    style Q fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    style L fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a measurement diagram, not an architecture diagram, and the dashed edge is the move the whole
+talk turns on. **The crux is that each stage fails in a different way, so a single quality score for
+the pipeline is not a coarse measurement but a meaningless one.** It is drawn fanning out and
+reconverging because the three metrics are not alternatives to choose between: a production pipeline
+runs all three simultaneously, and the loop at the bottom only works once every stage emits something
+comparable over time. Notice the food is incidental. What transfers is the mapping from stage type to
+metric type, which holds for any routed pipeline of small agents.
+
+*Synthesized from `n3`, `n5`, `n7` and `n9`.*
+
 ## The 1-minute version
 
 This article covers a production image pipeline at Uber Eats and the eval design wrapped around it.
@@ -147,7 +175,7 @@ flowchart TB
     style D fill:#fbf1dc
 ```
 
-Read the diagram top to bottom, in the order of the argument, and treat every box as a numbered
+This is a reading-order diagram about the note rather than about the pipeline, and every box is a numbered
 section below. The boxes are gathered into four movements, and the two coloured ones are the two you
 should not skim. Blue marks the core technique, which is the single idea the talk exists to deliver.
 Amber marks what nobody tells you until you have shipped, meaning the parts that only start to matter
@@ -181,7 +209,30 @@ decision points, and D is entirely about defending what C measures.
 
 *Synthesized roadmap of this note - not from the source.*
 
-## 1. First, unlearn "eval" as a test suite
+## Movement A - why this problem needs an agent at all
+
+```mermaid
+flowchart TB
+    T["'eval' as you know it:<br/>a test suite, fixed inputs,<br/>expected outputs"]
+    C["2. but the constraints here rule<br/>out rules: the output is an image,<br/>quality is subjective, and there<br/>is no expected answer to diff"]
+    N["so no assertion can be written,<br/>and the thing doing the judging<br/>has to be a model"]
+
+    T -.->|"unlearn this first"| C --> N
+
+    style N fill:#e8f0fc,stroke:#4285f4,color:#1a3a6b
+```
+
+This is an unlearning diagram, not a design, and the movement does no eval work at all - which makes
+it look skippable and is exactly why it is here. **The crux is that the word "eval" arrives carrying
+assumptions from software testing that none of this problem satisfies, and every one of them has to be
+put down before the rest reads as anything but strange.** It is drawn with the familiar meaning
+retained and explicitly crossed because the argument is a correction rather than an introduction. An
+experienced engineer is the reader most likely to skim here and most likely to misread Movement C as a
+result.
+
+*Synthesized from `n1` and `n2`.*
+
+### 1. First, unlearn "eval" as a test suite
 
 The word carries the wrong instinct, and getting it wrong at the start makes everything after it
 look arbitrary.
@@ -207,7 +258,7 @@ overall quality score would only tell you that something got worse without telli
 exactly do you attach a metric to?** The answer turns out to be a consequence of the architecture,
 and the architecture is a consequence of the problem, so start there.
 
-## 2. The constraints that rule out rules
+### 2. The constraints that rule out rules
 
 Small merchants do not have good food photography, and Uber Eats wants better photos on menus. That
 sounds like a straightforward image-enhancement job right up until you add the constraint that
@@ -238,7 +289,30 @@ Only the guardrailed middle both *needs* measurement and *can be improved by* it
 and the eval strategy are therefore one design decision, not two**, which is why the next thing to
 look at is the architecture.
 
-## 3. The system under test is a pipeline, not an agent
+## Movement B - the system under test
+
+```mermaid
+flowchart TB
+    A["3. not one agent, but a <b>routed pipeline</b><br/>of small agents: understanding, routing,<br/>prompting, generation, QA, post-processing"]
+    W["which is what makes failure<br/><b>attributable</b> to a stage"]
+    T["4. but only if the evidence arrives<br/>already correlated - one <b>flat</b><br/>end-to-end trace, not nested<br/>per-agent logs - n1"]
+    F["'if you don't start with it, you have<br/>nothing to optimize for, let alone<br/>set up a self-learning loop'"]
+
+    A --> W --> T --> F
+
+    style T fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a prerequisite diagram, not an architecture. **The crux is that decomposition only buys you
+localisation if the trace is flat, because the questions you will ask cross stages and per-agent logs
+leave you stitching timestamps together.** It is drawn as a dependency chain rather than as two
+features because the ordering is the argument: a decomposed architecture with nested logs gives you
+the cost of decomposition and none of the benefit. Section 4 is the one to act on first in your own
+system, and it is the cheapest thing in the whole talk.
+
+*Synthesized from `n1` and `n3`.*
+
+### 3. The system under test is a pipeline, not an agent
 
 ![Input -> Image Quality Understanding -> Routing -> Prompting -> Generation -> LLM QA -> Post-Processing -> Publish-Ready QA -> Menu Output, with Retry and Logging/Traces](visuals/frame_1058.jpg)
 
@@ -273,7 +347,31 @@ Knowing where to measure is not yet being able to measure, though. Every metric 
 from what the system did, which means something must have recorded it, and the talk is emphatic that
 this comes first.
 
-## 4. Nothing works until the trace does
+### 4. Nothing works until the trace does
+
+```mermaid
+flowchart TB
+    Q["'this image came out badly -<br/>was it routed, prompted or<br/>generated wrong?'"]
+    N["<b>nested per-agent logs</b><br/><i>each answers its own part;<br/>you stitch timestamps</i>"]
+    F["<b>one flat end-to-end trace</b><br/><i>the whole journey legible<br/>in a single read</i>"]
+    A["the questions you will ask<br/><b>cross stages</b>, so the record<br/>has to as well"]
+
+    Q --> N
+    Q --> F --> A
+
+    style N fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    style A fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a logging diagram, and the word doing the work is *flat*. **The crux is that the shape of the
+record has to match the shape of the question, and every interesting question here spans stages that
+nested logs deliberately separate.** It is drawn starting from a question rather than from an
+architecture because the justification is entirely about what you will need to ask later, which is
+also why this is easy to defer and expensive to retrofit. Note that this is what makes section 3's
+attribution argument real rather than theoretical.
+
+*Synthesized from `n1`.*
+
 
 Every stage writes to **one flat end-to-end trace**. Not nested per-agent logs, but a single JSON
 structure anyone can open and read top to bottom. The justification is blunt - "if you don't start
@@ -297,7 +395,33 @@ With the trace in place, work through the decision points in order. The first on
 is the friendliest of the three, because it is the only stage where the right answer is a label a
 human could have written down.
 
-## 5. A router is a classifier, so measure it like one
+## Movement C - one metric per stage, because each fails differently
+
+```mermaid
+flowchart TB
+    Q{"what kind of thing<br/>is this stage?"}
+    R["5. a <b>router</b> picks one of N.<br/>That is a classifier, so measure<br/>recall - and a precision miss costs<br/>less than a recall miss here"]
+    G["6. a <b>generator</b> has no single right<br/>answer, so measure the retry curve:<br/>pass@k"]
+    E["7. an <b>editor</b> has a free reference<br/>it can be compared against -<br/>its own input"]
+
+    Q --> R
+    Q --> G
+    Q --> E
+
+    style Q fill:#e8f0fc,stroke:#4285f4,color:#1a3a6b
+```
+
+This is a selection diagram, not a menu of three techniques, and that distinction is the payload of
+the note. **The crux is that the metric is determined by the stage's type rather than chosen by
+taste, so the question to ask of your own pipeline is what kind of thing each stage is.** It is drawn
+as one question with three answers because presenting them as options invites a team to pick a
+favourite and apply it everywhere, which is the failure this movement exists to prevent. The editing
+case is the most transferable and the least obvious: a stage that transforms an input has a reference
+for free, and most teams never notice.
+
+*Synthesized from `n5`, `n7` and `n8`.*
+
+### 5. A router is a classifier, so measure it like one
 
 The first stage decides whether to enhance an image or leave it alone. That is a classification, and
 classification has been measured the same way for decades. You build a **confusion matrix** and read
@@ -350,7 +474,7 @@ in section 9 for a reason nobody expects.
 Routing was tractable because a human could write down the right answer. The next stage is where that
 stops being true.
 
-## 6. When there is no correct answer, measure the retry curve
+### 6. When there is no correct answer, measure the retry curve
 
 Nobody can write down the correct enhanced photograph. There is no label to compare against, so
 precision and recall have nothing to attach to, and the technique from section 5 simply does not
@@ -385,7 +509,7 @@ calling it a feedback loop.
 So generation gets a metric. But look again at what this system actually does to an image, because it
 does not create one, it **edits** one, and an edit has a reference that a creation never has.
 
-## 7. An edit has a free reference: its own input
+### 7. An edit has a free reference: its own input
 
 This is the eval shape most teams miss, and it exists only because the task is transformation rather
 than generation.
@@ -416,7 +540,31 @@ Sections 5 to 7 complete the core technique, which is three decision points, thr
 three metrics chosen to match. That is the transferable payload, and if the world held still it would
 be enough. The rest of this note is about the fact that it does not.
 
-## 8. Gates leak, so stack them
+## Movement D - surviving production
+
+```mermaid
+flowchart TB
+    G["8. every gate leaks, so <b>stack</b> them<br/>and make sure the holes do not line up"]
+    L["9. the world drifts, so sample live traffic,<br/>re-label it, and let the system<br/>retune itself - n9"]
+    C["10. and one loop is not enough:<br/>three loops on three clocks"]
+    H["11. because a metric under optimisation<br/>gets gamed, which is the failure<br/>to expect rather than to fear"]
+
+    G --> L --> C --> H
+
+    style H fill:#fbf1dc,stroke:#b45309,color:#78350f
+```
+
+This is a production diagram, and it is where most teams' understanding stops short. **The crux is
+that each section here answers a failure the previous one creates: stacked gates need tuning, tuning
+needs a loop, a loop needs more than one clock, and any loop optimising a proxy will eventually
+optimise the proxy rather than the goal.** It is drawn as a straight chain because that escalation is
+the content - a reader who takes only section 8 will build something that degrades silently, and one
+who takes only sections 9 and 10 will build something that games itself. The amber terminal is the
+one to plan for rather than to be surprised by.
+
+*Synthesized from `n9`, `n10` and `n11`.*
+
+### 8. Gates leak, so stack them
 
 Return to the architecture in section 3 and count the QA gates. There are **two**, an LLM QA gate
 immediately after generation and a separate **publish-ready QA** near the end (`n11`, `&t=1062s`).
@@ -437,7 +585,7 @@ catches what upstream missed **and indicates what upstream should have caught**.
 only blocks bad output is a filter, whereas one that attributes the miss is a diagnostic, and
 attribution is the raw material for everything in the next section.
 
-## 9. The world moves, so the system has to tune itself
+### 9. The world moves, so the system has to tune itself
 
 Everything so far produces a system that is good on the day you ship it. What happens on day ninety,
 when the dishes, the cameras and the expectations have all moved?
@@ -488,7 +636,7 @@ optimises itself away from the truth, confidently**, because it is a control sys
 And a fixed reference solves only half of it. The loop still improves whatever it is pointed at,
 which raises the question of who decides the loop is pointed at the right thing.
 
-## 10. One loop is not enough, because metrics get gamed
+### 10. One loop is not enough, because metrics get gamed
 
 ![3 Feedback Loops: Model loop (drift/regression), Dogfooding loop (merchant + internal), Marketplace loop (A/B on funnel metrics)](visuals/frame_1118.jpg)
 
@@ -512,7 +660,31 @@ this made a **business** difference, which is also why it is the slowest and noi
 
 That defence exists because the attack is real, and the talk closes by describing it.
 
-## 11. What optimising the proxy actually looks like
+### 11. What optimising the proxy actually looks like
+
+```mermaid
+flowchart TB
+    M["a metric stands in for the goal"]
+    L["a loop optimises the metric"]
+    G["the loop finds the cheapest way<br/>to move the metric"]
+    W["which is rarely the way that<br/>moves the goal"]
+    R["so the counter is not a better metric.<br/>It is a <b>second loop on a different clock</b>,<br/>measuring something the first cannot game"]
+
+    M --> L --> G --> W --> R
+
+    style W fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    style R fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a Goodhart diagram, not a warning. **The crux is that reward hacking here is the expected
+behaviour of a working optimiser rather than a malfunction, so the response is structural rather than
+vigilance.** It is drawn ending on the counter rather than on the failure because a section that stops
+at "metrics get gamed" leaves a reader with nothing to do. The answer this talk gives - more than one
+loop, on different clocks, watching different things - is the reason section 10 exists and is what
+separates this from generic advice about proxy metrics.
+
+*Synthesized from `n10` and `n11`.*
+
 
 Told its edit failed, the agent **oversteers into an overly conservative, generic output**, a plain
 ceramic bowl, where the raw pixels differ enormously from the original while nothing meaningful
@@ -636,3 +808,126 @@ thing the talk says.
 - `../../brain/topics/agents.md` - n2, n8, n13 (routed multi-agent pipeline, self-tuning agents).
 </content>
 </invoke>
+
+## Presentation narrative
+
+*A talk track for a team putting a multi-stage agent pipeline into production, derived entirely from
+the gated nodes above. The food-photo domain is incidental; what transfers is the mapping from stage
+type to metric type. This is a conference talk from one company about its own system, with no
+external replication and no figures anybody else can check.*
+
+### Slide 1 - Stop asking whether the agent is good
+
+**"Is the agent good?" is not a coarse question, it is an unanswerable one, because a single score
+over a multi-stage pipeline cannot tell you which stage failed.** That is the move the whole talk
+turns on, and everything after it is a consequence.
+
+Before that lands, one thing has to be unlearned. The word "eval" arrives carrying assumptions from
+software testing - fixed inputs, expected outputs, an assertion that passes or fails - and none of
+them survive here. The output is an image, quality is subjective, and there is no reference to diff
+against. So the thing doing the judging has to be a model, and the discipline has to come from
+somewhere other than assertions.
+
+![Slide showing the goals: authenticity, ship safely, scale](visuals/frame_222.jpg)
+
+This is the goal slide, and it is worth noting what is absent. **The crux is that none of the three
+goals is a metric** - they are properties somebody has to translate into measurements, which is the
+work the rest of the talk does [`n2`].
+
+### Slide 2 - Nothing works until the trace is flat
+
+**Every stage writes to one flat end-to-end trace, not nested per-agent logs, and the justification is
+blunt: without it you have nothing to optimise for, let alone a self-learning loop [n1].**
+
+The word doing the work is *flat*, and the reason is that the questions you will ask cross stages.
+This image came out badly - was it routed wrong, prompted wrong, or generated wrong? Per-agent logs
+answer each part separately and leave you stitching timestamps together. One flat record makes the
+whole journey legible in a single read.
+
+This is also what makes decomposition worth anything. A pipeline of small agents only buys you
+localisation if the evidence arrives already correlated, so the architecture and the trace are one
+decision rather than two.
+
+![Input to Image Quality Understanding to Routing to Prompting to Generation to LLM QA to Post-Processing to Publish-Ready QA](visuals/frame_583.jpg)
+
+This is the system under test. **The crux is that every arrow is a place a failure can be attributed
+to, but only if the trace spans them** [`n1`, `n3`].
+
+### Slide 3 - A router is a classifier, so measure it like one
+
+**The metric is determined by what kind of thing the stage is, not chosen by taste.** A router picks
+one of N options, which makes it a classifier, and the measurement is recall.
+
+The asymmetry is the part worth carrying. A precision miss sends a good photo for needless
+enhancement, which costs compute. A recall miss lets a bad photo through, which costs the thing the
+system exists for. Those are not equally bad, so the router is tuned toward recall deliberately rather
+than toward accuracy.
+
+![Routing Failures: Precision Miss - a high-quality cheeseburger scored "below bar" and sent for needless enhancement](visuals/frame_658.jpg)
+
+This is a precision miss, shown rather than described. **The crux is that this failure is visible and
+cheap, while the recall miss is invisible and expensive** - which is why the metric is not accuracy
+[`n5`].
+
+### Slide 4 - A generator has no right answer, so measure the retry curve
+
+**When there is no correct output to compare against, the useful question is how many attempts it
+takes to get an acceptable one.** That is pass@k, and it turns an unanswerable quality question into a
+curve you can watch move.
+
+The editing stage then gets the most transferable idea in the talk, and it is the one most teams never
+notice. **An edit has a free reference: its own input.** You do not need a golden answer to judge a
+transformation, because you can ask whether the output is better than what went in, faithful to it,
+complete, natural, and whether anything was removed that should not have been.
+
+![Generation Evals: Pairwise Comparison - is the output better than the input, faithful, complete, natural, and did anything get removed](visuals/frame_850.jpg)
+
+This is the pairwise rubric. **The crux is that a transforming stage always has a reference available
+for free**, which is why editing is the cheapest stage in any pipeline to evaluate well [`n7`, `n8`].
+
+### Slide 5 - Gates leak, so stack them, and then close the loop
+
+**Every quality gate lets something through, so the design stacks them and takes care that the holes
+do not line up.** That is Swiss cheese, borrowed intact from safety engineering, and it is the
+structural answer to a stage that cannot be made perfect.
+
+Stacked gates then need tuning, and the world does not hold still. So live traffic is sampled and
+re-labelled, and the system rewrites its own configs as drift appears [n9]. For leadership the
+significant part is that this converts a periodic manual retuning project into a standing property of
+the system, which changes who is on the hook and when.
+
+![Routing: Online Tuning Focused on Drift - live traffic feeds Routing, Verify, Diagnose and Tune, Benchmark, Ship, re-running on fresh data](visuals/frame_1058.jpg)
+
+This is the closed loop. **The crux is that the loop's input is production traffic rather than a fixed
+benchmark**, which is what lets it track a world that moves [`n9`].
+
+### Slide 6 - One loop is not enough, because the loop will game the metric
+
+**A loop optimising a proxy finds the cheapest way to move that proxy, which is rarely the way that
+moves the goal.** This is expected behaviour from a working optimiser rather than a malfunction, so
+vigilance is not the counter.
+
+The answer the talk gives is three loops on three clocks, each watching something the others cannot
+game. That is the part most teams' understanding stops short of, and it is the reason to read this
+rather than a generic piece about proxy metrics.
+
+On trust: this is one company describing its own production system in a conference talk. There is no
+external replication, no ablation, and no figure anybody outside Uber can check. The mechanisms are
+the value and they are unusually concrete; the outcomes are self-reported. Adopt the stage-to-metric
+mapping and the flat trace today, and treat every result as an existence proof.
+
+![3 Feedback Loops: Model loop, drift and regression, on separate clocks](visuals/frame_1118.jpg)
+
+This is the closing structure. **The crux is that the loops run at different frequencies deliberately**
+- a fast loop that can be gamed is checked by a slow one that cannot [`n10`, `n11`].
+
+### Key takeaway message
+
+Stop asking whether the agent is good, because a single score over a pipeline cannot say which stage
+failed. Log one flat end-to-end trace first, since decomposition only buys attribution if the evidence
+arrives correlated. Then judge each stage by what kind of thing it is: a router is a classifier
+measured on recall, a generator has no right answer so measure the retry curve, and an editor has a
+free reference in its own input. Stack the gates so their holes do not line up, close the loop on
+sampled production traffic, and run more than one loop on more than one clock, because any single loop
+will eventually optimise the proxy instead of the goal. The food is incidental; the mapping from stage
+type to metric type is what transfers.
