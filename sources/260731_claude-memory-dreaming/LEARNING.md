@@ -23,6 +23,32 @@ stores, optimistic concurrency via a `content_sha256` precondition, and per-sess
 (`n5`-`n7`). A live demo shows agents leaving **instructions** for their successors, not just facts
 (`n20`).
 
+```mermaid
+flowchart TB
+    O["one loop asked to finish the task<br/><b>and</b> curate memory"]
+    C["trades them off <b>untunably</b> - n12"]
+    S["so split the loops:<br/>agents write <b>during</b> work,<br/>a batch pass rewrites <b>between</b> sessions - n11, n14"]
+    R["the reason is <b>objective conflict</b>,<br/>not throughput"]
+    G["and that diagnosis generalises<br/>far past memory"]
+
+    O --> C --> S
+    C --> R --> G
+
+    style C fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    style R fill:#e8f0fc,stroke:#4285f4,color:#1a3a6b
+    style G fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a diagnosis diagram, not an architecture diagram, and the blue node is the reason to read the
+note rather than the mechanism it describes. **The crux is that the second loop exists to separate two
+objectives that cannot be weighted against each other, which is a different argument from the usual
+one about batch work being cheaper.** It is drawn with the conflict feeding both the fix and the
+generalisation because the fix alone would be an implementation detail, and the generalisation is what
+travels: any single loop carrying two objectives will trade one against the other silently, and no
+amount of prompt tuning surfaces the exchange rate.
+
+*Synthesized from `n11`, `n12` and `n14`.*
+
 ## The 1-minute version
 
 This article covers a vendor conference talk about giving many agents one shared memory, and about
@@ -143,8 +169,8 @@ flowchart TB
     style D fill:#fbf1dc
 ```
 
-The diagram runs top to bottom in the order of the argument, in four movements, and every box is a
-numbered section below. Two of the movements are shaded. Blue marks the transferable idea, and amber
+This is a reading-order diagram about the note rather than about the platform, in four movements, and
+every box is a numbered section below. Two of the movements are shaded. Blue marks the transferable idea, and amber
 marks the place where the talk stops short. **The crux is that the blue movement, unusually, carries a
 *diagnosis* rather than a mechanism - objective conflict generalises far past memory - while the amber
 movement holds the hole the whole design rests on.**
@@ -171,7 +197,31 @@ that is supposed to catch the drift is the one step with no mechanism behind it.
 
 *Synthesized roadmap of this note - not from the source.*
 
-## 1. The problem is not forgetting - it is that every agent learns alone
+## Movement A - the problem is coordination, not forgetting
+
+```mermaid
+flowchart TB
+    F["the assumed problem:<br/>the agent <i>forgets</i>"]
+    R["the actual problem:<br/>every agent learns <b>alone</b>,<br/>and nothing it learns reaches the next one"]
+    C["so this is a <b>coordination</b> problem<br/>wearing a storage costume"]
+    X["which is why 'give it a bigger context window'<br/>is aimed at the wrong thing entirely"]
+
+    F -.->|"the instinctive reading"| R --> C --> X
+
+    style F fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    style C fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a reframing diagram, not a design, and the dashed edge is the move the movement exists to
+make. **The crux is that the failure is not an agent losing what it knew but a fleet never sharing
+it**, which relocates the whole problem from capacity to distribution. It is drawn with the wrong
+reading kept visible because it is the one a reader arrives with, and the argument only lands once you
+have felt its pull. Movement A does no design work at all, deliberately: its job is to make everything
+after it feel necessary rather than elaborate.
+
+*Synthesized from `n1` and the section below.*
+
+### 1. The problem is not forgetting - it is that every agent learns alone
 
 A memory talk usually starts with recall. This one starts with **coordination**, and that reframe is
 what makes the rest worth reading, because it changes which problems count as memory problems at all.
@@ -210,7 +260,29 @@ one participant can fix from where it stands.
 
 At first glance there is still a cheaper answer available, and it is the one most teams reach for.
 
-## 2. Why "just make the agent curate better" cannot work
+### 2. Why "just make the agent curate better" cannot work
+
+```mermaid
+flowchart TB
+    L["one loop, two objectives:<br/>finish the task <b>and</b> curate memory"]
+    T["every token spent curating<br/>is a token not spent finishing"]
+    U["and there is no exchange rate<br/>anybody can write down"]
+    S["so the trade happens, silently,<br/>and 'curate better' is an instruction<br/>with nothing to act on - n12"]
+
+    L --> T --> U --> S
+
+    style S fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+```
+
+This is an impossibility diagram, not a criticism of prompting. **The crux is that the two objectives
+are not merely competing but incommensurable, so no prompt can specify how much task quality a unit of
+memory quality is worth.** It is drawn as a forced chain because each step follows without judgement,
+ending at why the obvious fix is not a fix: telling an agent to curate better does not supply the
+missing exchange rate, it just moves the silent trade somewhere else. This is the same shape as
+claim 34's conflict of interest, arriving from scheduling rather than from evaluation.
+
+*Synthesized from `n12`.*
+
 
 The cheaper answer is to keep one loop and simply instruct it better, telling the agent to tidy the
 store as it goes. The talk rejects that, and its reasoning is the sharpest idea in the source
@@ -260,7 +332,34 @@ this source most worth carrying elsewhere.
 So curation gets its own process. Before that second process can be described, though, the thing it
 curates needs a shape, and the choice made there is a bet rather than an engineering detail.
 
-## 3. Memory as a file system, on the skills bet
+## Movement B - the storage bet
+
+```mermaid
+flowchart TB
+    B["memory is a <b>file system</b> the model<br/>drives with bash and grep - n2, n3"]
+    S["the same bet that produced skills:<br/>give the model a general tool<br/>rather than a bespoke API"]
+    M["and then add what a consumer<br/>assistant never needs:"]
+    A1["scoped stores"]
+    A2["optimistic concurrency via a<br/>content_sha256 precondition"]
+    A3["per-session attribution"]
+    B --> S
+    B --> M --> A1
+    M --> A2
+    M --> A3
+
+    style B fill:#e8f0fc,stroke:#4285f4,color:#1a3a6b
+```
+
+This is a bet diagram, not a schema. **The crux is that the storage choice is a wager that a general
+tool the model already knows how to use beats a purpose-built memory API**, which is the same wager
+skills represent and it is stated as such. It is drawn with three additions hanging off the base
+because they are what separates a platform from an assistant: the file-system bet is shared with the
+consumer product, and concurrency, scoping and attribution are the price of more than one writer.
+Those three are the parts a single-user memory store never has to solve.
+
+*Synthesized from `n2`, `n3`, `n5`, `n6` and `n7`.*
+
+### 3. Memory as a file system, on the skills bet
 
 ![Slide "How agent memory evolved": a four-stage ladder from CLAUDE.md to memory tool to skills to memory/](visuals/frame_330.jpg)
 
@@ -303,7 +402,7 @@ Treat the design rationale as transferable and the capability figure as marketin
 A file system is enough for one agent. It stops being enough the moment there is a second one, and
 what it stops being enough for is not what most readers guess.
 
-## 4. What multi-agent memory needs that a single-user store never does
+### 4. What multi-agent memory needs that a single-user store never does
 
 ![Slide "Built for multi-agent systems": sharing across agents, read/write scopes, optimistic concurrency, with a read-only org-conventions store paired against a read-write team-memory store](visuals/frame_460.jpg)
 
@@ -343,7 +442,33 @@ the second agent.
 
 All of that governs writes made while agents work. Now the second clock.
 
-## 5. Dreaming: the batch pass that runs out of band
+## Movement C - the second clock
+
+```mermaid
+flowchart TB
+    W["<b>during work</b><br/>agents write memory as they go,<br/>on the task's clock"]
+    D["<b>between sessions</b><br/>a decoupled batch pass<br/>rewrites it - n11, n14"]
+    R["two clocks, because one loop<br/>cannot serve two objectives - n12"]
+    E["and the demo is the strongest<br/>evidence in the source - n20"]
+
+    W --> R
+    D --> R --> E
+
+    style D fill:#e8f0fc,stroke:#4285f4,color:#1a3a6b
+    style E fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a scheduling diagram, not a data flow, and the two clocks are the content. **The crux is that
+the batch pass is out of band by design rather than for efficiency**, because a curation step running
+inside the task competes with finishing the task and loses in a way nobody can tune. It is drawn as
+two writers converging on one justification because the split is only defensible on the objective
+argument; if you believed one loop could balance both, you would not build the second. The demo
+matters because it is the only place in the source where the design is seen running rather than
+described.
+
+*Synthesized from `n11`, `n12`, `n14` and `n20`.*
+
+### 5. Dreaming: the batch pass that runs out of band
 
 ![Slide "How dreaming works": transcripts from agents' daily sessions feeding a periodic batch process, producing an updated memory state with new insights and organized structure](visuals/frame_708.jpg)
 
@@ -394,7 +519,7 @@ nightly, hourly or on an event, all through the API (`n22`, `&t=715s`).
 Everything to this point is the vendor describing itself. The next section is the one place that
 changes.
 
-## 6. Seen running: the strongest evidence in the source
+### 6. Seen running: the strongest evidence in the source
 
 Slides show what a vendor believes. The demo shows the artifact, and here it carries detail the
 narration never states.
@@ -439,7 +564,32 @@ asserted.
 Having shown the mechanism working at the scale of one team, the talk turns to where it is meant to
 end up.
 
-## 7. Where it points: organizational memory
+## Movement D - where it points, and what it leaves open
+
+```mermaid
+flowchart TB
+    P["7. agents leave <b>instructions</b> for their<br/>successors, not just facts - n20"]
+    O["which points at organisational memory:<br/>a fleet accumulating procedure<br/>rather than a store accumulating data"]
+    H["8. and the hole underneath it:<br/><b>'verified' by what?</b>"]
+    N["nothing in the source says what<br/>validates a memory before it<br/>is written or reused"]
+
+    P --> O
+    O --> H --> N
+
+    style O fill:#dcfce7,stroke:#15803d,color:#14532d
+    style N fill:#fbf1dc,stroke:#b45309,color:#78350f
+```
+
+This is a limits diagram, and the two boxes pull in opposite directions on purpose. **The crux is that
+the most exciting property in the talk and its largest unanswered question are the same fact seen from
+two sides: agents writing procedure for other agents is powerful precisely because nothing checks
+it.** It is drawn as a single descent rather than a balance because the hole is downstream of the
+capability rather than beside it. The amber terminal is what a reader should carry into any design
+review, since it is the question the whole architecture rests on and the source does not answer.
+
+*Synthesized from `n20` and the section below.*
+
+### 7. Where it points: organizational memory
 
 ![Slide "From task memory to organizational memory": per-task notes, to a curated memory tree, to org-wide memory](visuals/frame_835.jpg)
 
@@ -470,7 +620,33 @@ are worth looking at precisely so you know not to reuse them.
 Weak numbers are an ordinary hazard in a vendor talk and are easy to discount. The gap in the next
 section is not, because it sits inside the design rather than inside the marketing.
 
-## 8. The hole: "verified" by what?
+### 8. The hole: "verified" by what?
+
+```mermaid
+flowchart TB
+    A["an agent writes a memory"]
+    B["a later agent reads it and<br/>treats it as established"]
+    Q{"what validated it<br/>in between?"}
+    N["the source does not say"]
+    R["and the batch pass rewrites memory<br/>with the same authority,<br/>on the same absent check"]
+
+    A --> B --> Q --> N
+    N --> R
+
+    style Q fill:#fbf1dc,stroke:#b45309,color:#78350f
+    style N fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+```
+
+This is a gap diagram, and the question node is the whole section. **The crux is that the architecture
+gives memory the standing of fact without ever naming what confers that standing**, so a wrong entry
+and a right one are indistinguishable to every downstream reader. It is drawn with the batch pass
+attached to the same missing check because the second loop inherits the problem rather than solving
+it: rewriting memory out of band is a stronger operation than writing it, performed with no more
+validation. Nothing here is a claim that the platform lacks such a check, only that the source never
+describes one.
+
+*Synthesized from the section below; the absence is recorded rather than inferred.*
+
 
 The talk says dreaming's output is "**a verified**, better organized snapshot" that agents "can choose
 to adopt" (`d4`, `&t=748s`). Read that sentence as a specification and see how little of it is
@@ -601,3 +777,123 @@ a diagram that quietly completed the design would be claiming more than the sour
 - `../../brain/topics/skills.md` - skills as procedural memory (the category name).
 - `../../brain/topics/agent-security.md` - shared memory as a prompt-injection sink with a
   demonstrated propagation path.
+
+## Presentation narrative
+
+*A talk track for a team running more than one agent against shared work, derived entirely from the
+gated nodes above. It is a vendor talk with a live demo and no measurement of any kind, so treat the
+architecture as a design worth borrowing and the outcomes as undemonstrated. The last slide names the
+gap the whole thing rests on.*
+
+### Slide 1 - The problem is not that your agent forgets, it is that every agent learns alone
+
+**Nothing one agent works out ever reaches the next one, which makes this a coordination problem
+wearing a storage costume.** That reframing matters commercially, because the instinctive response to
+"the agent forgot" is to buy more context window, and context is aimed at the wrong thing entirely.
+
+What engineers should take from it is where the loss actually happens. It is not inside a session, it
+is at the boundary between sessions and between agents, and no amount of capacity inside one session
+touches it.
+
+![Slide "Memory lets agents learn": three columns - learning about tasks, about environments, and from other agents](visuals/frame_200.jpg)
+
+This is a scope slide, and the third column is the one that does not exist in a consumer assistant.
+**The crux is that learning from other agents is a different problem from remembering your own
+work**, and only the third column needs coordination machinery.
+
+### Slide 2 - One loop cannot both finish the task and curate the memory
+
+**Ask a single loop to do both and it trades them off untunably, because there is no exchange rate
+anybody can write down [n12].** Every token spent curating is a token not spent finishing, and no
+prompt specifies how much task quality a unit of memory quality is worth.
+
+This is the transferable idea in the talk and it generalises far past memory. Any single loop carrying
+two objectives will trade one against the other silently, and "curate better" is an instruction with
+nothing to act on. The leadership significance is that this is an architectural constraint rather than
+a tuning problem, so it will not yield to a better prompt or a stronger model.
+
+![Slide "Out-of-band memory updates": shared learnings across agents contrasted against independent memory curation](visuals/frame_772.jpg)
+
+This is the justification slide for everything that follows. **The crux is that the second loop exists
+to separate objectives, not to save money** [`n12`].
+
+### Slide 3 - Memory is a file system, on the same bet that produced skills
+
+**The model drives memory with bash and grep rather than through a bespoke memory API [n2, n3].** That
+is a deliberate wager: a general tool the model already knows how to use beats a purpose-built
+interface, which is exactly the bet skills represent.
+
+To that the platform adds the three things a consumer assistant never needs, and they are the whole
+difference between an assistant and a fleet. Scoped stores, so a read-only org-conventions tree can sit
+beside a read-write team memory. Optimistic concurrency through a `content_sha256` write precondition,
+because more than one writer now exists. And per-session attribution, so every memory traces to what
+produced it [n5, n6, n7].
+
+![Slide "Built for multi-agent systems": sharing across agents, read/write scopes, optimistic concurrency, with a read-only org-conventions store paired against a read-write team-memory store](visuals/frame_460.jpg)
+
+This is a multi-writer slide, not a storage diagram. **The crux is that concurrency, scoping and
+attribution are the price of a second writer**, and a single-user memory store never has to pay it
+[`n5`, `n6`, `n7`].
+
+### Slide 4 - The second clock runs between sessions, not during them
+
+**Agents write memory during work, and a decoupled batch pass rewrites it between sessions [n11,
+n14].** Transcripts from the day's sessions feed a periodic process that verifies, organises and
+enriches, producing an updated memory state.
+
+The scheduling is the design. Running curation out of band is what makes slide 2's objective conflict
+disappear rather than merely shrink, because the curating loop is no longer competing with a deadline.
+That is a stronger justification than throughput and it is the one the source gives.
+
+![Slide "How dreaming works": transcripts from agents' daily sessions feeding a periodic batch process, producing an updated memory state with new insights and organized structure](visuals/frame_708.jpg)
+
+This is a scheduling slide. **The crux is that the pass is out of band by design rather than for
+efficiency** [`n11`, `n14`].
+
+### Slide 5 - Agents leave instructions for their successors, not just facts
+
+**This is the strongest evidence in the source, and it is a live demo rather than a measurement
+[n20].** What the memory accumulates is not only what was learned but what the next agent should do,
+which is procedure rather than data.
+
+That points somewhere larger than memory. A fleet accumulating procedure is organisational memory, and
+the progression the talk draws runs from per-task notes to a curated tree to something org-wide. For
+engineers the concrete artifact is worth looking at: a memory file carrying a version strip, session
+attribution and a write precondition is a very different object from a chat history.
+
+![The dreaming console: a dream detail pane showing input sessions and duration, beside a memory-updates pane showing a red/green line diff](visuals/frame_1188.jpg)
+
+This is the seen-running slide, and the diff pane is why it counts. **The crux is that the rewrite is
+inspectable after the fact**, which is the only reviewability the design offers [`n20`].
+
+### Slide 6 - The whole architecture rests on a question the talk never answers
+
+**An agent writes a memory, a later agent reads it and treats it as established, and nothing in the
+source says what validated it in between.** The dreaming pass is described as verifying, and what
+verification consists of is never stated.
+
+That gap gets worse rather than better with the second loop, because rewriting memory out of band is a
+stronger operation than writing it and is performed with no more checking. And it compounds with slide
+5: agents leaving instructions for successors is powerful precisely because nothing checks them.
+
+So the honest verdict is pilot rather than adopt, and the thing to build first is the missing piece
+rather than the impressive one. Before running a dreaming pass over shared memory, decide what
+validates an entry, who can see the diff, and what rollback looks like. The platform supplies
+versioning, attribution and diffing, which are the raw materials for exactly that review, and the talk
+never assembles them into a gate.
+
+![Slide "Built for auditability and developer control": versioning with rollback and diffing, attribution linking every memory to its session, and a portable standalone API](visuals/frame_522.jpg)
+
+This is the slide to build on. **The crux is that the ingredients for a review gate are all present
+and the gate itself is not** [`n7`].
+
+### Key takeaway message
+
+The problem worth solving is not an agent forgetting but a fleet never sharing, which makes this
+coordination rather than storage. The transferable finding is that one loop cannot both finish a task
+and curate memory, because the two objectives have no exchange rate and get traded silently, so the
+curation pass runs between sessions rather than during them. Memory is a file system on the same bet
+that produced skills, plus the three things a second writer forces: scoping, optimistic concurrency
+and attribution. The demo shows agents leaving instructions for their successors, which is the
+exciting part and the dangerous one, because nothing in the source says what verifies a memory before
+it is written or reused. Build that gate before you run the loop.
