@@ -20,6 +20,33 @@ technique is worth anything. The most useful idea here is the reframe at the end
 *select* the best candidate and start *synthesizing* one from all of them, which beats even a perfect
 oracle selector (`n25`).
 
+```mermaid
+flowchart TB
+    S["sample the model k times<br/>instead of once"]
+    C["<b>coverage</b> climbs lawfully:<br/>c = exp(a·k^b), from 70M<br/>to 70B parameters - n3"]
+    G["but coverage is a property of the <b>set</b>.<br/>You still have to pick one answer."]
+    P["and every practical selector plateaus<br/>after roughly 10-50 samples while<br/>the set keeps improving - n10"]
+    D["<b>the generation-verification gap</b>,<br/>which decides where any of<br/>this is worth paying for"]
+    F["so stop <b>selecting</b> a candidate<br/>and start <b>synthesizing</b> one -<br/>which beats a perfect oracle - n25"]
+
+    S --> C --> G --> P --> D --> F
+
+    style C fill:#dcfce7,stroke:#15803d,color:#14532d
+    style P fill:#e8f0fc,stroke:#4285f4,color:#1a3a6b
+    style F fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a limits diagram, not a technique diagram, and the middle of the chain is where the lecture
+spends its best twenty minutes. **The crux is that sampling buys a set containing a right answer and
+never buys the right answer, so the headline scaling law and the practical ceiling are measuring two
+different things.** It is drawn as one descent because the argument is a single walk from an
+attractive result to the constraint that governs it and then out the other side; branching would
+suggest the gap is one consideration among several rather than the thing that decides whether the
+technique pays. The last box is the reframe worth taking away, and it is the only move here that gets
+past the plateau rather than optimising within it.
+
+*Synthesized from `n3`, `n10` and `n25`.*
+
 ## The 1-minute version
 
 **What this article covers.** It covers the second axis of scaling - what happens when you spend
@@ -162,7 +189,28 @@ is also where the source's conflict of interest is heaviest, so it rewards a sus
 
 *Synthesized from the walkthrough structure below.*
 
-## Walkthrough
+## Movement A - sampling more works, and it is lawful
+
+```mermaid
+flowchart TB
+    O["1. a small open model, sampled many times,<br/>exceeds a frontier model's single attempt<br/>across four reasoning benchmarks"]
+    L["2. and it is not a trick: coverage follows<br/>an exponentiated power law across<br/>models from 70M to 70B - n3"]
+    W["3. and there is a reason for the law -<br/>average power-law scaling is per-problem<br/>exponential scaling plus the pass@1<br/>distribution over problems"]
+
+    O --> L --> W
+
+    style W fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is an evidence-strength diagram, not a results summary, and the three sections rise in how much
+they explain rather than in how surprising they are. **The crux is that section 3 is the only
+peer-reviewed thing in the lecture and it explains something most summaries of this area simply
+assert**, which is why a reader who knows the headline result should still slow down there. It is
+drawn as a straight ascent because each step answers the doubt raised by the one before: the result
+looks like a fluke, the law says it is not, and the decomposition says why a law exists at all.
+
+*Synthesized from `n3` and the sections below.*
+
 
 ### 1. The result that should not work
 
@@ -288,6 +336,29 @@ lecture, which is an odd thing to skip.
 Knowing the shape of the curve tells you what more samples buy. It does not tell you whether buying
 them is a sane thing to do with money, which is the next question.
 
+## Movement B - what it costs, and where it runs
+
+```mermaid
+flowchart TB
+    A["<b>today</b>: $100M+ of pre-training,<br/>then sub-cent inference"]
+    B["<b>the alternative</b>: a smaller model,<br/>and $1k+ spent at inference, offline"]
+    C["5. and the whole argument turns on one word:<br/><b>coverage</b> - which is a property of a set<br/>rather than of an answer"]
+
+    A --> C
+    B --> C
+
+    style C fill:#e8f0fc,stroke:#4285f4,color:#1a3a6b
+```
+
+This is a reallocation diagram, not a cost model. **The crux is that this is a proposal to move money
+between two budgets rather than to spend less, and the case for moving it rests entirely on what
+"coverage" actually means.** The movement is short and easy to skim, which is precisely the risk:
+section 5 is where a technical term stops being a definition and becomes the hinge the next movement
+swings on. Note also that the alternative is framed as offline work, which quietly excludes every
+latency-bound application.
+
+*Synthesized from `n8` and the sections below.*
+
 ### 4. What this does to the money
 
 The economics are why this became a paradigm rather than a paper. Historically almost all the compute
@@ -362,6 +433,32 @@ So where a mechanical verifier exists, the story is as good as advertised. The o
 the picture looks like where one does not, and the honest answer to that is the reason to read this
 lecture.
 
+## Movement C - the constraint
+
+```mermaid
+flowchart TB
+    C["coverage keeps climbing<br/>with more samples"]
+    S["but every practical selector -<br/>majority vote, reward-model best-of-N,<br/>and both combined - plateaus after<br/>roughly 10-50 samples - n10"]
+    G["<b>the generation-verification gap</b>"]
+    N["7. and no cleverer vote closes it, because<br/>the problem is verification rather<br/>than aggregation"]
+
+    C --> G
+    S --> G --> N
+
+    style G fill:#e8f0fc,stroke:#4285f4,color:#1a3a6b
+    style N fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+```
+
+This is the payload of the note and the reason to read it rather than the previous lecture. **The
+crux is that the gap between what sampling produces and what you can extract is structural, so the
+plateau is not a weakness in any particular selector.** It is drawn with two lines converging because
+the gap is a difference rather than a thing: it exists only in the distance between the rising curve
+and the flat one. Everything before this movement builds a case for repeated sampling and everything
+after it works around this limit, so a reader who skims here will misread D and E as flourishes rather
+than as responses to a specific structural problem.
+
+*Synthesized from `n10` and the sections below.*
+
 ### 6. The bill arrives
 
 Here is where the source turns on its own headline. Take the same repeated sampling and replace the
@@ -408,6 +505,32 @@ is what stops you trying to fix it with a better voting scheme.
 
 ### 7. Why no cleverer vote saves you
 
+```mermaid
+flowchart TB
+    A["majority vote"]
+    B["reward-model best-of-N"]
+    C["reward model + majority vote"]
+    P["all three plateau at<br/>roughly the same place - n10"]
+    R["because they are all <b>selection</b>,<br/>and selection is bounded by how well<br/>you can <b>verify</b>, not by how many<br/>candidates you generate"]
+
+    A --> P
+    B --> P
+    C --> P --> R
+
+    style P fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    style R fill:#e8f0fc,stroke:#4285f4,color:#1a3a6b
+```
+
+This is a common-cause diagram, not a method comparison. **The crux is that three unrelated selectors
+failing at the same point is evidence about the problem rather than about the selectors**, which is
+what promotes the plateau from an engineering annoyance to a structural constraint. It is drawn with
+all three converging before the explanation because the convergence is the finding: any one of them
+plateauing would invite a better selector, and all three plateauing together says the ceiling is
+verification. That is also why Movement E's escape works by not selecting at all.
+
+*Synthesized from `n10`.*
+
+
 The reason is arithmetic rather than engineering. On the hardest problems, the correct answer turns up
 **once, twice or three times in ten thousand samples** (`n12`).
 
@@ -434,6 +557,31 @@ will bank its errors.
 
 So one axis of test-time compute is capped by something compute cannot buy. That is a good moment to
 ask whether sampling more times is the only way to spend compute at inference.
+
+## Movement D - the second axis, and where it stops paying
+
+```mermaid
+flowchart TB
+    P["<b>parallel</b>: propose k answers<br/>independently"]
+    S["<b>sequential</b>: revise, each attempt<br/>conditioned on the last"]
+    F["9. FLOPs-matched, the answer swings from<br/><b>+27.8% to -37.2%</b> depending on difficulty<br/>and the inference-to-pretraining ratio"]
+    B["so there is a boundary, and it is<br/>two-dimensional rather than a threshold"]
+
+    P --> F
+    S --> F --> B
+
+    style F fill:#fbf1dc,stroke:#b45309,color:#78350f
+    style B fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a boundary diagram, not a comparison. **The crux is the sign change: the same technique helps
+by 28% and hurts by 37% depending on where you sit, which makes "does test-time compute work" an
+unanswerable question as usually posed.** It is drawn with both axes feeding one measurement because
+the useful result is not that sequential beats parallel or the reverse, but that the winner depends on
+two variables you can actually look up for your own workload. This is the movement that turns the
+lecture from advocacy into something you can plan against.
+
+*Synthesized from `n18` and the sections below.*
 
 ### 8. A different knob entirely
 
@@ -522,6 +670,30 @@ Both sections 6 and 9 are limits, and they are limits of different kinds. Sectio
 constraint you can plan around by not overspending. Section 6 is a wall, because no amount of compute
 manufactures a verifier. The last movement is what you do about the wall.
 
+## Movement E - engineering around the constraint
+
+```mermaid
+flowchart TB
+    O["the ceiling from Movement C:<br/>selection plateaus"]
+    Q{"what if you stop<br/>selecting?"}
+    F["<b>synthesize</b> one answer from all<br/>the candidates - and it beats even<br/>a perfect oracle selector - n25"]
+    C["11. and the framework's own concessions<br/>sit here too, which is where the source's<br/>conflict of interest is heaviest"]
+
+    O --> Q --> F --> C
+
+    style F fill:#dcfce7,stroke:#15803d,color:#14532d
+    style C fill:#fbf1dc,stroke:#b45309,color:#78350f
+```
+
+This is a reframe diagram, and the question node is the whole movement. **The crux is that beating a
+perfect oracle is only possible because synthesis is not doing the same job as selection - an oracle
+picks the best candidate, and a fuser can produce something none of the candidates contained.** It is
+drawn with the ceiling retained on top because the move only reads as significant against the plateau
+it escapes. Section 11 is deliberately attached rather than separated: this is the movement where the
+speaker's own framework is the answer, so it is the one that rewards a suspicious reader most.
+
+*Synthesized from `n25` and the sections below.*
+
 ### 10. Stop selecting, start synthesizing
 
 Everything so far has framed the problem as *selection*. You have `k` candidates and you must choose
@@ -568,6 +740,30 @@ The framework is impressive, and this is exactly the point in a lecture where a 
 suspicious rather than enthusiastic.
 
 ### 11. What the framework concedes
+
+```mermaid
+flowchart TB
+    S["the speaker's own framework<br/>is the answer in Movement E"]
+    C1["conceded: the gains depend on<br/>having candidates worth fusing"]
+    C2["conceded: the boundary from Movement D<br/>still applies"]
+    R["so read this movement as the place<br/>where advocacy and evidence are<br/>hardest to separate"]
+
+    S --> C1 --> R
+    S --> C2 --> R
+
+    style S fill:#fbf1dc,stroke:#b45309,color:#78350f
+    style R fill:#fbf1dc,stroke:#b45309,color:#78350f
+```
+
+This is a conflict-of-interest diagram, not a limitations list. **The crux is that the strongest
+result in the lecture is also the one the speaker has the most stake in, and the concessions are what
+make it citable rather than what weaken it.** It is drawn with both concessions returning to a single
+reading instruction because the point is not either limitation individually but the posture they
+should induce. A source that states what its own method requires is doing the thing this brain rewards;
+that does not convert a demonstration into a measurement.
+
+*Synthesized from the section below. The reading instruction is this brain's.*
+
 
 Two admissions sit in the last five minutes, and both are more informative than the headline.
 
@@ -743,3 +939,124 @@ a topic when it **teaches within** the scope, not when it **depends on** it, and
 inference serving while teaching nothing about how it works. S14 declined the same filing for the same
 reason. **Filing it here would have made an empty seed note look populated, using material that
 answers none of the questions a reader would open it for.**
+
+## Presentation narrative
+
+*A talk track for a team deciding whether to spend at inference time, derived entirely from the gated
+nodes above. It is a lecture rather than a paper, and the movement carrying its strongest result is
+also the one where the speaker's own framework is the answer, which the last slide addresses.*
+
+### Slide 1 - You can buy accuracy at inference time instead of at training time
+
+**A small open model sampled many times exceeds a frontier model's single attempt across four
+reasoning benchmarks.** That is the result that should not work, and the reason it matters
+commercially is that it moves a capability question into a budget you already control.
+
+The returns are lawful enough to plan against rather than merely observed. Coverage follows an
+exponentiated power law in the number of samples, and it holds across models from 70 million to 70
+billion parameters [n3]. Section 3 of the note explains why a law exists at all, and it is the only
+peer-reviewed thing in the lecture.
+
+![Llama-3-8B coverage exceeding GPT-4o single-attempt across four reasoning benchmarks](visuals/frame_150.jpg)
+
+This is the headline, and the fine print is in the axis label. **The crux is that the y-axis is
+coverage, not accuracy** - which is the distinction the next two slides are about [`n3`].
+
+### Slide 2 - Coverage is a property of the set, not of an answer
+
+**Sampling gets you a set containing a right answer. It does not get you the right answer.** That
+single sentence is the hinge of the whole argument, and it is easy to slide past because "coverage"
+sounds like a technicality.
+
+The practical consequence arrives immediately. Every way of picking one answer out of the set -
+majority vote, reward-model best-of-N, and both combined - plateaus after roughly ten to fifty samples
+while the set itself keeps improving [n10]. So you are paying for a curve that keeps rising and
+receiving one that has already flattened.
+
+![Majority vote, reward model best-of-N and reward model plus majority vote all plateauing while coverage climbs](visuals/frame_1000.jpg)
+
+This is the constraint, and it is the reason to read this lecture rather than the previous one. **The
+crux is that three unrelated selectors plateau in the same place**, which is evidence about the
+problem rather than about the selectors [`n10`].
+
+### Slide 3 - The gap between those two curves is what decides whether this pays
+
+**That distance is the generation-verification gap, and it is structural rather than an artefact of
+any particular selector.** Where verification is cheap and reliable - a unit test passes, a flag
+string matches, a proof checks - the gap is narrow and repeated sampling converts almost directly into
+accuracy. Where verification is a judgement call, the gap is wide and most of what you buy is
+unreachable.
+
+The question for this room is therefore not whether test-time compute works. It is how well your
+domain can verify, because that is the variable that decides the return. Teams that already have a
+strong automatic checker are the ones for whom this technique is close to free money.
+
+![Average power law scaling equals per-problem exponential scaling plus the pass@1 distribution over problems](visuals/frame_590.jpg)
+
+This is why a law exists at all. **The crux is that the population curve is the sum of per-problem
+curves**, so a benchmark average hides enormous variation in which problems are actually reachable
+[`n3`].
+
+### Slide 4 - It is a reallocation of spend, and it excludes latency-bound work
+
+**The proposal is to move money from a $100M+ pre-training budget with sub-cent inference, to a
+smaller model with $1k+ spent per problem at inference, offline.** Framed that way it is a
+procurement question rather than a research one.
+
+The word doing quiet work there is *offline*. A thousand samples per problem is not a thing you do
+behind a user-facing request, so this whole technique addresses batch and asynchronous work and
+excludes anything latency-bound. That constraint is worth stating early in any internal discussion,
+because it removes a large fraction of candidate use cases before the cost analysis starts.
+
+![Current paradigm of $100M+ pre-training and sub-cent inference against an alternative spending $1k+ at inference, offline](visuals/frame_715.jpg)
+
+This is the reallocation. **The crux is that the two bars are different budgets rather than different
+sizes of the same one** [`n8`].
+
+### Slide 5 - There is a second axis, and the same technique swings from +28% to -37%
+
+**Parallel sampling proposes answers independently; sequential revision conditions each attempt on the
+last. FLOPs-matched, the gain ranges from +27.8% to -37.2% depending on problem difficulty and the
+inference-to-pretraining ratio.**
+
+That sign change is the most operationally useful number in the lecture. It means "does test-time
+compute work" is unanswerable as posed, and the answerable version is whether it works at your
+difficulty and your compute ratio. Both are things you can look up for your own workload rather than
+argue about.
+
+![FLOPs-matched comparison showing gains from +27.8% to -37.2% depending on difficulty and inference-to-pretraining ratio](visuals/frame_2310.jpg)
+
+This is a boundary in two dimensions, not a threshold. **The crux is that the wrong choice is worse
+than not doing it at all** [`n18`].
+
+### Slide 6 - Stop selecting, start synthesizing, and read the last movement suspiciously
+
+**Fusing an answer out of all the candidates beats even a perfect oracle selector [n25].** That is
+only possible because synthesis is not doing selection's job: an oracle picks the best candidate a
+fuser can produce something none of the candidates contained.
+
+So the decision this supports is narrow and concrete. If you have cheap automatic verification and
+offline work, sample hard and fuse rather than vote. If verification is a judgement call or the work
+is latency-bound, this technique is not for you and the boundary in slide 5 says so quantitatively.
+
+I want to name the conflict plainly. The strongest result here is the speaker's own framework, in the
+movement where advocacy and evidence are hardest to separate. The framework does concede what it
+requires, which is what makes it citable, and a demonstration by its author is still a demonstration
+rather than a measurement.
+
+![Fuser and ranked-top-5-plus-fuser exceeding oracle selection, with random selection degrading as models are added](visuals/frame_3100.jpg)
+
+This is the reframe, and the degrading line matters as much as the rising one. **The crux is that
+adding models helps only if you fuse; under random selection it actively hurts** [`n25`].
+
+### Key takeaway message
+
+Sampling a model many times buys coverage, which is a property of a set rather than of an answer, and
+every practical way of extracting one answer plateaus after ten to fifty samples while coverage keeps
+climbing. That distance is the generation-verification gap, and it is what decides whether the
+technique pays: cheap reliable verification converts samples into accuracy, and judgement-based
+verification leaves most of what you bought unreachable. The scaling is lawful enough to budget
+against, the work has to be offline, and FLOPs-matched the same technique ranges from +28% to -37%
+depending on difficulty and compute ratio. The move that escapes the ceiling is to stop selecting a
+candidate and start synthesizing one, which beats a perfect oracle - and which is also the speaker's
+own framework, so read that part suspiciously.
