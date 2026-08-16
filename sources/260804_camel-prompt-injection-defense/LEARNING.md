@@ -21,6 +21,30 @@ for **2.82x input tokens** (`n9`, `n10`, `n12`). Two things to hold onto: **the 
 authors' own** (`d1`), and the paper spends its last five pages showing where its own design breaks
 (`n15`, `n16`, `n18`).
 
+```mermaid
+flowchart TB
+    A["<b>the abandoned goal</b><br/>make the model able to tell<br/>data from instructions"]
+    B["<b>the replacement goal</b><br/>build a system in which an unsafe model<br/>cannot cause an unsafe action - n1"]
+    C["untrusted data never reaches<br/>control flow"]
+    D["and the actions it can influence are<br/>bounded by <b>policy</b> rather than<br/>by the model's judgement"]
+    E["77% of tasks against an undefended 84%,<br/>attacks from ~100 down to 0-1,<br/>for 2.82x input tokens - n9, n10, n12"]
+
+    A -.->|"give up on this"| B --> C --> D --> E
+
+    style A fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    style B fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a goal-substitution diagram, not an architecture diagram, and the dashed edge is the entire
+contribution. **The crux is that CaMeL concedes the problem S17 established rather than attacking it,
+and then makes the concession harmless by moving the security boundary out of the model entirely.**
+It is drawn as one abandoned goal feeding a replacement because the design only makes sense once you
+accept that the first box is unachievable; a reader still hoping for a better classifier will read the
+architecture as overkill. The bottom box is deliberately a single node holding both the benefit and
+the price, since quoting either without the other misrepresents the trade.
+
+*Synthesized from `n1`, `n9`, `n10` and `n12`.*
+
 ## The 1-minute version
 
 This article covers a 2025 paper from Google, Google DeepMind and ETH Zurich that proposes the first
@@ -134,7 +158,8 @@ flowchart TB
     style M2 fill:#f8b4b4,stroke:#c1121f,stroke-width:2px
 ```
 
-Four movements top to bottom, with the shaded one carrying the design. Movement 1 is short and is
+This is a reading-order diagram about the note rather than about CaMeL, and the shaded movement
+carries the design. Movement 1 is short and is
 worth reading even if you know the Dual LLM pattern, because section 2 is the precise statement of
 what that pattern misses and everything after it is shaped by that gap. Movement 2 is the payload;
 section 4 derives the architecture rather than listing it, and section 5 is where the mechanism
@@ -144,7 +169,33 @@ most papers do not have, where the authors attack their own design, and section 
 synthesis rather than the paper's - it maps what CaMeL covers onto S17's six threat classes, and the
 gaps are not where you would guess.
 
-## 1. Heuristic defences and their guarantee problem
+## Movement 1 - why the existing defences fail
+
+```mermaid
+flowchart TB
+    H["<b>heuristic defences</b><br/>detectors, delimiters, spotlighting"]
+    G["no guarantee: they raise the cost<br/>of an attack without bounding it"]
+    D["<b>Dual LLM</b><br/>a quarantined model reads untrusted<br/>data and holds no tools"]
+    X["but the <b>values</b> it returns still flow<br/>into the privileged model's actions - n2"]
+    Q["so the plan stays clean and the<br/>data flowing through it does not"]
+
+    H --> G
+    D --> X --> Q
+
+    style G fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    style Q fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+```
+
+This is a gap diagram, not a survey, and section 2 is the one to read even if you already know the
+Dual LLM pattern. **The crux is that isolating the model that reads untrusted data does not isolate
+the data itself**, so a recipient address extracted by the quarantined model still becomes the
+recipient of a real email. It is drawn as two separate failures rather than a ranking because they
+fail for different reasons: heuristics lack a bound, and Dual LLM has a bound in the wrong place.
+Everything in Movement 2 is shaped by closing that second gap specifically.
+
+*Synthesized from `n1` and `n2`.*
+
+### 1. Heuristic defences and their guarantee problem
 
 Start where S17 left off. Untrusted content and trusted instructions arrive in one channel, the model
 cannot tell them apart, and S17 walked four candidate defences to their failure points without naming
@@ -171,7 +222,7 @@ security decision is taken somewhere the adversary cannot reach.
 There is one prior answer to that question, and understanding why it is insufficient is the fastest
 route into CaMeL's design.
 
-## 2. Dual LLM, and the half it does not protect
+### 2. Dual LLM, and the half it does not protect
 
 > **Background, supplied.** The **Dual LLM** pattern was proposed by Simon Willison in 2023. Split the
 > agent in two. A *privileged* model sees the user's request, holds the tools, and plans; a
@@ -209,7 +260,32 @@ parameters rather than the structure of the query itself" (`n2`).
 **Hold that analogy, because section 3 is where it pays off.** In the SQL case the industry did not
 respond with a better filter. Keep in mind what it did respond with.
 
-## 3. Borrowing the classical stack
+## Movement 2 - the design, derived rather than listed
+
+```mermaid
+flowchart TB
+    Q1{"who may write the plan?"} --> A1["<b>Privileged LLM</b><br/>sees only the trusted user query - n3"]
+    A1 --> Q2{"then who reads the<br/>untrusted content?"}
+    Q2 --> A2["<b>Quarantined LLM</b><br/>no tools, returns only<br/>schema-conforming values - n4"]
+    A2 --> Q3{"but those values still<br/>reach real actions"}
+    Q3 --> A3["<b>custom interpreter</b><br/>tags every value with provenance<br/>and permitted readers - n5, n6"]
+    A3 --> Q4{"and who decides what<br/>is permitted?"}
+    Q4 --> A4["<b>a Python security policy</b>,<br/>checked at every tool call - n7"]
+
+    style A4 fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a derivation diagram, not a component map, and the questions are what make four components
+feel like three too few rather than three too many. **The crux is that each component exists to close
+a hole the previous one opened**, which is why the architecture is not reducible: removing the
+interpreter returns you exactly to the Dual LLM gap from Movement 1. It is drawn as an alternating
+chain because the paper presents these as a stack borrowed from classical security, and the borrowing
+is only convincing once you watch each piece get forced. The last box is where the security property
+actually lives.
+
+*Synthesized from `n3`, `n4`, `n5`, `n6` and `n7`.*
+
+### 3. Borrowing the classical stack
 
 The payoff is that CaMeL's answer is the same *kind* of answer that worked for SQL, and the authors
 are explicit that they went shopping in an old field rather than inventing something.
@@ -247,7 +323,7 @@ around an untrusted model that makes the whole system robust even if the model i
 So the goal is a system where the untrusted component cannot make the security decision. The question
 is what components that actually requires, and each one is forced by a gap the previous ones leave.
 
-## 4. Deriving the four components
+### 4. Deriving the four components
 
 Do not read CaMeL as a list of parts. Ask what each residual problem demands and let it name the next
 component.
@@ -294,7 +370,7 @@ that distinguishes CaMeL from Dual LLM done carefully.
 Four components, each forced by what the previous three leave open. What makes the fourth work is a
 piece of bookkeeping the interpreter does on every operation.
 
-## 5. How a value carries its own permissions
+### 5. How a value carries its own permissions
 
 The mechanism is a **data-flow graph maintained during execution**, plus a tag on every value.
 
@@ -336,7 +412,34 @@ document's permitted readers include `attacker@gmail.com`, the answer is no, and
 That is the design. The question a reader should ask next is whether it works, and the answer needs
 handling with some care.
 
-## 6. The numbers, and whose benchmark they are
+## Movement 3 - what it buys, and what it costs
+
+```mermaid
+flowchart TB
+    S["<b>security</b><br/>successful attacks fall from<br/>~100-300 to 0-1 - n10"]
+    U["<b>utility</b><br/>77% of tasks solved against<br/>an undefended 84% - n9"]
+    T["<b>tokens</b><br/>2.82x input, median<br/>per-task ratio 2-3x - n12"]
+    H["<b>human effort</b><br/>somebody writes and maintains<br/>the security policies"]
+    D["and the benchmark is<br/><b>the authors' own</b> - d1"]
+
+    S --> D
+    U --> D
+    T --> D
+    H --> D
+
+    style D fill:#fff4e5,stroke:#b45309,color:#78350f
+```
+
+This is a bill diagram, not a results table, and the fourth cost is the one papers usually omit. **The
+crux is that the seven-point utility drop and the 2.82x token cost are the visible prices, while the
+standing cost is a policy file somebody has to write and keep correct as the system changes.** All
+four are drawn converging on the provenance caveat because that is the right order of operations for a
+reader deciding whether to adopt: establish what is claimed, then note who ran the benchmark. This is
+the movement to slow down in.
+
+*Synthesized from `n9`, `n10`, `n12` and divergence `d1`.*
+
+### 6. The numbers, and whose benchmark they are
 
 The headline is that CaMeL solves **77% of AgentDojo tasks with provable security, against 84%
 undefended** (`n9`), so roughly seven points of utility buys the guarantee.
@@ -371,7 +474,7 @@ travels.
 
 Even taking the numbers at face value, adopting this costs something in two currencies.
 
-## 7. The bill, in tokens and in human effort
+### 7. The bill, in tokens and in human effort
 
 The token cost is the one the paper measures, and it is the highest of any defence it compares.
 
@@ -409,7 +512,30 @@ somebody owns.
 So it works on its authors' benchmark and it costs about 3x tokens and a policy-maintenance burden.
 The remaining question is where it fails, and the paper answers that better than most.
 
-## 8. The attack the authors ran on themselves
+## Movement 4 - where it breaks
+
+```mermaid
+flowchart TB
+    A["8. the authors attack their own design:<br/>an agent decodes an instruction, lists its<br/>tools, and sends the next instruction<br/>to itself - n15"]
+    B["<b>data flow becomes control flow</b>,<br/>which is the one thing the<br/>architecture exists to prevent"]
+    C["9. and mapped onto S17's six threat classes,<br/>the gaps are not where you would guess"]
+
+    A --> B --> C
+
+    style B fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+```
+
+This is a limits diagram, not a criticism, and the movement exists because most papers do not have
+one. **The crux is that the authors spend their last five pages demonstrating a route around their own
+guarantee, which is what makes the rest of the paper credible.** It is drawn as a single escalation
+because the self-attack is not a list of caveats but one mechanism: an agent that can enumerate its
+own tools can be walked through them by content it was only supposed to read. Section 9 is this
+brain's synthesis rather than the paper's, mapping coverage onto a threat taxonomy the paper never
+uses.
+
+*Synthesized from `n15`, `n16` and `n18`.*
+
+### 8. The attack the authors ran on themselves
 
 Section 6.4 of the paper is titled "when data flow becomes control flow", and it is a demonstration
 that CaMeL's core isolation can be defeated.
@@ -441,7 +567,32 @@ the smaller control flow blocks that are allowed by the security policy" (`n16`)
 
 There is a second, quieter limit that matters more for anyone mapping this onto a real threat model.
 
-## 9. What it cannot cover, mapped onto S17
+### 9. What it cannot cover, mapped onto S17
+
+```mermaid
+flowchart TB
+    C["CaMeL's guarantee:<br/>untrusted data cannot<br/>reach control flow"]
+    Y["<b>covered</b><br/>the classes where the attack must<br/>change what the agent <i>does</i>"]
+    N["<b>not covered</b><br/>the classes where the attack changes<br/>what the agent <i>believes</i> or <i>reports</i>,<br/>without changing any action"]
+    R["so the residual risk is not a weaker<br/>version of the same threat -<br/>it is a different one"]
+
+    C --> Y
+    C --> N --> R
+
+    style N fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    style R fill:#fff4e5,stroke:#b45309,color:#78350f
+```
+
+This is a coverage diagram, not a scorecard, and the split is the useful part. **The crux is that a
+data-flow guarantee bounds what an agent can be made to do and says nothing about what it can be made
+to believe or to say**, so summarisation, reporting and advisory tasks sit outside the protection
+entirely. It is drawn with the uncovered branch carrying the consequence because that is the reading
+error worth preventing: a reader who sees "attacks fall to 0-1" will assume general coverage, and the
+mapping shows the gaps are in a category the headline number never measured.
+
+*Synthesized from `n16` and `n18`, mapped onto S17's threat classes. The mapping is this brain's and
+appears in neither source.*
+
 
 CaMeL's explicit non-goal is attacks with **no data-flow consequence**. If the injection's whole
 effect is that the model tells the user something false, no capability was violated and no policy
@@ -595,3 +746,120 @@ source and it was not taken.
   statement in this brain of who may write into the context window.** The P-LLM never sees tool
   output, and the Q-LLM's reply is schema-constrained precisely so untrusted text cannot re-enter the
   planning context.
+
+## Presentation narrative
+
+*A talk track for a team choosing a prompt-injection defence, derived entirely from the gated nodes
+above. Two caveats govern it and are stated on the last slide: the benchmark is the authors' own, and
+the paper's final movement is the authors demonstrating a route around their own guarantee.*
+
+### Slide 1 - Stop trying to make the model safe, and make an unsafe model harmless instead
+
+**An LLM reading untrusted content cannot reliably distinguish data from instructions, and no filter
+fixes that. CaMeL concedes the point [n1].** The design goal it substitutes is different in kind:
+build a system in which an unsafe model cannot cause an unsafe action.
+
+That substitution is the entire contribution, and it is worth dwelling on before any architecture
+appears, because a room still hoping for a better classifier will read what follows as overkill. Once
+you accept that the model's judgement cannot be the security boundary, the only place left to put one
+is outside the model.
+
+![The plan is unchanged while the data flowing through it is attacker-controlled: the extracted document name becomes confidential.txt and the extracted recipient becomes attacker@gmail.com](visuals/fig2_dataflow_diverted.png)
+
+This is the gap slide, and it is why the Dual LLM pattern is not enough. **The crux is that isolating
+the model that reads untrusted data does not isolate the data itself** - the plan stays clean while
+the values flowing through it are attacker-controlled [`n2`].
+
+### Slide 2 - Four components, each closing a hole the previous one opened
+
+**A Privileged LLM sees only the trusted user query and writes a program. A Quarantined LLM parses
+untrusted data, holds no tools, and can return only schema-conforming values [n3, n4].** So far that
+is Dual LLM, and slide 1 showed it is insufficient.
+
+The two additions are what make it work. A custom interpreter runs the generated program and tags
+every value with its provenance and its permitted readers [n5, n6]. A Python security policy is then
+checked at every tool call [n7]. Untrusted data therefore never reaches control flow, and the actions
+it can influence are bounded by policy rather than by the model's judgement.
+
+What engineers should notice is that this is not four good ideas assembled. Remove the interpreter and
+you are back at the gap from slide 1 exactly.
+
+![CaMeL's architecture: the Privileged LLM generates code from the user query alone, the Quarantined LLM parses untrusted data behind a schema, and the interpreter maintains a data-flow graph and capabilities while enforcing security policies at tool calls](visuals/fig5_architecture.png)
+
+This is an ownership diagram, not a pipeline. **The crux is where the security property lives**: not
+in either model, but in the interpreter and the policy file [`n5`, `n7`].
+
+### Slide 3 - A value carries its own permissions, which is what makes the check possible
+
+**Every value the interpreter handles is tagged with where it came from and who is allowed to read
+it**, and dependencies are tracked through the program rather than assumed. A `send_email` call
+depends on a date because a conditional gated it, and the graph records that.
+
+This is the mechanism that turns the architecture from a diagram into something enforceable. A policy
+at a tool call can ask a question no prompt-based defence can answer: not "does this text look
+malicious?" but "is every value feeding this action permitted to reach this destination?"
+
+![Generated code beside its dependency graph, where send_email depends on date because a conditional gated it](visuals/fig7_code_depgraph.png)
+
+This is the concrete slide, and it is where the design stops being abstract. **The crux is that
+provenance travels with the value rather than being reconstructed at the boundary** [`n6`].
+
+### Slide 4 - It works, and here is the whole bill
+
+**Successful attacks fall from roughly 100-300 to 0-1, and utility lands at 77% of tasks against an
+undefended 84% [n9, n10].** That is a seven-point utility cost for a near-elimination of the attack
+class, which is a favourable trade by most standards.
+
+The prices are not only in utility. Input tokens run 2.82x, with the median per-task ratio between two
+and three [n12]. And there is a fourth cost the numbers do not show: somebody writes the security
+policies and keeps them correct as the system changes. That is standing human effort, not a one-off.
+
+![Left: utility under attack, with CaMeL tracking the undefended baseline across six models. Right: number of successful attacks on a log scale, falling from 100-300 for native tool calling to 0-1 for CaMeL](visuals/fig9_security_results.png)
+
+This is the headline result, on a log scale for a reason. **The crux is the shape of the right-hand
+panel: this is not an incremental reduction** [`n10`].
+
+### Slide 5 - The authors then attack their own design, and it is the reason to trust them
+
+**The paper spends its last five pages showing where CaMeL breaks [n15].** An agent finds an email
+containing an instruction, decodes the next instruction, lists all available tools, and sends the next
+instruction to itself. Data flow effectively becomes control flow, which is the one thing the
+architecture exists to prevent.
+
+I want to name what that means for the evidence, because it cuts both ways. It is a real limitation
+and it is also the strongest signal of good faith in the paper: most defence papers do not include a
+section demonstrating a route around their own guarantee.
+
+![A loop in which the agent finds an email containing an instruction, decodes the next instruction, lists all available tools, and sends the next instruction to itself, so data flow effectively becomes control flow](visuals/fig12_dataflow_becomes_controlflow.png)
+
+This is the self-attack. **The crux is that an agent able to enumerate its own tools can be walked
+through them by content it was only supposed to read** [`n15`].
+
+### Slide 6 - Adopt the pattern, and know that it bounds actions rather than beliefs
+
+**The verdict is adopt for action-taking agents and understand precisely what is left uncovered.** A
+data-flow guarantee bounds what an agent can be made to *do* and says nothing about what it can be
+made to believe or to report, so summarisation, reporting and advisory tasks sit outside the
+protection entirely. Mapped onto S17's threat classes, the gaps are not where you would guess, and
+that mapping is this brain's rather than the paper's.
+
+Two caveats on the numbers. The benchmark is the authors' own [d1], so the utility and attack figures
+are self-reported in the setting the authors designed. And the policy file is the part that decides
+whether this works in your system, since a permissive policy reproduces the original problem with
+extra steps.
+
+![Two histograms of per-task token ratio with the median marked in red, both centred between 2x and 3x](visuals/fig13_token_overhead.png)
+
+This is the cost you will actually feel. **The crux is that the overhead is a stable multiple rather
+than a tail risk**, which makes it something you can budget for [`n12`].
+
+### Key takeaway message
+
+CaMeL stops trying to make the model able to tell data from instructions and instead builds a system
+where an unsafe model cannot cause an unsafe action. Four components do that, each closing a hole the
+previous one opened, with the security property living in an interpreter that tags every value with
+its provenance and a policy checked at every tool call. It cuts successful attacks from around a
+hundred to nearly zero for seven points of utility and 2.82x input tokens, plus the standing cost of
+maintaining the policies. The benchmark is the authors' own, and the authors themselves show a route
+around the guarantee. The boundary worth carrying is that this bounds what an agent does and not what
+it believes or reports.
