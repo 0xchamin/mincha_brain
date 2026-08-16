@@ -17,6 +17,34 @@ Each relocation has a bill, and the article prices none of them. The one that ma
 second, because decoding the article's own example shows server execution state travelling through
 the client as unsigned plaintext while it guards a file deletion (`n8`, `d1`).
 
+```mermaid
+flowchart TB
+    B["before: one state owner<br/>server memory, keyed by Mcp-Session-Id"]
+    H["delete the handshake - n3"]
+    W["<b>to the wire</b><br/>a _meta block on every<br/>request, forever"]
+    C["<b>to the client</b><br/>requestState, unsigned plaintext<br/>in the article's own example - n8"]
+    A["<b>to your application</b><br/>a task store, which is Redis, four sections<br/>after the headline says you do not<br/>need Redis - n9, d2"]
+    S["State is conserved.<br/>Three new owners, three bills,<br/>and the article prices none of them - n10"]
+
+    B --> H
+    H --> W --> S
+    H --> C --> S
+    H --> A --> S
+
+    classDef cost fill:#fce8e6,stroke:#ea4335,color:#7f1d1d
+    class C,A,S cost
+    style H fill:#e8f0fe,stroke:#4285f4,color:#1a3a6b
+```
+
+This is a conservation diagram, not an architecture diagram, and the claim it makes is arithmetic
+rather than architectural. **The crux is that what the article calls statelessness is state
+relocation, so the correct question is never whether the state is gone but who is holding it now and
+what they pay.** It is drawn as one owner fanning into three because the announcement presents a
+deletion and the deletion is real, while the three destinations appear scattered across the article
+with nothing adding them up. The middle branch is the one to act on: server execution state travelling
+through the client as unsigned plaintext, while it guards a file deletion. *Synthesized from `n3`,
+`n8`, `n9`, `n10` and divergences `d1` and `d2`; the conservation framing is this brain's.*
+
 ## The 1-minute version
 
 This article is a vendor announcement of a protocol revision, and underneath the announcement is a
@@ -161,7 +189,34 @@ been, because a payload can be decoded and a diagram can only be looked at.
 
 ---
 
-## 1. Why a session ID is a scaling decision
+## Movement 1 - why the problem is hard
+
+```mermaid
+flowchart TB
+    D["a protocol designed for one client,<br/>one server, one machine"]
+    P["a session ID binds the conversation<br/>to a process - n1"]
+    L["put two servers behind one address"]
+    F["<b>400 Session Not Found</b> on request two,<br/>because it landed on a pod that has<br/>never heard of the session - n2"]
+    N["not degradation under load.<br/>A correctness error that fires<br/>whenever the balancer does its job"]
+
+    D --> P --> L --> F --> N
+
+    style F fill:#fce8e6,stroke:#ea4335,color:#7f1d1d
+    style N fill:#fff4e5,stroke:#b45309,color:#78350f
+```
+
+This is a failure-mode diagram, not a design, and the last box is why the movement exists. **The crux
+is that this breaks loudly rather than slowly, and that distinction decides whether it is an
+operations problem or a protocol problem.** It is drawn as a straight descent ending in a
+reclassification because the sequence is unremarkable until the final step: everything up to the error
+is how a great deal of software legitimately works, and it only becomes a design conflict when you
+notice the failure cannot be tuned around. Degradation you can throw capacity at. A correctness error
+triggered by correct load-balancer behaviour propagates outward into every layer that touches the
+traffic, which is what forces a change to the protocol rather than to the deployment.
+
+*Synthesized from `n1` and `n2`.*
+
+### 1. Why a session ID is a scaling decision
 
 Start with the version of MCP that worked. A client opened a connection, sent an `initialize` call
 naming its protocol version, its capabilities and itself, and the server answered with an
@@ -206,7 +261,35 @@ more useful. Which requests can be served by a backend that has never seen this 
 the 2025-11-25 model the answer is exactly one, the handshake, and that is why the trouble starts on
 request two.
 
-## 2. What breaks, and why it breaks loudly
+### 2. What breaks, and why it breaks loudly
+
+```mermaid
+flowchart TB
+    P["the problem"]
+    O1["sticky affinity<br/><i>defeats even distribution, makes autoscaling<br/>inefficient, still dies on pod restart</i>"]
+    O2["session in shared Redis<br/><i>correct, and adds a network read and a<br/>network write to every single call</i>"]
+    O3["deep packet inspection at the gateway<br/><i>correct, and puts JSON parsing on<br/>the ingress hot path</i>"]
+    T["Every option is a tax paid forever<br/>to support a handshake<br/>that happens once - n2"]
+
+    P --> O1 --> T
+    P --> O2 --> T
+    P --> O3 --> T
+
+    classDef bad fill:#fce8e6,stroke:#ea4335,color:#7f1d1d
+    class O1,O2,O3 bad
+    style T fill:#fff4e5,stroke:#b45309,color:#78350f
+```
+
+This is an alternatives diagram, and the point is that none of the three is wrong. **The crux is that
+every available fix works and every one of them is a recurring cost imposed by a one-time event, which
+is the observation that justifies changing the protocol instead of the deployment.** It is drawn with
+all three converging on a single verdict rather than ranked, because ranking them invites a reader to
+pick the least bad and stop, and the argument only lands once you see that the thing they have in
+common is the problem. Each italic line is what you give up, and the design conflict is that you give
+up something on every request to support a handshake that occurs on the first.
+
+*Synthesized from `n2`.*
+
 
 At first glance this looks like a performance problem, and that reading is comforting because
 performance problems have knobs. The article's own example says otherwise. Put three pods behind a
@@ -241,7 +324,32 @@ of the new design, and in section 5 the same article will quietly ask you to bri
 Three escapes, three permanent bills, all of them paid to support a handshake that happens once per
 connection. That framing is what makes the next move feel inevitable rather than clever.
 
-## 3. The handshake removal, read as a diff
+## Movement 2 - the change itself
+
+```mermaid
+flowchart TB
+    O["3. delete initialize and Mcp-Session-Id.<br/>Protocol version, client capabilities and<br/>client info move into _meta on<br/>every request - n3"]
+    Q{"but a self-describing body is only<br/>self-describing to something<br/>willing to parse it"}
+    H["4. so routing values climb into HTTP headers:<br/>Mcp-Protocol-Version, Mcp-Method, Mcp-Name -<br/>mirrored to the body, rejected with<br/>-32020 on mismatch - n4"]
+    R["a gateway can now rate-limit one tool by<br/>reading a header, with no JSON<br/>parsing on the hot path - n5"]
+
+    O --> Q --> H --> R
+
+    style R fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a derivation diagram, not a changelog, and the question in the middle is what turns two
+announcements into one argument. **The crux is that the header promotion is not a second feature but a
+necessary completion of the first, because moving state into the body helps the server and does
+nothing for the intermediaries the whole change exists to satisfy.** It is drawn with the objection
+stated explicitly because the article presents these as sibling bullet points, and read that way the
+headers look like convenience. The mirroring rule with its own error code is the detail worth keeping:
+duplicating data across two layers creates a disagreement risk, and the design closes it by making
+disagreement an explicit protocol error rather than undefined behaviour.
+
+*Synthesized from `n3`, `n4` and `n5`.*
+
+### 3. The handshake removal, read as a diff
 
 If the handshake is what makes request two special, then the fix is not to support the handshake
 better. It is to arrange for there to be no request two, in the sense that no request depends on any
@@ -303,7 +411,32 @@ forever, so the protocol has traded a one-time negotiation for a permanent per-r
 the scale the article is arguing for that is a fine trade and almost certainly the right one. It is
 still the first of the three relocations that section 8 adds up.
 
-## 4. Why routing metadata climbed into the headers
+### 4. Why routing metadata climbed into the headers
+
+```mermaid
+flowchart TB
+    B["the body is self-describing"]
+    G["but a gateway will not parse<br/>a JSON body to route"]
+    H["so mirror the routing values<br/>into HTTP headers - n4"]
+    D{"what if the header and<br/>the body disagree?"}
+    E["reject with -32020.<br/>Disagreement is an explicit protocol<br/>error, not undefined behaviour"]
+    R["ordinary infrastructure can now route,<br/>audit, rate-limit and cache MCP traffic<br/>without understanding it - n5"]
+
+    B --> G --> H --> D --> E --> R
+
+    style E fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a design-decision diagram, and the interesting box is the error code rather than the headers.
+**The crux is that duplicating data across two layers always creates a disagreement risk, and the
+design earns the duplication by making disagreement a named, rejectable error instead of leaving it to
+whichever layer reads first.** It is drawn with the objection as an explicit decision node because that
+is the question a reviewer would raise, and skipping it makes the header promotion look like a free
+convenience. The payoff in the last box is the actual goal of the whole revision, and it is a
+statement about who can participate in the traffic rather than about the protocol's own behaviour.
+
+*Synthesized from `n4` and `n5`.*
+
 
 Section 3 leaves a gap that is easy to miss. A self-describing request is only self-describing to
 something willing to read it, and the components this whole exercise is meant to satisfy are exactly
@@ -347,7 +480,34 @@ response may be cached across users, which is a security-relevant field describe
 Headers and cache hints handle the requests that are simply requests. Two kinds of interaction are not
 simply requests, and they are where the design gets genuinely interesting.
 
-## 5. The two interactions that refused to go stateless
+## Movement 3 - the residuals
+
+```mermaid
+flowchart TB
+    Q["which interactions genuinely need<br/>memory between calls?"]
+    A["5a. a server that must ask the user<br/>a question - elicitation"]
+    B["5b. a server running a long job"]
+    RA["returns InputRequiredResult carrying a<br/>requestState blob the client holds<br/>and echoes back - n7"]
+    RB["returns a taskId and keeps the real state<br/>in a shared datastore, which in the<br/>article's own example is Redis - n9"]
+    C["6. neither was made stateless.<br/>Both were made <i>someone else's</i> state"]
+
+    Q --> A --> RA --> C
+    Q --> B --> RB --> C
+
+    style C fill:#fce8e6,stroke:#ea4335,color:#7f1d1d
+```
+
+This is a residuals diagram, not a feature list, and it is the movement the article's headline is
+least honest about. **The crux is that the two cases that could not be made stateless were not solved,
+they were reassigned, and in one of them the new owner is the client.** The two branches are drawn in
+parallel because they were handled by different mechanisms and arrive at the same place, which is what
+makes the pattern visible rather than anecdotal. The long-job branch is the awkward one for the
+announcement: it names Redis as the datastore four sections after a headline bullet declaring Redis
+unnecessary, which this note gates as a divergence rather than as a quibble.
+
+*Synthesized from `n7`, `n9` and divergence `d2`.*
+
+### 5. The two interactions that refused to go stateless
 
 Ask what "every request is independent" cannot express, and the answer comes out in two shapes. The
 first is a server that needs to ask the user something in the middle of doing the work, such as a
@@ -416,7 +576,35 @@ So both residual interactions were handled by moving their state somewhere new, 
 and the application in the other. The task store's cost is at least written in the example. The
 client's cost is written nowhere, which is what the next section is for.
 
-## 6. What is actually inside `requestState`
+### 6. What is actually inside `requestState`
+
+```mermaid
+flowchart TB
+    R["the requestState blob<br/>the client holds and echoes back"]
+    D["base64, and it decodes to<br/>plaintext JSON - n8"]
+    N["no signature. No integrity protection<br/>visible in the example."]
+    U["it accompanies<br/>'are you sure you want to<br/>delete these 3 files?'"]
+    Q["so a client that edits it is editing<br/><b>server execution state</b>"]
+
+    R --> D --> N --> Q
+    U --> Q
+
+    style N fill:#fce8e6,stroke:#ea4335,color:#7f1d1d
+    style Q fill:#fce8e6,stroke:#ea4335,color:#7f1d1d
+```
+
+This is an evidence diagram, not a vulnerability report, and every box came from decoding the
+article's own printed payload. **The crux is that the mechanism moves server-side execution state
+through an untrusted party, and the example the article chose to illustrate it with is a destructive
+operation.** It is drawn ending in a question about who can edit what, rather than in a claimed
+exploit, because that is the honest limit of the evidence: this brain did not test a server and the
+specification may well require integrity protection that the blog post does not mention. What can be
+said is that the article shows the blob, shows the delete prompt, and never connects them, and that
+gap is recorded as the note's top research target.
+
+*Synthesized from `n8` and divergence `d1`. Whether the spec mandates signing is unknown from this
+source.*
+
 
 Before reading on, look again at the `requestState` value in section 5 and decide what you would want
 to know about it before shipping this design. The article treats it as an opaque implementation
@@ -476,7 +664,35 @@ attack the server at all, since it is already the component trusted to hand the 
 commentary rather than a claim of this source, and it is recorded as an open question rather than
 promoted.
 
-## 7. What the security section secures, and what it leaves open
+## Movement 4 - what it costs
+
+```mermaid
+flowchart TB
+    S["7. the security section secures<br/>inherited OAuth concerns:<br/>issuer verification, resource indicators - n11"]
+    G["and not the trust surface<br/>its own redesign created - d1"]
+    E["requestState decodes to unsigned plaintext<br/>JSON, attached to 'are you sure you want<br/>to delete these 3 files?' - n8"]
+    C["8. state is conserved:<br/>three relocations, three bills,<br/>none of them priced - n10"]
+    D["9. and the deprecations say where<br/>the protocol has decided to stop - n13"]
+
+    S --> G --> E
+    E --> C --> D
+
+    style G fill:#fce8e6,stroke:#ea4335,color:#7f1d1d
+    style E fill:#fce8e6,stroke:#ea4335,color:#7f1d1d
+```
+
+This is a gap diagram, not a security review, and the finding is a mismatch between what was secured
+and what was changed. **The crux is that the article has a security section and it addresses the
+threats the protocol already had, while the redesign created a new one that goes unmentioned.** It is
+drawn with the secured items and the unaddressed item on the same spine deliberately, because the
+presence of a security section is what makes the omission easy to miss: a reader who sees the heading
+assumes the surface was considered. The decode is the actionable item in this whole note, and it came
+from taking the article's own example payload and base64-decoding it rather than from any claim the
+article makes.
+
+*Synthesized from `n8`, `n10`, `n11`, `n13` and divergence `d1`.*
+
+### 7. What the security section secures, and what it leaves open
 
 Given section 6, the fair question is whether the article simply has no security content, and it is
 worth being accurate here, because it does. The section is real and its two additions matter to this
@@ -513,7 +729,33 @@ framing, since the security section opens by observing that responsibility for m
 from the transport layer to the application layer and that this is why security becomes paramount. It
 then secures the layer that did not change.
 
-## 8. State is conserved: three relocations, three bills
+### 8. State is conserved: three relocations, three bills
+
+```mermaid
+flowchart TB
+    Q["'stateless'"]
+    W["the wire pays<br/>a _meta block on every request,<br/>forever, instead of once"]
+    C["the client pays<br/>holding and echoing server state<br/>it cannot validate"]
+    A["your application pays<br/>running the task store the<br/>headline said you would not need - d2"]
+    T["Three bills. The article<br/>prices none of them - n10"]
+
+    Q --> W --> T
+    Q --> C --> T
+    Q --> A --> T
+
+    style T fill:#fff4e5,stroke:#b45309,color:#78350f
+```
+
+This is an accounting diagram, and it is the most portable thing in the note. **The crux is that
+statelessness is a claim about one component and never about a system, so the useful question when
+anyone announces it is simply which party started paying.** It is drawn with the word in quotation
+marks at the top because the framing is this brain's rather than the article's, and the article does
+concede the general form while its own headline denies the third instance. This generalises well past
+MCP: the same three destinations, the wire, the client and the operator's own infrastructure, are where
+protocol state goes whenever a server declares it has stopped holding any.
+
+*Synthesized from `n10` and divergence `d2`. The conservation framing is this brain's.*
+
 
 Now the sections can be added up, and this is the part most likely to transfer to a system that has
 nothing to do with MCP. Walk the three relocations in order and ask, for each, who pays.
@@ -554,7 +796,29 @@ session integrity was structural, since the state never left the process that ow
 2026-07-28 it becomes an obligation somebody has to discharge, on the wire, in the client and in the
 application separately. The mechanism is different and the conversion is identical.
 
-## 9. What the deprecations say about where the protocol stops
+### 9. What the deprecations say about where the protocol stops
+
+```mermaid
+flowchart TB
+    D["a deprecation policy, with a<br/>12-month minimum window - n13"]
+    R["Roots, Sampling and Logging<br/>enter it immediately"]
+    S["sampling is replaced by 'call the LLM<br/>provider's API directly'"]
+    C["which is the protocol declaring<br/>that model access is<br/><b>not its problem</b>"]
+
+    D --> R --> S --> C
+
+    style C fill:#e8f0fe,stroke:#4285f4,color:#1a3a6b
+```
+
+This is a scope diagram, not a migration note. **The crux is that what a protocol deprecates tells you
+where it has decided its boundary is, and dropping sampling is MCP saying it connects tools rather
+than brokering models.** It is drawn as a short chain ending in an inference because the deprecation
+list reads as housekeeping and the inference is the part worth carrying: a reader planning against this
+protocol should know which responsibilities it is walking away from, since those become theirs. The
+12-month window is the operationally useful fact and the direction of travel is the strategic one.
+
+*Synthesized from `n13`, `single-leg`. The boundary reading is this brain's.*
+
 
 One piece of the release is easy to skip and says something the rest does not. MCP now has a formal
 deprecation policy, with features moving through Active, then Deprecated, then Removed, and a minimum
@@ -719,3 +983,132 @@ Treat "widely" as marketing and the single named instance as the evidence.
   claim 28 and claim 29 (`n8`, `d1`).
 - [`agents.md`](../../brain/topics/agents.md) - the Tasks extension as the protocol-level form of
   pause-and-resume, which claim 15 reached from agent design rather than from transport (`n9`).
+
+## Presentation narrative
+
+*A talk track for engineers and their leadership on the MCP 2026-07-28 revision, derived entirely from
+the gated nodes above. The mechanics are well evidenced because the article prints its payloads and
+they agree with its prose. Nothing here is measured, it is a release candidate on beta SDKs, and the
+article itself asks for staging rather than production.*
+
+### Slide 1 - The failure was loud, and that is what made it a protocol problem rather than an ops problem
+
+**A stateful session behind a round-robin balancer does not get slower under load, it returns 400
+Session Not Found on the client's second request [n2].** The original protocol bound a conversation to
+a process: the client opened with an `initialize` handshake, the server replied with an
+`Mcp-Session-Id`, and every later call had to reach the specific pod holding the matching in-memory
+state [n1].
+
+Nothing about that is unusual, and it is how a great deal of software legitimately works. It becomes a
+design conflict the moment you put two servers behind one address, and the reason it could not be
+absorbed is the shape of the failure. Degradation you can tune, and you can throw capacity at it. A
+correctness error that fires precisely when the load balancer does its job propagates outward into
+every layer touching the traffic, which is what forces the change into the protocol rather than into
+the deployment.
+
+*Visual: the Movement 1 failure-mode diagram. Provenance: `n1`, `n2`.*
+
+### Slide 2 - Every available workaround was a tax paid forever for an event that happens once
+
+**Three fixes were available before this revision, all of them correct, and each buys the fix by
+giving something up [n2].** Sticky affinity pins the client to its pod, which defeats even traffic
+distribution, makes autoscaling inefficient, and still loses the session when the pod restarts. Moving
+the session into shared Redis restores correctness and adds a network read and a network write to
+every single call. Having the gateway inspect request bodies deeply enough to route intelligently puts
+JSON parsing on the hot path of your ingress.
+
+The question this reframes is the one worth putting to the room. None of those is wrong, so ranking
+them is the wrong exercise. What they have in common is that each imposes a permanent per-request cost
+to support a handshake that occurs on the first request only, and that asymmetry is the argument for
+changing the protocol.
+
+*Visual: the section 2 alternatives diagram. Provenance: `n2`.*
+
+### Slide 3 - Delete the handshake, then finish the job by promoting routing values into headers
+
+**If the state exchanged at connection time travels on every request, no request depends on an earlier
+one and any instance can serve any call [n3].** The article makes this unusually easy to verify: the
+same three fields, protocol version, client capabilities and client info, appear first in the legacy
+`initialize` parameters and then in the new request's `_meta`. The relocation is visible rather than
+asserted, which is rare in a vendor announcement.
+
+One more move was needed, and it is presented as a sibling feature when it is really a completion. A
+self-describing body is only self-describing to something willing to parse it, and a gateway will not
+parse JSON to route. So the routing values climbed into HTTP headers, mirrored against the body and
+rejected with `-32020` when the two disagree [n4]. The error code is the detail engineers should note:
+duplicating data across two layers creates a disagreement risk, and the design closes it by making
+disagreement an explicit protocol error rather than undefined behaviour. The payoff is that ordinary
+infrastructure can route, audit, rate-limit and cache MCP traffic without understanding it [n5].
+
+*Visual: the Movement 2 derivation diagram. Provenance: `n3`, `n4`, `n5`.*
+
+### Slide 4 - What the article calls statelessness is state relocation, and there are three new owners
+
+**Statelessness is a claim about one component and never about a system, so the useful question is
+which party started paying [n10].** Three of them did. The wire pays a `_meta` block on every request,
+forever, instead of once. The client pays by holding and echoing server execution state it cannot
+validate [n7]. And your own application pays by running the task store [n9].
+
+That third one is where the announcement is least honest, and it is worth saying precisely rather than
+rhetorically. The article's own long-job example keeps the real state in Redis, four sections after a
+headline bullet announcing that Redis is no longer needed. This note gates that as a divergence [d2]
+rather than as a quibble, because the headline is the part most readers will carry.
+
+The framing is this brain's rather than the article's, and it generalises past MCP: the wire, the
+client and the operator's own infrastructure are where protocol state goes whenever a server declares
+it has stopped holding any.
+
+*Visual: the section 8 accounting diagram, with the TL;DR conservation diagram. Provenance: `n7`, `n9`,
+`n10`, `d2`.*
+
+### Slide 5 - The security section secures the old threats and not the one the redesign created
+
+**This is the actionable finding, and it came from base64-decoding the article's own example payload
+rather than from anything the article claims.** The `requestState` blob the client holds and echoes
+back decodes to plaintext JSON with no signature, and in the source's own illustration it accompanies
+the question "are you sure you want to delete these 3 files?" [n8].
+
+The article does have a security section, and that is exactly what makes the gap easy to miss. It
+addresses inherited OAuth concerns, issuer verification against redirect and session hijacking, and
+resource indicators against the confused deputy [n11]. Those are real and they are the threats the
+protocol already had. The trust surface created by moving server execution state through an untrusted
+party goes unmentioned [d1].
+
+I want to state the limit of this honestly. This brain did not test a server, and the specification may
+well require integrity protection that the blog post does not mention. What can be said is that the
+article shows the blob, shows the delete prompt, and never connects them. That is the note's top
+research target rather than a demonstrated vulnerability.
+
+*Visual: the section 6 evidence diagram. Provenance: `n8`, `n11`, `d1`.*
+
+### Slide 6 - Adopt the mechanism in staging, and settle the signing question before anything destructive
+
+**The mechanics are well evidenced for a blog post and the deployment story is genuinely simpler, so
+the verdict is pilot rather than watch.** Round-robin routing, scale-to-zero serverless deployment and
+invisible pod restarts all fall out of one change rather than being separate features, and that is a
+real reduction in operational surface.
+
+Two conditions attach. This is a release candidate on beta SDKs and the article asks for staging rather
+than production [n15], which is the vendor's own recommendation and should be honoured. And before any
+elicitation flow guards a destructive action, read the specification directly and establish whether
+`requestState` integrity protection is required, because the article does not say and its own example
+does not have it.
+
+There is also a strategic signal worth one sentence for leadership. MCP now has a deprecation policy
+with a 12-month window, and Roots, Sampling and Logging entered it immediately, with sampling replaced
+by calling LLM provider APIs directly [n13]. That is the protocol declaring that model access is not
+its problem, which tells you which responsibilities are becoming yours.
+
+*Visual: the Movement 4 gap diagram, with the section 9 scope diagram. Provenance: `n13`, `n15`, `d1`.*
+
+### Key takeaway message
+
+MCP bound a session to a process, which failed loudly rather than slowly behind a load balancer, and
+every workaround charged a permanent per-request tax to support a one-time handshake. Deleting the
+handshake and promoting routing values into headers fixes that cleanly, and you can watch it happen
+field by field in the article's own payloads. What the announcement calls statelessness is state
+relocation, and three new owners are now paying: the wire, the client, and the application still
+running the Redis the headline said it would not need. The one to act on is the client, because server
+execution state travels through it as unsigned plaintext while guarding a file deletion, and the
+article's security section addresses everything except that. Pilot it in staging, and settle the
+signing question before anything destructive depends on it.
