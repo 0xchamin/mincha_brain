@@ -1070,11 +1070,10 @@ reversal [n20] is a forecast. Both are load-bearing here, and both are `single-l
 
 ## Presentation narrative
 
-> **Framing note.** This is a talk track for a mixed room of engineers and engineering leadership,
-> derived entirely from the gated nodes above. It selects the load-bearing reasoning from a thirteen
-> section walkthrough and does not re-summarise it. It claims nothing about whether GitHub's choices
-> are the right ones for anyone else, and every number in it is the vendor's own self-report with no
-> external baseline. Where the evidence is one-legged, the slide says so.
+> **Framing note.** A talk track for a mixed room of engineers and engineering leadership, derived
+> entirely from the gated nodes above. It selects the load-bearing reasoning from a thirteen section
+> walkthrough rather than re-summarising it. **Every number in it is the vendor's own self-report with
+> no external baseline**, and where the evidence is one-legged the slide says so.
 
 ### Slide 1 - The tools were free to add and the context was not
 
@@ -1082,107 +1081,124 @@ reversal [n20] is a forecast. Both are load-bearing here, and both are `single-l
 open-sourced its MCP server, became the most-starred repository of the week, and contributions
 filled platform coverage to 101 tools within about a month. Then agents got measurably worse at
 using GitHub [n2]. What engineers should take from this is that no individual pull request was
-wrong. Each tool was defensible, each had a user, and the degradation was emergent, which means no
-review gate could have caught it. The leadership significance is that **an open contribution
-process has a cost that accrues to a resource nobody owns**, and the tool catalogue is exactly that
-kind of resource. LangChain's ReAct study had already measured the general effect, finding worse
-performance across every model tested and single-domain agents beating multi-domain ones by 50% or
-more [n3]. That figure is re-displayed here rather than reproduced, so treat it as context, not as
-this source's evidence.
+wrong. Every tool was defensible and had a user, and the degradation was emergent, so no review gate
+could have caught it. The leadership significance is that **an open contribution process has a cost
+that accrues to a resource nobody owns** - here, the tool catalogue. LangChain's ReAct study had
+already measured the general effect across every model tested [n3].
 
-*Visual: `visuals/frame_155.jpg`. This is a findings slide, not a benchmark, and its value is that
-it separates three distinct failure modes that get lumped together as "too many tools". Only one of
-them, volume, is fixed by a smaller catalogue.*
+![the three failure modes of an oversized tool surface](visuals/frame_155.jpg)
+
+This is a findings slide, not a benchmark. It separates three failure modes that get lumped together
+as "too many tools", and only one of them is volume. **The crux is that a smaller catalogue fixes the
+first and leaves the other two standing** - domain confusion needs the cut to follow domain lines, and
+trajectory breakdown is untouched by catalogue size entirely. Engineers should check which of the
+three their own fix addresses. *Re-displayed from LangChain's study (`n3`), not reproduced - context
+rather than evidence.*
 
 ### Slide 2 - Every fix that required a user to act reached nobody
 
-**The team built three good solutions and shipped none of the value.** Grouped toolsets, dynamic
-tool discovery, and an unreleased semantic tool-search prototype are the same three answers the
-industry converged on, and all three required the user to edit a JSON config. Everyone used the
-default settings [n4]. What engineers should take from this is that the entry cost of a fix is part
-of its design, not a deployment detail. The question is therefore not whether your tool-surface
-design is good. It is whether it lands on anyone who did not read your changelog. **The leadership
-significance is that activation energy is an architectural property**, and it beat three rounds of
-competent engineering here. What finally moved the numbers was changing what arrives when the user
-does nothing: 101 tools to 52, and 64.6k tokens of initial context to 30.3k [n5].
+**The team built three good solutions and shipped none of the value.** Grouped toolsets, dynamic tool
+discovery and an unreleased semantic tool-search prototype are the three answers the industry
+converged on, and each required the user to edit a JSON config. Everyone used the default settings
+[n4]. Engineers should note that the entry cost of a fix is part of its design, not a deployment
+detail. The question is therefore not whether your tool-surface design is good. It is whether it lands
+on anyone who did not read your changelog. **The leadership significance is that activation energy is
+an architectural property**, and it beat three rounds of competent engineering. What moved the numbers
+was changing what arrives when the user does nothing, taking 101 tools to 52 and 64.6k tokens of
+initial context to 30.3k [n5].
 
-*Visual: `visuals/frame_295.jpg`. One sentence on a slide, which is the correct visual weight for
-the finding, because the elegance of what it defeated is the whole point.*
+![the answer to three elegant fixes](visuals/frame_295.jpg)
+
+This is a punchline slide rather than a data slide, and its emptiness is the argument. One sentence is
+the right visual weight, because the elegance of what it defeated is the whole point. **The crux is
+that the sentence describes user behaviour and not a product defect**, which is why a fourth
+configuration option would not have changed it either. *Corroborated by `n4`, narration @t=243s.*
 
 ### Slide 3 - The catalogue is the smaller number, by an order of magnitude
 
 **A single tool response cost ten times the entire tool catalogue.** One merged pull request tailored
 what `list_pull_requests` returns, and at a hundred items the response fell from 657,272 tokens to
 153,352 [n6]. The catalogue everyone spends their time optimising was 64.6k [n5]. What engineers
-should take from this is the structural difference between the two costs. Catalogue cost scales with
-something you control and change rarely. Response cost scales with what the agent asks for, changes
-every call, and has no upper bound. The leadership significance is a budgeting one, which is that
+should take from this is the structural difference. Catalogue cost scales with something you control
+and change rarely. Response cost scales with what the agent asks for, and it has no upper bound. The
+leadership significance is budgetary, which is that
 **an optimisation programme aimed only at tool definitions is aimed at the smaller half of the
-bill.** Both matter and only one is currently fashionable. The arithmetic comparing these two figures
-is this brain's, not the source's, so hold it as a reading rather than a finding.
+bill.** Both matter and only one is currently fashionable.
 
-*Visual: `visuals/frame_370.jpg`. This is a measurement artifact, not an architecture diagram, and
-it is worth showing because it is the only externally checkable number in the talk. It is a merged
-public pull request with a stated tokeniser.*
+![a merged PR measuring one tool's response payload](visuals/frame_370.jpg)
+
+This is a measurement artifact rather than an architecture diagram, and it earns the slide by being
+the only externally checkable number in the talk - a merged public pull request naming its tokeniser.
+**The crux is that the baseline column is the finding, not the reduction.** 657,272 tokens left one
+tool call before anyone optimised anything. Engineers should read the two rows as a slope, because
+the cost tracks the item count the agent chose. *Corroborated by `n6`; the comparison against the
+64.6k catalogue is this brain's arithmetic, stated by neither source.*
 
 ### Slide 4 - Tool descriptions compete, so evaluate them as a classifier
 
 **A description that wins every ambiguous call has not been improved, it has been over-fitted at its
 neighbours' expense.** GitHub stopped micro-optimising individual descriptions and started testing
 them against each other, asking whether each tool is called at the right times and left alone at the
-wrong ones [n10]. That reframing forces the evaluation shape: it is multi-class classification, and
-the artifact is a per-tool classification report per model, generated by a CI workflow that posts
-back into the pull request before merge. What engineers should take from this is that it makes
-description tuning measurable rather than a matter of taste, with precision and recall per tool. The
+wrong ones [n10]. That reframing forces the evaluation shape. It is multi-class classification, and
+the artifact is a per-tool classification report per model, scored on precision and recall - which
+turns description tuning from a matter of taste into a measurement. The
 leadership significance is that **it is the only control shown here that scales with contribution
-volume**, which matters for a project taking seven pull requests a day. Be clear about the limit:
-the method is demonstrated and no score is quoted anywhere in the talk.
+volume**, which matters for a project taking seven pull requests a day.
 
-*Visual: `visuals/frame_465.jpg`. This is a pipeline artifact rather than a result, and that is
-exactly what makes it worth presenting, because the reusable part is where the eval runs and not
-what it scored.*
+![a per-tool classification report generated in CI](visuals/frame_465.jpg)
+
+This is a pipeline artifact rather than a result, and that is exactly why it earns the slide - the
+reusable part is where the eval runs, not what it scored. **The crux is the job list down the left:
+`run-eval` sits between `build-mcp` and `comment-summary`, so a score lands in the review before a
+description change merges.** *Corroborated by `n10`; the report is unreadable at source resolution
+and no score is quoted anywhere in the talk.*
 
 ### Slide 5 - Authorization turned out to be the filter they had spent months trying to build
 
 **The credential already knew which tools the caller could possibly use, and nobody had thought to
-ask it.** A personal access token's scopes filter the tool list automatically with the user doing
-nothing beyond authenticating. OAuth adds step-up, so a call needing an ungranted scope returns a
-challenge and continues on approval instead of failing. Server tokens in GitHub Actions have no user,
-so user-specific tools disappear [n15]. The slide's own summary is "less context waste, fewer
-failures", which are precisely the two problems the first half of this work was about. What engineers
-should take from this is why it costs nothing: the server already builds a fresh tool list on every
-single request, so consulting scopes is one more input to a function that exists rather than a new
-subsystem [n16]. **The leadership significance is that the security migration paid for itself in
-reliability and context**, which is not the usual direction of that trade. The honest gap is that
-this is the one claim the talk never quantifies.
+ask it.** A token's scopes filter the tool list automatically, with the user doing nothing beyond
+authenticating. OAuth adds step-up, so a call needing an ungranted scope returns a challenge and
+continues on approval instead of failing. Server tokens have no user at all, so user-specific tools
+disappear [n15]. Engineers should note why it costs nothing. The server already builds a fresh tool
+list on every request, so consulting scopes is one more input to a function that exists rather than a
+new subsystem [n16]. **The leadership significance is that the security migration paid for itself in
+reliability and context**, which is not the usual direction of that trade.
 
-*Visual: `visuals/frame_815.jpg`. This is a convergence slide, not a security architecture, and the
-line worth reading aloud is the italic one underneath the three boxes.*
+![authorization reused as a context filter](visuals/frame_815.jpg)
+
+This is a convergence slide rather than a security architecture. Three auth paths sit above one italic
+line, "Less context waste. Fewer failures.", which are the two problems the first half of the work was
+about. **The crux is that a security control states its benefit in the currency of the other
+problem**, which makes it a design finding rather than a feature announcement. Engineers should take
+the middle box, since step-up removes the incentive to over-scope up front. *Corroborated by `n15`;
+the benefit is claimed on the slide and quantified nowhere.*
 
 ### Slide 6 - The author expects to reverse the central decision, and that is the right close
 
-**The engineer who halved the catalogue says he will probably put the tools back.** His prediction is
-that discovery becomes automatic, tools compose like shell pipes, and thousands of tools become
-normal, with tool-search APIs from Anthropic and OpenAI as the enablers [n19, n20]. That is a
-forecast, it is one-legged, and it is stated against his own interest, which is what makes it worth
-more than the claims it qualifies. So the recommendation here is **watch, not adopt**, and the split
-is clean. Adopt the mechanics, because per-request server construction, scope filtering, classifier
-evals in CI and response-payload tailoring do not depend on any tool-count judgement. Do not adopt
-the tool-count conclusion, because its own author has published its expiry date. The decision that
-would change this is a measurement nobody has taken: what scope filtering actually removes, and what
-server-side intent repair costs when the inferred intent is wrong.
+**The engineer who halved the catalogue says he will probably put the tools back.** He expects
+discovery to become automatic, tools to compose like shell pipes, and thousands of tools to become
+normal, enabled by tool-search APIs from Anthropic and OpenAI [n19, n20]. So the recommendation is
+**watch, not adopt**, and the split is clean. Adopt the mechanics, because per-request server
+construction, scope filtering, classifier evals in CI and response-payload tailoring depend on no
+tool-count judgement. Leave the tool-count conclusion, whose author has published its expiry date.
+What would change that is a measurement nobody has taken, of what scope filtering removes and what
+intent repair costs when the inference is wrong.
 
-*Visual: `visuals/frame_1000.jpg`. This is a forecast slide and should be presented as one, which
-means the three lines on it are the speaker's expectations and none of them is evidence.*
+![the three shifts the author expects](visuals/frame_1000.jpg)
+
+This is a forecast slide and has to be presented as one, because nothing on it is evidence and the
+three lines describe an ecosystem the speaker does not control. **The crux is that the reversal is not
+on the slide at all** - it is said aloud beside it, which is why an audience reading the deck later
+would miss the scope condition on everything presented earlier. *`n19` corroborated; the reversal is
+`n20`, single-leg and stated against the speaker's own interest.*
 
 ### Key takeaway message
 
-The problem was that an open contribution process filled a tool surface faster than anyone could
-govern it, and every per-user fix the team designed failed because it required the user to act. The
-decision that worked was to move the filter to something the user had already declared for another
-reason, which is the credential, and the delivered value is a security migration that paid for
-itself in context and reliability. The boundary is that this is a single vendor's self-report with
-no external baseline, its most interesting mechanism is its least quantified, and its central
-recommendation carries an expiry date its own author has published. The implication for anyone
-building on MCP is to take the mechanics and leave the tool-count conclusion, and to measure your
-response payloads before you spend a quarter optimising your tool definitions.
+An open contribution process filled a tool surface faster than anyone could govern it, and every
+per-user fix the team designed failed because it required the user to act. What worked was moving the
+filter onto something the user had already declared for another reason, the credential, so a security
+migration paid for itself in context and reliability. The boundary is that this is one vendor's
+self-report with no external baseline, its most interesting mechanism is its least quantified, and its
+central recommendation carries an expiry date its own author published. Take the mechanics, leave the
+tool-count conclusion, and measure your response payloads before spending a quarter on tool
+definitions.
