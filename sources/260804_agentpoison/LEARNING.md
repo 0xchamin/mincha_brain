@@ -19,6 +19,33 @@ benign accuracy stays above 90% (`n5`). The trigger it produces reads like ordin
 reviewing the store would not flag it (`n8`). Read this as the threat model that three vendor memory
 sources in this brain designed without.
 
+```mermaid
+flowchart TB
+    R["every agent retrieves something<br/>before it acts"]
+    S["so the <b>retriever</b> is an attack surface,<br/>and the cheapest one in the system"]
+    M["optimise a short trigger so any query<br/>containing it lands in a private corner<br/>of the embedding space - n3"]
+    N["<b>no weights touched, no training run</b> - n2"]
+    C["one poisoned record -> ~62%<br/>one trigger token -> ~79%<br/>benign accuracy stays above 90% - n5"]
+    H["and the trigger reads like ordinary text,<br/>so a human reviewing the store<br/>would not flag it - n8"]
+
+    R --> S --> M --> C
+    M --> N
+    C --> H
+
+    style S fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    style H fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+```
+
+This is a cost diagram, not an attack diagram, and every number in it is chosen because it is small.
+**The crux is that this attack is cheap in exactly the dimensions defenders monitor - record count,
+trigger length, accuracy impact and human readability - which is what makes it a threat model rather
+than a demonstration.** It is drawn with the costs and the stealth on the same branch because they are
+one property: an attack that needs a single innocuous-looking record is invisible to volume anomaly
+detection and to review alike. Read this as the threat model that three vendor memory sources in this
+brain designed without.
+
+*Synthesized from `n2`, `n3`, `n5` and `n8`.*
+
 ## The 1-minute version
 
 This article covers a 2024 red-teaming paper from Chicago, Illinois, Wisconsin and Berkeley that
@@ -140,7 +167,8 @@ flowchart TB
     style M2 fill:#f8b4b4,stroke:#c1121f,stroke-width:2px
 ```
 
-The diagram groups nine sections into four movements running top to bottom, and the shaded movement
+This is a reading-order diagram about the note rather than about the attack, grouping nine sections
+into four movements, and the shaded one
 carries the idea worth taking away. Movement 1 establishes why a retrieval store deserves a threat
 model, and a reader who already accepts that can move quickly, though section 2 is what makes the
 design in Movement 2 feel necessary rather than clever. Movement 2 is the payload and repays slow
@@ -150,7 +178,29 @@ read only one section it should be section 5. Movement 4 turns from exposition t
 paper, and a reader who wants the criticism can begin at section 8, though section 8's argument
 depends on a detail planted back in section 1.
 
-## 1. The store is an input, and nobody treats it like one
+## Movement 1 - the surface nobody guards
+
+```mermaid
+flowchart TB
+    I["inputs everyone guards:<br/>the prompt, the tool call, the API"]
+    S["the <b>retrieval store</b>: also an input,<br/>read on every request, guarded<br/>by nobody"]
+    O["2. and the obvious attacks do not<br/>work here, which is why it stayed<br/>unexamined"]
+
+    I -.->|"the surface that got attention"| S --> O
+
+    style S fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+```
+
+This is a surface diagram, not a design. **The crux is that the store is read on every single request
+and is the only input in the system with no gate on it**, which makes it the highest-leverage place to
+put something and the least likely place anyone is looking. It is drawn with the guarded inputs
+retained because the argument is comparative: nothing here says the store is easy to reach, only that
+reaching it is worth more than reaching anything else. Section 2 then closes off the attacks a reader
+would expect, which is what makes Movement 2's reframe land rather than sound clever.
+
+*Synthesized from `n1` and `n2`.*
+
+### 1. The store is an input, and nobody treats it like one
 
 Start with a question that sounds naive and is not. When you threat-model an agent, what do you count
 as untrusted input?
@@ -203,7 +253,34 @@ because section 7 is where it stops mattering as much as it should.
 So the surface is real and the access is plausible. The question is what an attacker can actually do
 with it, and the honest answer for most of the field's history was: not much.
 
-## 2. Why the obvious attacks do not work here
+### 2. Why the obvious attacks do not work here
+
+```mermaid
+flowchart TB
+    A["<b>flood the corpus</b><br/><i>detectable by volume, and you are<br/>competing with every real document</i>"]
+    B["<b>jailbreak the prompt</b><br/><i>wrong surface - the store is read<br/>before the model reasons</i>"]
+    C["<b>adversarial suffix, GCG-style</b><br/><i>works, and reads as gibberish -<br/>high perplexity, trivially flagged</i>"]
+    D["so the attack has to be cheap,<br/>on the retrieval surface,<br/>and read like ordinary text"]
+
+    A --> D
+    B --> D
+    C --> D
+
+    classDef bad fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    class A,B,C bad
+    style D fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is an elimination diagram, and the three constraints in the last box are what the rest of the
+paper satisfies. **The crux is that the requirements are derived from the failures rather than chosen,
+which is why the eventual design looks inevitable instead of ingenious.** It is drawn as three
+independent dead ends because they fail for unrelated reasons - volume, surface and detectability -
+and a reader who sees only one will assume the remaining two are open. Notice that the third almost
+works, which is the useful one: an attack that succeeds and is trivially detectable is not a threat
+model.
+
+*Synthesized from `n2`. The three-way framing is this brain's reading of the section.*
+
 
 To see why this paper needed a new method, it helps to try the two things you would try first and
 watch both fail for different reasons.
@@ -235,7 +312,30 @@ similarity contest. They want to not be in it.**
 
 That reframing is the paper's contribution, and it is a geometric idea rather than a security one.
 
-## 3. Attack the coordinates, not the corpus
+## Movement 2 - the reframe
+
+```mermaid
+flowchart TB
+    C["<b>corpus thinking</b>: poison the documents,<br/>hope the retriever picks them"]
+    E["<b>coordinate thinking</b>: optimise a trigger<br/>so triggered queries land in a private,<br/>tightly clustered region - n3"]
+    P["and put your handful of records there"]
+    L["4. and the four losses are <b>derived</b><br/>from what that region has to satisfy,<br/>not listed as a recipe"]
+
+    C -.->|"the reframe"| E --> P --> L
+
+    style E fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a reframe diagram, and the shift from corpus to coordinates is the paper's contribution. **The
+crux is that the attacker stops competing for relevance against a whole corpus and instead creates a
+region of the space that only triggered queries visit, which is why one record suffices where hundreds
+would otherwise be needed.** It is drawn with the naive framing retained because the economics only
+make sense against it. Section 4's losses then fall out: the region must be reachable by triggered
+queries, avoided by benign ones, tightly clustered, and the trigger must read naturally.
+
+*Synthesized from `n3` and `n4`.*
+
+### 3. Attack the coordinates, not the corpus
 
 Here is the reframe, and the figure that carries it is the single most explanatory image in the
 paper.
@@ -270,7 +370,34 @@ a fine-tuning budget.
 So the goal is a trigger that produces that cluster. The question is what you have to optimise to
 get one, and the answer is more interesting than a single objective.
 
-## 4. Deriving the four losses, rather than listing them
+### 4. Deriving the four losses, rather than listing them
+
+```mermaid
+flowchart TB
+    Q["what must a poisoned region satisfy?"]
+    L1["triggered queries must <b>land</b> in it<br/>-> a compactness loss"]
+    L2["benign queries must <b>not</b><br/>-> a separation loss"]
+    L3["the records there must actually<br/><b>drive the action</b> -> a target loss"]
+    L4["and the trigger must read naturally<br/>-> a fluency loss"]
+
+    Q --> L1
+    Q --> L2
+    Q --> L3
+    Q --> L4
+
+    style Q fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a derivation diagram, not an objective listing. **The crux is that each loss exists because
+of a specific way the attack fails without it, so the four are not tunable preferences but the minimum
+set that makes the region usable.** It is drawn fanning from a single question because presenting four
+loss terms as a recipe hides which one you may drop, and the answer is none: without separation the
+attack fires on benign traffic, without fluency it is detectable, and without the target loss the
+retrieval succeeds and nothing happens. This is the anti-pattern the contract warns about, avoided -
+a derived list feels inevitable and an enumerated one feels arbitrary.
+
+*Synthesized from `n4`.*
+
 
 It is tempting to present the method as four loss terms, but a list gives no sense of which ones are
 load-bearing. Instead, ask what the attacker needs and let each unmet requirement name the next term.
@@ -311,7 +438,33 @@ with a defender. In short, the design's shape is set by the assumption that some
 | Target generation (Eq 9) | The retrieved demonstration must actually produce the action | The poison is retrieved and the model ignores it |
 | Coherence (Eq 10) | The trigger must read as language | A perplexity filter or a human reviewer catches it immediately |
 
-## 5. One record, one token
+## Movement 3 - what it costs to run
+
+```mermaid
+flowchart TB
+    A["5. <b>one</b> poisoned record -> ~62%<br/><b>one</b> trigger token -> ~79% - n5"]
+    B["6. and the trigger reads like ordinary<br/>text - perplexity indistinguishable<br/>from benign queries - n8"]
+    C["7. white-box access to the embedder<br/>sounds like a barrier, and transfers<br/>across five other embedders anyway"]
+    D["cheap, invisible, and portable"]
+
+    A --> D
+    B --> D
+    C --> D
+
+    style D fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+```
+
+This is a threat-viability diagram, not a results tour. **The crux is that the three properties
+defenders would rely on to make this impractical - volume, detectability and access - all fail
+independently, and it is their conjunction that turns a paper into a threat model.** It is drawn
+converging because any one of them alone leaves a defence: a high record count is detectable by
+volume, a high-perplexity trigger is detectable by inspection, and a non-transferable attack requires
+knowing the target's embedder. The paper closes all three, and section 7 is the one most readers
+assume protects them.
+
+*Synthesized from `n5`, `n8` and `n9`.*
+
+### 5. One record, one token
 
 Everything so far describes a method. This section is where it becomes a problem for anyone running
 an agent, and the reason is a pair of curves the paper reports almost in passing.
@@ -347,7 +500,7 @@ on.**
 That still leaves inspection. If the store is small enough, or the writes are reviewed, surely
 someone reads the record and notices?
 
-## 6. The trigger you would not catch by reading it
+### 6. The trigger you would not catch by reading it
 
 This is where the coherence loss earns its section, and the paper's own case study is more persuasive
 than any of its charts.
@@ -401,7 +554,7 @@ So volume detection fails, human review fails, and perplexity filtering fails. T
 authors' own stated limitation to fall back on, which is that all of this requires white-box access
 to the embedder.
 
-## 7. Why white-box access is not the barrier it sounds like
+### 7. Why white-box access is not the barrier it sounds like
 
 The paper lists exactly one limitation about itself, and it is this one. The attack optimises against
 the embedder's gradients, so the attacker must hold the embedder. Against a proprietary agent using a
@@ -437,7 +590,31 @@ rather than as the difference between possible and impossible.
 
 Which leaves the defense that was actually built for corpus poisoning.
 
-## 8. The defense that was designed around
+## Movement 4 - why it is hard to stop
+
+```mermaid
+flowchart TB
+    D["8. the defence in the literature was<br/>designed around, deliberately -<br/>it is one of the four losses"]
+    N["9. and the reported numbers understate<br/>as much as they show"]
+    R["so the honest reading is a threat model<br/>rather than a measured risk"]
+
+    D --> R
+    N --> R
+
+    style R fill:#fbf1dc,stroke:#b45309,color:#78350f
+```
+
+This is a limits diagram, not a defence survey. **The crux is that the attack was optimised against
+the known defence, which means the headline numbers describe an adversary who has already read your
+mitigation - and that is the right adversary to design against and the wrong one to draw a risk
+estimate from.** It is drawn with both sections feeding one reading instruction because they cut in
+opposite directions and both matter: one says the numbers are achievable against real defences, the
+other says what the numbers leave out. Section 9 is where this note is most useful to somebody
+deciding what to actually do.
+
+*Synthesized from `n10` and `n11`.*
+
+### 8. The defense that was designed around
 
 Now the detail planted in section 1 pays off, and it is a definition rather than a result.
 
@@ -472,7 +649,7 @@ guarantee into an enforcement obligation nobody has specified**. A shared retrie
 such a component, and AgentPoison is what the unspecified enforcement obligation looks like when
 someone actually attacks it.
 
-## 9. What the numbers do not say
+### 9. What the numbers do not say
 
 The mechanism in this paper is well evidenced. Its numbers deserve more scepticism than its
 presentation invites, and two problems are visible in its own tables.
@@ -662,3 +839,117 @@ to `rag.md`. Under [ADR-0012](../../brain/decisions/0012-a-mention-is-not-a-sour
 topic when it teaches within the scope rather than when it is *about* something in the scope. Filing it
 to `agents.md` would move that note from 11 sources to 12 while adding nothing a reader of it would
 open it for, which is the [`skills.md`](../../brain/topics/skills.md) trap exactly.
+
+## Presentation narrative
+
+*A talk track for a team running an agent with any retrieval store - memory, knowledge base or
+otherwise - derived entirely from the gated nodes above. This is an academic paper with published
+numbers, and the last slide states precisely what those numbers do and do not describe.*
+
+### Slide 1 - Your retrieval store is an input, and it is the only one nobody gates
+
+**Every agent retrieves something before it acts, and that store is read on every single request.**
+Prompts get filtered, tool calls get authorised, APIs get rate-limited. The store gets written by
+whatever process fills it and read without question.
+
+That asymmetry is the whole opportunity. An attacker who reaches the store does not need to win an
+argument with the model on every request, because the store is consulted before the model reasons at
+all.
+
+![The AgentPoison framework: an adversary poisons the memory or knowledge base, and a triggered user instruction retrieves the poisoned records](visuals/fig1_framework.png)
+
+This is the surface. **The crux is that the poisoning step and the triggering step are separated in
+time** - the attacker acts once, offline, and waits [`n1`].
+
+### Slide 2 - Attack the coordinates, not the corpus
+
+**The reframe is to stop poisoning documents and start engineering a region of the embedding space
+[n3].** A short trigger phrase is optimised so that any query containing it lands in a private,
+tightly clustered corner where the attacker has already placed a handful of records.
+
+That changes the economics completely. Corpus poisoning means competing for relevance against every
+legitimate document, which needs volume and is detectable by volume. Coordinate poisoning means
+creating somewhere only triggered queries ever visit, which needs almost nothing.
+
+No weights are touched and no training is run [n2].
+
+![Embedding space visualisation comparing CPA's scattered poisoned embeddings against AgentPoison's tightly clustered trigger region](visuals/fig2_embedding_space.png)
+
+This is the difference, shown geometrically. **The crux is the tightness of the cluster** - that is
+what lets one record serve every triggered query [`n3`].
+
+### Slide 3 - One record, one token, and benign accuracy barely moves
+
+**A single poisoned record reaches roughly 62% retrieval success, and a one-token trigger reaches
+roughly 79%, while benign accuracy stays above 90% [n5].** Those are the numbers to put in front of
+anyone who assumes store poisoning requires scale.
+
+The last clause matters as much as the first two. An attack that degraded normal performance would
+show up in your quality metrics, and this one does not. So the monitoring most teams already have -
+task success, error rates, user complaints - is blind to it by construction.
+
+![ASR-r and benign accuracy against number of poisoned instances and number of trigger tokens, comparing AgentPoison against baselines](visuals/fig4_one_instance.png)
+
+This is the cost curve, and the interesting part is the left-hand edge. **The crux is that the curve
+is already high at n equals one** [`n5`].
+
+### Slide 4 - The trigger reads like ordinary text
+
+**A human reviewing the store would not flag it, and neither would a perplexity filter [n8].** This is
+where the paper separates itself from adversarial-suffix work, which produces gibberish that is
+trivially detectable.
+
+Fluency is one of the four optimisation objectives rather than a happy accident, and the four are
+worth understanding as a set. The region must be reachable by triggered queries, avoided by benign
+ones, populated with records that actually drive the action, and named by a trigger that reads
+naturally. Drop any one and the attack fails in a specific way.
+
+![Perplexity density distributions of benign queries, AgentPoison-triggered queries and GCG-triggered queries](visuals/fig10_perplexity.png)
+
+This is the detectability result. **The crux is the overlap between the benign and AgentPoison curves
+against the separation of the GCG one** [`n8`].
+
+### Slide 5 - White-box access sounds like a barrier and is not
+
+**The method optimises against a known embedder, and the triggers transfer to five others.** That is
+the assumption most readers reach for as reassurance, and it does not hold.
+
+For a room evaluating exposure, this collapses the usual mitigation. Using a proprietary or
+self-hosted embedder narrows the attack surface far less than it appears to, because a trigger tuned
+on a public model carries over. What actually reduces exposure is controlling who can write to the
+store, which is a permissions question rather than a modelling one.
+
+![Transferability confusion matrix showing triggers optimised on one embedder evaluated against five others](visuals/fig3_transferability.png)
+
+This is the transfer matrix. **The crux is that the off-diagonal cells are populated** - optimising
+against one embedder is not the narrow attack it sounds like [`n9`].
+
+### Slide 6 - Read it as a threat model, not as a risk estimate
+
+**The defence in the literature was designed around deliberately - avoiding it is one of the four
+optimisation objectives.** That cuts both ways and both directions matter.
+
+It means the numbers describe an adversary who has already read your mitigation, which is the right
+adversary to design against. It also means these are not measurements of your risk, because the
+attacker in this paper knows more about your setup than most real ones will, and section 9 is explicit
+about what the reported numbers leave out.
+
+So the decision this supports is about write access rather than detection. Treat every path that can
+write to a retrieval store as privileged, record what authorised each entry, and stop assuming that
+volume anomalies, quality metrics or human review will catch anything. None of the three sees this.
+
+![Main results comparing AgentPoison against four baselines across three agents and four backbone-retriever combinations](visuals/tab1_main_results.png)
+
+This is the full comparison, and the baselines are the context. **The crux is that the margin over
+prior work is largest exactly where the costs are smallest** [`n10`].
+
+### Key takeaway message
+
+Every agent retrieves before it acts, and the retrieval store is the one input nobody gates. The
+reframe worth carrying is from corpus to coordinates: rather than poisoning documents and hoping,
+optimise a trigger so that triggered queries land in a private region of the embedding space where a
+handful of records are waiting. That makes the attack cheap in exactly the dimensions defenders watch
+- one record, one token, no measurable accuracy loss, a trigger that reads like ordinary text, and
+transfer across embedders. The known defence was designed around on purpose, so read the figures as a
+threat model rather than a risk estimate. The mitigation is write-path control, because nothing on the
+read path can see this.
