@@ -18,6 +18,32 @@ headline chart measures something weaker than its title claims (`d1`). The most 
 leaves you with is a question to ask of any self-improving system: what checks the output, and who
 wrote the checker?
 
+```mermaid
+flowchart TB
+    S["sample the model many times<br/>instead of once"]
+    K["keep the answers that<br/><b>survive a check</b>"]
+    F["feed those back as<br/>training data - n5"]
+    L["the loop turns"]
+    Q{"but every turn needs something that can<br/>tell a good answer from a bad one"}
+    V["and that is scarce outside math, code<br/>and other rule-based domains - n6"]
+    A["so the question to ask of any<br/>self-improving system is:<br/><b>what checks the output,<br/>and who wrote the checker?</b>"]
+
+    S --> K --> F --> L --> Q --> V --> A
+
+    style Q fill:#e8f0fc,stroke:#4285f4,color:#1a3a6b
+    style A fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a bottleneck diagram, not a method diagram, and the interesting part is where the chain stops
+rather than how it turns. **The crux is that self-improvement is mechanically simple and gated
+entirely on verification, so the loop's reach is set by the domain rather than by the model.** It is
+drawn as a cycle that runs into a question because the mechanism genuinely does work and the
+constraint genuinely does bind; drawing either alone would misrepresent the lecture. The terminal box
+is what to carry away, and it is a question rather than a finding because this is lecture 1 of a
+course and a map of a research area rather than a result.
+
+*Synthesized from `n5` and `n6`.*
+
 ## The 1-minute version
 
 This article covers the opening lecture of a Stanford course on self-improving AI agents, taught by
@@ -141,7 +167,8 @@ flowchart TD
     style M3 fill:#f7c59f,stroke:#c1440e,stroke-width:2px
 ```
 
-The diagram groups the nine sections into four movements running top to bottom, and the shaded one
+This is a reading-order diagram about the note rather than about the field, grouping the nine sections
+into four movements, and the shaded one
 carries the payload. Movement 1 establishes why a course exists for this at all, and a reader who
 already accepts that agents need to self-correct can skim it without losing the thread. Movement 2
 builds the raw material in three steps, and it is the part where skimming costs the most, because
@@ -151,7 +178,33 @@ make them land. Movement 4 is where the note stops reporting the source and star
 and a reader who wants the criticism rather than the exposition can begin at section 7, though
 section 7's argument will feel unearned without section 6.
 
-## 1. The three gaps that survived scaling
+## Movement 1 - why this needs a course
+
+```mermaid
+flowchart TB
+    S["scaling closed a great deal"]
+    G1["gap 1"]
+    G2["gap 2"]
+    G3["gap 3"]
+    R["three things that did <b>not</b> close,<br/>and will not close by making<br/>the model bigger"]
+
+    S --> G1 --> R
+    S --> G2 --> R
+    S --> G3 --> R
+
+    style R fill:#e8f0fc,stroke:#4285f4,color:#1a3a6b
+```
+
+This is a scoping diagram, not a survey, and it is a single section for a reason. **The crux is that
+the course exists because three specific problems survived the thing that solved most others, so the
+subject is defined by what scaling left behind rather than by a technique.** It is drawn as one cause
+with three residues because the residues are the syllabus: everything in the remaining movements is an
+attempt on one of them. A reader who wants to know whether this material is relevant to their work
+should read this movement and can then decide honestly, which is the job a first movement should do.
+
+*Synthesized from the section below.*
+
+### 1. The three gaps that survived scaling
 
 Start with a question the lecture answers early and that is easy to skip past. If models keep
 getting better on their own, what exactly is left to teach?
@@ -200,7 +253,30 @@ nothing at all for the agent that must judge its own work at three in the mornin
 self-improvement has to address. So the question becomes where a mechanical judgement could possibly
 come from, and the answer starts somewhere unexpected.
 
-## 2. One sample badly understates a model
+## Movement 2 - the raw material
+
+```mermaid
+flowchart TB
+    O["2. one sample badly understates<br/>what a model can do"]
+    C["3. so measure <b>coverage</b> - and then<br/>notice that coverage is not precision,<br/>and the payoff lives in the gap"]
+    I["4. which makes inference a <b>third</b><br/>scaling axis, beside data and parameters"]
+
+    O --> C --> I
+
+    style I fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a derivation diagram, not a results tour. **The crux is that the whole self-improvement
+programme rests on one empirical fact - a model's first answer understates it - and everything else in
+the movement is working out what follows.** It is drawn as a straight chain because the sections
+genuinely do force each other: repeated sampling only matters if you can say what it bought, saying so
+requires separating coverage from precision, and once both are on the table inference becomes an axis
+you can spend along rather than a fixed cost. This movement supplies the raw material the loop in
+Movement 3 consumes.
+
+*Synthesized from `n1`, `n2` and `n4`.*
+
+### 2. One sample badly understates a model
 
 Before reading the next figure, it is worth stating what you would expect. If a small open model
 scores below a frontier model on a reasoning benchmark, the natural conclusion is that the small
@@ -239,7 +315,7 @@ the lecture confirms that latency is "less of an issue" because the samples run 
 somebody has to choose. That choice is a separate problem from generation, and the field has given
 the two halves separate names.
 
-## 3. Coverage and precision, and the payoff
+### 3. Coverage and precision, and the payoff
 
 Here is the decomposition, and it is the single most portable thing in this source.
 
@@ -283,7 +359,7 @@ is a proof assistant in one case and a test suite in the other. That is not a co
 section 6 is where it becomes the whole argument. First, though, this needs to be connected to
 something larger than one paper.
 
-## 4. Inference as a third scaling axis
+### 4. Inference as a third scaling axis
 
 The natural objection to everything so far is that repeated sampling is a trick. You are spending a
 hundred times the compute to recover performance you could have bought with a bigger model, so
@@ -329,7 +405,30 @@ spending compute at inference to extract it follows a predictable curve. Both fa
 better answers out of a *fixed* model. The step that turns them into self-improvement is the one that
 puts the answers back in.
 
-## 5. Closing the loop
+## Movement 3 - the loop itself
+
+```mermaid
+flowchart TB
+    G["generate many candidates"]
+    V["keep what survives a check"]
+    T["train on those"]
+    G --> V --> T --> G
+    S["6. and it stalls - not because the<br/>generator runs out, but because the<br/><b>checker</b> does"]
+    V --> S
+
+    style S fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+```
+
+This is a cycle diagram, and the branch off it is the finding. **The crux is that the loop's failure
+mode is located precisely at the verification step, so what limits self-improvement is not the model's
+ability to produce good answers but your ability to recognise them.** It is drawn as a closed cycle
+with one edge leading out because the stall is not a break in the loop: the loop keeps turning and
+stops producing improvement, which is a harder thing to notice than a failure. Section 6 is where the
+lecture stops describing an attractive mechanism and starts naming its boundary.
+
+*Synthesized from `n5` and `n6`.*
+
+### 5. Closing the loop
 
 This is the thesis, and the slide that carries it is almost aggressively simple.
 
@@ -372,7 +471,7 @@ self-improvement from self-reinforcement. Which raises the obvious question abou
 construction. If the loop is this simple and the components are all available, why has it not already
 been run to convergence on everything?
 
-## 6. Where the loop stalls, and why
+### 6. Where the loop stalls, and why
 
 The answer is that the filter is not available everywhere, and the lecture names this as the field's
 central obstacle. It calls it the generator-verifier gap: "it's easy for models to generate a whole
@@ -422,7 +521,34 @@ as a verifier that works**, and a loop cannot tell the difference from the insid
 Which leaves the field with an uncomfortable incentive. If verifiers gate everything and only some
 domains supply them, the tempting move is to manufacture verifiers for the rest.
 
-## 7. The verifier written by the generator
+## Movement 4 - what breaks
+
+```mermaid
+flowchart TB
+    A["7. the verifier is written<br/>by the generator"]
+    B["8. and the pipeline reviews<br/>its own paper"]
+    C["so the check and the thing being<br/>checked share an author"]
+    D["9. and the field admits it cannot explain<br/>why the loop works when it works"]
+
+    A --> C
+    B --> C
+    C --> D
+
+    style C fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    style D fill:#fbf1dc,stroke:#b45309,color:#78350f
+```
+
+This is a conflict-of-interest diagram, not a limitations list. **The crux is that both failures in
+this movement are the same failure at different scales: a generator that also supplies its own
+verifier has no independent vantage point, exactly as an agent grading its own output does not.** It
+is drawn converging because reading them separately makes each look like an implementation detail, and
+together they identify a structural problem this brain records elsewhere as claim 34. The amber
+terminal is the honest ending: the field can demonstrate the loop working and cannot say why, which is
+what makes this a map rather than a result.
+
+*Synthesized from `n7`, `n8` and `n9`.*
+
+### 7. The verifier written by the generator
 
 The lecture describes that move twice, in both cases approvingly and in passing. Discussing the
 lab's Code Monkeys work, it says that "if you can generate unit tests for whatever code the model
@@ -476,7 +602,7 @@ the kind of gap worth noticing when a survey moves quickly.
 
 There is a published system where you can watch this arrangement reach its logical end.
 
-## 8. A pipeline that reviews its own paper
+### 8. A pipeline that reviews its own paper
 
 ![Research agents](visuals/frame_3420.jpg)
 
@@ -510,7 +636,7 @@ argument is that the boring part is the one that determines whether the loop wor
 
 Which makes it fair to ask how much of this the field actually knows, as opposed to hopes.
 
-## 9. What the field admits it cannot explain
+### 9. What the field admits it cannot explain
 
 The lecture's most useful moment is a student question it declines to answer confidently. Asked why
 reinforcement learning produces such a large jump when pre-training supposedly already contains the
@@ -676,3 +802,119 @@ evidence, and it is logged in `nodes.md`.
 > scaling is about buying accuracy rather than efficiency. Filing it there would misfile it and leave
 > the serving note looking populated when it is still empty. See
 > [ADR-0018](../../brain/decisions/0018-self-improvement-topic.md).
+
+## Presentation narrative
+
+*A talk track for a team considering an agent that improves itself, derived entirely from the gated
+nodes above. This is lecture 1 of a university course, so it is a map of a research area rather than a
+result, and its headline chart measures something weaker than its title claims - which the last slide
+handles rather than buries.*
+
+### Slide 1 - Self-improvement is mechanically plainer than the name suggests
+
+**Sample the model many times instead of once, keep the answers that survive a check, and feed those
+back as training data [n5].** That is the whole loop. No part of it requires a new architecture, and
+the reason it is interesting is not that it works but where it stops working.
+
+The framing worth carrying into any internal discussion is that this course exists because of three
+specific gaps that survived scaling. They are not problems that close by making the model bigger,
+which is why they need a technique rather than a budget.
+
+![Agentic workflows](visuals/frame_2640.jpg)
+
+This is the scope, not the method. **The crux is that everything downstream is an attempt on
+something scaling did not solve** - which is the honest test of whether this material applies to your
+problem.
+
+### Slide 2 - A model's first answer badly understates what it knows
+
+**Ask the same question many times at nonzero temperature and a correct answer often appears, which
+means the capability was in the weights and the first sample simply did not surface it.** That single
+empirical fact is what the entire programme rests on.
+
+What engineers should take from it immediately is that your evaluation of a model is partly an
+evaluation of your sampling strategy. A one-shot benchmark number is a lower bound on capability, and
+sometimes a very loose one.
+
+![Models improve drastically with just repeated sampling](visuals/frame_1355.jpg)
+
+This is the foundational result. **The crux is that the curve rises with samples rather than with
+model size**, which is what makes inference a place you can spend [`n1`].
+
+### Slide 3 - Coverage is not precision, and the payoff lives in the gap
+
+**Repeated sampling raises coverage, meaning the chance that a right answer is somewhere in the set.
+It does not raise precision, meaning your ability to point at it.** Everything practical about this
+field lives in the distance between those two.
+
+That distinction promotes inference into a third scaling axis beside data and parameters, but only
+conditionally. You can spend along it and convert the spend into capability exactly to the extent that
+you can identify the good answer once it exists.
+
+![Large Language Monkeys](visuals/frame_1206.jpg)
+
+This is where the coverage claim comes from. **The crux is that the y-axis is what the set contains,
+not what you can extract** [`n2`].
+
+### Slide 4 - The loop stalls at the checker, not at the generator
+
+**Every turn of the loop needs something that can tell a good answer from a bad one, and that is
+scarce outside math, code and other rule-based domains [n6].** The lecture calls verification the
+field's bottleneck, and that is the sentence to take to a design review.
+
+The failure mode is worth stating precisely because it is hard to notice. The loop does not break. It
+keeps turning and stops producing improvement, which looks like diminishing returns rather than like a
+fault. For leadership the consequence is a scoping rule: the domains where this pays are the ones
+where checking is mechanisable, and everywhere else the loop runs and quietly banks noise.
+
+![From test-time scaling to distilling synthetic reasoning traces](visuals/frame_1712.jpg)
+
+This is the loop closing. **The crux is the arrow back into training** - that is what makes it
+self-improvement rather than just sampling [`n5`].
+
+### Slide 5 - The verifier is written by the generator, which is the same problem twice
+
+**When the thing being checked and the thing doing the checking share an author, there is no
+independent vantage point.** That shows up here in two places: a verifier the generator produced, and
+a research pipeline that reviews its own paper.
+
+Reading those as separate implementation details misses the point. They are one structural problem,
+and it is the same one this brain records elsewhere as a generator grading its own output. The
+practical question for anyone building this is not whether the checker is good but whether it is
+independent, and independence is a property of provenance rather than of quality.
+
+![Research agents](visuals/frame_3420.jpg)
+
+This is the self-reviewing pipeline. **The crux is that every arrow inside it was authored by the same
+system**, which is what makes the review a formality rather than a check [`n7`, `n8`].
+
+### Slide 6 - The field cannot explain why the loop works when it works
+
+**Section 9 is the lecture admitting that the mechanism is demonstrated and not understood.** That is
+an unusual thing for a course to say early, and it is the reason to treat this as a map rather than as
+guidance.
+
+The trust boundary is specific rather than general. This is lecture 1 of a university course, the
+material is a survey of other people's results, and the headline chart measures something weaker than
+its title claims [d1]. So the verdict is watch rather than adopt: take the framing, take the
+verification bottleneck as a scoping rule, and do not take any number here as a target.
+
+What would change that is exactly what the field says it lacks - an account of why the loop converges
+where it does. Until then the actionable residue is one question, and it is the most useful thing the
+lecture leaves you with. What checks the output, and who wrote the checker?
+
+![CS329A at a glance](visuals/frame_3645.jpg)
+
+This is the course map. **The crux is that it is a syllabus rather than a set of conclusions**, which
+is the correct way to cite everything in this note.
+
+### Key takeaway message
+
+Self-improvement is mechanically simple: sample many times, keep what survives a check, train on the
+survivors. It rests on one empirical fact, that a model's first answer understates what it knows, and
+it is gated entirely by verification, which is scarce outside math, code and other rule-based domains.
+The loop does not break when verification is weak; it keeps turning and stops improving, which is
+harder to notice. Both of the failures the lecture names are the same structural problem - a verifier
+written by the generator has no independent vantage point - and the field admits it cannot explain why
+the loop works when it does. Carry one question into any design review: what checks the output, and
+who wrote the checker?
