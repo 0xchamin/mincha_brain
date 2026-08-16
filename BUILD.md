@@ -1,6 +1,6 @@
 # BUILD.md - build Brain from scratch, from this file alone
 
-> **Generated 2026-08-16 from commit `903d78c`** by `tools/make_build_doc.py`. Do not hand-edit: edit the
+> **Generated 2026-08-16 from commit `3d1eaec`** by `tools/make_build_doc.py`. Do not hand-edit: edit the
 > source files in the reference clone and regenerate, or your copy silently diverges from the kit
 > it claims to build.
 
@@ -188,6 +188,7 @@ signal it was put here for: fix the contract, not the artifact**, and record wha
 | **Movement + gap-fill diagrams** in the walkthrough | 260815 | **1**, and on a **slide-heavy** source where 8 of 10 sections already had a frame | one **transcript-only** source has run it - that is the untested path, where *every* section triggers gap-fill | "Diagrams for a visual reader" below |
 | **Presentation budget 900-1,500 words** | 260815 | **1 measurement**, widened from 700-1,200 on a single draft | a second and third instance land in the band without trimming | [`personas/presenter.md`](personas/presenter.md) |
 | **Stage specs in [`stages/`](stages/)** rather than inline | 260815 | **0 stage runs since the move** | `/verify`, `/research`, `/conjecture` and `/dream` have each fired once and found their spec | [ADR-0027](brain/decisions/0027-stage-specs-leave-the-contract.md) |
+| **The 1-minute diagram** - the argument's arc, between narrative and table | 260816 | **1** ([S27](sources/260816_scaling-github-for-agents/LEARNING.md)), and it **reverses a decision taken one day earlier** | 3 sources have one and none of them restates the TL;DR diagram | [ADR-0029](brain/decisions/0029-the-one-minute-version-gets-a-diagram.md) |
 | **Reserved terms registry** (above) | 260815 | n/a - it is a preventative | the next few contract changes produce no new collisions | [ADR-0027](brain/decisions/0027-stage-specs-leave-the-contract.md) |
 
 **Graduating a rule means deleting its row**, not marking it done. `validate.py` reports how many rows
@@ -336,6 +337,7 @@ framing. Understanding is the deliverable.)*
 | `## TL;DR` | **Hard** - the executive summary, and `build_site.py` lifts it onto the landing page |
 | The **TL;DR diagram**, inside that section, under the prose | **Hard wherever the argument has a shape** - the whole note in one glance, for a reader deciding whether to spend twenty minutes. Same conditional as the mental model, and it is **not** the same diagram. See below |
 | `## The 1-minute version` | **Hard** - the whole article compressed to a scannable table. See below |
+| The **1-minute diagram**, inside that section, between the narrative and the table | **Hard for sources from 2026-08-16** ([ADR-0029](brain/decisions/0029-the-one-minute-version-gets-a-diagram.md)) - the argument's **arc**, drawn as the standard row sequence. Not the thesis again, and not the subject. See below |
 | `## Key claims` | **Hard** - also lifted onto the landing page |
 | `## What you will learn, and in what order` | **Hard** - a mermaid roadmap of the walkthrough, grouped into movements. See below |
 | A **movement diagram** at the head of each movement, inside the walkthrough | **Hard for sources from 2026-08-15.** One per movement (so typically 3-4), showing how that movement's sections relate. See "Diagrams for a visual reader" below |
@@ -451,11 +453,8 @@ bites.)*
 **Keep it phone-sized, and prefer `flowchart TB`.** It renders on a landing card among two dozen
 others and on a 390px screen. A diagram needing a laptop to read has failed at the one job it has.
 
-**It must survive being the only thing read, which is the bar that was raised on 2026-08-15.** A
-diagram set in `The 1-minute version` was considered and rejected, because that section's job is *the
-argument in sixty seconds of scanning* and a set of diagrams makes it slower to scan than the prose it
-compresses - and because its thesis-shape is already drawn here. **So this diagram absorbed that
-requirement instead.** The test: a reader who looks at this and reads nothing else should be able to
+**It must survive being the only thing read, which is the bar that was raised on 2026-08-15.** The
+test: a reader who looks at this and reads nothing else should be able to
 state the note's argument, not merely its topic. If they would come away with the subject rather than
 the claim, it is drawing the wrong thing.
 
@@ -483,10 +482,24 @@ skip it**; unlike the visual leg, there is no evidential cost to record.
 
 ### The 1-minute version
 
-**Narrative first, then the table.** The two are not alternatives and they answer different needs: the
-narrative is read once by someone arriving, the table is scanned repeatedly by someone returning or
-checking one row. Introduce the table with a line that says so, rather than letting it look like a
-restatement.
+**Narrative first, then the diagram, then the table.** The three are not alternatives and they answer
+different needs: the narrative is read once by someone arriving, the diagram gives that reader the arc
+in one glance, and the table is scanned repeatedly by someone returning or checking one row. Introduce
+the table with a line that says so, rather than letting it look like a restatement.
+
+**The diagram draws the argument's arc and nothing else** - the standard row sequence as a single
+vertical flow, from the problem through why it is hard and why the obvious answer fails, to the idea,
+how it works, what it costs and how far to trust it. **Hard for sources from 2026-08-16**
+([ADR-0029](brain/decisions/0029-the-one-minute-version-gets-a-diagram.md)), which **reverses the
+rejection recorded here on 2026-08-15**: that rejection priced *a set* of diagrams rather than one, and
+assumed the TL;DR diagram already covered the arc. It does not - it draws the note's thesis, which is
+where the argument *lands* rather than how it got there.
+
+> **This is the diagram most likely to collapse into its neighbours, and the test is mechanical.** If
+> it shows components, it has become the mental model. If it shows only the conclusion, it has become
+> the TL;DR diagram. If it shows section numbers, it has become the roadmap. **Draw the row sequence.**
+> Keep it vertical and phone-sized, avoid subgraphs (see the `direction TB` trap under the TL;DR
+> diagram), and give it a walkthrough in presenter voice like every other diagram - roughly 150 words.
 
 The narrative runs **six to eight flowing paragraphs** following the reader's own questions, not the
 source's running order: *what this article covers* -> *the problem it works on* -> *why that problem
@@ -622,6 +635,7 @@ and each row must answer a different question:**
 | Diagram | Answers | Scope | Must not |
 |---|---|---|---|
 | **TL;DR** | what is the shape of the argument? | the whole note's **thesis** | be the flow, or the reading order |
+| **1-minute** | how did the reasoning get from the problem to the answer? | the whole note's **arc** | be the thesis again, or the subject |
 | **Roadmap** | what order will I meet it in, what may I skim? | the whole note's **structure** | be the subject |
 | **Movement** | how do the sections in this movement relate? | **one movement's** mechanism | restate the roadmap at smaller scale |
 | **Gap-fill** | whatever that section teaches | **one section** | exist where a frame already teaches the step |
@@ -4405,6 +4419,38 @@ sentence, why this shape rather than another, and provenance. Four or five sente
      outcome and needs no note - same conditional the mental model carries. -->
 
 ## The 1-minute version
+
+<!-- NARRATIVE FIRST, then the diagram, then the table. Six to eight flowing paragraphs following the
+     reader's questions: what this covers -> the problem -> why that problem is hard -> the naive
+     approach and how it collapses -> the idea -> how it works -> what it costs -> how far to trust
+     it. The narrative holds the beat the table has no slot for, which is WHY THE PROBLEM IS HARD. -->
+
+```mermaid
+flowchart TB
+    P["The problem<br/>..."]
+    H["Why it is hard<br/>..."]
+    F["Why the obvious answer fails<br/>..."]
+    I["The idea<br/>..."]
+    W["How it works<br/>..."]
+    C["What it costs<br/>..."]
+    T["How far to trust it<br/>..."]
+
+    P --> H --> F --> I --> W
+    W --> C
+    W --> T
+
+    style F fill:#3a2020,stroke:#a04040,color:#fff
+    style I fill:#1f3320,stroke:#4a9e5c,color:#fff
+    style T fill:#3a3320,stroke:#a08040,color:#fff
+```
+
+<!-- THE 1-MINUTE DIAGRAM (hard from 2026-08-16, ADR-0029). Draws the ARGUMENT'S ARC and nothing
+     else - the row sequence below as one vertical flow. Collapse test: components means you drew the
+     mental model; the conclusion alone means you drew the TL;DR diagram; section numbers mean you
+     drew the roadmap. Keep it vertical and phone-sized, no subgraphs. Walkthrough in presenter voice
+     underneath it, ~150 words, naming what kind of diagram it is and what it is not. -->
+
+<!-- Then a line introducing the table as the returning reader's view, not a restatement. -->
 
 | | |
 |---|---|

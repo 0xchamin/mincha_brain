@@ -52,6 +52,38 @@ sentence, why this shape rather than another, and provenance. Four or five sente
 
 ## The 1-minute version
 
+<!-- NARRATIVE FIRST, then the diagram, then the table. Six to eight flowing paragraphs following the
+     reader's questions: what this covers -> the problem -> why that problem is hard -> the naive
+     approach and how it collapses -> the idea -> how it works -> what it costs -> how far to trust
+     it. The narrative holds the beat the table has no slot for, which is WHY THE PROBLEM IS HARD. -->
+
+```mermaid
+flowchart TB
+    P["The problem<br/>..."]
+    H["Why it is hard<br/>..."]
+    F["Why the obvious answer fails<br/>..."]
+    I["The idea<br/>..."]
+    W["How it works<br/>..."]
+    C["What it costs<br/>..."]
+    T["How far to trust it<br/>..."]
+
+    P --> H --> F --> I --> W
+    W --> C
+    W --> T
+
+    style F fill:#3a2020,stroke:#a04040,color:#fff
+    style I fill:#1f3320,stroke:#4a9e5c,color:#fff
+    style T fill:#3a3320,stroke:#a08040,color:#fff
+```
+
+<!-- THE 1-MINUTE DIAGRAM (hard from 2026-08-16, ADR-0029). Draws the ARGUMENT'S ARC and nothing
+     else - the row sequence below as one vertical flow. Collapse test: components means you drew the
+     mental model; the conclusion alone means you drew the TL;DR diagram; section numbers mean you
+     drew the roadmap. Keep it vertical and phone-sized, no subgraphs. Walkthrough in presenter voice
+     underneath it, ~150 words, naming what kind of diagram it is and what it is not. -->
+
+<!-- Then a line introducing the table as the returning reader's view, not a restatement. -->
+
 | | |
 |---|---|
 | **The problem** | <what is actually hard, in one or two sentences> |

@@ -122,6 +122,36 @@ predicting that thousands of tools will be normal soon and that he will "probabl
 the fewer tools decisions" [n20]. Treat the mechanisms as durable and the recommendations as scoped
 to a moment their own author expects to end.
 
+```mermaid
+flowchart TB
+    P["The problem<br/>open contribution filled the server to 101 tools<br/>and agents got worse at using GitHub"]
+    H["Why it is hard<br/>every tool has a real user, so none can be deleted<br/>which forces the fix to be per-user"]
+    F["Why the obvious answer fails<br/>every per-user fix is a configuration option<br/>and everyone used the default settings"]
+    I["The idea<br/>change what arrives by default, then find<br/>per-user signal that needs no user action"]
+    W["How it works<br/>a fresh tool list built on every request<br/>from config, policy and the token's scopes"]
+    C["What it costs<br/>silent repairs replace auditable errors<br/>and two users see different servers"]
+    T["How far to trust it<br/>one vendor, self-reported, no baseline<br/>and the author expects to reverse it"]
+
+    P --> H --> F --> I --> W
+    W --> C
+    W --> T
+
+    style F fill:#3a2020,stroke:#a04040,color:#fff
+    style I fill:#1f3320,stroke:#4a9e5c,color:#fff
+    style T fill:#3a3320,stroke:#a08040,color:#fff
+```
+
+This is an arc diagram, not a mechanism diagram, and it draws how the reasoning travelled rather than
+where it arrived. **The crux is the red box, because the argument turns on a failure and not on an
+insight** - the team's three good designs are compressed into one node marked *failed*, and everything
+green downstream exists only because that failure ruled configuration out. Notice that the chain runs
+unbroken to *how it works* and then forks, which is deliberate: cost and trust are not later stages of
+the argument but standing conditions on it, and drawing them in sequence would imply the trust caveat
+is something you reach rather than something you carry throughout. The amber node is where a reader
+who stops here should look twice, since it is the one the author himself supplied.
+
+*Synthesized from n2, n4, n5, n15, n16 and n20.*
+
 The narrative above is the argument as it unfolds. The table below is the same argument compressed
 for someone returning to check a single row.
 
