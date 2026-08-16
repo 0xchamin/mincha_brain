@@ -854,10 +854,10 @@ structure is assembled from prose and may impose more shape than the author inte
 
 ## Presentation narrative
 
-*A talk track for a room deciding how to build an internal knowledge base, derived entirely from the
-gated nodes above. The source is a nineteen-hundred-word design argument with no figures, no code, no
-data and no worked example, so this presents a diagnosis and a pattern, never a result. Every node here
-is `single-leg` by construction: the document has no second leg to gate against.*
+*A talk track for a room deciding how to build an internal knowledge base, derived from the gated
+nodes above. The source is a nineteen-hundred-word design argument with no figures, code or data, so
+this presents a diagnosis and a pattern, never a result. Every node is `single-leg` by construction:
+the document has no second leg to gate against.*
 
 ### Slide 1 - This is not the usual complaint about retrieval, and the difference decides your budget
 
@@ -959,8 +959,7 @@ hunting six named defect classes [n8].
 The arithmetic behind the third one is the part to state plainly. An ingest is a wide write touching
 ten to fifteen pages at once [n17], and nobody reviews fifteen edits per source, so drift is not a risk
 to be managed but a guaranteed output of the write pattern. A store that needed no repair would never
-have earned a lint pass. The out-of-band property matters more than it looks: a lint running inside an
-ingest would be grading work it had just done, which is the conflict of interest this brain records
+have earned a lint pass. Out-of-band matters more than it looks, and this brain records the reason
 separately as claim 34.
 
 ```mermaid
@@ -1014,11 +1013,10 @@ maintenance cost, now paid in tokens, stay below the value of synthesis already 
 no comparison against the retrieval systems the gist opens by dismissing.** Its two efficacy claims are
 pure assertion, and one of them contradicts the document's own operations section [d1].
 
-I want to give the source its due, because one thing about it is genuinely unusual in this brain:
-nothing is being sold. There is no product, no vendor position and no commercial interest pointing the
-argument anywhere. That is rarer than it sounds and it is why the diagnosis is worth taking seriously.
-It also changes nothing about the evidence, because an unmeasured claim from a disinterested expert is
-still unmeasured.
+One thing about it is genuinely unusual in this brain: nothing is being sold. No product, no vendor
+position, no commercial interest pointing the argument anywhere. That is rarer than it sounds and it
+is why the diagnosis deserves attention - and it changes nothing about the evidence, because an
+unmeasured claim from a disinterested expert is still unmeasured.
 
 So the verdict is adopt the diagnosis, pilot the pattern, and discard the one number on offer. The
 "~100 sources" threshold in particular should not be quoted [n10]. This brain later researched it
@@ -1045,10 +1043,9 @@ the history. Later research found what binds is token volume, not a count of sou
 ### Key takeaway message
 
 Retrieval re-pays the cost of relating documents on every question and keeps none of it, and that
-problem survives a perfect retriever, which is why better chunking never touches it. The alternative is
-to compile the synthesis once at ingest and maintain it, accepting a build step's liability along with
-its speed: the artifact can now go stale. Layer the store by who may write, put the engineering into
-the schema document rather than the retrieval stack, and ship the repair pass, because wide writes with
-no review make drift arithmetic rather than risk. The pattern is Bush's Memex and it was always blocked
-on labour rather than on ideas, so what changed is a price. None of it is measured, so adopt the
-diagnosis and treat the single number in the document as the assertion it is.
+problem survives a perfect retriever, which is why better chunking never touches it. The alternative
+compiles the synthesis once at ingest, accepting a build step's liability with its speed: the artifact
+can go stale. Layer the store by who may write, put the engineering into the schema document rather
+than the retrieval stack, and ship the repair pass, because wide writes with no review make drift
+arithmetic rather than risk. The pattern is Bush's Memex, blocked on labour rather than ideas, so what
+changed is a price. None of it is measured.

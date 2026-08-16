@@ -970,10 +970,9 @@ protocol.
 
 ## Presentation narrative
 
-*A talk track for a room deciding whether to put an agent in front of its own warehouse, derived
-entirely from the gated nodes above. It is about what has to be written down before that is safe, and
-it deliberately does not claim the approach works, because the source does not measure that. Where
-weight is carried here it comes from the deep-research pass rather than from the article.*
+*A talk track for a room deciding whether to put an agent in front of its own warehouse, derived from
+the gated nodes above. It does not claim the approach works: the source never measures that, and what
+weight it carries comes from the deep-research pass.*
 
 ### Slide 1 - The failure mode is a correct query answering the wrong question
 
@@ -985,11 +984,10 @@ does not know that churned customers are normally excluded, nothing errors and n
 returns a confident number that is wrong by exactly the size of your churn, and hands it to somebody
 who puts it in a board deck.
 
-The leadership significance is that this is a safety property rather than a quality one, because
-there is no traceback for a wrong assumption. What engineers should take from it is that the usual
-signal you rely on to catch a bad agent is structurally absent here. Before this system existed,
-three people held the context that would have prevented the error, and every question queued behind
-them [n1].
+The leadership significance is that this is a safety property rather than a quality one, because there
+is no traceback for a wrong assumption: the usual signal you rely on to catch a bad agent is
+structurally absent. Before this system existed, three people held the context that would have
+prevented the error, and every question queued behind them [n1].
 
 ```mermaid
 flowchart LR
@@ -1038,9 +1036,8 @@ inevitable: the agent picked the wrong table, so you need definitions; it then p
 and the wrong formula, so you need a semantic model; it then used the right formula and still answered
 a different question, so you need guides.
 
-The rule that falls out is the portable part and it doubles as a stopping condition. A layer that
-cannot name a question only it answers is a duplicate, and duplicated context is worse than missing
-context, because two copies drift apart and nothing tells you which one the agent read.
+The rule that falls out is the portable part: duplicated context is worse than missing context,
+because two copies drift apart and nothing tells you which one the agent read.
 
 ```mermaid
 flowchart TB
@@ -1067,12 +1064,11 @@ Active unless the analysis explicitly includes churned or prospective accounts"*
 documentation. It is a default policy stored in metadata, positioned so the agent meets it at exactly
 the moment it matters.
 
-What engineers should notice is where the instruction lives. It is not in a system prompt, not in a
-retrieval corpus, and not in a wrapper. It is in the schema field the agent already reads in order to
-do its job, which means it cannot be skipped and does not compete for context budget with anything
-else. This claim is `single-leg` on the article's own content, and it is the one place where external
-evidence is strongest: schema documentation is measured to help, and considerably more on real
-warehouses than on public benchmarks.
+Notice where the instruction lives: not a system prompt, not a retrieval corpus, not a wrapper, but
+the schema field the agent already reads to do its job. It cannot be skipped and competes with nothing
+for context budget. The claim is `single-leg` on the article's content, and it is where external
+evidence is strongest: schema documentation is measured to help, far more on real warehouses than on
+public benchmarks.
 
 ```mermaid
 flowchart TB
@@ -1100,11 +1096,8 @@ endorsed the signal stops being useful [n6].
 The cost of this is three permanent people, and the reason is older than the technology. The model
 collapsed the encoding cost of expert knowledge, since the target formalism is now English prose
 rather than production rules. It left the elicitation cost completely untouched, because somebody
-still has to sit with the go-to-market team and find out what they mean by "pipeline". That is a
-45-year-old diagnosis arriving on schedule, and it is why this is standing headcount rather than a
-project. There is also a gap in the source's own picture worth naming: the feedback figure routes
-usage trends straight back into the context layer with no human in the path, and the human is the
-part that costs three salaries.
+still has to sit with the go-to-market team and find out what they mean by "pipeline". That is a 45-year-old diagnosis arriving on
+schedule, and it is why this is standing headcount rather than a project.
 
 ![LangChain's agent feedback loop: agent conversations feeding observability, usage trends flowing back into the context layer, with the five context stores feeding the agent](visuals/fig3_feedback-loop.png)
 
@@ -1148,10 +1141,9 @@ should never be quoted bare [`d3`].
 ### Key takeaway message
 
 An agent-first data stack is a documentation layer wrapped around a stack you already have, and the
-article's own architecture figure is the proof, since it contains no agent. The transferable move is
-that a column definition becomes an instruction, placed where the agent already looks. The
-decomposition worth copying is by the question each store answers, with the duplicate test as its
-stopping condition. The cost is three permanent people, because the model collapsed the encoding cost
-of expert knowledge and left the elicitation cost untouched. And the boundary is firm: everything
-reported here measures adoption, correctness is measured nowhere, so pilot this with an answer-quality
-eval attached and treat any claim about trustworthiness as untested.
+article's own architecture figure proves it by containing no agent. The transferable move is that a
+column definition becomes an instruction, placed where the agent already looks. Decompose by the
+question each store answers, with the duplicate test as the stopping condition. The cost is three
+permanent people, because the model collapsed the encoding cost of expert knowledge and left
+elicitation untouched. The boundary is firm: everything reported measures adoption and correctness is
+measured nowhere, so pilot with an answer-quality eval attached.

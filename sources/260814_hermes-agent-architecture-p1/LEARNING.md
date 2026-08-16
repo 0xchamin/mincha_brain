@@ -1142,11 +1142,10 @@ it out and the lane is shared. There is no access-control layer doing that work;
 policy.
 
 The leadership significance is that a multi-tenancy decision people expect to find in a security review
-is actually made in a data-structure definition, probably by one engineer, probably without a review.
-What engineers should take from it is the corollary the article is careful about: the author refuses to
-call the default per-participant behaviour a security guarantee, and calls it a routing policy [n3].
-That distinction is worth preserving, because a routing policy that happens to isolate is not the same
-promise as one that is enforced to.
+is made in a data-structure definition, probably by one engineer, probably unreviewed. The corollary
+the article is careful about: it refuses to call the default per-participant behaviour a security
+guarantee, calling it a routing policy [n3]. A routing policy that happens to isolate is not the same
+promise as one enforced to.
 
 ![Ownership split - state, owner, scope, durable form and failure symptom](visuals/fig2_ownership-split.png)
 
@@ -1193,10 +1192,9 @@ table cell gives it away [n8, d1].** The guard providing mutual exclusion over a
 is held in memory, which makes it process-local. It does not survive a restart, and it does not hold
 across two gateway processes.
 
-I want to be precise about who this bites and when. An operator meets the restart case immediately. An
-architect meets the second case a quarter later, when horizontal scaling is proposed and nobody
-remembers this cell, and by then it is a single-process invariant that has been presented as a system
-invariant for months. Alongside it sits a second thing that moves under you: parallel tool results are
+Who this bites, and when. An operator meets the restart case immediately. An architect meets the
+second a quarter later, when horizontal scaling is proposed and nobody remembers this cell, by which
+time a single-process invariant has been presented as a system invariant for months. Alongside it sits a second thing that moves under you: parallel tool results are
 restored in model-call order, which is transcript validity and explicitly not side-effect ordering
 [n14]. Both are cases where a structure that looks authoritative is only locally true.
 

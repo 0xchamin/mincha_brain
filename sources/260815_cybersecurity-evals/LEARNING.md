@@ -999,29 +999,25 @@ directory is empty. Every open question below is genuinely open.
 
 ## Presentation narrative
 
-*A talk track for a mixed room of security leadership and engineers, derived entirely from the gated
-nodes above. It claims nothing about whether any specific model is dangerous, and it deliberately does
-not rank vendors. Its subject is how to read a capability number in this field, and its conclusion is
-a measurement decision rather than a security one. Every figure here is second-hand: this note is
-built on a survey whose author ran none of the experiments.*
+*A talk track for a mixed room of security leadership and engineers, derived from the gated nodes
+above. It claims nothing about whether any model is dangerous. Its subject is how to read a capability
+number in this field, and every figure is second-hand: the survey's author ran none of the
+experiments.*
 
 ### Slide 1 - The number you were about to quote describes a configuration, not a capability
 
 **Five separate settings move a cybersecurity score further than the difference between one frontier
-model and the next, and almost none of them get published alongside the number.** The evidence is in
-the article's own pages, and it is only visible once you line the figures up, which the article never
-does. Giving the agent a public patch to reverse-engineer rather than a bare codebase moves the score
-[n9]. Decomposing the task into subtasks moves the difficulty ceiling by roughly elevenfold [n6].
-Changing the harness around an unchanged model moves success from 3 of 40 networks to 37 [n19].
-Turning the vendor's safety filters back on takes a model from 120 exploits to zero [n25]. And the
-reported figures are maxima over three or eight attempts rather than single-shot rates, which the
-prose states nowhere at all [n8].
+model and the next, and almost none of them get published alongside the number.** The evidence is in the article's own pages and is
+only visible once you line the figures up, which it never does. Decomposition moves the difficulty
+ceiling roughly elevenfold [n6]. Changing the harness around an unchanged model moves success from 3
+of 40 networks to 37 [n19]. Turning the vendor's safety filters back on takes a model from 120
+exploits to zero [n25]. And the reported figures are maxima over three or eight attempts rather than
+single-shot rates, which the prose states nowhere [n8, n9].
 
-The question for this room is therefore not which model is most capable. It is whether any published
-number in this field is currently answering that question, and the honest answer is that it is not.
-What engineers should take from this is that a capability figure here is a five-tuple reported as a
-scalar. The leadership significance is that procurement and risk decisions taken off these
-leaderboards are being taken on the configuration rather than on the technology.
+The question is therefore not which model is most capable, but whether any published number in this
+field answers that question at all. A capability figure here is a five-tuple reported as a scalar, so
+procurement and risk decisions taken off these leaderboards are being taken on the configuration
+rather than on the technology.
 
 ```mermaid
 flowchart LR
@@ -1090,13 +1086,11 @@ was itself held constant.** On a fifty-host network replica, one model went from
 networks to 37 of 40 when the scaffolding was replaced. Every one of the ten models tested scored zero
 on the old harness and between six and nine out of ten on the new one [n19].
 
-The reason this is gated as strongly as it is has nothing to do with the size of the jump, and I want
-to be precise about that, because a large number is not evidence. It is that the authors removed each
-component individually and the result collapsed each time [n20]. Ablation is what separates a finding
-from an announcement, and it is the reason this claim carries weight while several larger-sounding
-figures elsewhere in the article do not. The leadership significance is that defensive posture built
-against a model is built against the wrong object. The threat scales with harness engineering, which
-is cheap, public, and improving independently of any model release.
+This is gated strongly not because the jump is large, since a large number is not evidence, but
+because the authors removed each component individually and the result collapsed each time [n20].
+Ablation separates a finding from an announcement. The leadership significance is that defensive
+posture built against a model is built against the wrong object: the threat scales with harness
+engineering, which is cheap, public and improving independently of any model release.
 
 ![The multi-host attack chain of the 2017 Equifax breach - scan, infect server, find credentials, infect databases, exfiltrate](visuals/fig7_mhbench-equifax-chain.png)
 
@@ -1114,21 +1108,20 @@ they rank first. Model and harness vary together in that same table, so no row i
 the attempt budgets differ across benchmarks and are never stated [n8, n25].
 
 So discount the leaderboard, and notice what that leaves standing. One chart carries an annotated
-log-linear fit of simulated exploitation revenue against model release date across eight models, with
-a doubling time of roughly 1.3 months at an R-squared of 0.828 [n23]. That quantity is unaffected by
-every objection just raised, because a confound that shifts all points similarly does not change a
-slope. It is also, and this is the part worth sitting with, the single most consequential number in
-the article and it appears nowhere in the prose. It exists only inside the image.
+log-linear fit of simulated exploitation revenue against release date across eight models, doubling
+roughly every 1.3 months at an R-squared of 0.828 [n23]. A confound that shifts all points similarly
+does not change a slope, so that quantity survives every objection just raised - and it is the single
+most consequential number in the article.
 
-I should label the evidence honestly: `n23` is `single-leg` and figure-only, read off a chart by this
-brain rather than stated by the author. It is the strongest claim here and the least corroborated one,
-and those two facts are uncomfortable together.
+Label the evidence honestly: `n23` is `single-leg` and figure-only, read off a chart by this brain
+rather than stated by the author. It is the strongest claim here and the least corroborated, and those
+two facts are uncomfortable together.
 
 ![SCONE-Bench total simulated exploitation revenue against model release date, log scale with fitted trend](visuals/fig8_scone-doubling-time.png)
 
 This is a trend, not a ranking, and it is the only quantity here the confounds cannot touch. **The
-crux is the slope: a doubling time of roughly 1.3 months at an R-squared of 0.828 across eight
-models.** It appears nowhere in the article's prose and exists only inside this image [`n23`, `d2`].
+crux is the slope**, and it appears nowhere in the article's prose - it exists only inside this image
+[`n23`, `d2`].
 
 ### Slide 6 - The decision is not to act on the leaderboard, and to instrument the slope instead
 
@@ -1163,11 +1156,10 @@ every objection raised against the rest.
 
 ### Key takeaway message
 
-Cybersecurity capability figures are currently reports about experimental configuration wearing the
-appearance of reports about models, and the five settings that dominate them are usually undisclosed.
-Underneath that noise sits one quantity nobody is quoting, because it lives inside a chart rather than
-a sentence: offensive capability denominated in simulated stolen dollars, doubling roughly every 1.3
-months. The decision this supports is not to act on any published ranking, and to start measuring the
-rate rather than the level. The boundary is that the rate itself rests on a single figure this brain
-read off an image, which is precisely why confirming it against the primary is the first thing worth
-funding.
+Cybersecurity capability figures are reports about experimental configuration wearing the appearance
+of reports about models, and the five settings that dominate them are usually undisclosed. Underneath
+sits one quantity nobody quotes, because it lives inside a chart rather than a sentence: offensive
+capability in simulated stolen dollars, doubling roughly every 1.3 months. The decision is not to act
+on any published ranking, and to measure the rate rather than the level. The boundary is that the rate
+rests on a single figure this brain read off an image, which is why confirming it against the primary
+is the first thing worth funding.

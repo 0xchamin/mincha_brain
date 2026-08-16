@@ -1120,10 +1120,8 @@ repository.
 ## Presentation narrative
 
 *A talk track for a room deciding whether to let agents run unattended work, derived entirely from the
-gated nodes above. It is about a containment design rather than about language-model training, and the
-distinction matters because the design transfers and the training code does not. One caveat governs
-everything here: the mechanism is fully inspectable and the results are a single unreproducible chart
-from one author on one GPU.*
+gated nodes above. The containment design transfers; the training code does not. The mechanism is
+inspectable and the results are one unreproducible chart from one author on one GPU.*
 
 ### Slide 1 - Removing the human does not make the work harder, it moves every decision earlier
 
@@ -1162,12 +1160,10 @@ that must be settled up front and cannot be revisited.
 ### Slide 2 - The design is four freezes, and each one is forced by the last
 
 **This repository contains no agent code at all, and what it actually teaches is which four things you
-must hold still before an agent can be trusted to change everything else.** Start by asking what the
-agent may edit, and the answer is one file. That immediately forces the next question, which is what
-is held constant while that file changes, and the answer is wall-clock seconds rather than steps or
-tokens. Seconds are the choice that makes a faster kernel, a better optimizer and a longer schedule
-compete on a single axis, so efficiency becomes part of the objective without ever becoming part of
-the metric.
+must hold still before an agent can be trusted to change everything else.** Start by asking what the agent may edit: one file. That forces the next
+question, what is held constant while that file changes, and the answer is wall-clock seconds rather
+than steps or tokens. Seconds put a faster kernel, a better optimizer and a longer schedule on a
+single axis, so efficiency becomes part of the objective without becoming part of the metric.
 
 That in turn forces a harder question: what is a comparable measurement once the model itself keeps
 moving? The answer is bits per byte, evaluated always at a fixed sequence length, because bytes are
@@ -1175,10 +1171,6 @@ the one denominator the agent cannot redefine. The fourth freeze is the holdout,
 read-only file so that train and validation separation is the single rule the agent structurally
 cannot break [n1, n2, n3, n4].
 
-I want to be precise about why this is worth your attention, because a list of four settings is not
-interesting. The derivation is. Each freeze exists because the previous one left a residue, which
-means you can run the same four questions against a system that has nothing to do with language models
-and get four different answers that are correct for it.
 
 ```mermaid
 flowchart LR
@@ -1231,17 +1223,16 @@ team with overnight batch-job experience will have solved the first and never me
 ### Slide 4 - The containment is a declaration, not an enforcement, and the design says so
 
 **There is no sandbox, no import hook and no checksum anywhere in this repository, so the boundary
-between editable and protected exists in a banner comment and a markdown instruction [n1].** That is
-worth stating to a technical audience without softening it, and it is also worth saying that it is
-not obviously wrong. For a single-agent loop on your own hardware, a declared boundary that the agent
-respects is cheap and sufficient, and the alternative costs real engineering.
+between editable and protected exists in a banner comment and a markdown instruction [n1].** That is worth stating without
+softening, and it is also not obviously wrong: for a single-agent loop on your own hardware, a
+declared boundary the agent respects is cheap and sufficient, and the alternative costs real
+engineering.
 
 The sharper problem is one level in. The protected metric is computed by a frozen function, and then
 the file that calls it, formats it and prints it is the file the agent rewrites, with the agent's
-score read from that print [n5]. Generator and evaluator can be perfectly separated at the function
-level while the evaluator's output still travels through the generator's hands, and nothing in the
-repository compares the two. This is the seam the first three freezes leave open, and it is the reason
-section 5 is one of the two sections worth reading if you read only two.
+score read from that print [n5]. Generator and evaluator can be perfectly separated at the function level while
+the evaluator's output still travels through the generator's hands, and nothing compares the two.
+This is the seam the first three freezes leave open.
 
 ```mermaid
 flowchart TB
@@ -1266,11 +1257,11 @@ a change of random seed [n11].** That is not a failure of the agent's judgement.
 bare scalar comparison with no repetition, no seed averaging, no threshold and no error bar, and it
 executed correctly on an input it has no way to recognise.
 
-What makes this the most useful result in the source is that it is free. The seed experiment measures
-the loop's own noise floor at no additional cost, and by that floor at least three other accepted
-changes are unresolved [n12]. There is a compounding consequence worth naming for anyone considering
-this pattern: every accept permanently moves the baseline and nothing ever re-tests a kept change, so
-a lucky accept raises the bar for every genuine improvement after it.
+What makes this the most useful result in the source is that it is free: the seed experiment measures
+the loop's noise floor at no extra cost, and by that floor at least three other accepted changes are
+unresolved [n12]. There is a compounding consequence: every accept
+permanently moves the baseline and nothing re-tests a kept change, so a lucky accept raises the bar
+for every real improvement after it.
 
 I should label this evidence honestly. The noise floor rests on a single experiment, and the deltas
 behind it were read off a rendered chart by eye at a scale where the quantity of interest is roughly
@@ -1278,10 +1269,8 @@ one pixel. It is gated `needs-check` and deliberately not promoted harder.
 
 ![The end of the run: a plateau, a staircase, and a seed](visuals/progress_endgame.png)
 
-This is the author's own published run, not a criticism of it. **The crux is the final step: the
-fifteenth and last kept improvement is a change of random seed**, which is the accept rule executing
-correctly on an input it cannot recognise. That experiment also measures the loop's noise floor for
-free [`n11`, `n12`].
+This is the author's own published run, not a criticism of it. **The crux is the final step**, which
+is the accept rule executing correctly on an input it has no way to recognise [`n11`, `n12`].
 
 ### Slide 6 - Adopt the shape, do not cite the numbers, and add the one thing it is missing
 
@@ -1305,10 +1294,9 @@ experiments with nothing.** Read off a rendered chart by eye, so gated `needs-ch
 
 ### Key takeaway message
 
-The transferable object in this repository is not an agent and not a training script, it is a
-containment design: four things frozen in advance, after which an agent can be trusted to change
-everything else. The four questions it answers transfer to any unattended loop, and the answers do
-not. Its two failures are both places where nothing was frozen, and the more consequential one is an
-accept rule with no notion of variance, which its own published run demonstrates by banking a random
-seed as an improvement. Adopt the freezes, add a variance-aware accept rule before you run anything
-overnight, and do not quote a single number from the chart.
+The transferable object here is not an agent and not a training script, it is a containment design:
+four things frozen in advance, after which an agent can be trusted to change everything else. The four
+questions transfer to any unattended loop; the answers do not. Both failures are places where nothing
+was frozen, and the consequential one is an accept rule with no notion of variance, which the author's
+own run demonstrates by banking a random seed. Adopt the freezes, add a variance-aware accept rule
+before running anything overnight, and quote no number from the chart.

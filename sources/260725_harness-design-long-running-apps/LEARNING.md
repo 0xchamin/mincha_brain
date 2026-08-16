@@ -809,10 +809,10 @@ so this is assembled from prose and may impose more structure than the author in
 
 ## Presentation narrative
 
-*A talk track for a room deciding whether to build a harness around a coding model, derived entirely
-from the gated nodes above. It reports one vendor's numbers from single runs, so treat every figure as
-one observation and the mechanisms as the transferable part. The visual leg of this source was skipped
-and every node is `single-leg` by construction.*
+*A talk track for a room deciding whether to build a harness around a coding model, derived from the
+gated nodes above. It reports one vendor's numbers from single runs, so treat every figure as one
+observation and the mechanisms as the transferable part. The visual leg was skipped and every node is
+`single-leg` by construction.*
 
 ### Slide 1 - Telling an agent to check its own work does not work, and the reason is structural
 

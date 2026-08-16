@@ -986,10 +986,9 @@ Treat "widely" as marketing and the single named instance as the evidence.
 
 ## Presentation narrative
 
-*A talk track for engineers and their leadership on the MCP 2026-07-28 revision, derived entirely from
-the gated nodes above. The mechanics are well evidenced because the article prints its payloads and
-they agree with its prose. Nothing here is measured, it is a release candidate on beta SDKs, and the
-article itself asks for staging rather than production.*
+*A talk track for engineers and their leadership on the MCP 2026-07-28 revision, derived from the
+gated nodes above. The mechanics are well evidenced: the article prints its payloads and they agree
+with its prose. Nothing is measured, and the article itself asks for staging rather than production.*
 
 ### Slide 1 - The failure was loud, and that is what made it a protocol problem rather than an ops problem
 
@@ -1056,18 +1055,17 @@ asymmetry is the argument for changing the protocol.
 ### Slide 3 - Delete the handshake, then finish the job by promoting routing values into headers
 
 **If the state exchanged at connection time travels on every request, no request depends on an earlier
-one and any instance can serve any call [n3].** The article makes this unusually easy to verify: the
-same three fields, protocol version, client capabilities and client info, appear first in the legacy
-`initialize` parameters and then in the new request's `_meta`. The relocation is visible rather than
-asserted, which is rare in a vendor announcement.
+one and any instance can serve any call [n3].** The article makes this unusually easy to verify: the same three fields,
+protocol version, client capabilities and client info, appear first in the legacy `initialize`
+parameters and then in the new request's `_meta`. The relocation is visible rather than asserted.
 
 One more move was needed, and it is presented as a sibling feature when it is really a completion. A
 self-describing body is only self-describing to something willing to parse it, and a gateway will not
 parse JSON to route. So the routing values climbed into HTTP headers, mirrored against the body and
-rejected with `-32020` when the two disagree [n4]. The error code is the detail engineers should note:
-duplicating data across two layers creates a disagreement risk, and the design closes it by making
-disagreement an explicit protocol error rather than undefined behaviour. The payoff is that ordinary
-infrastructure can route, audit, rate-limit and cache MCP traffic without understanding it [n5].
+rejected with `-32020` when the two disagree [n4]. The error code is the detail engineers should note: duplicating data
+across two layers creates a disagreement risk, closed here by making disagreement an explicit protocol
+error. The payoff is that ordinary infrastructure can route, audit, rate-limit and cache MCP traffic
+without understanding it [n5].
 
 ```mermaid
 flowchart TB
@@ -1126,16 +1124,11 @@ rather than from anything the article claims.** The `requestState` blob the clie
 back decodes to plaintext JSON with no signature, and in the source's own illustration it accompanies
 the question "are you sure you want to delete these 3 files?" [n8].
 
-The article does have a security section, and that is exactly what makes the gap easy to miss. It
-addresses inherited OAuth concerns, issuer verification against redirect and session hijacking, and
-resource indicators against the confused deputy [n11]. Those are real and they are the threats the
-protocol already had. The trust surface created by moving server execution state through an untrusted
-party goes unmentioned [d1].
+The article does have a security section, which is exactly what makes the gap easy to miss. It
+addresses inherited OAuth concerns: issuer verification against redirect and session hijacking, and
+resource indicators against the confused deputy [n11]. Those are real, and they are the threats the
+protocol already had. The trust surface its own redesign created goes unmentioned [d1].
 
-I want to state the limit of this honestly. This brain did not test a server, and the specification may
-well require integrity protection that the blog post does not mention. What can be said is that the
-article shows the blob, shows the delete prompt, and never connects them. That is the note's top
-research target rather than a demonstrated vulnerability.
 
 ```mermaid
 flowchart TB
@@ -1169,10 +1162,10 @@ elicitation flow guards a destructive action, read the specification directly an
 `requestState` integrity protection is required, because the article does not say and its own example
 does not have it.
 
-There is also a strategic signal worth one sentence for leadership. MCP now has a deprecation policy
-with a 12-month window, and Roots, Sampling and Logging entered it immediately, with sampling replaced
-by calling LLM provider APIs directly [n13]. That is the protocol declaring that model access is not
-its problem, which tells you which responsibilities are becoming yours.
+One strategic signal for leadership. MCP now has a deprecation policy with a 12-month window, and
+Roots, Sampling and Logging entered it immediately, sampling replaced by calling provider APIs
+directly [n13]. That is the protocol declaring that model access is not its problem, which tells you
+which responsibilities are becoming yours.
 
 ```mermaid
 flowchart TB
@@ -1195,11 +1188,10 @@ protocol is handing back to you. Release candidate on beta SDKs [`n15`].
 ### Key takeaway message
 
 MCP bound a session to a process, which failed loudly rather than slowly behind a load balancer, and
-every workaround charged a permanent per-request tax to support a one-time handshake. Deleting the
-handshake and promoting routing values into headers fixes that cleanly, and you can watch it happen
-field by field in the article's own payloads. What the announcement calls statelessness is state
-relocation, and three new owners are now paying: the wire, the client, and the application still
-running the Redis the headline said it would not need. The one to act on is the client, because server
-execution state travels through it as unsigned plaintext while guarding a file deletion, and the
-article's security section addresses everything except that. Pilot it in staging, and settle the
-signing question before anything destructive depends on it.
+every workaround charged a permanent per-request tax for a one-time handshake. Deleting the handshake
+and promoting routing values into headers fixes that cleanly, visibly, field by field in the article's
+own payloads. What the announcement calls statelessness is relocation: the wire, the client and the
+application still running the Redis the headline said it would not need. Act on the client, because
+server execution state travels through it as unsigned plaintext while guarding a file deletion, and
+the security section addresses everything except that. Pilot in staging, and settle the signing
+question first.
