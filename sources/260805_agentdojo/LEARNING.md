@@ -22,6 +22,33 @@ success to 7.5%**, and its failure mode is stated exactly - it breaks when the t
 suffice for the attack, **17% of cases** (`n12`, `n13`). Read `d1` first: this shares two authors with
 S18, so **it cannot validate CaMeL**.
 
+```mermaid
+flowchart TB
+    P["four sources in, and every efficacy<br/>number came from whoever<br/>was making the claim"]
+    B["a benchmark built to <b>settle</b> such<br/>arguments rather than to win one"]
+    D["utility checked by <b>deterministic functions</b>,<br/>never an LLM judge - because an attack<br/>strong enough to hijack the agent<br/>might hijack the evaluator too - n3"]
+    F1["agents fail a third of these tasks<br/>with <b>no attacker present</b> - n4"]
+    F2["more capable models are <b>easier</b><br/>to attack - n6"]
+    F3["attack success is a property of the<br/><b>application</b>, not the model:<br/>92% on Slack, 0% on some Travel - n8"]
+
+    P --> B --> D
+    B --> F1
+    B --> F2
+    B --> F3
+
+    style D fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a provenance diagram, not a benchmark description, and the top box is why this source matters
+more than its numbers do. **The crux is that the design decision and the findings both follow from
+taking adversarial conditions seriously: the evaluator is deterministic because a judge is attackable,
+and the three findings are all things a vendor benchmarking its own product would have no reason to
+surface.** It is drawn with the green node separated from the findings because that decision is the
+transferable part - it generalises to any adversarial evaluation, whether or not you ever run this
+benchmark. Read `d1` first: this shares two authors with S18, so it cannot validate CaMeL.
+
+*Synthesized from `n1`, `n3`, `n4`, `n6` and `n8`.*
+
 ## The 1-minute version
 
 This article covers the benchmark that the agent-security field measures itself against, published at
@@ -134,7 +161,8 @@ flowchart TB
     style M3 fill:#f8b4b4,stroke:#c1121f,stroke-width:2px
 ```
 
-Four movements top to bottom, with the shaded one carrying what this source uniquely provides.
+This is a reading-order diagram about the note rather than about the benchmark, and the shaded
+movement carries what this source uniquely provides.
 Movement 1 is design, and **section 3 is the one to read even if you skim the rest** - the argument
 for a deterministic judge is a principle that transfers to any adversarial evaluation you build.
 Movement 2 is what the benchmark found about agents rather than about attacks, and section 5 is the
@@ -142,7 +170,30 @@ finding that travels furthest. **Movement 3 is the payload**, because this is th
 comparison of prompt-injection defences anywhere in this brain, and section 8's 17% is the number to
 carry into a design review. Movement 4 is short and is about what the artifact is for.
 
-## 1. Why nothing existing could measure this
+## Movement 1 - what a security benchmark has to be
+
+```mermaid
+flowchart TB
+    N["1. nothing existing could measure this:<br/>capability benchmarks have no attacker,<br/>and attack demos have no baseline"]
+    T["2. so run a <b>user task</b> and an<br/><b>attacker task</b> in one stateful<br/>environment, and score them separately - n1"]
+    J["3. and the utility check must be a<br/><b>deterministic function</b>, because a<br/>model judge is itself attackable - n3"]
+
+    N --> T --> J
+
+    style J fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a requirements diagram, not an architecture. **The crux is that measuring security needs two
+scores rather than one, because a defence that blocks every attack by breaking the agent is not a
+defence and a single number cannot tell you that happened.** It is drawn as a forced chain because
+each step is the only available answer to the previous gap. Section 3 is the one to take away even if
+you never run the benchmark, since the reasoning generalises to any adversarial evaluation: if the
+thing you are measuring can attack the thing doing the measuring, the measurement has to be outside
+the model.
+
+*Synthesized from `n1`, `n2` and `n3`.*
+
+### 1. Why nothing existing could measure this
 
 Start with the gap, because the design is a response to it.
 
@@ -164,7 +215,7 @@ stateful predecessor, "uses LLMs to efficiently *simulate* tool calls and to sco
 utility". Simulating with a model is fine when nobody is attacking. Section 3 is what goes wrong when
 somebody is.
 
-## 2. Two tasks, one environment, two scores
+### 2. Two tasks, one environment, two scores
 
 The construction is simple enough to describe in a sentence and the simplicity is the point.
 
@@ -201,7 +252,32 @@ check attached.
 
 Which raises the question of who performs that check.
 
-## 3. Why the judge cannot be a model
+### 3. Why the judge cannot be a model
+
+```mermaid
+flowchart TB
+    A["the attack aims to inject<br/>new instructions into a model"]
+    J["the judge <b>is</b> a model"]
+    R["so a sufficiently successful attack<br/>hijacks the evaluator as well<br/>as the agent"]
+    D["therefore: a <b>deterministic</b> function over<br/>the output and the environment state<br/>before and after - laborious, and<br/>outside the attack surface - n3"]
+
+    A --> R
+    J --> R --> D
+
+    style R fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    style D fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is an adversarial-design diagram, and it is the section to take away even if you never run the
+benchmark. **The crux is that in an adversarial setting the evaluator is part of the attack surface,
+so scalability arguments for LLM-as-judge do not apply where the thing being judged can rewrite the
+judge.** It is drawn with two independent premises meeting because the conclusion needs both: an LLM
+judge is fine when nothing is trying to manipulate it, and the attack alone is fine when the judge
+cannot be reached. The paper acknowledges the hand-written alternative is less scalable and rejects
+scalability anyway, which is the trade worth copying.
+
+*Synthesized from `n3`.*
+
 
 This is the section to take away even if you never run the benchmark, because the reasoning generalises
 to any adversarial evaluation.
@@ -233,7 +309,33 @@ the reliability of the evaluation" (§5). **Scale was traded for soundness**, de
 
 So the instrument is trustworthy. The first thing it measures is not what anyone expected.
 
-## 4. They fail without any attacker
+## Movement 2 - what it found about agents
+
+```mermaid
+flowchart TB
+    A["4. agents fail <b>more than a third</b><br/>of these tasks with no attacker<br/>present at all - n4"]
+    B["5. and more capable models are<br/><b>easier</b> to attack, because weak models<br/>fail at the attacker's goal too - n6"]
+    C["6. and attack success tracks the<br/><b>application</b> rather than the model:<br/>92% on Slack, 0% on some Travel - n8"]
+    D["none of these is a finding about attacks.<br/>They are findings about <b>agents</b>."]
+
+    A --> D
+    B --> D
+    C --> D
+
+    style D fill:#e8f0fc,stroke:#4285f4,color:#1a3a6b
+```
+
+This is a findings diagram, and what unites the three is the point. **The crux is that a benchmark
+built to measure attacks ended up measuring agents, and all three results are things a vendor
+evaluating its own product would have had no reason to surface.** It is drawn converging on a
+reframe rather than listed because each alone reads as a curiosity: a baseline failure rate, an
+inverse-scaling curiosity, a variance across suites. Together they say the security question is
+downstream of a capability question and of an application-design question, which is a different
+conversation from the one most teams are having.
+
+*Synthesized from `n4`, `n6` and `n8`.*
+
+### 4. They fail without any attacker
 
 Before reading the security results, note what the benchmark says about agents in peace time:
 state-of-the-art LLMs "solve less than 66% of AgentDojo tasks *in the absence of any attack*" (`n4`).
@@ -254,7 +356,7 @@ target work at the boundary of what the model does *reliably* and engineer relia
 
 Now the security results, and the first one inverts an assumption most people carry.
 
-## 5. Capability makes you a better victim
+### 5. Capability makes you a better victim
 
 ![Left: targeted attack success rate against benign utility, trending upward. Right: utility under attack against benign utility, with every model below the diagonal](visuals/fig6_inverse_scaling.png)
 
@@ -289,7 +391,7 @@ the one CaMeL explicitly does not address.
 So capability predicts vulnerability. The next question is what else does, and the answer is not the
 model at all.
 
-## 6. The application decides, not the model
+### 6. The application decides, not the model
 
 ![Attack success rates for GPT-4o broken down by injection task within each of the four suites](visuals/fig7_asr_by_suite.png)
 
@@ -316,7 +418,32 @@ and both are decided when you choose which tools an agent gets.
 That is also a hint about what a defence should do, and the paper's defence results confirm it from the
 other side.
 
-## 7. The simplest isolation wins
+## Movement 3 - what it found about defences
+
+```mermaid
+flowchart TB
+    D["7. of the defences tested, the simplest<br/>isolation mechanism wins: a <b>tool filter</b><br/>drops attack success to <b>7.5%</b> - n12"]
+    Q{"and where does it fail?"}
+    F1["when the tool list cannot be<br/>planned in advance"]
+    F2["when the task's own tools are<br/>sufficient for the attack -<br/><b>17% of cases</b> - n13"]
+
+    D --> Q --> F1
+    Q --> F2
+
+    style D fill:#dcfce7,stroke:#15803d,color:#14532d
+    style F2 fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+```
+
+This is a defence diagram, and the failure modes are what make the headline citable. **The crux is
+that a defence whose failure boundary is stated and quantified is worth more than a stronger one whose
+boundary is not, because you can reason about where it leaves you.** It is drawn with the question
+node dominant because the 7.5% on its own would be exactly the kind of number this brain is trying to
+stop taking at face value. The 17% is the finding to carry: in one case in six, the tools the user's
+task legitimately needs are enough to run the attack, and no filter can separate them.
+
+*Synthesized from `n12` and `n13`.*
+
+### 7. The simplest isolation wins
 
 Four defences were evaluated: **data delimiters** (mark tool output with special tokens and tell the
 model to ignore instructions inside them), a **prompt-injection detector** (a BERT classifier on each
@@ -354,7 +481,32 @@ agent to its unattacked performance - on a baseline that was already under 66%.
 The tool filter is therefore the recommendation. What makes this paper worth trusting is that it then
 says exactly when it fails.
 
-## 8. Where it breaks, and the 17%
+### 8. Where it breaks, and the 17%
+
+```mermaid
+flowchart TB
+    T["the tool filter: decide in advance<br/>which tools this task may use"]
+    F1["<b>fails</b> when the tool list cannot be<br/>planned ahead, because one call's result<br/>decides what is needed next"]
+    F2["<b>fails</b> when the task's own tools are<br/>sufficient for the attack - <b>17%</b> - n13"]
+    N["and the first failure is the same<br/>dynamism that makes agents useful"]
+
+    T --> F1 --> N
+    T --> F2
+
+    style F2 fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    style N fill:#fbf1dc,stroke:#b45309,color:#78350f
+```
+
+This is a boundary diagram, not a critique of the defence. **The crux is that the two failure modes
+are qualitatively different: one is a limitation you can engineer around by making the task less
+dynamic, and the other is irreducible, because no filter can separate tools the user legitimately
+needs from tools the attacker can use.** It is drawn with the first failure carrying a consequence
+because it is the one that bites hardest in practice - static tool planning rules out exactly the
+adaptive work agents are chosen for. The 17% is the number to quote, and quoting it alongside the 7.5%
+is what makes the defence honest rather than impressive.
+
+*Synthesized from `n13`.*
+
 
 The tool filter has two failure modes and the second is the one to carry (`n13`).
 
@@ -385,7 +537,31 @@ AgentDojo does not model it.
 > same authors, a year later. **This paper's stated limitations are a map of the two sources that
 > follow it.**
 
-## 9. A benchmark built to be extended
+## Movement 4 - using it
+
+```mermaid
+flowchart TB
+    E["9. built to be extended: new suites,<br/>new attacks, new defences,<br/>on the same scoring"]
+    V["which is what makes it infrastructure<br/>rather than a paper"]
+    C["and the caveat that governs everything:<br/>it shares two authors with S18,<br/>so it <b>cannot validate CaMeL</b> - d1"]
+
+    E --> V
+    V --> C
+
+    style V fill:#dcfce7,stroke:#15803d,color:#14532d
+    style C fill:#fbf1dc,stroke:#b45309,color:#78350f
+```
+
+This is a positioning diagram, not a how-to. **The crux is that the extensibility is the contribution
+- a shared scoreboard everyone can add to is worth more to the field than any single result on it.**
+It is drawn ending on the independence caveat deliberately, because that is the one thing a reader
+carrying this benchmark into an argument needs to hold: shared authorship with a defence paper means
+this cannot serve as external corroboration for that defence, however good both are. That is a rule
+about provenance rather than about quality.
+
+*Synthesized from `n14` and divergence `d1`.*
+
+### 9. A benchmark built to be extended
 
 The last design decision is worth a short section because it is unusual and it is the reason this
 artifact is still the reference two years on.
@@ -524,3 +700,131 @@ this brain's security set.**
 - [`brain/topics/agents.md`](../../brain/topics/agents.md) - agents fail more than a third of realistic
   multi-step tool tasks **with no adversary present**, and attack success is decided by how much of
   the tool output an attacker controls rather than by the model.
+
+## Presentation narrative
+
+*A talk track for a team choosing how to evaluate agent security, derived entirely from the gated
+nodes above. One caveat governs any use of it in an argument and is stated on the last slide: this
+shares two authors with the CaMeL paper, so it cannot serve as external corroboration for CaMeL.*
+
+### Slide 1 - The first security source here built to settle an argument rather than win one
+
+**Four sources into this brain's security material, every efficacy number had come from whoever was
+making the claim.** AgentDojo is the field's reference benchmark and the first artifact here designed
+as a shared scoreboard.
+
+The construction is what makes that possible. A user task and an attacker task run in the same
+stateful tool-calling environment and are scored separately: 97 user tasks, 629 security test cases,
+70 tools, four applications [n1, n2]. Two scores rather than one, because a defence that blocks every
+attack by breaking the agent is not a defence, and a single number cannot tell you that happened.
+
+![The AgentDojo framework: an attacker goal and a user task enter the same environment, the agent calls tools over it, and utility and security are scored separately](visuals/fig1_framework.png)
+
+This is the two-score design. **The crux is that utility and security are measured on the same run**,
+which is what makes a defence's cost visible rather than assumed [`n1`].
+
+### Slide 2 - The evaluator cannot be a model, and the reasoning generalises
+
+**This is the design decision to take away even if you never run the benchmark.** Every user task
+ships a deterministic binary function over the model's output and the environment state before and
+after execution [n3]. Writing those by hand is laborious, and the paper acknowledges an LLM judge
+would be more scalable. It rejects scalability anyway.
+
+The reason is one sentence worth carrying: the attacks under study explicitly aim to inject new
+instructions into a model, so an attack strong enough to hijack the agent might hijack the evaluator
+too. In an adversarial setting the judge is part of the attack surface, and every scalability argument
+for LLM-as-judge quietly assumes it is not.
+
+![The four AgentDojo environments with their tool, user-task and injection-task counts, and example task pairs](visuals/tab1_environments.png)
+
+This is the cost of that decision, made concrete. **The crux is that every row here was hand-written**
+- that is what deterministic checking actually buys and what it charges [`n2`, `n3`].
+
+### Slide 3 - Agents fail a third of these tasks with nobody attacking them
+
+**More than a third of the user tasks fail with no attacker present at all [n4].** That is the first
+number to put in front of a room worried about prompt injection, because it reframes the whole
+conversation.
+
+The leadership significance is a sequencing one. If your agent fails a third of its work unattacked,
+security is not your binding constraint yet, and hardening it will not produce a working system. This
+is a benchmark built to measure attacks that ended up measuring agents, and that is the more useful
+result.
+
+```mermaid
+flowchart TB
+    A["a third of tasks fail<br/><b>with no attacker present</b> - n4"]
+    B["so security is downstream of<br/>a capability problem"]
+    C["and no defence can recover<br/>the third you were already losing"]
+    A --> B --> C
+    style A fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    style C fill:#fbf1dc,stroke:#b45309,color:#78350f
+```
+
+This is a sequencing slide, not a result. **The crux is that the unattacked failure rate bounds what
+any defence can possibly be worth to you**, so hardening an agent that already fails a third of its
+work will not produce a working system. It is drawn as a short chain rather than a single number
+because the number alone invites the wrong response, which is to treat it as a quality footnote rather
+than as a precondition on the whole security conversation [`n4`].
+
+### Slide 4 - More capable models are easier to attack
+
+**Capability makes you a better victim, because a weak model fails at the attacker's goal just as it
+fails at the user's [n6].** That is genuinely counterintuitive and it inverts the usual assumption
+that upgrading the model improves your security posture.
+
+What engineers should take from it is that model upgrades are not security-neutral and should be
+re-evaluated rather than assumed safe. What leadership should take from it is that the risk curve
+rises with the capability curve, so the two cannot be procured independently.
+
+![Left: targeted attack success rate against benign utility, trending upward. Right: utility under attack against benign utility](visuals/fig6_inverse_scaling.png)
+
+This is inverse scaling, plotted. **The crux is the direction of the left-hand trend** - the more
+useful the agent, the more successfully it can be misused [`n6`].
+
+### Slide 5 - Attack success is a property of the application, not the model
+
+**92% on Slack, and 0% on some Travel tasks [n8].** Same models, same attacks, wildly different
+outcomes, which means the variable that matters most is the one you control.
+
+That is the most actionable finding here. The tools you expose, the data the agent reads and what an
+action can reach are design decisions made by your team, not properties of the model you bought. A
+room that leaves believing model choice is the security lever has taken the wrong thing from this
+benchmark.
+
+![Attack success rates for GPT-4o broken down by injection task within each of the four suites](visuals/fig7_asr_by_suite.png)
+
+This is the variance across suites. **The crux is that the spread within one model is wider than the
+spread between models** [`n8`].
+
+### Slide 6 - The simplest isolation wins, and its failure boundary is the citable part
+
+**A tool filter drops attack success to 7.5%, and it fails in two named ways [n12, n13].** It fails
+when the tool list cannot be planned in advance, which is the same dynamism that makes agents worth
+using. And it fails when the tools the user's task legitimately needs are also sufficient to carry out
+the attack - true for 17% of test cases.
+
+Quote both numbers or neither. A defence whose boundary is stated and quantified is worth more than a
+stronger one whose boundary is not, because you can reason about where it leaves you. The 17% is
+irreducible: no filter separates tools the user needs from tools the attacker can use.
+
+One thing to be strict about when citing this. It shares two authors with the CaMeL paper, so however
+good both are, this benchmark cannot serve as independent corroboration for that defence [d1]. That is
+a rule about provenance rather than quality, and it is exactly the rule this brain exists to keep.
+
+![Left: targeted attack success rate against benign utility for each defence. Right: utility under attack against benign utility](visuals/fig9_defenses.png)
+
+This is the defence comparison on both axes at once. **The crux is that a defence is a point in two
+dimensions** - blocking attacks while destroying utility is visible here and invisible in any single
+score [`n12`].
+
+### Key takeaway message
+
+AgentDojo is the first security source in this brain built to settle arguments rather than win one,
+running a user task and an attacker task in the same environment and scoring them separately. Its most
+transferable decision is that utility is checked by deterministic functions rather than an LLM judge,
+because in an adversarial setting the evaluator is part of the attack surface. Three findings matter
+and none is about attacks: agents fail a third of these tasks unattacked, more capable models are
+easier to attack, and attack success tracks the application rather than the model. The simplest
+isolation wins, a tool filter reaching 7.5%, and its stated failure boundary of 17% is what makes that
+number worth quoting. It shares authors with CaMeL, so it cannot validate CaMeL.
