@@ -873,7 +873,21 @@ commercially rather than academically: better chunking, a stronger embedding mod
 genuinely improve which documents come back, and not one of them changes the moment synthesis happens.
 A team can spend a year on the cheaper of the two costs without noticing.
 
-*Visual: the TL;DR diagnosis diagram, which forks on exactly that question. Provenance: `n1`, `n2`.*
+```mermaid
+flowchart TB
+    Q{"which cost, and how often?"}
+    L["<b>lookup</b> - finding documents<br/><i>chunking, embeddings, rerankers</i>"]
+    S["<b>synthesis</b> - relating them<br/><i>re-paid on every question,<br/>then discarded</i>"]
+    Q --> L
+    Q --> S
+    style S fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+```
+
+This is a diagnosis slide, not an architecture. **The crux is the test: does the problem survive a
+perfect retriever?** Here it does, because what is re-paid is the relating of documents rather than the
+finding of them - so the whole retrieval industry is aimed at the cheaper cost.
+
+*Synthesized from `n1`.*
 
 ### Slide 2 - Compile once at ingest, and inherit a build step's liability along with its speed
 
@@ -887,7 +901,21 @@ That single trade is the whole architecture. Everything after it, the layers and
 consequence rather than an addition, which is the useful thing to tell a team evaluating this: if you
 accept the compile decision, you have mostly accepted the rest.
 
-*Visual: the section 2 analogy diagram. Provenance: `n2`.*
+```mermaid
+flowchart LR
+    I["<b>interpreter</b><br/>re-derive per question<br/><i>always current, always re-paid</i>"]
+    C["<b>compiler</b><br/>derive once at ingest<br/><i>paid once, and can go stale</i>"]
+    T["the trade is <b>when</b> you pay<br/>and <b>what</b> can rot"]
+    I --> T
+    C --> T
+    style C fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is an analogy slide, and "compiled" is meant literally. **The crux is that moving synthesis to
+ingest buys what a build step buys, and inherits the matching liability: a compiled artifact can be out
+of date in a way a freshly interpreted one cannot.**
+
+*Synthesized from `n2`.*
 
 ### Slide 3 - Once a machine writes your knowledge base, the architecture is about write access
 
@@ -902,8 +930,23 @@ wiki is structured [n5]. That document looks like documentation and behaves like
 definition, and the predictable failure is a team reading "no retrieval stack" as "less work", writing
 a thin schema, and getting a wiki whose shape drifts every time the model extends it.
 
-*Visual: the Movement B ownership diagram, with the section 4 budget-relocation diagram beside it.
-Provenance: `n4`, `n5`.*
+```mermaid
+flowchart TB
+    R["raw sources<br/><i>immutable, nobody edits</i>"]
+    W["the wiki<br/><i>LLM writes, you read</i>"]
+    S["the schema document<br/><i>both parties co-evolve</i>"]
+    R --> W --> S
+    B["the engineering moved here,<br/>out of the retrieval stack - n5"]
+    S --> B
+    style B fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is an ownership slide, not a storage diagram. **The crux is that once a machine writes your
+knowledge base, the interesting axis is who may change what** - a question no retrieval architecture
+has to answer. The predictable failure is reading "no vector database" as "less work" and writing a
+thin schema.
+
+*Synthesized from `n4`, `n5`.*
 
 ### Slide 4 - The design ships with a repair pass, and that is the honest part
 
@@ -920,8 +963,21 @@ have earned a lint pass. The out-of-band property matters more than it looks: a 
 ingest would be grading work it had just done, which is the conflict of interest this brain records
 separately as claim 34.
 
-*Visual: the Movement C admission diagram, with the section 7 necessity diagram. Provenance: `n3`,
-`n7`, `n8`, `n17`.*
+```mermaid
+flowchart TB
+    I["each ingest is a <b>wide write</b>,<br/>touching 10-15 pages - n17"]
+    N["nobody reviews 15 edits per source"]
+    D["so drift is arithmetic,<br/>not a risk to be managed"]
+    L["lint: a periodic pass,<br/>invoked <b>out of band</b> - n8"]
+    I --> N --> D --> L
+    style D fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+```
+
+This is a necessity slide, not a feature list. **The crux is that a design shipping with a periodic
+repair pass is telling you it expects to drift, and that is the honest part.** Out-of-band matters: a
+lint inside an ingest would be grading work it had just done.
+
+*Synthesized from `n8`, `n17`.*
 
 ### Slide 5 - The pattern is eighty years old and was blocked on labour, not on ideas
 
@@ -937,7 +993,20 @@ tokens rather than in librarians, stays below the value of having synthesis alre
 caution belongs in the same breath: a constraint lifting tells you a design is buildable and says
 nothing whatever about whether it works.
 
-*Visual: the section 10 lineage diagram. Provenance: `n13`, `n15`.*
+```mermaid
+flowchart LR
+    M["Memex, 1945"] --> B["blocked eighty years,<br/>not on storage or linking"]
+    B --> W["blocked on <b>who does<br/>the bookkeeping</b>"]
+    W --> L["the LLM does it"]
+    L --> E["the contribution is <b>economic</b>,<br/>not intellectual"]
+    style E fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a lineage slide, not a history lesson. **The crux is that the idea was never the hard part, so
+what changed is a price rather than an insight.** Evaluate it as an economics argument: does the
+maintenance cost, now paid in tokens, stay below the value of synthesis already done?
+
+*Synthesized from `n13`, `n15`.*
 
 ### Slide 6 - Take the pattern, leave the numbers, and note that nothing here was measured
 
@@ -956,8 +1025,22 @@ So the verdict is adopt the diagnosis, pilot the pattern, and discard the one nu
 externally, and what binds turns out to be the token volume the navigation ranges over rather than any
 count of sources, which makes the figure far too low for short notes and far too high for books.
 
-*Visual: the Movement D claim-strength diagram, where the best and worst claims in the gist sit side by
-side. Provenance: `n10`, `d1`.*
+```mermaid
+flowchart TB
+    G["the gist"]
+    S["<b>strong</b><br/>the Memex reframe,<br/>the diagnosis"]
+    W["<b>weak</b><br/>'~100 sources', asserted,<br/>and contradicted by its own<br/>operations section - d1"]
+    G --> S
+    G --> W
+    style S fill:#dcfce7,stroke:#15803d,color:#14532d
+    style W fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+```
+
+This is a claim-strength slide. **The crux is that the best and worst claims sit side by side and
+nothing in the text distinguishes them**, so a reader carries the number with the same confidence as
+the history. Later research found what binds is token volume, not a count of sources.
+
+*Synthesized from `n10`, `d1`.*
 
 ### Key takeaway message
 

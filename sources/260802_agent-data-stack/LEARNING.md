@@ -991,8 +991,22 @@ signal you rely on to catch a bad agent is structurally absent here. Before this
 three people held the context that would have prevented the error, and every question queued behind
 them [n1].
 
-*Visual: the Part 4 trace diagram, where omitting any single store produces a plausible wrong answer
-rather than a failure. Provenance: `n1`, `n2`.*
+```mermaid
+flowchart LR
+    Q["'how many active customers<br/>did we add last quarter?'"]
+    S["five context stores consulted"]
+    R["a number for the board deck"]
+    Q --> S --> R
+    F["omit any one and you get a<br/><b>confident wrong number</b>,<br/>not an error"]
+    S -.-> F
+    style F fill:#fdeaea,stroke:#dc3545,color:#7f1d1d
+```
+
+This is a failure-mode slide, not a pipeline. **The crux is the dashed edge: there is no traceback for
+a wrong assumption**, so all five omissions look identical from outside, like a confident number
+arriving on time. That is what makes context a safety property here rather than a quality one.
+
+*Synthesized from `n1`, `n2`.*
 
 ### Slide 2 - It was never a plumbing problem, and the article's own figure proves it
 
@@ -1008,8 +1022,11 @@ around the warehouse. For a room evaluating a similar project, the question this
 budget question: you are not buying infrastructure, you are commissioning documentation, and those
 have very different cost curves.
 
-*Visual: `visuals/fig2_data-stack-architecture.png`, the figure in question, alongside the TL;DR
-diagram. Provenance: divergence `d1`, `n1`.*
+![LangChain's data stack: billing, third-party sources, internal services and event tracking flowing through Metronome, Fivetran, Airbyte, Postgres and Segment into a BigQuery boundary, where Loading feeds Raw data, then Transforming via dbt produces Prod, then Reporting](visuals/fig2_data-stack-architecture.png)
+
+This is the article's own figure, captioned by its authors as the big architectural shift. **The crux
+is what is absent: no agent, no semantic model, no feedback loop** - a stock ELT pipeline [`d1`]. It is
+the strongest evidence in the piece that the plumbing was never what changed.
 
 ### Slide 3 - Five context stores, each earning its place by a failure the other four cannot explain
 
@@ -1025,8 +1042,21 @@ The rule that falls out is the portable part and it doubles as a stopping condit
 cannot name a question only it answers is a duplicate, and duplicated context is worse than missing
 context, because two copies drift apart and nothing tells you which one the agent read.
 
-*Visual: the Part 3 derivation diagram. Provenance: `n2`; the residual-question framing is this
-brain's, and the article presents the five as a list.*
+```mermaid
+flowchart TB
+    A["wrong table"] --> S1["definitions"]
+    S1 --> B["wrong formula"] --> S2["semantic model"]
+    S2 --> C["different question"] --> S3["workspace guides"]
+    S3 --> D["two assets look right"] --> S4["trust signal"]
+    S4 --> E["still off"] --> S5["computation lineage"]
+    style S5 fill:#e8f4ea,stroke:#28a745,color:#14532d
+```
+
+This is a derivation slide, not a taxonomy. **The crux is that each store exists because of a failure
+the previous ones cannot explain**, which is what makes five the right number and gives you a stopping
+condition: a layer that cannot name a question only it answers is a duplicate.
+
+*Synthesized from `n2`; the article presents the five as a list.*
 
 ### Slide 4 - A column definition stops being a description and becomes an instruction
 
@@ -1044,8 +1074,20 @@ else. This claim is `single-leg` on the article's own content, and it is the one
 evidence is strongest: schema documentation is measured to help, and considerably more on real
 warehouses than on public benchmarks.
 
-*Visual: reuses the Part 3 derivation diagram, since the definition layer is its first box. Provenance:
-`n3`, plus F1 from the research pass.*
+```mermaid
+flowchart TB
+    A["<code>account_status: The status of the account.</code>"]
+    B["a paragraph naming each value's<br/>business meaning, then an imperative:<br/><i>'for customer reporting, filter to Active<br/>unless the analysis explicitly includes<br/>churned or prospective accounts'</i>"]
+    C["a default <b>policy</b>, stored where the<br/>agent already has to look"]
+    A --> B --> C
+    style C fill:#e8f4ea,stroke:#28a745,color:#14532d
+```
+
+This is a before-and-after on one field. **The crux is where the instruction lives: not a system
+prompt, not a retrieval corpus, but the schema field the agent already reads to do its job**, so it
+cannot be skipped and competes with nothing for context budget.
+
+*Synthesized from `n3`; measured externally by F1.*
 
 ### Slide 5 - The loop's output is a write back to the store, never an answer to a user
 
@@ -1064,8 +1106,12 @@ project. There is also a gap in the source's own picture worth naming: the feedb
 usage trends straight back into the context layer with no human in the path, and the human is the
 part that costs three salaries.
 
-*Visual: `visuals/fig3_feedback-loop.png`, with the corrected loop that follows it. Provenance: `n6`,
-`n7`, `n8`, `n12`, F5.*
+![LangChain's agent feedback loop: agent conversations feeding observability, usage trends flowing back into the context layer, with the five context stores feeding the agent](visuals/fig3_feedback-loop.png)
+
+This is the source's own loop, and what it omits is the point. **The crux is that usage trends route
+straight back into the context layer with no human in the path, and the human is the part that costs
+three salaries** [`n12`]. The encoding cost of expert knowledge collapsed; the elicitation cost did
+not [F5].
 
 ### Slide 6 - Adopt the mechanism, and do not believe the results, because nobody measured them
 
@@ -1083,8 +1129,21 @@ say they have not built: an eval that scores answers rather than counting conver
 this pattern, build that first, because without it you will be measuring the same thing they did and
 concluding something they did not.
 
-*Visual: the TL;DR diagram's right-hand column, which is what is well evidenced, against the absence
-of any correctness figure. Provenance: `d3`, `d4`, `n9`, `n10`.*
+```mermaid
+flowchart TB
+    M["what is measured<br/>2,200 conversations, 40x throughput,<br/>100% migration in six weeks"]
+    T["what is claimed<br/>trustworthiness"]
+    G["nothing connects them,<br/>and the authors concede it - d4, n10"]
+    M --> G
+    T --> G
+    style G fill:#fdeaea,stroke:#dc3545,color:#7f1d1d
+```
+
+This is an evidence slide, not a summary. **The crux is that every number describes how much the thing
+is used and none describes whether its answers are right.** The 40x compares mismatched units and
+should never be quoted bare [`d3`].
+
+*Synthesized from `d3`, `d4`, `n9`, `n10`.*
 
 ### Key takeaway message
 

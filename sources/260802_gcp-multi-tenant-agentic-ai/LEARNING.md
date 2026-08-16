@@ -1062,8 +1062,22 @@ Either failure alone could be patched, which is why both matter. A finite query 
 and a trusted input could be sanitised. Together they force one conclusion, and it is the sentence the
 whole architecture spends: isolation has to live somewhere the model has no vote.
 
-*Visual: the Movement A refutation diagram. Provenance: `n1`, `n2`; the two-collapse framing is
-derived and the source states it less directly.*
+```mermaid
+flowchart TB
+    T["one app, a tenant ID,<br/>a filtered query"]
+    A["the agent composes its own<br/>data access at run time"]
+    B["and the input steering it is<br/>attacker-influenceable text"]
+    C["isolation has to live somewhere<br/>the model has <b>no vote</b>"]
+    T --> A --> C
+    T --> B --> C
+    style C fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a refutation slide, not a design. **The crux is that the standard SaaS answer breaks in two
+independent places, so patching either one is not enough.** A finite query set could be reviewed and a
+trusted input could be sanitised; neither is available here.
+
+*Synthesized from `n1`, `n2`.*
 
 ### Slide 2 - One tenancy decision buys three guarantees, and that is what makes it fundable
 
@@ -1079,8 +1093,11 @@ security grounds alone, and the case only closes when reliability and capacity a
 same line item. I should be clear that the addition is this brain's: the source states the three in
 three separate places and never puts them together.
 
-*Visual: `visuals/fig1b_two-tenants.png`, two tenant projects with no edge between them, plus the
-section 4 leverage diagram. Provenance: `n2`, `n4`, `n13`.*
+![Two tenant projects side by side, each wrapped in its own PAB boundary, each holding a complete duplicated stack, with no edge between them](visuals/fig1b_two-tenants.png)
+
+This is the boundary itself, and the absence is the content. **The crux is that there is no edge
+between the two tenants to draw** - cross-tenant access is not forbidden by policy, it is structurally
+unavailable [`n2`, `n4`]. The same boundary also delivers failure and quota isolation [`n13`].
 
 ### Slide 3 - Identity is established once and then spent three times
 
@@ -1094,8 +1111,12 @@ questions here, not one. The routing decision can be correct while the principal
 and both can be correct while a user sees another user's rows inside the right tenant. Hold onto the
 third spend in particular, because it is the one the cost-saving variants quietly make your problem.
 
-*Visual: `visuals/fig1a_ingress-chain.png` for the edge, and the section 6 authority diagram for the
-three spends. Provenance: `n4`, `n6`, `n8`, `n9`.*
+![The routing hub: user, external Application Load Balancer with Cloud Armor and Model Armor attached, IAP bound to the Cloud Run frontend portal](visuals/fig1a_ingress-chain.png)
+
+This is a filter chain, and the ordering is the argument. **The crux is that each filter catches what
+the previous one structurally cannot**, ending with identity established once at the door [`n6`]. That
+single authentication is then spent three times, on routing, on the agent's own principal, and on what
+this user may see [`n4`, `n8`, `n9`].
 
 ### Slide 4 - Every cost-saving option on offer is the same trade wearing different clothes
 
@@ -1110,7 +1131,22 @@ verb is carrying an enormous amount of work. The question for the room is theref
 to choose. It is how much enforcement code you are prepared to write, own and keep correct, because
 that is the actual currency the saving is denominated in.
 
-*Visual: the Movement C trade diagram. Provenance: `n10`, `n11`, `n14`.*
+```mermaid
+flowchart TB
+    V1["shared model endpoint"] --> T
+    V2["shared MCP server"] --> T
+    V3["single Model Armor"] --> T
+    V4["private ingress"] --> T
+    T["each converts a <b>structural</b> guarantee<br/>into one you must enforce<br/>in code you own - n14"]
+    style T fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+```
+
+This is a trade slide, not a menu. **The crux is that four options presented separately across the
+document are one move.** The real decision is not which variant to pick but how much enforcement code
+you are prepared to write and keep correct - and "you securely propagate the end-user identity" names
+no mechanism at all [`n10`, `n11`].
+
+*Synthesized from `n10`, `n11`, `n14`.*
 
 ### Slide 5 - The document's headline guarantee stops holding in the configuration it recommends
 
@@ -1124,7 +1160,23 @@ in the same sentence that the two-layer design is what "helps to ensure data sov
 recommendation quietly removes a control the security section calls essential, and the document never
 notices. This is why the second half is the payload and not an appendix.
 
-*Visual: the section 10 scope diagram. Provenance: divergences `d2` and `d3`.*
+```mermaid
+flowchart TB
+    G["'even if an agent identity<br/>is compromised...'"]
+    A["true of the topology<br/>the figure draws"]
+    B["not true of the shared variants<br/>recommended three sections later - d3"]
+    C["and the cost section deletes the tenant-local<br/>PII filter the security section<br/>calls essential - d2"]
+    G --> A
+    G --> B --> C
+    style B fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    style C fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+```
+
+This is a scope slide, not a criticism. **The crux is that the headline guarantee is stated
+unconditionally and holds for only one configuration - and not the one the same document recommends on
+cost grounds.** Nothing retracts it and no sentence connects the two.
+
+*Synthesized from `d2`, `d3`.*
 
 ### Slide 6 - Adopt the shape, and understand that nobody has run this
 
@@ -1141,8 +1193,12 @@ a reading rule rather than an architecture, and it is this. What a reference arc
 specify is usually what has not been solved, and the specific absence worth hunting is a named
 mechanism behind a reassuring verb.
 
-*Visual: the Movement D evidence diagram, alongside `visuals/fig1_architecture.png` for the topology
-being assessed. Provenance: `n18`, and the source-level assessment in "What to distrust in this note".*
+![The full architecture: user, shared hubs containing the routing hub and the central governance and security hub, and two isolated tenant projects below, with the seven numbered flow steps](visuals/fig1_architecture.png)
+
+This is the topology being assessed, shown so the verdict has an object. **The crux is that this
+well-argued picture carries two authors, 21 contributors, a Terraform implementation, and not one
+latency figure, cost figure, incident or named deployment.** Both legs of this kit's gate are the same
+team's prose and the same team's diagram [`n18`].
 
 ### Key takeaway message
 

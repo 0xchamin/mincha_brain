@@ -1023,8 +1023,23 @@ What engineers should take from this is that a capability figure here is a five-
 scalar. The leadership significance is that procurement and risk decisions taken off these
 leaderboards are being taken on the configuration rather than on the technology.
 
-*Visual: the five-dial diagram in this note's TL;DR, which is the only place in the source material
-where all five settings appear together. Provenance: synthesized from `n6`, `n8`, `n9`, `n19`, `n25`.*
+```mermaid
+flowchart LR
+    D1["information given"] --> N
+    D2["task decomposition"] --> N
+    D3["scaffolding"] --> N
+    D4["safeguards on/off"] --> N
+    D5["attempt budget"] --> N
+    N["'17.5% on Cybench'"]
+    classDef dial fill:#fef3c7,stroke:#b45309,color:#78350f
+    class D1,D2,D3,D4,D5 dial
+```
+
+This is a configuration slide, not a benchmark. **The crux is that all five dials move the score
+further than the model does, and published figures disclose almost none of them.** Ask any vendor
+quoting a security capability number for all five settings, and treat a refusal as information.
+
+*Synthesized from `n6`, `n8`, `n9`, `n19`, `n25`.*
 
 ### Slide 2 - Capability does not fade out, it stops at an identifiable rung
 
@@ -1041,8 +1056,12 @@ sandbox is close to zero, and arbitrary code execution is zero for every publicl
 The competence is real, it is broad, and it ends at a specific rung. For leadership that is the most
 decision-relevant sentence in the note, because it says the current gap is not a matter of degree.
 
-*Visual: `fig2_outcome-ladder.png` for the ladder, `fig6_exploitbench-capability-ladder.png` for where
-it terminates. Provenance: `n3`, `n16`.*
+![ExploitBench capability ceiling per agent and arm, showing tier counts and cost](visuals/fig6_exploitbench-capability-ladder.png)
+
+This is a ladder, not a leaderboard, and the rungs matter more than the ordering. **The crux is that
+competence saturates at the bottom and vanishes at the top**, so the interesting number is not any
+model's score but the rung at which every model stops. *Corroborated by the surrounding prose [`n3`,
+`n16`].*
 
 ### Slide 3 - That rung belongs to the guidance regime, not to the agent
 
@@ -1058,7 +1077,11 @@ this one article is that task decomposition is not an exotic research technique.
 competent operator does, which means the unguided number is the one least representative of a real
 adversary.
 
-*Visual: `fig4_cybench-guidance-ceiling.png`. Provenance: `n6`, divergence `d1`.*
+![Cybench unguided and subtask-guided performance with highest first-solve-time solved](visuals/fig4_cybench-guidance-ceiling.png)
+
+This is a before-and-after on one variable, and the variable is not the model. **The crux is that
+decomposing the task moved the ceiling from eleven minutes to two hours with nothing else changed.**
+The article's prose reports only the unguided half, which this note records as a divergence [`d1`].
 
 ### Slide 4 - Scaffolding beats the model, and it is not close
 
@@ -1075,8 +1098,12 @@ figures elsewhere in the article do not. The leadership significance is that def
 against a model is built against the wrong object. The threat scales with harness engineering, which
 is cheap, public, and improving independently of any model release.
 
-*Visual: `fig7_mhbench-equifax-chain.png`, the multi-host attack chain these agents are being scored
-against. Provenance: `n19`, `n20`.*
+![The multi-host attack chain of the 2017 Equifax breach - scan, infect server, find credentials, infect databases, exfiltrate](visuals/fig7_mhbench-equifax-chain.png)
+
+This is the task, not a result, and it is here to calibrate what "3 of 40 to 37 of 40" refers to.
+**The crux is that these are multi-host chains rather than puzzles**, which is why a harness change
+moved the number so far: the work is orchestration, and orchestration is what scaffolding supplies.
+*Corroborated by the surrounding prose [`n19`, `n20`].*
 
 ### Slide 5 - Every confound attacks the level of the number and none of them touches its slope
 
@@ -1097,8 +1124,11 @@ I should label the evidence honestly: `n23` is `single-leg` and figure-only, rea
 brain rather than stated by the author. It is the strongest claim here and the least corroborated one,
 and those two facts are uncomfortable together.
 
-*Visual: `fig8_scone-doubling-time.png`. Provenance: `n23`, divergence `d2`; confounds from `n8`,
-`n25` and `fig5_exploitgym-results.png`.*
+![SCONE-Bench total simulated exploitation revenue against model release date, log scale with fitted trend](visuals/fig8_scone-doubling-time.png)
+
+This is a trend, not a ranking, and it is the only quantity here the confounds cannot touch. **The
+crux is the slope: a doubling time of roughly 1.3 months at an R-squared of 0.828 across eight
+models.** It appears nowhere in the article's prose and exists only inside this image [`n23`, `d2`].
 
 ### Slide 6 - The decision is not to act on the leaderboard, and to instrument the slope instead
 
@@ -1114,8 +1144,22 @@ any vendor quoting a cybersecurity figure for all five configuration settings, a
 information. And track the slope rather than the level, because the level is what the configuration
 controls and the slope is what the technology is doing.
 
-*Visual: the separation diagram at the head of Movement 3, which is the argument of this slide in one
-picture. Provenance: synthesized from `n8`, `n23`, `n25`.*
+```mermaid
+flowchart TB
+    N["a published capability number"]
+    L["its <b>level</b><br/>four confounds destroy it"]
+    S["its <b>slope</b><br/>untouched by all four"]
+    N --> L --> R["do not act on the leaderboard"]
+    N --> S --> D["track the rate instead"]
+    style L fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    style S fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a separation slide, not a critique. **The crux is that discounting the article for being
+unreliable throws away the trend along with the leaderboard**, and the trend is the half that survives
+every objection raised against the rest.
+
+*Synthesized from `n8`, `n23`, `n25`.*
 
 ### Key takeaway message
 

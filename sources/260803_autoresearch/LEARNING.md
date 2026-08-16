@@ -1140,7 +1140,24 @@ starts there is no mechanism to add one. What engineers should take from this is
 execution converts ongoing judgement into advance specification. The leadership significance is that
 the review cost does not disappear when you remove the reviewer, it gets paid up front in design.
 
-*Visual: the Movement A diagram. Provenance: synthesized from `n1`.*
+```mermaid
+flowchart TB
+    U["nobody is watching"]
+    A["no one asks if a result<br/>is meaningful"]
+    B["the agent may rewrite<br/>what is measured"]
+    C["100 iterations must fit<br/>one context window"]
+    G["every guarantee must exist<br/><b>before</b> the loop starts"]
+    U --> A --> G
+    U --> B --> G
+    U --> C --> G
+    style G fill:#e8f4ea,stroke:#28a745,color:#14532d
+```
+
+This is a problem slide, not a design. **The crux is that removing the human does not make the work
+harder, it moves every decision earlier**, converting three ongoing judgement calls into three things
+that must be settled up front and cannot be revisited.
+
+*Synthesized from `n1`.*
 
 ### Slide 2 - The design is four freezes, and each one is forced by the last
 
@@ -1163,7 +1180,19 @@ interesting. The derivation is. Each freeze exists because the previous one left
 means you can run the same four questions against a system that has nothing to do with language models
 and get four different answers that are correct for it.
 
-*Visual: the Movement B diagram. Provenance: `n1` through `n4`.*
+```mermaid
+flowchart LR
+    A["1. what may<br/>it change?<br/><i>one file</i>"] --> B["2. what is held<br/>constant?<br/><i>wall-clock time</i>"]
+    B --> C["3. what is<br/>comparable?<br/><i>bits per byte</i>"]
+    C --> D["4. what is<br/>protected?<br/><i>the pinned holdout</i>"]
+    style D fill:#e8f4ea,stroke:#28a745,color:#14532d
+```
+
+This is a derivation slide, not a settings list. **The crux is that each freeze is forced by the
+residue the previous one left**, so the four questions transfer to a system that has nothing to do
+with language models even though the four answers do not.
+
+*Synthesized from `n1` through `n4`.*
 
 ### Slide 3 - The resources an unattended loop runs out of are memory, context and momentum, and none of them is compute
 
@@ -1180,7 +1209,24 @@ tree and would otherwise erase the record of the experiment that just failed [n7
 in any loop whose failure mode is rollback, the audit trail must not itself be rollback-able. The
 source gives the instruction and never gives that reason, so the generalisation is this brain's.
 
-*Visual: the Movement C diagram. Provenance: `n6`, `n7`, `n8`.*
+```mermaid
+flowchart TB
+    N["a hundred unattended iterations"]
+    M["<b>memory</b><br/>git: branch per run,<br/>commit per experiment"]
+    C["<b>context</b><br/>~2 grepped lines<br/>per experiment"]
+    D["<b>momentum</b><br/>NEVER STOP, written down"]
+    N --> M
+    N --> C
+    N --> D
+    X["the ledger sits <b>outside</b> git,<br/>because the loop rewinds the tree"]
+    M --> X
+    style X fill:#e8f4ea,stroke:#28a745,color:#14532d
+```
+
+This is a resource slide. **The crux is that none of the three scarce resources is compute**, and a
+team with overnight batch-job experience will have solved the first and never met the other two.
+
+*Synthesized from `n6`, `n7`, `n8`.*
 
 ### Slide 4 - The containment is a declaration, not an enforcement, and the design says so
 
@@ -1197,8 +1243,21 @@ level while the evaluator's output still travels through the generator's hands, 
 repository compares the two. This is the seam the first three freezes leave open, and it is the reason
 section 5 is one of the two sections worth reading if you read only two.
 
-*Visual: the TL;DR containment diagram, whose right-hand column is exactly this slide. Provenance:
-`n1`, `n5`.*
+```mermaid
+flowchart TB
+    F["evaluate_bpb is frozen"]
+    P["but the file that calls it,<br/>formats it and <b>prints</b> it<br/>is the file the agent rewrites"]
+    R["and the score is read<br/>from that print - n5"]
+    N["nothing compares the two"]
+    F --> P --> R --> N
+    style N fill:#fdeaea,stroke:#dc3545,color:#7f1d1d
+```
+
+This is a seam slide, not an architecture. **The crux is that generator and evaluator can be perfectly
+separated at the function level while the evaluator's output still travels through the generator's
+hands.** No sandbox and no checksum exist anywhere in the repository [`n1`].
+
+*Synthesized from `n1`, `n5`.*
 
 ### Slide 5 - The loop banked a random seed as its final improvement, and that is the accept rule working correctly
 
@@ -1217,8 +1276,12 @@ I should label this evidence honestly. The noise floor rests on a single experim
 behind it were read off a rendered chart by eye at a scale where the quantity of interest is roughly
 one pixel. It is gated `needs-check` and deliberately not promoted harder.
 
-*Visual: `visuals/progress_endgame.png`, the plateau, the staircase and the seed. Provenance: `n11`,
-`n12`.*
+![The end of the run: a plateau, a staircase, and a seed](visuals/progress_endgame.png)
+
+This is the author's own published run, not a criticism of it. **The crux is the final step: the
+fifteenth and last kept improvement is a change of random seed**, which is the accept rule executing
+correctly on an input it cannot recognise. That experiment also measures the loop's noise floor for
+free [`n11`, `n12`].
 
 ### Slide 6 - Adopt the shape, do not cite the numbers, and add the one thing it is missing
 
@@ -1234,8 +1297,11 @@ single addition is what separates a loop that compounds real improvements from o
 whatever its benchmark cannot see, and the source hands you the measurement you would need to set the
 threshold without ever using it itself.
 
-*Visual: `visuals/progress_full.png`, the full frontier, with `visuals/progress_early.png` for the
-front-loaded yield. Provenance: `n12`, `n14`.*
+![The full 83-experiment frontier](visuals/progress_full.png)
+
+This is the whole programme in one image, and the shape is the argument. **The crux is that yield is
+low and front-loaded: 83 experiments, 15 keeps, most of the gain early, then a plateau of roughly 22
+experiments with nothing.** Read off a rendered chart by eye, so gated `needs-check` [`n12`, `n14`].
 
 ### Key takeaway message
 

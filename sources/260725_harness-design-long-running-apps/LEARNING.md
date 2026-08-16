@@ -827,8 +827,22 @@ the single agent was split into a generator and a separate evaluator [n1]. The q
 is not how to make the agent more self-critical. It is where a second, independent understanding is
 going to come from, because no instruction manufactures one.
 
-*Visual: the section 2 causal diagram, where one understanding feeds both writing and reviewing.
-Provenance: `n1`, `n2`, `n3`.*
+```mermaid
+flowchart TB
+    U["one understanding of the task"]
+    W["writes the work"]
+    R["reviews the work"]
+    B["the blind spots are the same blind spots"]
+    U --> W --> B
+    U --> R --> B
+    style B fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+```
+
+This is a causal slide, not a workflow. **The crux is the single node at the top: writing and reviewing
+draw on the same understanding, so a self-check cannot surface the flaws that understanding caused.**
+Asking harder does not manufacture a second perspective.
+
+*Synthesized from `n1`, `n3`.*
 
 ### Slide 2 - The split exists to defeat a conflict of interest, not to add capability
 
@@ -843,8 +857,23 @@ and it is the same reason you do not have an engineer sign off their own change.
 take from it is the narrowness: if a proposed second agent is not resolving a conflict of interest,
 this source is not evidence for building it.
 
-*Visual: the Movement A dead-end diagram, which closes off the cheap fix before this one is proposed.
-Provenance: `n2`, `n11`.*
+```mermaid
+flowchart LR
+    P["planner"] --> G["generator"] --> E["evaluator"]
+    F[("files")]
+    P -.- F
+    G -.- F
+    E -.- F
+    N["three contexts, not one"]
+    E --> N
+    style N fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is an independence slide, not an architecture. **The crux is that the roles communicate through
+files precisely so each holds its own context**, which is the entire mechanism buying the second
+vantage point. Nothing here argues that more agents are better.
+
+*Synthesized from `n2`, `n11`.*
 
 ### Slide 3 - A second agent is worthless by default, and making it useful is three separate moves
 
@@ -861,7 +890,20 @@ the artifact, and perception is useless if the aggregation rule hides what it fo
 accordingly: an out-of-the-box model pointed at your work is lenient QA and needs tuning rounds [n14],
 which means the evaluator is a build rather than a configuration.
 
-*Visual: the Movement B derivation diagram. Provenance: `n4`, `n8`, `n13`, `n14`.*
+```mermaid
+flowchart TB
+    A["fix the <b>question</b>, not the judge<br/><i>'follows our design principles'</i><br/><i>beats 'is it beautiful'</i>"]
+    B["give it <b>tools</b>, so it interacts<br/>with the running artifact"]
+    C["gate on <b>hard thresholds</b>,<br/>never a weighted average"]
+    A --> B --> C
+    style C fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a build slide, not a checklist, and the order is load-bearing. **The crux is that a fixed
+question is useless if the grader cannot perceive the artifact, and perception is useless if the
+aggregation rule hides what it found.** An out-of-the-box grader is lenient QA [`n14`].
+
+*Synthesized from `n4`, `n8`, `n13`.*
 
 ### Slide 4 - The harness cost 22x, and what it bought was detection rather than quality
 
@@ -877,7 +919,21 @@ budgeting, the more useful figure is from the later build, where QA ran at rough
 and caught core features that had shipped as display-only stubs [n21, n22]. Nobody quotes that one,
 and it is the one that makes the case.
 
-*Visual: the section 6 value diagram. Provenance: `n15`, `n16`, `n21`, `n22`.*
+```mermaid
+flowchart TB
+    S["solo agent<br/>20 min, ~$9"] --> X["rendered perfectly,<br/>responded to nothing,<br/>said nothing was wrong"]
+    H["full harness<br/>6 hr, ~$200"] --> Y["a working app"]
+    X --> M["18x time, 22x cost -<br/>and the cheap run is the broken one"]
+    Y --> M
+    style X fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    style M fill:#fff4e5,stroke:#b45309,color:#78350f
+```
+
+This is a cost slide, and the failure box is what makes the multiplier discussable. **The crux is that
+the comparison is working-versus-silently-broken, not expensive-versus-cheap.** What the money bought
+was detection, not quality, and the later build prices QA at ~8% of spend [`n22`].
+
+*Synthesized from `n15`, `n16`, `n21`, `n22`.*
 
 ### Slide 5 - On a stronger model the author deleted half his own scaffolding and published the result
 
@@ -896,8 +952,24 @@ And a guard against the easy misreading, because the source supplies it. What su
 caught core features shipped as stubs. The expiry claim is about which components, not about whether
 any are needed.
 
-*Visual: the section 8 lifecycle diagram, with the section 9 guard beside it. Provenance: `n17`, `n18`,
-`n19`, `n20`, `n21`.*
+```mermaid
+flowchart TB
+    C["a component encodes an assumption<br/>about what the model cannot do - n17"]
+    M["a stronger model ships"]
+    E["the assumption expires.<br/>Nothing about the component changed."]
+    D["delete it - one at a time,<br/>because simultaneous cuts<br/>are uninterpretable - n20"]
+    C --> E
+    M --> E --> D
+    style E fill:#fff4e5,stroke:#b45309,color:#78350f
+    style D fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a lifecycle slide. **The crux is that the thing invalidating your design is a model release
+rather than a bug, and it arrives on somebody else's schedule with no notification.** What survived
+the cull still caught features shipped as stubs, so this is about which components, not whether any
+are needed [`n21`].
+
+*Synthesized from `n17`, `n18`, `n19`, `n20`.*
 
 ### Slide 6 - Adopt the mechanisms, treat every number as one run, and schedule the deletion review
 
@@ -911,7 +983,22 @@ a recurring review on it, because the thing that invalidates your design is a mo
 than a bug, and it arrives on somebody else's schedule with no notification. Remove one component per
 review and keep the measurement after you remove it, so you find out when to put it back.
 
-*Visual: the TL;DR obsolescence diagram. Provenance: `n15`, `n17`, `n19`.*
+```mermaid
+flowchart LR
+    G["the gap between task<br/>and model capability"]
+    V["a component's value"]
+    G --> V
+    N["not the component's merit"] -.-x V
+    R["so schedule a deletion review,<br/>not just a build"]
+    V --> R
+    style R fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a decision slide. **The crux is that a component's worth is a property of the gap it closes,
+so good scaffolding expires without ever becoming bad scaffolding.** Remove one per review and keep
+the measurement after removal, so you find out when to put it back.
+
+*Synthesized from `n17`, `n19`.*
 
 ### Key takeaway message
 

@@ -1006,7 +1006,20 @@ correctness error that fires precisely when the load balancer does its job propa
 every layer touching the traffic, which is what forces the change into the protocol rather than into
 the deployment.
 
-*Visual: the Movement 1 failure-mode diagram. Provenance: `n1`, `n2`.*
+```mermaid
+flowchart LR
+    C["client"] --> LB["round-robin<br/>balancer"]
+    LB --> P1["pod A<br/><i>holds the session</i>"]
+    LB --> P2["pod B<br/><i>never heard of it</i>"]
+    P2 --> E["<b>400 Session Not Found</b><br/>on request two - n2"]
+    style E fill:#fce8e6,stroke:#ea4335,color:#7f1d1d
+```
+
+This is a failure-mode slide. **The crux is that this breaks loudly rather than slowly, so it is a
+correctness error fired by the balancer doing its job** - not degradation you can tune or throw
+capacity at. That distinction is what forces a protocol change rather than a deployment change.
+
+*Synthesized from `n1`, `n2`.*
 
 ### Slide 2 - Every available workaround was a tax paid forever for an event that happens once
 
@@ -1022,7 +1035,23 @@ them is the wrong exercise. What they have in common is that each imposes a perm
 to support a handshake that occurs on the first request only, and that asymmetry is the argument for
 changing the protocol.
 
-*Visual: the section 2 alternatives diagram. Provenance: `n2`.*
+```mermaid
+flowchart TB
+    A["sticky affinity<br/><i>defeats distribution, dies on restart</i>"]
+    B["session in shared Redis<br/><i>a network read and write per call</i>"]
+    C["deep packet inspection<br/><i>JSON parsing on the ingress hot path</i>"]
+    T["every option is a tax paid forever<br/>for a handshake that happens once"]
+    A --> T
+    B --> T
+    C --> T
+    style T fill:#fff4e5,stroke:#b45309,color:#78350f
+```
+
+This is an alternatives slide, and none of the three is wrong. **The crux is that ranking them is the
+wrong exercise: what they share is a permanent per-request cost imposed by a one-time event.** That
+asymmetry is the argument for changing the protocol.
+
+*Synthesized from `n2`.*
 
 ### Slide 3 - Delete the handshake, then finish the job by promoting routing values into headers
 
@@ -1040,7 +1069,21 @@ duplicating data across two layers creates a disagreement risk, and the design c
 disagreement an explicit protocol error rather than undefined behaviour. The payoff is that ordinary
 infrastructure can route, audit, rate-limit and cache MCP traffic without understanding it [n5].
 
-*Visual: the Movement 2 derivation diagram. Provenance: `n3`, `n4`, `n5`.*
+```mermaid
+flowchart TB
+    D["delete initialize and Mcp-Session-Id.<br/>Version, capabilities and client info<br/>ride in _meta on every request - n3"]
+    Q{"but a gateway will not parse<br/>a JSON body to route"}
+    H["so mirror routing values into headers,<br/>rejected with -32020 on mismatch - n4"]
+    R["ordinary infrastructure can route, audit,<br/>rate-limit and cache - n5"]
+    D --> Q --> H --> R
+    style R fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+This is a derivation slide. **The crux is that the header promotion is not a second feature but a
+necessary completion of the first**, since moving state into the body helps the server and does nothing
+for the intermediaries the change exists to satisfy. The error code earns the duplication.
+
+*Synthesized from `n3`, `n4`, `n5`.*
 
 ### Slide 4 - What the article calls statelessness is state relocation, and there are three new owners
 
@@ -1058,8 +1101,23 @@ The framing is this brain's rather than the article's, and it generalises past M
 client and the operator's own infrastructure are where protocol state goes whenever a server declares
 it has stopped holding any.
 
-*Visual: the section 8 accounting diagram, with the TL;DR conservation diagram. Provenance: `n7`, `n9`,
-`n10`, `d2`.*
+```mermaid
+flowchart TB
+    Q["'stateless'"]
+    W["the <b>wire</b> pays<br/>_meta on every request, forever"]
+    C["the <b>client</b> pays<br/>holding server state it cannot validate"]
+    A["<b>you</b> pay<br/>the task store - which is Redis,<br/>four sections after the headline<br/>said you would not need it - d2"]
+    Q --> W
+    Q --> C
+    Q --> A
+    style A fill:#fce8e6,stroke:#ea4335,color:#7f1d1d
+```
+
+This is an accounting slide. **The crux is that statelessness is a claim about one component and never
+about a system, so the useful question is which party started paying** [`n10`]. The same three
+destinations appear whenever any server declares it holds no state.
+
+*Synthesized from `n7`, `n9`, `n10`, `d2`.*
 
 ### Slide 5 - The security section secures the old threats and not the one the redesign created
 
@@ -1079,7 +1137,24 @@ well require integrity protection that the blog post does not mention. What can 
 article shows the blob, shows the delete prompt, and never connects them. That is the note's top
 research target rather than a demonstrated vulnerability.
 
-*Visual: the section 6 evidence diagram. Provenance: `n8`, `n11`, `d1`.*
+```mermaid
+flowchart TB
+    R["requestState, held and echoed<br/>by the client"]
+    D["base64 -> <b>plaintext JSON,<br/>no signature</b> - n8"]
+    U["attached to 'are you sure you want<br/>to delete these 3 files?'"]
+    Q["so a client that edits it is editing<br/><b>server execution state</b>"]
+    R --> D --> Q
+    U --> Q
+    style D fill:#fce8e6,stroke:#ea4335,color:#7f1d1d
+    style Q fill:#fce8e6,stroke:#ea4335,color:#7f1d1d
+```
+
+This is an evidence slide, and every box came from decoding the article's own printed payload. **The
+crux is that the mechanism moves server-side execution state through an untrusted party, and the
+example chosen to illustrate it is a destructive operation.** No server was tested; the spec may
+require signing the post does not mention [`d1`].
+
+*Synthesized from `n8`, `d1`.*
 
 ### Slide 6 - Adopt the mechanism in staging, and settle the signing question before anything destructive
 
@@ -1099,7 +1174,23 @@ with a 12-month window, and Roots, Sampling and Logging entered it immediately, 
 by calling LLM provider APIs directly [n13]. That is the protocol declaring that model access is not
 its problem, which tells you which responsibilities are becoming yours.
 
-*Visual: the Movement 4 gap diagram, with the section 9 scope diagram. Provenance: `n13`, `n15`, `d1`.*
+```mermaid
+flowchart TB
+    S["the security section secures<br/>inherited OAuth concerns - n11"]
+    G["and not the trust surface<br/>its own redesign created - d1"]
+    D["deprecations: Roots, Sampling, Logging,<br/>with sampling replaced by<br/>'call the provider API directly' - n13"]
+    B["the protocol declaring that model access<br/>is <b>not its problem</b>"]
+    S --> G
+    D --> B
+    style G fill:#fce8e6,stroke:#ea4335,color:#7f1d1d
+    style B fill:#e8f0fe,stroke:#4285f4,color:#1a3a6b
+```
+
+This is a boundary slide. **The crux is that a security section addressing the old threats is exactly
+what makes the new omission easy to miss**, and the deprecations tell you which responsibilities the
+protocol is handing back to you. Release candidate on beta SDKs [`n15`].
+
+*Synthesized from `n11`, `n13`, `n15`, `d1`.*
 
 ### Key takeaway message
 
