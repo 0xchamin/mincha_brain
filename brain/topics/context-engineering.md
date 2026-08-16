@@ -475,6 +475,9 @@ versioned and got wrong in ways a quality judgement cannot.
 
 | Claim | Sources (cited) | Confidence |
 |---|---|---|
+| **Response payloads dominate tool definitions as a context cost, and the industry is optimising the smaller number.** One `list_pull_requests(100)` response cost **657,272 tokens** before tailoring and 153,352 after; the whole tool catalog it sits beside cost **64.6k**. Catalog cost scales with something you control and change rarely; response cost scales with what the agent asks for, changes every call, and has no upper bound. **This bounds what claim 85 buys** - deferring the manifest behind a search tool is a 36x win on the smaller number and does nothing about the response side. | S27 (`n6`) against claim 82 / S10, claim 218 | **needs-check** - both figures corroborated within their sources; **the comparison is this brain's arithmetic**, one tool, one vendor |
+| **A tool catalog can be priced from its tool count alone**: 64.6k tokens at 101 tools (~640 each) and 541k at 1,180 tools (~458 each), two independent catalogs converging within a factor of 1.4. Useful for estimation before instrumentation. | S27 (`n5`) + S10 (claim 82), claim 219 | **needs-check - this brain's arithmetic over two sources**, stated by neither. n=2, both large well-maintained products |
+| **A configuration option is not a fix; the only lever reaching a whole user base is what arrives when the user does nothing.** Three competent opt-in designs (grouped toolsets, dynamic discovery, semantic tool search) shipped and **everyone used the default settings**, because each cost a JSON edit. Changing the default instead moved 101 tools to 52 and 64.6k tokens to 30.3k. The burden relocates to the minority who need more, which is the right place for it. | S27 (`n4`, `n5`, `n21`), claim 217 | **corroborated** on the failure, `single-leg` on the 17% read-only counterexample. The generalisation beyond tool surfaces is this brain's reading |
 | LLMs are stateless pure functions; input-token quality is the only lever on output quality short of retraining. | S2 `&t=547s` | emerging |
 | **In an unattended loop the context budget is per-iteration and its cost is multiplied by the iteration count** (claim 118). S13 compresses a 5-minute run to ~2 grepped lines via a single-line log, a prohibition on `tee`, and a greppable summary block. Corollary: **empty output is the error signal**, costing zero tokens in the common case. | S13 (`program.md:99-101` + `train.py:590`,`:621-630`,`:570-572` @ `228791f`, `n8`, `n17`) | corroborated (docs+code). Specialises claim 22 to the loop case |
 | Prompt, memory, RAG and history are one problem - which tokens reach the model. | S2 `&t=616s` | emerging |
@@ -575,6 +578,16 @@ versioned and got wrong in ways a quality judgement cannot.
 
 ## Sources feeding this topic
 
+- **S27** - [Scaling GitHub for your Agents](../../sources/260816_scaling-github-for-agents/LEARNING.md)
+  (Sam Morrow, GitHub, ~April 2026) - **a partial feeder contributing three claims, and the first
+  operator-scale measurement this note has of anything.** The important one is claim 218, because it
+  is a **correction to where this note has been looking**: every context claim here concerns what goes
+  *into* the model, and the largest single number in the source is a tool *response*. It also supplies
+  the delivery finding (claim 217) that no context optimisation matters if it needs a JSON edit, and
+  the per-tool pricing rule of thumb (claim 219) that finally joins S10's 541k figure to a second
+  independent catalog. **⚠️ T2 vendor talk, everything self-reported, no baseline against any other
+  server**, and the author expects to reverse its central recommendation. Full synthesis in
+  [`LEARNING.md`](../../sources/260816_scaling-github-for-agents/LEARNING.md).
 - **S24** - [Hermes Agent Architecture Part 1](../../sources/260814_hermes-agent-architecture-p1/LEARNING.md)
   (Vinoth Govindarajan, 2026-08-10) - **a partial feeder, contributing one claim**: session state is not
   prompt context, which is the storage-side route to claim 22. Its subject is the same system S19

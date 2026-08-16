@@ -441,6 +441,9 @@ the field.**
 
 | Claim | Threat / mitigation | Sources (cited) | Confidence |
 |---|---|---|---|
+| **Authorization data is a free, per-user, already-correct filter on the tool surface, and it works precisely where configuration failed.** PAT scopes filter the tool list with the user doing nothing beyond authenticating; OAuth **step-up** returns a scope challenge so a call needing an ungranted scope becomes an interactive prompt and **continues on approval instead of failing**; a server token with no user hides every user-specific tool. **The reason it succeeds where three opt-in designs failed (claim 217) is that the user already declared it, in another vocabulary, for another reason, and the declaration is authoritative.** The step-up inversion is the copyable part: failing on a missing permission burns turns, while a challenge makes least privilege **more usable as it gets more precise**. | mitigation - least privilege applied to the tool surface itself, plus a usability fix that removes the incentive to over-scope up front | S27 (`n15`), claim 221 | **corroborated on the mechanism and unquantified.** **The talk gives no figure for how much context this removes**, in a presentation that counts everything else. The joining to claim 217 is this brain's reading |
+| **The dominant MCP credential in the wild is a long-lived, over-privileged plaintext secret sitting where the agent can read it** - a PAT declared in a client config and passed as an environment variable into a container. **It is the user's default rather than the user's choice**: "it's actually hard to make configuration easy and secure at the same time." | threat - credential exposure to the agent's own read surface, and over-privilege by default | S27 (`n11`) | **corroborated** - the config JSON on the slide is the evidence, the headline is the assertion. **No incidence figure** is given for how common it is |
+| **An operator at ~7.34M tool calls a week states publicly that prompt-injection exfiltration is unsolved**, conceding a published attack against his own server is correct while arguing it is the lethal trifecta rather than an MCP defect, and noting the same server serves risk profiles from air-gapped Enterprise instances to individuals handing an agent a full-access token. | threat - indirect prompt injection / exfiltration; **no mitigation claimed** | S27 (`n14`) | **corroborated as a display, needs-check on the generalisation.** The concession is credible because it costs the speaker something; the "not unique to us" framing is the interested party's |
 | **Client-held server state is a trust surface, and MCP's stateless redesign created one.** `requestState` carries server execution context through the client, which echoes it back to a server that has kept nothing to compare it against. S23's own example is unsigned plaintext beside a delete confirmation. **Inverts claim 29** (the untrusted leg should carry useless material) and **defeats claim 28** (consent is itemised, but the itemisation is mutable by the constrained party). | Tampering with client-held state between the two halves of a confirmed action | S23 (`n7`, `n8`, `d1`), claim 181; against claim 28 + claim 29 | **needs-check.** Corroborated that the blob is client-held and echoed, and that the printed example is unauthenticated. **Not established: what the spec requires** - SEP-2322 unread |
 | **MCP authorization builds on OAuth and now names two mechanisms:** RFC 9207 issuer verification (`iss` validation by public clients) and RFC 8707 resource indicators (audience restriction, named as the confused-deputy fix). **The first spec-level answer to this note's identity question**, and it closes that question's direction only. | Confused deputy across multiple MCP servers; redirect and session-hijacking attacks | S23 (`n11`), claim 182 | needs-check (single-leg, two sentences, no artifact). **The RFCs themselves are T1 and unread** |
 |---|---|---|---|
@@ -1109,6 +1112,16 @@ a property S24 does not claim and could not establish.
 
 ## Sources feeding this topic
 
+- **S27** - [Scaling GitHub for your Agents](../../sources/260816_scaling-github-for-agents/LEARNING.md)
+  (Sam Morrow, GitHub, ~April 2026) - **a partial feeder contributing claim 221 plus two threat rows,
+  and it is this note's first source written by somebody who has to defend a real deployment rather
+  than analyse one.** Claim 221 is the constructive part and it is unusual here: almost every
+  mitigation in this note *costs* something in capability, and scope filtering is a security control
+  that **paid for itself in context and reliability**. The step-up pattern is worth stealing on its
+  own, because it removes the incentive to grant broad scopes up front. **⚠️ T2 vendor talk with no
+  external evaluation**, and the mitigation is entirely unquantified. **Its most valuable contribution
+  may be the concession** that prompt injection is unsolved, stated by an operator with every
+  commercial reason to say otherwise.
 - **S25** - [Patterns for Building Cybersecurity Evals](../../sources/260815_cybersecurity-evals/LEARNING.md)
   (Eugene Yan, 2026-06). **The note's first source on offensive capability rather than on attacks
   against agents**, surveying seven benchmarks. Contributes claims 200, 203 and 204 - where

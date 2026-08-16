@@ -533,6 +533,8 @@ covers, not just to the one that produced it.
 
 | Claim | Sources (cited) | Confidence |
 |---|---|---|
+| **Repairing an agent's evident intent server-side raises success rate and silently spends an auditable signal.** Where intent is clear and the fix unambiguous - a push to an uninitialized repo, `main` assumed when the default is `master` - the server performs the repair instead of erroring, under the slide's own question "if intent is clear and fix is unambiguous, why error?". **The team named the cost in the title: "Papering Over Agent Mistakes."** A deterministic error is an audit record and a true signal; a silent repair takes an unrequested action, so a wrong inference now fails invisibly. The related technique, absorbing a five-call sequence server-side, is **the trajectory-depth failure being attacked without being named**. | S27 (`n8` corroborated, `n7`/`n9` single-leg), claim 223 | **corroborated on the mechanism; the source measures only the upside.** No rate for wrong-intent repairs, and ">95% success" is hedged with no denominator |
+| **A human-in-the-loop control can exist to satisfy other humans rather than to catch model errors.** GitHub's MCP apps let the user edit an AI-drafted issue before it posts, and the stated reason is social: "you want to make sure that it's you posting and it's not going to get closed as a sort of bot-generated thing". **Every other HITL pattern in this note is justified by error rates, safety or authority; this one survives a 100% accuracy rate**, so "the model got good enough" will not retire it. | S27 (`n18`), claim 226 | **corroborated** on mechanism and stated motivation; **no adoption data**, and it ships behind an opt-in flag. The category claim is this brain's reading |
 | An agent = prompt + switch statement + context builder + loop; own all four. | S2 `&t=406s` | emerging |
 | **What ships today is mostly a hand-drawn static graph, not the open-ended loop the agent definition promises** (claim 127) - because for open-ended problems it is currently easier to draw the graph a human would follow than to let the agent find it. Independent academic restatement of claim 12. | S14 (`n7`, `frame_2640` + `&t=2622s`, `&t=2667s`) | corroborated (slide + narration), and **independent support for claim 12's practice** from a non-practitioner vantage |
 | **Which agent tasks repeated sampling suits is decided by the task's verifiability, not by the agent's design** (claim 134). SWE-bench Verified is the showcase case precisely because it ships real test suites - coverage runs from ~0.20 at one sample to 70+% at a thousand. Where an agent's task has no mechanical checker, the samples exist and cannot be cashed in. | S15 (`n2`, `n8`, `frame_235`, `&t=238s`, `&t=763s`) | corroborated (slide + narration). **The headline number is *coverage*, compared against real systems' *resolution* rates** (`d2`) - cite the mechanism, not the 70% |
@@ -668,6 +670,15 @@ covers, not just to the one that produced it.
 
 ## Sources feeding this topic
 
+- **S27** - [Scaling GitHub for your Agents](../../sources/260816_scaling-github-for-agents/LEARNING.md)
+  (Sam Morrow, GitHub, ~April 2026) - **a partial feeder contributing two claims, and it extends this
+  note's human-in-the-loop spectrum along an axis it did not previously have.** Every position on that
+  spectrum so far was placed by *error rate*, from per-action approval to S26's batch diff review;
+  claim 226 adds a control placed by **social acceptance**, which does not move as models improve.
+  Claim 223 is the sharper one for builders: server-side intent repair buys success rate with
+  auditability, and the source names its own technique "papering over" while measuring only the
+  upside. **⚠️ T2 vendor talk, self-reported throughout, and the success-rate figure is hedged in
+  delivery.**
 - **S26** - [LLM Knowledge Bases: a practical guide](../../sources/260815_llm-knowledge-bases/LEARNING.md)
   (Ben Holmes, Warp, 2026-08-15). **A peripheral feeder contributing two things.** It supplies the
   third position on this note's human-in-the-loop spectrum - batch review of a diff after an

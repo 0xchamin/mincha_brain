@@ -317,6 +317,7 @@ announcement.
 
 | Claim | Sources (cited) | Confidence |
 |---|---|---|
+| **Tool descriptions compete for calls, so they are a joint optimisation evaluated as multi-class classification rather than tuned one at a time.** A description that wins every ambiguous case has been over-fitted at its neighbours' expense, so improving one in isolation is not a well-defined operation. The evaluation shape is forced by that: does the model pick this tool when it should and leave it alone when it should not, which is precision and recall per tool. **The deployable form is a per-tool classification report per model generated in CI**, posted back into the PR before merge - the only control in the source that scales with contribution volume. | S27 (`n10`), claim 220 | **corroborated on the method and empty on results.** The report is displayed unreadably and **no score is quoted anywhere in the talk** |
 | Log the full flat trace first - it is the precondition for evals and any self-learning loop. | S1 `&t=418s` (slide `frame_1058` + narration) | emerging |
 | **Models prefer their own reasoning traces over better traces from a stronger model** (claim 125). An independent, different-mechanism statement of claim 34's self-evaluation bias. | S14 (`n9`, `&t=2291s`) | **needs-check** - single-leg, uncited by the source, no magnitude. Two independent assertions, zero measurements |
 | **The verifier is increasingly written by the system it judges** - agents generating the tests they must pass (claim 126). Presented approvingly by the source and never interrogated. | S14 (`n13`, `&t=2992s`, `&t=3196s`) | **needs-check** - single-leg, and recorded as a structural hazard rather than a documented failure. Extends claims 34 and 113 |
@@ -438,6 +439,15 @@ announcement.
 
 ## Sources feeding this topic
 
+- **S27** - [Scaling GitHub for your Agents](../../sources/260816_scaling-github-for-agents/LEARNING.md)
+  (Sam Morrow, GitHub, ~April 2026) - **a partial feeder contributing one claim, and it is a framing
+  rather than a result.** Claim 220 reframes tool-description tuning as multi-class classification,
+  which this note has the vocabulary for already from S1's "routers as classifiers" - the new part is
+  applying it to the *tool catalog* rather than the router, and running it as a CI job that scores
+  every tool on every PR. **⚠️ The single largest weakness for this note's purposes: the method is
+  shown and no score is.** The classification report is a screenshot at unreadable resolution and the
+  talk never quotes a number, so this supports adopting the framing and supports nothing about
+  whether it works. **T2 vendor self-report throughout.**
 - **S25** - [Patterns for Building Cybersecurity Evals](../../sources/260815_cybersecurity-evals/LEARNING.md)
   (Eugene Yan, 2026-06). **The brain's first survey source**, covering seven cybersecurity benchmarks
   at once, which is why it can say what converged across independent designs rather than what one

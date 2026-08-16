@@ -1,12 +1,32 @@
 # Topic: MCP (Model Context Protocol)
 
-**Status:** **emerging** (3 sources - S10 "Tool search", Microsoft, 2026-07-29; S12 Google Cloud's
+**Status:** **established** (4 sources - S10 "Tool search", Microsoft, 2026-07-29; S12 Google Cloud's
 multi-tenant agentic AI reference architecture, 2026-06-18; **S23 Google's MCP stateless-updates
-announcement, 2026-08-05**). **S23 is this note's first primary source** - the first that is *about*
-MCP rather than teaching it on the way past something else - and the first anywhere in this brain to
-**pin a specification version** (2026-07-28, superseding 2025-11-25). The other two remain secondary
-under [ADR-0013](../decisions/0013-secondary-but-substantial.md); see
+announcement, 2026-08-05**; **S27 GitHub's own MCP server at operator scale, ~April 2026**). S23 is
+this note's first primary source - the first that is *about* MCP rather than teaching it on the way
+past something else - and the first anywhere in this brain to **pin a specification version**
+(2026-07-28, superseding 2025-11-25). S10 and S12 remain secondary under
+[ADR-0013](../decisions/0013-secondary-but-substantial.md); see
 [ADR-0012](../decisions/0012-a-mention-is-not-a-source.md) for why S9's earlier mention did not count.
+
+**Advanced to `established` on 2026-08-16 ([ADR-0028](../decisions/0028-mcp-established-on-an-independent-implementation.md)),
+and the reason is not the source count.** [ADR-0022](../decisions/0022-a-primary-source-is-not-corroboration.md)
+named the exact bar: two sources confirming the same mechanic. S27 does that for the first time in
+this note's history. S23 asserts a specification in which state relocates rather than disappears, and
+this brain's reading of it was claim 180; S27 is an independent implementer at a **different company**
+running a stateless MCP server at ~7.34M tool calls a week with **Redis still in the architecture
+diagram**, in a system built *before* the spec change S23 documents (claim 224). That is convergent
+engineering rather than compliance, and it corroborates precisely the half of claim 180 that was
+weakest, which was the generalisation rather than the mechanics.
+
+> **Read the advance narrowly.** This note crosses the line on **one** corroborating group where
+> `agent-security.md` cleared it on three, so it has just crossed rather than comfortably cleared.
+> **Nothing else here got stronger** - S27 confirms nothing about caching, deprecation policy, JSON
+> Schema support, resource indicators or the tool-search mechanics, and the per-claim confidence
+> column below is still where the real information lives. **The lesson worth carrying is about which
+> source to hunt for when a topic stalls**: this note spent three sources trying to corroborate a
+> specification by reading more about the specification, and what moved it was somebody building the
+> thing and reporting what stayed in their architecture diagram.
 
 **Status deliberately held at `emerging`, and the reason is the same one this note has recorded
 twice.** A primary source fixes the note's *scope* defect and does nothing for its *corroboration*
@@ -260,7 +280,10 @@ field's gap rather than the document's.
 | Claim | Spec version | Sources (cited) | Confidence |
 |---|---|---|---|
 | **The protocol core is stateless: the handshake and `Mcp-Session-Id` are deleted, `_meta` carries the negotiated fields on every request, and routing metadata is promoted to mirrored HTTP headers** (`-32020` on mismatch), so round-robin routing, serverless scale-to-zero and invisible failover follow from one change. | **2026-07-28** (from **2025-11-25**) | S23 §Why Sessions + §The New Request Model + §HTTP Standardization (`n1`-`n5`), claim 179 | **corroborated** - prose against the article's own printed payloads, which diff cleanly. SEP numbers prose-only and unverified |
-| **Statelessness is state relocation, not elimination**: to the wire (`_meta`), to the client (`requestState`), to the application (a task store). MRTR (SEP-2322) and the Tasks extension (SEP-2663) are the two mechanisms. | 2026-07-28 | S23 (`n3`, `n7`, `n9`, `n10`, `d2`), claim 180 | corroborated on all three relocations and on the "No Redis Sessions Needed" divergence. **The framing is this brain's synthesis** |
+| **Statelessness is state relocation, not elimination**: to the wire (`_meta`), to the client (`requestState`), to the application (a task store). MRTR (SEP-2322) and the Tasks extension (SEP-2663) are the two mechanisms. | 2026-07-28 | S23 (`n3`, `n7`, `n9`, `n10`, `d2`), claim 180; **externally corroborated by S27 (`n16`)** | corroborated on all three relocations and on the "No Redis Sessions Needed" divergence. **The framing was this brain's synthesis and now has an independent production instance** - see the status block |
+| **A tool surface assembled per request makes per-caller filtering free**, and a server building its tool list at startup cannot do it without inventing per-connection state. GitHub constructs a brand-new server instance in the SDK sense **on every single request**, attaching tools from configuration, policy and token scopes, behind a load balancer with no session affinity, at ~7.34M calls/week. | unstated (predates 2026-07-28) | S27 (`n16`, `n17`), claim 224 | **corroborated** - architecture slide against narration. The design consequence, that scope filtering is a by-product rather than a feature, is this brain's reading |
+| **Dynamic Client Registration was rejected by a major authorization server for operational reasons, not cryptographic ones**: unbounded app-database growth, no natural bucketing for rate limits, and no reliable app identity. Verdict from the team that made the call: "a well-intentioned mistake". **Client ID Metadata Documents** named as the likely direction and explicitly unpromised. | unstated | S27 (`n12` corroborated, `n13` single-leg), claim 222 | **needs-check** - the reasons are narration only, from the deciding team, so authoritative about the decision and not about whether it was right |
+| **A protocol capability no client surfaces migrates into server-side configuration, where it earns configuration-level adoption.** `readOnlyHint` exists and GitHub's read-only mode maps one-to-one onto it; no client exposes the annotation as a filter, so the server ships a redundant feature reaching ~17% of users. **Every tool-grouping proposal to the spec has been rejected.** | unstated | S27 (`n21`, `n22`), claim 225 | **single-leg, needs-check.** Narration only and the 17% is hedged. A direct operator statement about their own product, which is the strongest form single-leg takes |
 | **Authorization adds issuer verification (RFC 9207) and resource indicators (RFC 8707)** - the latter named as the fix for the confused deputy, and the first mechanism this note's identity question has ever been given. | 2026-07-28 | S23 §Clear Security & Capability Boundaries (`n11`), claim 182 | needs-check (single-leg, two sentences, no artifact). Resolves the question's **direction**, not its content |
 | **A formal deprecation policy exists** (Active -> Deprecated -> Removed, 12-month minimum, SEP-2577), and **Roots, Sampling and Logging are deprecated** - sampling in favour of calling LLM provider APIs directly. | 2026-07-28 | S23 §Deprecations (`n13`), claim 183 | needs-check (single-leg, prose-only). The scope-narrowing reading is commentary |
 | **Tool and resource results can carry `ttlMs` and `cacheScope`** (SEP-2549, modelled on HTTP `Cache-Control`), so clients stop holding SSE connections open to detect list changes. **`cacheScope` decides caching across users.** | 2026-07-28 | S23 §Intelligent Caching (`n6`) | **needs-check - the weakest-evidenced feature in S23.** No example, no field placement, no default, and a multi-tenancy control described in half a sentence |
@@ -342,6 +365,21 @@ field's gap rather than the document's.
 
 ## Sources feeding this topic
 
+- **S27** - [Scaling GitHub for your Agents](../../sources/260816_scaling-github-for-agents/LEARNING.md)
+  (Sam Morrow, GitHub, AI Engineer Europe, ~April 2026). **This note's second primary source and the
+  first written from inside a running deployment rather than about a specification.** Supplies the
+  production topology and the per-request construction pattern (claim 224), the DCR rejection and its
+  three operational reasons (claim 222), the unsurfaced-annotation finding (claim 225), and the
+  observation that every tool-grouping proposal to the spec has been rejected. It is the source that
+  moved this note to `established`, by corroborating claim 180 from an independent implementation
+  ([ADR-0028](../decisions/0028-mcp-established-on-an-independent-implementation.md)). **T2 vendor
+  engineer presenting his own product**, with no external evaluation and no baseline against another
+  MCP server, so every efficacy figure is self-report. **Its most interesting claim is its least
+  quantified** - scope filtering (claim 221) gets no number in a talk that counts everything else.
+  Two figures are hedged in delivery (">95%" success, "roughly 17%" read-only adoption) and are
+  `single-leg`. **The strongest caveat is the author's own**: he expects thousands of tools to become
+  normal and to "probably reverse many of the fewer tools decisions", so treat the mechanics as
+  durable and the tool-count recommendation as carrying a published expiry date.
 - **S23** - [Scaling AI Agent Infrastructure with the MCP Stateless updates](../../sources/260807_mcp-stateless-updates/LEARNING.md)
   (Kurtis Van Gent + Alan Blount, Google Developers Blog, 2026-08-05). **This note's first primary
   source and the first anywhere to pin a spec version** (2026-07-28). Supplies the transport core, the
