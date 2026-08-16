@@ -21,6 +21,30 @@ from the attacker's server on every request** (`n7`). Read it for the taxonomy a
 read `d1` first: this paper proves feasibility on named systems and reports **no success rate for
 anything**.
 
+```mermaid
+flowchart TB
+    R["the model reads content<br/>it did not author"]
+    C["content and instructions arrive<br/>through the <b>same channel</b>"]
+    E["<b>processing retrieved data is analogous<br/>to executing arbitrary code</b> - n1"]
+    A["so the attacker needs no account,<br/>no session and no interface"]
+    P["only text somewhere your agent<br/>is likely to read - n2"]
+
+    R --> C --> E --> A --> P
+
+    style E fill:#f8b4b4,stroke:#c1121f,color:#7f1d1d
+    style P fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+```
+
+This is a consequence diagram, not an attack tree, and the whole paper is the middle box unpacked.
+**The crux is that retrieval is not a data operation but an execution one, which relocates the
+security question from who can talk to your system to what your system is willing to read.** It is
+drawn as a single descent because nothing branches: each step follows from the one above with no
+design choice available, which is why the paper's framing survived even as the specific products it
+tested changed. The terminal box is the practical consequence and the reason the threat model in
+section 2 pointed the wrong way for years.
+
+*Synthesized from `n1` and `n2`.*
+
 ## The 1-minute version
 
 This article covers a 2023 paper from Saarland University, CISPA and a small German security firm
@@ -140,7 +164,8 @@ flowchart TB
     style M2 fill:#f8b4b4,stroke:#c1121f,stroke-width:2px
 ```
 
-Four movements, top to bottom, with the shaded one carrying the idea everything else depends on.
+This is a reading-order diagram about the note rather than about the attack, and the shaded movement
+carries the idea everything else depends on.
 Movement 1 sets up the architecture that created the surface, and a reader who already builds
 retrieval-augmented agents can move through it quickly, though section 2 is what makes the reframe
 land rather than sound obvious. Movement 2 is the payload and is two short sections; if you read
@@ -149,7 +174,30 @@ is the part that turns a conceptual worry into an engineering problem, and secti
 classical-malware analogy stops being a metaphor. Movement 4 is where the paper is most useful to
 somebody building defences today, and section 8 in particular pays off a detail planted in section 2.
 
-## 1. What changed when the model started reading
+## Movement 1 - the surface that appeared
+
+```mermaid
+flowchart TB
+    B["before: the model saw only<br/>what the user typed"]
+    A["after: the model reads web pages,<br/>emails, documents, package docs"]
+    S["every one of those is content<br/>somebody else wrote"]
+    T["and the threat model still assumed<br/>the attacker had to reach<br/>your <b>interface</b> - n2"]
+
+    B --> A --> S --> T
+
+    style T fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+```
+
+This is a setup diagram, not a design, and the last box is the mistake the movement exists to name.
+**The crux is that retrieval quietly added an input channel that nobody was defending, because the
+defended channel was still assumed to be the one the user types into.** It is drawn as a straight
+progression because each step was an ordinary product decision at the time, and the surface appeared
+without anyone choosing to create it. A reader who already builds retrieval-augmented agents can move
+through this quickly, but section 2 is what makes the reframe land rather than sound obvious.
+
+*Synthesized from `n1` and `n2`.*
+
+### 1. What changed when the model started reading
 
 Begin with an architectural shift that happened so quickly nobody re-ran the threat model. In 2022 a
 language model was mostly a thing you talked to, with a bounded input you typed and a bounded output
@@ -183,7 +231,26 @@ behaving abnormally, because none of them is.
 So the surface exists because of an architecture rather than a defect. The question is why it went
 unexamined for as long as it did, and the answer is a habit of mind rather than an oversight.
 
-## 2. Why the threat model pointed the wrong way
+### 2. Why the threat model pointed the wrong way
+
+```mermaid
+flowchart TB
+    A["the assumed attacker<br/><i>reaches your interface, needs an<br/>account or a session</i>"]
+    B["the actual attacker<br/><i>reaches a web page your agent<br/>might read, and needs nothing</i>"]
+    C["so every control built around<br/><b>access</b> misses entirely"]
+    A -.->|"the model everyone had"| B --> C
+    style C fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+```
+
+This is a threat-model diagram, and the dashed edge marks an assumption rather than a mechanism.
+**The crux is that authentication, rate limiting and session controls all presuppose the attacker has
+to arrive through a door you own, and this attacker never approaches one.** It is drawn with the wrong
+model retained on the left because the argument only works as a correction: a reader shown only the
+right-hand box will think it obvious, and the point is that it was not, for years, to people whose job
+it was. Hold this, because section 8 shows the same misdirection surviving into the defences.
+
+*Synthesized from `n2`.*
+
 
 > **Background, supplied.** Skip this if prompt injection is familiar. Before this paper, "prompt
 > injection" meant what is now called the *direct* kind, and it was largely synonymous with
@@ -217,7 +284,34 @@ route is the most instructive result in the paper.
 So the threat model pointed at the user because the user used to be the only one talking. What makes
 the new position so much stronger than a change of vantage is the property of the channel itself.
 
-## 3. Data and instructions share one channel
+## Movement 2 - the reframe
+
+```mermaid
+flowchart TB
+    O["an ordinary program"]
+    O1["<b>code</b> path - executed"]
+    O2["<b>data</b> path - parsed"]
+    L["an LLM"]
+    L1["one channel, carrying both,<br/>with no mechanism for<br/>telling them apart"]
+    X["so the taxonomy is not invented,<br/>it is <b>derived</b> from what an<br/>attacker can reach - n3, n4"]
+
+    O --> O1
+    O --> O2
+    L --> L1 --> X
+
+    style L1 fill:#f8b4b4,stroke:#c1121f,color:#7f1d1d
+```
+
+This is a contrast diagram, not an architecture, and it is two short sections carrying the paper's
+entire idea. **The crux is that every other system you have secured had a separation this one does
+not, so the intuitions you bring from those systems quietly do not apply.** It is drawn as two
+architectures side by side because the absence is only visible against the presence: nobody notices
+that code and data are separated until they meet a system where they are not. If you read nothing
+else in this note, read section 3, because the rest of the paper is that one sentence unpacked.
+
+*Synthesized from `n1`, `n3` and `n4`.*
+
+### 3. Data and instructions share one channel
 
 Here is the sentence the rest of the field is built on, and it is worth reading twice: when
 augmenting LLMs with retrieval, "*processing* untrusted retrieved data would be analogous to
@@ -251,7 +345,7 @@ So a single flat channel with no type distinction gives an attacker code executi
 interpreter that improvises. The natural next question is what an attacker actually does with that,
 and the paper's answer is more disciplined than a list of tricks.
 
-## 4. Deriving the taxonomy, rather than listing it
+### 4. Deriving the taxonomy, rather than listing it
 
 The temptation with a six-category taxonomy is to enumerate it, which teaches nothing about why those
 six. Derive it instead, from the equivalence just established.
@@ -290,7 +384,32 @@ else directly.
 The map tells you the shape of the risk. What it does not yet tell you is how much work each of those
 outcomes costs an attacker, and that turns out to be the paper's most surprising contribution.
 
-## 5. The attacker states the goal, and the model supplies the method
+## Movement 3 - what it buys an attacker
+
+```mermaid
+flowchart TB
+    G["5. the attacker states the <b>goal</b>,<br/>and the model supplies the method"]
+    W["6. it forwards itself to your contacts,<br/>writes itself into memory and re-poisons<br/>a later session, and fetches fresh<br/>instructions from a server - n5, n6, n7"]
+    S["7. and the delivery path runs through<br/>the supply chain: a package's docs<br/>reaching a code-completion context"]
+    M["the classical-malware analogy<br/>stops being a metaphor"]
+
+    G --> W --> M
+    S --> M
+
+    style M fill:#f8b4b4,stroke:#c1121f,color:#7f1d1d
+```
+
+This is a capability diagram, not a demo list. **The crux is that the model itself supplies the
+implementation, so an attacker writes intent rather than exploit code and inherits every capability
+the agent has.** It is drawn with the supply-chain path entering separately because it is a delivery
+route rather than a capability, and the two combine into something worse than either: a worm needs
+both a payload and a way to reach hosts. Section 6 is where this movement earns its place, since
+self-forwarding, persistence and command-and-control are the three properties that define malware
+rather than mischief.
+
+*Synthesized from `n5`, `n6` and `n7`.*
+
+### 5. The attacker states the goal, and the model supplies the method
 
 Here is the finding that separates this from classical exploitation, and the paper flags it in its
 own boxed observation: "Attacks could only outline the goal, which models might autonomously
@@ -320,7 +439,7 @@ wearing the clothes of independent retrieval, which is a laundering step nobody 
 So the attacker's cost is a sentence, and the target does the work. The question that follows is what
 outcomes this can actually reach, and the answer is the classical list, demonstrated.
 
-## 6. Worms, persistence and command-and-control
+### 6. Worms, persistence and command-and-control
 
 This section is where the code-execution analogy stops being an analogy. Three demonstrations, each
 a direct transfer of a classical technique.
@@ -382,7 +501,7 @@ Propagation, persistence and remote control are the three properties that distin
 one-off exploit, and all three are demonstrated. What remains is how the payload reaches a
 well-run organisation in the first place.
 
-## 7. The path through the supply chain
+### 7. The path through the supply chain
 
 The answer that should concern anyone shipping software is that it does not have to reach your
 users at all. It can reach your **developers**.
@@ -435,7 +554,33 @@ So delivery is solved from several directions at once. The remaining question is
 under attack were actually doing about any of it, and the answer is the paper's sharpest practical
 result.
 
-## 8. The filter on the wrong channel
+## Movement 4 - why it is still not fixed
+
+```mermaid
+flowchart TB
+    F["8. filters are applied to the channel<br/>the <b>user</b> types into"]
+    R["and the injection arrives through<br/>the channel the model <b>reads</b>"]
+    D["9. every defence the paper surveys<br/>carries a named failure mode"]
+    N["none of them restores the separation<br/>that Movement 2 showed is missing"]
+
+    F --> R --> N
+    D --> N
+
+    style R fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    style N fill:#fbf1dc,stroke:#b45309,color:#78350f
+```
+
+This is a gap diagram, and section 8 pays off a detail planted back in section 2. **The crux is that
+the defences are not weak so much as aimed at the wrong channel**, which is why buying a better
+prompt filter does not move the risk. It is drawn with both the filter mismatch and the defence survey
+converging on one conclusion because either alone invites the wrong response: the first suggests
+moving the filter, and the second suggests a better filter, while together they say the separation
+itself has to be reconstructed somewhere the model does not decide. That is the door CaMeL later
+walks through.
+
+*Synthesized from `n8` and the section below.*
+
+### 8. The filter on the wrong channel
 
 Now the detail planted in section 2 pays off, and it is worth stating as a finding rather than an
 anecdote. Bing Chat **did** have input filtering. Prompts the authors typed directly into the chat
@@ -467,7 +612,32 @@ between retrieval and the context window**, on the assembled prompt, because tha
 that sees the untrusted text in the form the model will actually receive it. Which raises the
 question the paper closes on, and its answer is not encouraging.
 
-## 9. Every defence, and its failure mode
+### 9. Every defence, and its failure mode
+
+```mermaid
+flowchart TB
+    D1["detect the injection<br/><i>fails: no reliable signal in text</i>"]
+    D2["instruct the model to ignore it<br/><i>fails: the instruction is in the<br/>same channel as the attack</i>"]
+    D3["restrict what the model may read<br/><i>fails: reading is the feature</i>"]
+    D4["restrict what the model may do<br/><i>the only one that bounds anything -<br/>and it costs capability</i>"]
+    S["and the paper reports<br/><b>no success rate for any of them</b> - d1"]
+    D1 --> S
+    D2 --> S
+    D3 --> S
+    D4 --> S
+    style D4 fill:#dcfce7,stroke:#15803d,color:#14532d
+    style S fill:#fbf1dc,stroke:#b45309,color:#78350f
+```
+
+This is a defence-survey diagram, and the italic lines are the content rather than the labels. **The
+crux is that only the last row bounds anything, and it does so by giving up capability rather than by
+detecting the attack** - which is the shape every serious later defence takes. It is drawn flat rather
+than ranked because three of the four fail for unrelated reasons and ordering them would imply a
+progression that does not exist. The amber terminal is the honest caveat: this paper demonstrates
+feasibility on named systems and quantifies nothing at all.
+
+*Synthesized from the section below and divergence `d1`. The four-row grouping is this brain's.*
+
 
 The paper's mitigations section is unusually honest, and its value is that it walks each candidate
 to the point where it breaks rather than gesturing at future work (`n14`).
@@ -659,3 +829,120 @@ obvious one is hard".
   capable agent is a more capable attack payload, with no extra work by the attacker. That is a
   property of the agent loop rather than of any security control, and it belongs where the agent
   loop is described.
+
+## Presentation narrative
+
+*A talk track for a room shipping anything that lets a model read content it did not author, derived
+entirely from the gated nodes above. One caveat governs the whole thing and is stated on the last
+slide: this paper demonstrates feasibility on named production systems and reports no success rate
+for anything.*
+
+### Slide 1 - Retrieval is not a data operation, it is an execution one
+
+**The moment a model reads content it did not author, that content and your instructions arrive
+through the same channel, and the model has no mechanism for telling them apart [n1].** The paper's
+own framing is the sentence to carry out of the room: processing retrieved data is analogous to
+executing arbitrary code.
+
+That reframing changes who the attacker is. They need no account, no session and no interface to your
+system. They need only to place text somewhere your agent is likely to read - a web page, an email, a
+package's documentation - and your retrieval step does the rest [n2].
+
+![The indirect prompt injection attack flow: the attacker plants prompts in retrievable content, the user prompts the model, the model retrieves the poisoned content, and the model then acts through its APIs and back toward the attacker](visuals/fig3_attack_flow.png)
+
+This is the whole attack in one picture. **The crux is the return arrow: the model acts through its
+own APIs, so the attacker inherits every capability you gave it** [`n1`, `n2`].
+
+### Slide 2 - Every access control you own assumes a door the attacker never approaches
+
+**Authentication, rate limiting and session management all presuppose the attacker has to arrive
+through an interface you control.** This one arrives through content, and content is the feature.
+
+The leadership significance is that the existing security spend does not transfer. It is not that the
+controls are weak; it is that they sit on a channel the attack does not use. And this misdirection is
+not a historical curiosity - slide 5 shows the same mistake surviving into the defences people deploy
+today.
+
+![The paper's threat taxonomy: four injection methods, six threat classes, and four affected parties including the LLM itself](visuals/fig2_taxonomy.png)
+
+This is a derived taxonomy, not an enumeration. **The crux is that the classes fall out of what an
+attacker can reach rather than from a survey of what has been seen**, which is why it aged well
+[`n3`, `n4`].
+
+### Slide 3 - The attacker writes intent, and your model writes the exploit
+
+**An attacker states the goal and the model supplies the method.** That is a different economics from
+ordinary exploitation, because the hard part - working out how to accomplish something in your
+specific environment - is done by the system under attack.
+
+What engineers should take from this is that the payload is not code you can signature. It is a
+sentence, and the capability it reaches is whatever your agent already has. So the blast radius is
+not a property of the injection, it is a property of your tool permissions.
+
+![An LLM email client receives an attacker's poisoned email, reads the user's address book, and forwards the injection to the user's contacts](visuals/fig6_worm.png)
+
+This is self-propagation, demonstrated. **The crux is that a prompt which forwards itself to your
+contacts is a worm by any definition that matters** [`n5`].
+
+### Slide 4 - Persistence and command-and-control, which is where the malware analogy stops being a metaphor
+
+**One demonstration writes the injection into the agent's long-term memory, so a later session with an
+uncompromised model is re-poisoned while answering the user [n6].** Another fetches fresh instructions
+from the attacker's server on every request [n7].
+
+Those two properties, alongside self-propagation, are what distinguish malware from mischief. An
+attack that persists across sessions cannot be cleared by ending the conversation, and one that
+retrieves new instructions cannot be understood by reading the payload you found.
+
+![A compromised LLM writes the injection into persistent storage; a later session with an uncompromised model reads that memory and is re-compromised while answering the user](visuals/fig8_persistence.png)
+
+This is the persistence chain. **The crux is that the second session's model was never compromised -
+it was correctly reading a poisoned store** [`n6`].
+
+### Slide 5 - The delivery path runs through your supply chain
+
+**An attacker modifies a public repository's documentation, a developer installs the package, and the
+modified content enters the code-completion engine's context.** The suggestions shown to that
+developer are then contaminated.
+
+I want to be precise about why this one matters to a room that has already hardened its own systems.
+Nothing was breached. The package was installed the normal way, the docs were read the normal way, and
+every step was working as designed. That is the property that makes this hard: there is no anomalous
+event to detect anywhere along the path.
+
+![An attacker modifies a public repository's documentation; a developer installs the package; the modified content enters the code-completion engine's context and contaminates the suggestions shown to the developer](visuals/fig9_code_completion.png)
+
+This is the supply-chain route. **The crux is that the injection travels through channels you already
+trust for reasons unrelated to security** [`n4`].
+
+### Slide 6 - Only one class of defence bounds anything, and it costs capability
+
+**Detecting the injection fails because there is no reliable signal in the text. Telling the model to
+ignore it fails because the instruction arrives in the same channel as the attack. Restricting what
+the model may read fails because reading is the feature.** What is left is restricting what the model
+may *do*, and that works by giving up capability rather than by spotting the attack.
+
+That is the shape every serious later defence takes, and it is worth naming as the decision this
+paper actually supports: bound your agent's actions by policy, and stop expecting to filter your way
+out. The filters most teams have deployed sit on the channel the user types into, while the injection
+arrives through the channel the model reads.
+
+The honest boundary is that this paper quantifies nothing. It demonstrates six threat classes on real
+deployed products including Bing Chat on GPT-4 and GitHub Copilot, and reports no success rate for any
+of them [d1]. Treat it as an existence proof and a taxonomy, never as a measurement.
+
+![Multi-stage injection: the attacker plants a small payload on a public website and a larger one on their own server; the assistant fetches the first, which causes it to fetch the second](visuals/fig12_multistage.png)
+
+This is why filtering the payload does not help. **The crux is that the payload you would inspect is a
+pointer, and the instructions arrive afterwards** [`n7`].
+
+### Key takeaway message
+
+An agent that reads content it did not author is executing that content, because instructions and data
+share one channel and the model cannot separate them. The attacker therefore needs no access to your
+system at all, which makes every control built around authentication and sessions miss entirely. The
+demonstrations that matter borrow directly from classical malware: a prompt that forwards itself to
+your contacts, one that persists in memory and re-poisons a later clean session, and one that fetches
+fresh instructions on every request. Of the available defences only bounding what the agent may do
+constrains anything, and it does so by giving up capability rather than by detecting the attack. The
+paper proves all of this on named production systems and measures none of it.
