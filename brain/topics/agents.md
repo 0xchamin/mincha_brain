@@ -1,13 +1,21 @@
 # Topic: Agents
 
-**Status:** established (16 sources / **15 independent** - S1 Uber closed-loop evals, S2 12-factor
+**Status:** established (18 sources / **17 independent** - S1 Uber closed-loop evals, S2 12-factor
 agents, S4 Anthropic harness design, S5 skills evals, S7 Anthropic memory and dreaming, S9 Microsoft
 Agent Framework, S10 tool search, S12 Google Cloud multi-tenant reference architecture, S13
 `karpathy/autoresearch`, S14 Stanford CS329A, **S15 CS329A lecture 2 - not independent of S14**,
 S17 indirect prompt injection, S18 CaMeL, S20 AgentDojo, S24 Hermes agent architecture, **S25
 cybersecurity eval survey - which supplies the largest measured scaffolding effect in this brain, and
-the bound on it**, and **S26 LLM knowledge bases - a peripheral feeder** supplying the third position
-on the human-in-the-loop spectrum and the discovered-schema pattern)
+the bound on it**, **S26 LLM knowledge bases - a peripheral feeder** supplying the third position
+on the human-in-the-loop spectrum and the discovered-schema pattern, **S27 GitHub's MCP server at
+operator scale**, and **S28 the new MCP spec walkthrough - a peripheral feeder** supplying the
+instrument-the-seam practice)
+
+> **Count corrected 2026-08-21.** This line read "16 sources / 15 independent" while S27 already had a
+> full entry in `Sources feeding this topic` and three claims in the table below - the status line was
+> simply not updated when S27 landed. Now 18 with S28. **Recorded rather than silently fixed**, because
+> a source count that drifts from the sources list is the kind of thing `validate.py` cannot catch and
+> a reader has no reason to doubt.
 
 > **On S17's admission here, since its sibling S16 was declined.** S16 (AgentPoison) attacks a
 > retrieval store, which is a *component*, and was kept out of this note under
@@ -529,6 +537,43 @@ covers, not just to the one that produced it.
 > same author's diagram proves nothing about the world, and **disagreement still finds the cell that
 > matters**.
 
+### Retirement is a measurement you cannot take retroactively, so the instrument goes in at migration time
+
+Every claim above concerns how an agent system is built. **This one concerns how you get to delete
+part of it**, and it arrives from S28 by way of MCP without being about MCP at all (claim 229).
+
+The situation is one every long-lived system reaches. Two eras of something run at once, the old one
+is a maintenance tax, and nobody can say when it is safe to remove because nobody knows who is still
+using it. **The usual resolution is an argument between people with different intuitions**, settled by
+whoever is most confident or most senior, and the actual answer is unknowable because nothing recorded
+it.
+
+S28's author took the other branch while migrating his MCP server. Both protocol eras run behind one
+route, a predicate classifies each request, the old lane is preserved byte-identically, and **every
+authenticated request writes one non-blocking data point** recording the lane, the method, the
+protocol revision, the client name and version, and the user [S28 `n11`, `n12`]. The pull request
+states the goal in its own words, which is to make retirement "a metrics decision instead of a guess".
+
+Two details carry the judgement, and both are the kind that get dropped in a retelling. **The modern
+lane is configured to reject legacy traffic, "so exactly one lane owns each era"** - a tolerant lane
+would serve both, and the lane attribution would stop being a fact about the caller. That looks like
+protocol pedantry and is actually the difference between telemetry and noise. **And the write is a
+no-op without its binding and never throws**, which is what lets instrumentation survive its first
+incident rather than being removed after it.
+
+> **The timing is the whole claim and it is why this sits in `agents.md` rather than in `mcp.md`.**
+> You cannot start a time series about the past. The moment the instrument is cheap is while you are
+> already touching the code, and the moment you want the data is years later, by which point adding it
+> costs another migration and still gives you nothing about the interval you care about. S28's own
+> closing generalises it past protocols: you probably have legacy paths in your codebase and no idea
+> whether the fallback is used, and the way you find out is to instrument it [S28 `&t=1447s`].
+
+The cost side is honestly unmeasured. The instrumentation was part of a 1,249-line migration that was
+happening anyway, so **the claim that it is cheap rests on it riding along with work already
+budgeted**, and nobody has costed it standalone. What the practice produced is in
+[`evals.md`](evals.md) as claim 230, because deciding *when the number is enough* is a different
+discipline from collecting it.
+
 ## Key claims
 
 | Claim | Sources (cited) | Confidence |
@@ -579,6 +624,7 @@ covers, not just to the one that produced it.
 | **Guidance interventions are non-monotonic: the same upgrade helps one model and degrades another.** A pseudoterminal plus web search moved one model 17.5% to 20% and another 17.5% down to 10%; adaptive coaching lowered the best model's top-tier result, collapsed a third model across every tier, and raised a fourth's mid-tier count. **Measure per model, never assume.** Claim 205. | S25 `n7`, `n17` + `fig4`, `fig6` | **needs-check** - the tools half is corroborated, the coaching half is figure-only and the article never mentions that arm exists |
 | **What decides where the human sits in an agent loop is reversibility, not autonomy** - ask inside the run when the effect cannot be recalled, review the batch diff afterwards when it can, suppress the check-in when the decision carries no information the rule does not already encode. The three positions are S2, S26 and S13, and sorting them by *when* the human is consulted hides the variable that explains all three. Claim 208. | **S2 `&t=687s` + S13 `n9` + S26 `n10`, `n13`** | **needs-check - this brain's synthesis across three sources.** None of the three states the variable; each states only its own position |
 | **Scope an agent's behaviour with a schema file in the thing being managed, discovered at run time, overriding the worker's generic instructions.** One worker then serves many targets it knows nothing about, and onboarding a target means creating a directory with a schema file - no registry, no redeploy. Claim 209. | S26 `n12` + `visuals/frame_980.jpg` | **needs-check - `single-leg`, figure-only.** Visible in a screenshot of a saved prompt, never spoken |
+| **Retirement is a measurement you cannot take retroactively, so the instrument goes in at migration time.** Running two eras behind one route, a predicate classifies each request, the old path is preserved byte-identically, and every authenticated request writes one non-blocking data point (lane, method, revision, client, user). Two details carry it: the new lane **rejects** legacy traffic so exactly one lane owns each era (a tolerant lane destroys the attribution), and the write is a no-op without its binding and never throws. **You cannot start a time series about the past**, so the cheap moment is while you are already in the code. Claim 229. | S28 `n11`, `n12` + `visuals/frame_150.jpg` | **corroborated** - PR text against narration, and the source generalises it past MCP itself. **The cost is unmeasured**: it rode along inside a 1,249-line migration and nobody has costed it standalone |
 
 ## Key visuals
 
@@ -669,6 +715,17 @@ covers, not just to the one that produced it.
   gap from the one struck above.**
 
 ## Sources feeding this topic
+
+- **S28** - [Here's how the new MCP spec works](../../sources/260821_new-mcp-spec/LEARNING.md)
+  (Kent C. Dodds, 2026-08-20). **A peripheral feeder contributing exactly one claim, and it is not
+  about agents or about MCP** - claim 229, that retirement is a measurement you cannot take
+  retroactively, so the instrument goes in while you are already touching the code. It earns a place
+  here because the two design details are the kind that get dropped in a retelling: the new lane
+  **rejects** legacy traffic so exactly one lane owns each era, and the telemetry write is a no-op
+  without its binding and never throws. **T4 screencast, and on this claim the evidence is a merged
+  pull request displayed on screen rather than a recollection.** The cost of the practice is
+  unmeasured, since it rode inside a migration that was happening anyway. Everything else this source
+  supplies lives in [`mcp.md`](mcp.md).
 
 - **S27** - [Scaling GitHub for your Agents](../../sources/260816_scaling-github-for-agents/LEARNING.md)
   (Sam Morrow, GitHub, ~April 2026) - **a partial feeder contributing two claims, and it extends this

@@ -1,6 +1,14 @@
 # Topic: Agent security
 
-**Status:** **established** (**13 sources, with three independent corroborating groups.** **S25
+**Status:** **established** (**15 sources, with three independent corroborating groups.**
+
+> **Count corrected 2026-08-21.** This read 13 while S27 already had a full entry under
+> `Sources feeding this topic` and rows in the claims table; **S28 makes 15**. The same one-source
+> drift was found in `agents.md` and `evals.md` in the same pass, all three from S27 landing without
+> its status line being touched. **Neither new source joins a corroborating group**, so the three
+> groups the `established` verdict rests on are unchanged.
+
+**S25
 (2026-08-15) is the thirteenth and joins no group - it is the note's first source about *offensive*
 capability rather than about attacks on agents**, and the distinction matters: every other source here
 studies an adversary attacking an agent, while S25 surveys seven benchmarks measuring an agent
@@ -437,6 +445,38 @@ that vendor's own models, at best-of-eight, fitted to eight points against calen
 rather than compute. **Cite the existence of a measured rate; do not cite 1.3 months as a fact about
 the field.**
 
+### The `requestState` trust surface, narrowed but not closed
+
+This note recorded claim 181 from S23: MCP's stateless redesign pushes server execution state through
+the **client**, and the article's own worked example was 32 bytes of unsigned plaintext guarding a
+prompt that asked whether to delete three files. **S28 narrows that reading and it is worth being
+precise about which half moved** (claim 231).
+
+The half that moves is the design's awareness. S28's MRTR diagram states the obligation on its face,
+which is that `requestState` "is an opaque blob the client echoes. Server must treat it as untrusted
+and should encrypt/bind it to the user", and its author names the attack directly as a client
+fabricating a claim that the user approved something [S28 `n10`]. **So the community guidance is
+encrypt-and-bind, and the gap claim 181 found is between that guidance and one vendor's worked
+example** rather than a hole nobody had noticed. That is a materially better situation and this note
+should say so.
+
+The half that does not move is the one this note actually cares about. **Neither source examines a
+single SDK or server to see whether the encryption and binding happen.** A `should` on a diagram is
+not a conformance requirement, and the failure mode here is silent in the worst way: a server that
+skips the check works perfectly, indefinitely, until somebody forges a blob. There is no error, no
+degraded behaviour, and nothing in a test suite that would notice.
+
+> **The cheapest open question in this note.** Read the four Tier 1 SDKs and see what they do with
+> `requestState`. Two sources now assert the obligation and zero have checked it, which is exactly the
+> gap between a specification and a threat model that this note exists to track.
+
+The related finding sits one layer down, in how a client proves who it is at all. S28's account of DCR
+records that the consent screen "uses the self-asserted client name from registration", so **the user
+was being asked to approve a name the requester chose for itself** [S28 `n5`]. CIMD replaces that with
+trust in domain ownership (claim 228, held in [`mcp.md`](mcp.md)). That is not a strong identity claim
+and it is a real improvement, because it makes the assertion **attributable and revocable by somebody
+other than the claimant** - which is the property a self-asserted string never had.
+
 ## Key claims
 
 | Claim | Threat / mitigation | Sources (cited) | Confidence |
@@ -505,6 +545,7 @@ the field.**
 | **A published offensive-capability number describes a configuration end users cannot reach** - safeguards disabled under trusted-access programmes, and the same model scoring 120 exploits has *all* attempts blocked with default filters on. Capability is also **non-monotonic in model version**, with refusal training an unresolved confound moving opposite to capability | measurement | S25 (claim 203, `n24`, `n25`, `d5`, `fig5`) | corroborated **against the article**, which reports a total effect as a partial one. Complicates claim 165's instrument without refuting it |
 | **The first rate of change attached to any security capability here: ~1.3-month doubling** in simulated exploitation revenue on contamination-controlled targets, R^2 = 0.828 over eight models | offensive capability | S25 (claim 204, `n23`, `d2`, `fig8`) | **needs-check.** `single-leg`, **figure-only** - the article's prose never mentions the trend. T2 vendor benchmark, five of eight points its own models, best-of-eight, calendar x-axis. **Cite that a rate was measured, not the number as a fact about the field** |
 | **The artifact S19 attacked now has an independent architecture description** - a first for this brain, and it is an identification rather than corroboration | provenance | S19 + S24 (claim 196) | **verified against S19's bibliography.** Moves neither claim 160 nor 161 - see `d5` |
+| **MCP's client-held `requestState` has an explicit encrypt-and-bind obligation, and nobody has checked whether any implementation honours it.** The MRTR diagram states it on its face - untrusted input, encrypt and bind to the user - with the named threat being a client fabricating user approval. This **narrows claim 181** from an unrecognised design hole to a gap between guidance and S23's unsigned-plaintext example. **The failure is silent**: a server that skips the check works perfectly until somebody forges a blob. Claim 231. | Trust surface / delegated authorization | S28 `n10` + `visuals/frame_1310.jpg`, refining claim 181 / S23 | **corroborated within S28** and **needs-check as evidence about implementations, of which there is none.** Reading the four Tier 1 SDKs would settle it and is the cheapest open question in this note |
 
 ## Key visuals
 
@@ -1111,6 +1152,17 @@ a property S24 does not claim and could not establish.
 > agent, and its threat model is operational failure rather than an adversary.
 
 ## Sources feeding this topic
+
+- **S28** - [Here's how the new MCP spec works](../../sources/260821_new-mcp-spec/LEARNING.md)
+  (Kent C. Dodds, 2026-08-20). **A partial feeder contributing claim 231, which narrows this note's
+  own claim 181 without closing it.** MCP's MRTR diagram states the encrypt-and-bind obligation for
+  the client-held `requestState` on its face, so the design does recognise the trust boundary and
+  S23's unsigned-plaintext example was careless rather than uninformed. **What still stands is that no
+  source here has examined a single implementation**, and the failure is silent - a server skipping
+  the check works perfectly until somebody forges a blob. It also records that DCR consent screens
+  used a **self-asserted** client name, which is the defect CIMD's domain-ownership trust replaces
+  (claim 228, held in [`mcp.md`](mcp.md)). **T4 screencast, enthusiastic about its subject**, and on
+  these claims the second leg is a diagram the author drew rather than a specification he read.
 
 - **S27** - [Scaling GitHub for your Agents](../../sources/260816_scaling-github-for-agents/LEARNING.md)
   (Sam Morrow, GitHub, ~April 2026) - **a partial feeder contributing claim 221 plus two threat rows,

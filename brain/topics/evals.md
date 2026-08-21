@@ -1,6 +1,6 @@
 # Topic: Evals
 
-**Status:** established (10 sources / **9 independent** - S1 Uber closed-loop evals, S4 Anthropic
+**Status:** established (12 sources / **11 independent** - S1 Uber closed-loop evals, S4 Anthropic
 harness design, S5 Google DeepMind skill evals, **S11 agent-first data stack - a *counter*-example, a
 production deployment with no evals whose authors concede the gap**, **S13 `karpathy/autoresearch`,
 which supplies the half this note was missing: how to *design* a metric that an optimizer cannot game,
@@ -10,7 +10,14 @@ the thing it judges**, and **S15, CS329A lecture 2 - not independent of S14**, c
 coverage-versus-`pass@1` reporting failure and a scaling law that reads as a diagnostic for your
 evaluation set, and **S25, the brain's first *survey* - seven cybersecurity benchmarks read at once,
 which is the first time this note has seen an eval design problem solved seven independent times and
-can say which parts converged**).
+can say which parts converged**, **S27 GitHub's MCP server**, and **S28 the new MCP spec walkthrough -
+a peripheral feeder** supplying pre-committed removal criteria).
+
+> **Count corrected 2026-08-21: this line read "10 sources / 9 independent" while S27 already had a
+> full entry under `Sources feeding this topic` and a claim in the table.** Now 12 / 11 with S28. The
+> same drift was found in `agents.md` in the same pass, which suggests the status line is simply the
+> field most often missed when a source lands. Worth watching rather than tooling around.
+
 **Basis:** all three independently arrive at *an independent checking stage that can fail the work* -
 S1's Swiss-cheese QA gates on a production pipeline, S4's evaluator agent with hard thresholds on a
 build loop, and S5's CI gate that blocks a skill diff from merging without proof of lift. **S5 is the
@@ -313,6 +320,43 @@ and it drops to 1-5 environments. This note already holds ablation as an eval me
 instruction artifact, and it is the reason a 3-to-37 jump reads as a finding rather than as an
 announcement.
 
+### A criterion fixed before you know how it resolves converts an argument into an observation
+
+This note is about evaluating models and pipelines. **S28 supplies the same discipline pointed at an
+engineering decision**, and it is worth holding here because the structure is identical to a gated
+eval and the subject is not (claim 230).
+
+The decision was when to delete a legacy protocol lane. Instead of arguing it, S28's author wrote down
+**seven gates, each naming the number that would flip it**, before the removal decision: at least 90
+continuous days of dataset history, legacy below 1% of instrumented requests, no client bucket above
+100 legacy requests, legacy `tools/call` at zero, at least 1,000 modern `tools/call` from at least
+three distinct clients, one named client family dispositioned, and a seven-day brownout survived with
+**code deletion only after** [S28 `n14`]. Six fail and the seventh is not yet applicable.
+
+**The reason this belongs in an evals note rather than a project-management one is the pre-commitment,
+which is the same property that makes a holdout a holdout.** A threshold set after you have seen the
+data is a rationalisation with a number attached. Set before, it cannot be argued afterwards by
+either side - not by the person who wants the code gone, and not by the person who wants to keep it.
+This note already holds the metric-design half of that instinct from S13, where anti-Goodhart is
+treated as a code-layout problem, and claim 59's untunable trade. **This is the same idea applied to
+a one-off decision rather than to a running loop.**
+
+Two of the gates are the instructive ones, and both are non-volumetric. One asks whether the residual
+traffic represents real user value or protocol ceremony, noting explicitly that a bare `initialize`
+alone must not block retirement. The other asks about a single named client family that would be
+broken. **Those are the rows that stop a percentage from hiding a stranded population**, and a gate
+set built only from aggregate share would have missed both.
+
+The outcome deserves stating because it is easy to read as failure. The recorded verdict is that the
+only work worth doing is gathering more evidence, "not lane changes", under a heading that says
+"recommendation only - nothing implemented" [S28 `n15`]. **A well-built gate producing "not yet" is
+the gate working**, and it is the same result an eval gate gives when a diff does not clear its
+threshold.
+
+> **Gated `single-leg`.** The table is visible in a dated public document and is never spoken, which
+> is the strongest form single-leg takes here. **The thresholds are specific to one server and do not
+> transfer; the shape does.**
+
 ## Key claims
 
 | Claim | Sources (cited) | Confidence |
@@ -361,6 +405,7 @@ announcement.
 | **Make an open-ended task gradable by defining success as a checkable property of the environment, not of the trajectory** - eight named end states, a grader that interrogates the target rather than reading the submission, so **the grader never needs to be as capable as the agent**. Claim 198. | S25 `n5`, `n2` + `fig3_cvebench-standardized-goals.png` | corroborated (faithful summary - [ADR-0025](../decisions/0025-a-secondary-source-corroborates-its-own-reading.md)) |
 | **Score an open-ended capability as an ordered ladder, not a bit** - a binary grader reports "found nothing" and "found it and could not weaponise it" identically, and the rung where progress stops is the diagnostic. Claim 199. | S25 `n3` + `fig2_outcome-ladder.png` | corroborated (faithful summary). The reasoning is the article's own |
 | **A difficulty ceiling attributed to agents often belongs to the guidance regime** - 11 minutes unguided against 52 minutes and 2h03 subtask-guided, roughly elevenfold. Two readings of one benchmark support opposite conclusions about how far away the capability is. Claim 202. | S25 `n6`, `d1` + `fig4_cybench-guidance-ceiling.png` | corroborated **against the article**, which states only the unguided half - the figure is the stronger leg |
+| **A removal criterion with a pre-committed threshold converts an argument into an observation, and its honest output is often a decision not to act.** Seven gates written before the retirement decision, each naming the number that would flip it; six fail. **Two are non-volumetric and are the instructive ones** - is residual traffic real user value or protocol ceremony, and is one named client family dispositioned - the rows that stop a percentage from hiding a stranded population. Verdict: gather more evidence, change nothing. Claim 230. | S28 `n14`, `n15` + `visuals/frame_1418.jpg` | **single-leg** - a dated public document, never spoken, which is the strongest form single-leg takes. **The thresholds are one server's and do not transfer; the shape does.** That a null decision is a success is this brain's reading, supported by the source's own bottom line |
 
 ## Key visuals
 
@@ -438,6 +483,17 @@ announcement.
   cannot supply missing capability" is visible in one source and tested by nobody.
 
 ## Sources feeding this topic
+
+- **S28** - [Here's how the new MCP spec works](../../sources/260821_new-mcp-spec/LEARNING.md)
+  (Kent C. Dodds, 2026-08-20). **A peripheral feeder contributing claim 230 only**, and pointed at an
+  engineering decision rather than at a model: seven removal gates, each naming the number that would
+  flip it, written before the decision. It belongs in this note because **pre-commitment is the same
+  property that makes a holdout a holdout** - a threshold set after seeing the data is a
+  rationalisation with a number attached. **The two non-volumetric gates are the transferable part**,
+  asking whether residual traffic is real user value or protocol ceremony, and whether one named
+  client family would be broken. **`single-leg`** - the table is a dated public document and is never
+  spoken aloud - and **the thresholds are one server's**. The outcome, a recorded decision to change
+  nothing, is a gate working rather than a gate failing.
 
 - **S27** - [Scaling GitHub for your Agents](../../sources/260816_scaling-github-for-agents/LEARNING.md)
   (Sam Morrow, GitHub, ~April 2026) - **a partial feeder contributing one claim, and it is a framing

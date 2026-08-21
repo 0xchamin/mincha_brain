@@ -1,8 +1,9 @@
 # Topic: MCP (Model Context Protocol)
 
-**Status:** **established** (4 sources - S10 "Tool search", Microsoft, 2026-07-29; S12 Google Cloud's
+**Status:** **established** (5 sources - S10 "Tool search", Microsoft, 2026-07-29; S12 Google Cloud's
 multi-tenant agentic AI reference architecture, 2026-06-18; **S23 Google's MCP stateless-updates
-announcement, 2026-08-05**; **S27 GitHub's own MCP server at operator scale, ~April 2026**). S23 is
+announcement, 2026-08-05**; **S27 GitHub's own MCP server at operator scale, ~April 2026**; **S28 Kent
+C. Dodds walking `2026-07-28` as somebody who migrated onto it, 2026-08-20**). S23 is
 this note's first primary source - the first that is *about* MCP rather than teaching it on the way
 past something else - and the first anywhere in this brain to **pin a specification version**
 (2026-07-28, superseding 2025-11-25). S10 and S12 remain secondary under
@@ -27,6 +28,30 @@ weakest, which was the generalisation rather than the mechanics.
 > source to hunt for when a topic stalls**: this note spent three sources trying to corroborate a
 > specification by reading more about the specification, and what moved it was somebody building the
 > thing and reporting what stayed in their architecture diagram.
+
+**S28 (2026-08-21) is the fifth source and it closes the note's oldest complaint about itself.** The
+`established` block above ends by saying *almost nothing here is measured by anyone*, and every source
+before this one described a design. S28 describes **what happened after the design shipped**, from a
+server carrying one telemetry point per request: three weeks after `2026-07-28` published with all four
+Tier 1 SDKs supporting it, **25,288 requests had been served and none came from a client speaking it**
+(claim 227). It is a tiny, self-selected population over six to thirteen days, and it is nonetheless
+the first adoption number this note has ever held.
+
+**It also strengthens two things and adds one.** It is a second independent reading of the release, so
+claims 179 and 183 are no longer resting on a single vendor post. It reproduces **two of the three DCR
+defects** from an operator with no connection to GitHub, which is what upgraded claim 222 from
+`needs-check` to corroborated - and, importantly, one of those operators runs an authorization server
+for millions of developers while the other runs a personal assistant, which is what makes the failure
+modes structural. **The new material is CIMD** (claim 228), the replacement mechanism S27 could only
+name as an unpromised direction.
+
+> **The evidential shape of this source is unusual and worth knowing before citing it.** It is a
+> screencast, so the visual leg is not slides but **the official blog post, the author's own merged
+> PR, and his own public dashboard readout**, displayed on screen. On the specification claims that
+> makes the second leg the primary document rather than a summary of it. On the adoption claims it
+> makes the two legs genuinely independent, since the narration is recollection and the visual is an
+> aggregate query. **T4 by tier and better-evidenced than its tier suggests, on exactly the claims
+> where it matters.**
 
 **Status deliberately held at `emerging`, and the reason is the same one this note has recorded
 twice.** A primary source fixes the note's *scope* defect and does nothing for its *corroboration*
@@ -151,6 +176,79 @@ nothing about an agent acting on a schedule with no user present. Single-leg, tw
 no artifact. The RFCs themselves are T1 and were not read. Full treatment in
 [`agent-security.md`](agent-security.md), which owns the threat model.
 
+### Client registration is being replaced by client retrieval, and two operators rejected the old way independently
+
+This note recorded DCR's rejection from GitHub's side first, as claim 222, with Client ID Metadata
+Documents named as the likely direction and explicitly not promised. **S28 supplies both halves of
+what was missing**: an independent confirmation of the diagnosis, and the mechanism that replaced it.
+
+The diagnosis converges to a degree worth taking seriously. S28's DCR diagram carries two failure
+bands - the authorization server "writes unbounded per-client state" because it stores a record for
+every registration, and "the minted `client_id` is not portable across authorization servers" - and
+the narration adds that identity is self-asserted, since "anybody could say hey, I'm Claude Code"
+[S28 `n5`]. Those are two of the three reasons GitHub gave. **The two sources have no connection and
+sit at opposite ends of the scale**, one operating an authorization server for millions of developers
+and one running a personal assistant, which is what makes the failure modes structural rather than
+situational (claim 222, upgraded). S28 also attaches the first number anyone has: **~125 registrations
+per user** on its author's own server, read by him as reconnection churn rather than 125 clients
+[S28 `n6`]. Treat that as a direction and not a measurement, because it is single-leg with no
+denominator and no window.
+
+**CIMD replaces registration with retrieval, and the whole idea is in one line of its diagram: the
+`client_id` is a hosted HTTPS URL, the authorization server GETs the metadata on demand, and there is
+no per-client store** [S28 `n7`] (claim 228). The client publishes a metadata JSON document - client
+name, client URI, logo, redirect URIs, grant types - **before any connection exists**, and that URL is
+its identifier. The authorization server detects the URL form and fetches it "instead of writing a
+registration record".
+
+Notice that all three defects vanish from one change rather than being fixed individually, which is
+the signature of a design that deleted a step. Nothing grows unbounded because nothing is written.
+Portability is free because a URL means the same identifier everywhere. **And the identity
+substitution is the part to get right when explaining this**: trust reduces to *ownership of the
+domain*, which does not establish that a client is trustworthy but does make the claim **attributable
+and revocable by somebody other than the claimant**. An attacker can still call itself Claude Code and
+cannot serve `claude.ai/client-metadata.json`. That is weaker than a vetted registration and far
+stronger than a self-asserted string, and the web already runs the machinery.
+
+**The gap in this note's coverage is that nobody here has read the CIMD specification.** One source
+describes it, one deployment uses it, and the validation rules are what decide whether domain
+ownership is a real control or a formality. That is the highest-value deep-research candidate on this
+topic.
+
+### "The spec shipped" and "clients speak it" are three weeks and 25,288 requests apart
+
+Every source in this note before S28 describes a design. **This one describes what the ecosystem did
+with a design**, and the answer at three weeks was nothing (claim 227).
+
+The measurement exists because its author instrumented the seam while migrating rather than when he
+wanted to delete something. His server runs both protocol eras behind one route, classifies each
+request with the SDK's own `isLegacyRequest` predicate, keeps the 2025 lane byte-identically, and sets
+`legacy: 'reject'` on the modern lane "so exactly one lane owns each era" [S28 `n11`]. Every
+authenticated request then writes one non-blocking data point recording lane, method, protocol
+revision, client, and user.
+
+The strictness is the part that transfers, and it is easy to mistake for pedantry. **A tolerant modern
+lane would serve legacy requests too, and the lane attribution would stop being a fact about the
+client** - the telemetry would still record something, and it would mean nothing. The full treatment
+of the practice sits in [`agents.md`](agents.md) as claim 229, because the lesson is not about MCP.
+
+What it found on 2026-08-10 was `legacyShare = 1.0` across 25,288 requests, verdict
+`waiting-for-modern-clients`, with the observed protocol versions running `2025-11-25` at 20,771,
+unspecified at 4,474, `2025-06-18` at 41 and `2024-11-05` at 2 [S28 `n13`]. A week later legacy share
+was 97.0%, with 62 modern `tools/call` from 2 clients and a self-description of "real work is ~0.5%
+migrated".
+
+**Read that against the release announcement's own closing line, which is that all four Tier 1 SDKs
+speak `2026-07-28`** [S28 `n4`]. Both are true and they measure completely different things. SDK
+support means adoption is *possible*; whether it has happened is empirical, and almost nobody
+instruments it. **The consequence for this note is a correction to how it reads a spec version**: a
+pinned revision tells you what the protocol is, and nothing whatsoever about what is on the wire.
+
+> **Do not generalise the rate.** One hobbyist-scale server, a client population self-selected by who
+> follows one educator, and a window the source itself says contains six to thirteen days rather than
+> the thirty it is labelled. **What generalises is that the gap exists and is wide**, plus the method
+> that made it visible. The rate is about one person's audience.
+
 ### The protocol now has a deprecation policy, and used it to shrink itself
 
 Features move Active -> Deprecated -> Removed with a **minimum 12-month** transition window
@@ -165,6 +263,19 @@ the protocol declining to broker between a server and a model, narrowing itself 
 a client and a tool. *(That reading is this brain's commentary, not S23's claim.)* Note the irony for
 this note, which recorded sampling at zero sources until now: **the first thing the brain learns about
 MCP sampling is that it is going.**
+
+**S28 confirms all of it independently and adds one deprecation S23 did not record**, which is that
+the legacy **HTTP+SSE transport** is officially deprecated on the same year-long offramp [S28 `n3`].
+It also supplies the per-feature reaction of somebody who used these: Roots he is glad to lose,
+calling it useless outside very slim cases, and **Sampling he is sorry about**, with the example that
+makes the feature legible - a journaling server asking the client's model to generate tags for an
+entry before saving it. His read is that it was useful and little used.
+
+> **Twelve months is a floor and this note should stop reading it as a schedule.** Set the policy
+> beside claim 227: the one operator who has measured his own traffic sees 97% of it still on the
+> previous era three weeks in, and expects removal to take considerably longer than the minimum. **A
+> deprecation window is a promise about the earliest safe removal, not a prediction of the actual
+> one**, and the gap between those two is exactly what claim 230's gate discipline is for.
 
 ### `tools/list` is a per-turn cost centre, and it scales with the catalog
 
@@ -282,7 +393,9 @@ field's gap rather than the document's.
 | **The protocol core is stateless: the handshake and `Mcp-Session-Id` are deleted, `_meta` carries the negotiated fields on every request, and routing metadata is promoted to mirrored HTTP headers** (`-32020` on mismatch), so round-robin routing, serverless scale-to-zero and invisible failover follow from one change. | **2026-07-28** (from **2025-11-25**) | S23 §Why Sessions + §The New Request Model + §HTTP Standardization (`n1`-`n5`), claim 179 | **corroborated** - prose against the article's own printed payloads, which diff cleanly. SEP numbers prose-only and unverified |
 | **Statelessness is state relocation, not elimination**: to the wire (`_meta`), to the client (`requestState`), to the application (a task store). MRTR (SEP-2322) and the Tasks extension (SEP-2663) are the two mechanisms. | 2026-07-28 | S23 (`n3`, `n7`, `n9`, `n10`, `d2`), claim 180; **externally corroborated by S27 (`n16`)** | corroborated on all three relocations and on the "No Redis Sessions Needed" divergence. **The framing was this brain's synthesis and now has an independent production instance** - see the status block |
 | **A tool surface assembled per request makes per-caller filtering free**, and a server building its tool list at startup cannot do it without inventing per-connection state. GitHub constructs a brand-new server instance in the SDK sense **on every single request**, attaching tools from configuration, policy and token scopes, behind a load balancer with no session affinity, at ~7.34M calls/week. | unstated (predates 2026-07-28) | S27 (`n16`, `n17`), claim 224 | **corroborated** - architecture slide against narration. The design consequence, that scope filtering is a by-product rather than a feature, is this brain's reading |
-| **Dynamic Client Registration was rejected by a major authorization server for operational reasons, not cryptographic ones**: unbounded app-database growth, no natural bucketing for rate limits, and no reliable app identity. Verdict from the team that made the call: "a well-intentioned mistake". **Client ID Metadata Documents** named as the likely direction and explicitly unpromised. | unstated | S27 (`n12` corroborated, `n13` single-leg), claim 222 | **needs-check** - the reasons are narration only, from the deciding team, so authoritative about the decision and not about whether it was right |
+| **Dynamic Client Registration was rejected by two unconnected operators for the same operational reasons, not cryptographic ones**: unbounded per-client state, a `client_id` portable nowhere, and no reliable app identity (self-asserted registration). Verdict from the team that made the call: "a well-intentioned mistake". **First quantity attached to the growth problem: ~125 registrations per user.** | unstated | **S27 (`n12`, `n13`) + S28 (`n5` corroborated, `n6` single-leg)**, claim 222 | **Upgraded 2026-08-21 to corroborated across two independent operators.** S27 was narration only from the deciding team; S28 reproduces two of three defects from a diagram plus narration, at a completely different scale. **The ~125 figure is single-leg with no denominator** - a direction, not a measurement |
+| **CIMD replaces registration with retrieval: the `client_id` *is* a stable HTTPS URL the client hosts, which the authorization server GETs on demand and stores nothing about.** All three DCR defects vanish from one change, and **trust reduces to ownership of the domain** - not a trustworthiness claim, but one that is attributable and revocable by somebody other than the claimant. | 2026-07-28 | S28 (`n7`), claim 228 | **corroborated within the source** (diagram + narration + one working deployment). **The CIMD specification has not been read here**, so the validation rules that decide whether domain ownership is a real control are unverified. Highest-value deep-research candidate on this topic |
+| **SDK support is not client adoption.** Three weeks after `2026-07-28` published with all four Tier 1 SDKs speaking it, an instrumented production server had served **25,288 requests and none from a `2026-07-28` client**; a week later legacy share was 97.0% with ~0.5% of real work migrated. Observed versions were dominated by `2025-11-25`. | **2026-07-28** (measured against `2025-11-25` traffic) | S28 (`n4`, `n13`), claim 227 | **corroborated on the numbers, and the population is tiny and not neutral** - one hobbyist-scale server, a self-selected client base, and a window the source says holds ~6-13 days rather than 30. **The gap generalises; the rate does not.** This note's first adoption measurement of any kind |
 | **A protocol capability no client surfaces migrates into server-side configuration, where it earns configuration-level adoption.** `readOnlyHint` exists and GitHub's read-only mode maps one-to-one onto it; no client exposes the annotation as a filter, so the server ships a redundant feature reaching ~17% of users. **Every tool-grouping proposal to the spec has been rejected.** | unstated | S27 (`n21`, `n22`), claim 225 | **single-leg, needs-check.** Narration only and the 17% is hedged. A direct operator statement about their own product, which is the strongest form single-leg takes |
 | **Authorization adds issuer verification (RFC 9207) and resource indicators (RFC 8707)** - the latter named as the fix for the confused deputy, and the first mechanism this note's identity question has ever been given. | 2026-07-28 | S23 §Clear Security & Capability Boundaries (`n11`), claim 182 | needs-check (single-leg, two sentences, no artifact). Resolves the question's **direction**, not its content |
 | **A formal deprecation policy exists** (Active -> Deprecated -> Removed, 12-month minimum, SEP-2577), and **Roots, Sampling and Logging are deprecated** - sampling in favour of calling LLM provider APIs directly. | 2026-07-28 | S23 §Deprecations (`n13`), claim 183 | needs-check (single-leg, prose-only). The scope-narrowing reading is commentary |
@@ -329,7 +442,26 @@ field's gap rather than the document's.
   S23's own example decodes to unsigned plaintext JSON while guarding a file deletion (`n8`, `d1`,
   claim 181). If the spec mandates protection, this is a documentation defect in a widely-read
   announcement. If it does not, it is a protocol-level design gap. **The spec was not read in this
-  pass** and no deep research was requested.
+  pass** and no deep research was requested. **Narrowed 2026-08-21 by S28** (claim 231): the community
+  guidance *is* encrypt-and-bind, stated on the face of an MRTR diagram, so the likely answer is that
+  S23's example was careless rather than that the design forgot. **The question that replaces it is
+  harder and more useful - does any implementation actually do it?** Neither source examines an SDK,
+  and a survey of the four Tier 1 SDKs would settle it cheaply.
+- **What does the CIMD specification actually require?** **The highest-value deep-research candidate on
+  this topic.** One source describes the mechanism and one deployment uses it (claim 228), and nobody
+  here has read the spec. The validation rules are what decide whether "trust is ownership of the
+  domain" is a real control or a formality - what happens on a redirect, on a stale or unreachable
+  document, on a document served from a domain that has since changed hands, and how long an
+  authorization server may cache one.
+- **Is the adoption gap general, or is it one server's audience?** Claim 227 is n=1 over ~6-13 days.
+  The obvious test is whether any other operator has published protocol-lane telemetry for
+  `2026-07-28`. **Two independent servers showing the same shape would turn this from an anecdote into
+  a fact about the ecosystem**, and it is the kind of thing that may simply be sitting in a public
+  dashboard somewhere.
+- **How long does a deprecated MCP feature actually survive?** The policy sets a twelve-month floor
+  (claim 183) and claim 227 suggests real removal is much further out. Nobody has measured the decay
+  curve for a protocol era after deprecation, and **every migration plan in the ecosystem is currently
+  guessing at it.**
 - **What does `_meta` on every request cost when the catalog is already large?** Claim 85 measures
   `tools/list` at 541k tokens for 1,180 tools, and claim 179 adds a per-request block on top of it.
   Full JSON Schema 2020-12 support (`n12`) pushes the same direction. **The two sources never meet and
@@ -365,6 +497,23 @@ field's gap rather than the document's.
 
 ## Sources feeding this topic
 
+- **S28** - [Here's how the new MCP spec works](../../sources/260821_new-mcp-spec/LEARNING.md)
+  (Kent C. Dodds, "Better with Kent", 2026-08-20). **The note's second independent read of
+  `2026-07-28`, and the only source anywhere here that measured what happened after a spec shipped.**
+  Supplies CIMD's mechanism (claim 228), the DCR corroboration that upgraded claim 222, the first
+  adoption number in this note's history (claim 227), and second-source confirmation for claims 179
+  and 183. **T4 - an independent educator's screencast, unreviewed, no editor** - and better evidenced
+  than that tier suggests, because the visual leg is not slides but the official blog post, his own
+  merged PR and his own public dashboard, displayed on screen. On the spec mechanics the second leg is
+  therefore **the primary document rather than a summary of it**; on adoption the two legs are
+  genuinely independent, since one is recollection and the other an aggregate query. **The
+  specification content is not really his evidence** - he reads the post and comments, so every
+  rationale not visibly on the post is his inference. **The adoption data is n=1 on a self-selected
+  population over a window the source itself says holds 6-13 days rather than 30.** He also omits on
+  air something his own PR records, which is that Cloudflare deprecated and feature-froze the
+  framework he was on, making the migration sound more elective than it was (`d2`). He opens with
+  "they fixed MCP", so read it as enthusiasm - real and specific criticisms of sampling and logging
+  notwithstanding.
 - **S27** - [Scaling GitHub for your Agents](../../sources/260816_scaling-github-for-agents/LEARNING.md)
   (Sam Morrow, GitHub, AI Engineer Europe, ~April 2026). **This note's second primary source and the
   first written from inside a running deployment rather than about a specification.** Supplies the
