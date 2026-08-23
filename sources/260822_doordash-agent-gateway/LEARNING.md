@@ -1017,107 +1017,119 @@ These are the deep-research backlog for this source, ordered by what would most 
 
 ### Slide 1 - The protocol we adopted solved the part that was already easy
 
+![Five governance steps wrapped around the one step the protocol defines](visuals/fig1_gateway-architecture.jpg)
+
 **MCP standardised how a tool call is described and invoked, and left every question that decides
-whether the call should happen outside the specification.** DoorDash lists six of them. Which agent
-may call this tool. Whom is it acting for. Which credential should be attached. Which tools should it
-even see. How is access withdrawn. What record survives.
+whether the call should happen outside the specification.** DoorDash lists six. Which agent may call
+this tool. Whom is it acting for. Which credential should be attached. Which tools should it even
+see. How is access withdrawn. What record survives.
 
-Look at what those six have in common. Not one of them is answerable by a wire format, and a protocol
-that tried would be unimplementable by anyone whose authorization model differed, which is all of us.
-So this is not a defect in MCP. It is a category of work that adopting MCP does not reduce, and the
-reason it feels like a surprise is that the integration got easy first.
+Not one of those is answerable by a wire format, and a protocol that tried would be unimplementable
+by anyone whose authorization model differed. This is not a defect in MCP. It is work that adopting
+MCP does not reduce, and it surprises people only because the integration got easy first.
 
-*Visual: Figure 1, `visuals/fig1_gateway-architecture.jpg`.* The centre column is their gateway's
-pipeline. Authenticate, authorize, rate limit, inject credentials, forward. Notice that forwarding,
-the only step the protocol defines, is one of five.
+The obvious objection is that we could answer them where we already work, and each version fails
+differently. In the agent, the enforcement point becomes a prompt. In each server, every author
+reimplements identity and the third-party servers we most want to call never encode our org chart.
+In a shared library, it reaches only the teams that upgrade it and nobody can revoke anything.
 
-### Slide 2 - The question is not what to build, it is where to put it
+This is a pipeline diagram rather than a component diagram, and it is worth reading as a ratio.
+**The only step the protocol defines is one of five.** *Provenance: `visuals/fig1_gateway-architecture.jpg`,
+n1, n2, claim 232.*
 
-**Three obvious homes for this work exist and all three fail, which is the argument for a gateway
-rather than a preference for one.** Put it in the agent and the security decision ends up in a prompt,
-which is the one component we know reads untrusted text. Put it in each tool server and every author
-reimplements identity, and the third-party servers we most want to call will never encode our org
-chart. Put it in a shared library and it reaches only the teams that import and upgrade it, and no
-one can revoke anything.
+### Slide 2 - The tool catalog is an interface, and right now nobody here owns it
 
-That third failure is the one I want leadership to hold, because it is not specific to agents. We
-have watched it before. GitHub shipped three separate opt-in fixes for an agent problem and found
-everyone ran the defaults. **The only lever that reaches a whole population is the one that operates
-when nobody acts,** and a hop that traffic must cross is such a lever. The cost is that you now own a
-component in the path of everything.
-
-*Visual: the elimination diagram from section 2 of the note.*
-
-### Slide 3 - The tool catalog is an interface, and right now nobody here owns it
+![One bundle URL, four servers, and the tools that did not make it through](visuals/fig3_bundles-and-filtering.jpg)
 
 **This is the transferable finding, and it holds whether or not we ever build a gateway.** Agents do
-not think in servers, they think in tasks, and a coding agent investigating an incident wants one
-surface rather than four setup steps. Meanwhile a third-party server may publish several hundred
-operations when a workflow needs five.
+not think in servers, they think in tasks. A coding agent investigating an incident wants one surface
+to work from, not four separate setup steps. Servers are organised by who built them and tasks by
+what someone is doing, and those two decompositions have no reason to agree.
 
-DoorDash's answer composes across servers and subtracts within them. One endpoint, one merged
-catalog, filtered per tool. The half worth your attention is what they filter out, because their
-figure names it at tool granularity and the pattern is unmistakable. Deletes, transfers, reindexes,
-permission changes. **The filter is drawn around irreversibility and authority, not around
-relevance,** and that is a far sharper instruction than "expose fewer tools".
+DoorDash composes across servers and subtracts within them, so one endpoint returns one merged
+catalog, filtered per tool.
 
-*Visual: Figure 3, `visuals/fig3_bundles-and-filtering.jpg`.*
+This is a curation diagram, not an architecture one, so the instructive part is the struck-through
+names rather than the boxes. Deletes, transfers, reindexes, permission changes. **The filter is drawn
+around irreversibility and authority, not around relevance,** which is a far sharper instruction than
+"expose fewer tools" and the sort of thing only a worked example makes visible.
+*Provenance: `visuals/fig3_bundles-and-filtering.jpg`, n10, n11, claim 233.*
 
-### Slide 4 - Filtering the list is only half a control
+### Slide 3 - Filtering the list is only half a control
+
+![The same picture, read for its second step: authorization applied on the discovery path](visuals/fig3_bundles-and-filtering.jpg)
 
 **A client will not call a tool that was not in the list it received, so the catalog is a containment
-boundary that works without the model cooperating - but only if the same policy governs the call.**
-DoorDash evaluates authorization on the discovery fan-out and again on invocation, from one policy
+boundary that works without the model cooperating.** That holds only if the same policy governs the
+call, and DoorDash evaluates authorization on the discovery fan-out and again on invocation, from one
 source.
 
-Why insist on the shared source rather than just two checks? Because two independently maintained
-filters look identical on a whiteboard and drift within a quarter. The version where they share an
-origin is the version where the tools an agent can see and the calls it can make are provably the
-same set.
+Why insist on the shared source rather than simply two checks? Two independently maintained filters
+look identical on a whiteboard and drift within a quarter, and sharing an origin is what makes the
+visible set and the callable set provably the same.
 
 This is also where the evidence gets genuinely strong, and it is the one place I would defend citing
-this post. GitHub reached the same coupling of authorization and tool visibility from inside a server
-trying to shrink its own catalog. DoorDash reached it from outside, governing servers it does not
-own. **Two organisations, opposite vantage points, same conclusion.** That convergence is worth more
-than either company's numbers.
+this post. GitHub reached the same coupling from inside a server trying to shrink its own catalog.
+DoorDash reached it from outside, governing servers it does not own. **Two organisations, opposite
+vantage points, same conclusion,** which is worth more than either company's numbers.
+*Provenance: `visuals/fig3_bundles-and-filtering.jpg` read for its authorization step, n11, n12,
+claim 234 as a second vantage on claim 221.*
 
-*Visual: the two-path diagram from section 7 of the note.*
+### Slide 4 - A missing authorization is a state, not an error
+
+![Seven steps in which a missing grant becomes a prompt rather than a failed turn](visuals/fig2_elicitation-handshake.jpg)
+
+**This is the design move I would steal first, and it costs nothing to adopt.** When a user-scoped
+tool needs an authorization nobody has granted yet, the gateway holds the call open, prompts inside
+the protocol with a connect URL, takes the callback, and then issues the original call with the
+user's token attached.
+
+This is a sequence diagram, and the load-bearing step is the replay rather than any of the arrows. It
+does not tell the client to try again. A retry requires the agent to still be holding its intent, and
+intent between turns is exactly what decays. Their own figure puts it best: a dropped turn becomes a
+seamless prompt.
+
+Take it away from OAuth and it is a rule about categories. **When a condition occurs on a large
+fraction of first uses, treating it as an error is a category mistake,** and the fix is to give it a
+place inside the protocol rather than a better message.
+*Provenance: `visuals/fig2_elicitation-handshake.jpg`, n7, n9, claim 235. The fallback for clients
+without elicitation is stated once and never quantified.*
 
 ### Slide 5 - The competitor to a governed path is fifteen minutes and a hardcoded token
+
+![The same architecture, read for its lower left: self-serve registration as a first-class component](visuals/fig1_gateway-architecture.jpg)
 
 **Their stated adoption test is that governance requiring tickets does not scale, and the paved road
 has to be easier than copying a secret into an agent.** Registration, tool discovery, filtering and
 bundle management are all self-serve for that reason.
 
-The leadership significance is that this reframes a policy question as a product question. If we
-build a governed path that is slower than bypassing it, we do not get partial compliance. We get the
-platform's cost and the ungoverned traffic, which is strictly worse than not building it. So the
-thing to fund is the self-serve loop, and the thing to be suspicious of if we ever staff this is any
-plan whose first release requires a ticket.
+The leadership significance is that this reframes a policy question as a product question. A governed
+path slower than bypassing it does not buy partial compliance. It buys the platform's cost and the
+ungoverned traffic both, which is worse than not building it.
 
-*Visual: Figure 1 again, `visuals/fig1_gateway-architecture.jpg`, with attention on the control-plane
-UI at the lower left.* It is drawn as a first-class component rather than an admin afterthought, and
-that placement is the argument.
+Read the same picture for its lower left rather than its centre. The control plane is drawn as a
+component with its own interface rather than as an admin afterthought, and that placement is the
+argument. **The competitor is not another platform.**
+*Provenance: `visuals/fig1_gateway-architecture.jpg`, control-plane row, n17, claim 237 generalising
+claim 217.*
 
-### Slide 6 - What the numbers say, and what they carefully do not
+### Slide 6 - What the numbers say, and what their own diagram says that they do not
+
+![The same architecture, read for what nobody wrote down: a cached policy arrow, and agents among the targets](visuals/fig1_gateway-architecture.jpg)
 
 **They report 200-plus servers, 30-plus agents, thousands of employees, millions of calls a week, and
-no agent holding a raw credential. Four of those five measure reach. None measures outcome.** Nothing
-here says agents got better, anything got cheaper, or an incident was prevented. All four would read
-identically in a world where the platform achieved nothing.
+no agent holding a raw credential. Four of those five measure reach and none measures outcome.**
+Nothing says agents got better or an incident was prevented, and all four would read identically in a
+world where the platform achieved nothing. The fifth is the one I would quote, because zero agents
+holding raw credentials is a property that a single counterexample breaks.
 
-The fifth is different and is the one I would actually quote, because zero agents holding raw
-credentials is a property across a population that a single counterexample would break.
-
-I also want to flag two things their own diagram says that their text does not, because we found them
-by reading the picture against the prose. Their figure puts **agents** in the downstream-targets
-column, which would mean agent-to-agent calls cross the same governed hop, and the article never
-mentions it or addresses what governs a callee that decides for itself. And the arrow from their
-registry to their proxy is labelled **cached**, which turns "one place to revoke" into one place to
-author revocation, with an enforcement lag nobody bounds. Neither is a criticism of their
-engineering. Both are the first questions a security review would ask.
-
-*Visual: the gap diagram from section 10 of the note.*
+I want to close on two things their own diagram says that their text does not, because we found both
+by reading the picture against the prose. **Agents** sit in the downstream-targets column, which
+would put agent-to-agent calls on the same governed hop, and the post never addresses a callee that
+decides for itself. And the arrow feeding policy to the proxy is labelled **cached**, which turns one
+place to revoke into one place to *author* revocation with a lag nobody bounds. Neither is a
+criticism of their engineering. Both are the first questions a security review asks.
+*Provenance: `visuals/fig1_gateway-architecture.jpg` read against the prose, n4, n16, claim 238.*
 
 ### Key takeaway message
 
