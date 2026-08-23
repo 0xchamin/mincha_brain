@@ -1,6 +1,6 @@
 # Topic: Agent security
 
-**Status:** **established** (**15 sources, with three independent corroborating groups.**
+**Status:** **established** (**16 sources, with three independent corroborating groups.**
 
 > **Count corrected 2026-08-21.** This read 13 while S27 already had a full entry under
 > `Sources feeding this topic` and rows in the claims table; **S28 makes 15**. The same one-source
@@ -477,6 +477,59 @@ trust in domain ownership (claim 228, held in [`mcp.md`](mcp.md)). That is not a
 and it is a real improvement, because it makes the assertion **attributable and revocable by somebody
 other than the claimant** - which is the property a self-asserted string never had.
 
+### Custody, and the gateway's two unstated gaps (S29)
+
+[S29](../../sources/260822_doordash-agent-gateway/LEARNING.md) is this note's first look at an
+organisation governing agent access to tool servers it mostly did not write, and its contribution is
+a boundary rather than a threat model. **The component that reads untrusted input is never the
+component that holds the secret** (claim 236). DoorDash names four custody modes - internal service
+identity where no secret exists, a gateway-held vendor token injected unseen, per-user OAuth from an
+encrypted grant store, and brokered short-lived service principals - and the organising rule is that
+none of them is the agent.
+
+The three things it names agents as *not* holding are the instructive list, because they are not
+equally obvious. Vendor API keys and OAuth refresh tokens are the expected entries. The third is
+**borrowed human grants used for team automation**, which is not a control anybody overlooked but a
+thing teams do deliberately when a service account is inconvenient, and it works perfectly until the
+person leaves. Read it beside this note's OAuth material above: the pre-OAuth anti-pattern was
+credential sharing between a human and an app, and this is the same anti-pattern with an agent
+standing in for the app.
+
+There is a consequence here worth more than the taxonomy. **Whoever holds every grant is the only
+component that can see a grant is absent *before* the call goes out.** An agent holding its own token
+discovers a missing grant as a failure mid-task; a gateway holding all of them can repair the gap
+in-protocol, which is what makes claim 235 buildable at all. The security boundary and the usability
+win turn out to be the same decision.
+
+**The filtering result is the one that transfers furthest.** A client will not call a tool that was
+not in the list it received, so removing a tool from a catalog removes an action from the reachable
+set regardless of what the agent subsequently reads - **a containment control that needs no
+cooperation from the model**, which is the class this note's containment section already argues for.
+The condition is that one policy source must govern both `tools/list` and `tools/call`, because two
+independently maintained filters look identical on a whiteboard and drift (claim 234). **This is
+claim 221 arriving from the opposite vantage**: GitHub found authorization was a free tool-surface
+filter from inside a server shrinking its own catalog, and DoorDash couples the same two decisions
+from outside, governing servers it does not own. Convergent design across two organisations, and
+deliberately not counted as a second measurement.
+
+> **The two findings this note values most from S29 are ones the source does not make.** Both come
+> from reading its architecture figure against its prose, and both are recorded as inference (claim
+> 238). **The registry-to-proxy arrow is labelled "cached catalog and auth policy" while the text
+> promises "a single place to change access and revoke it", unqualified.** Both are true and in
+> tension: revocation is centrally *authored* and eventually *enforced*, with a window nobody bounds.
+> That is not an error, since every distributed policy plane caches, and it decides whether revoking
+> a compromised agent takes a second or an hour. **And "Agents" appears among the downstream targets
+> beside internal and third-party MCP servers**, in a post that never once discusses calling an
+> agent. If the figure is accurate, agent-to-agent traffic crosses the same governed hop - and every
+> control described assumes a deterministic callee, while the five-part authorization tuple has no
+> row for a callee that decides for itself.
+
+**The generalisable reading rule is the durable part, and this note now has one strong instance of
+it.** In an engineering-brand post the figures are drawn by the engineer and the prose is edited for
+the brand, so the picture routinely carries operational truth the text has smoothed away. On this
+source that method produced both of the findings above, and neither was available from either leg
+alone.
+
 ## Key claims
 
 | Claim | Threat / mitigation | Sources (cited) | Confidence |
@@ -546,6 +599,9 @@ other than the claimant** - which is the property a self-asserted string never h
 | **The first rate of change attached to any security capability here: ~1.3-month doubling** in simulated exploitation revenue on contamination-controlled targets, R^2 = 0.828 over eight models | offensive capability | S25 (claim 204, `n23`, `d2`, `fig8`) | **needs-check.** `single-leg`, **figure-only** - the article's prose never mentions the trend. T2 vendor benchmark, five of eight points its own models, best-of-eight, calendar x-axis. **Cite that a rate was measured, not the number as a fact about the field** |
 | **The artifact S19 attacked now has an independent architecture description** - a first for this brain, and it is an identification rather than corroboration | provenance | S19 + S24 (claim 196) | **verified against S19's bibliography.** Moves neither claim 160 nor 161 - see `d5` |
 | **MCP's client-held `requestState` has an explicit encrypt-and-bind obligation, and nobody has checked whether any implementation honours it.** The MRTR diagram states it on its face - untrusted input, encrypt and bind to the user - with the named threat being a client fabricating user approval. This **narrows claim 181** from an unrecognised design hole to a gap between guidance and S23's unsigned-plaintext example. **The failure is silent**: a server that skips the check works perfectly until somebody forges a blob. Claim 231. | Trust surface / delegated authorization | S28 `n10` + `visuals/frame_1310.jpg`, refining claim 181 / S23 | **corroborated within S28** and **needs-check as evidence about implementations, of which there is none.** Reading the four Tier 1 SDKs would settle it and is the cheapest open question in this note |
+| **The component that reads untrusted input is never the component that holds the secret.** Four custody modes at a gateway - internal service identity (no secret), gateway-held vendor token (injected unseen), per-user OAuth (encrypted grant store, injected and refreshed), and brokered short-lived service principals - none of which is the agent. The named anti-patterns are vendor API keys, refresh tokens, and **borrowed human grants for team automation**, the last being deliberate rather than overlooked. | Credential theft via the agent's own context; standing access surviving an employee's departure | S29 (`n5`), claim 236 | **single-leg.** Table 1 restates its own prose and a table is not a second leg. The principle is the transferable half and sits directly on this note's OAuth material |
+| **Filtering the tool catalog is a containment control that needs no cooperation from the model, and it holds only if one policy source governs both `tools/list` and `tools/call`.** A client will not call a tool absent from the list it received. Two independently maintained filters look identical on a whiteboard and drift. | Prompt injection and model confusion reaching destructive tools; visible-set/callable-set drift | S29 (`n11`, `n12`), claim 234; **second vantage on claim 221 / S27** | **corroborated** within S29. Independence from S27 is real (different org, layer, motive) and it is **convergent design, not replication** - S27 published numbers, S29 an architecture agreeing with them |
+| **Central revocation through a cached policy plane is central *authorship*, not central enforcement** - the lag is unbounded in the source, and the figure said so while the prose did not. Same figure also places **agents among the downstream targets**, which would put agent-to-agent calls on the governed hop with a callee that decides for itself. | Revoking a compromised agent's access takes an unknown time; an unmodelled non-deterministic callee | S29 (`n4`, divergence table), claim 238 | **single-leg, figure only, consequences are this brain's inference.** S29 makes no statement either way. **Highest-value deep-research candidate on this source**, since the propagation window is a number a vendor could be asked for |
 
 ## Key visuals
 
@@ -1153,6 +1209,17 @@ a property S24 does not claim and could not establish.
 
 ## Sources feeding this topic
 
+- **S29** - [How DoorDash Built a Centralized Gateway for AI Agent-Tool Access](../../sources/260822_doordash-agent-gateway/LEARNING.md)
+  (Siddarth Kodwani and Vasily Vlasov, DoorDash Engineering, 2026-07-30). **The note's first source on
+  agent-tool access governed as an org-wide platform**, rather than as a property of one agent or one
+  server. Supplies credential custody as a design boundary (claim 236), catalog filtering as
+  model-independent containment plus the shared-policy-source condition (claim 234), and the two
+  figure-only findings this note values most (claim 238). **T4 - a first-party vendor engineering-brand
+  post, unaudited, published on a careers site.** The design is instructive and checkable against what
+  this note already holds; **the numbers are not evidence about outcomes**, since all of them count the
+  platform's reach. It contains **no threat model, no incident, and no adversary** - it is a governance
+  architecture read here for its boundaries, and it should never be cited as evidence that those
+  boundaries hold under attack.
 - **S28** - [Here's how the new MCP spec works](../../sources/260821_new-mcp-spec/LEARNING.md)
   (Kent C. Dodds, 2026-08-20). **A partial feeder contributing claim 231, which narrows this note's
   own claim 181 without closing it.** MCP's MRTR diagram states the encrypt-and-bind obligation for

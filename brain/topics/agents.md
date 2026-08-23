@@ -9,7 +9,8 @@ cybersecurity eval survey - which supplies the largest measured scaffolding effe
 the bound on it**, **S26 LLM knowledge bases - a peripheral feeder** supplying the third position
 on the human-in-the-loop spectrum and the discovered-schema pattern, **S27 GitHub's MCP server at
 operator scale**, and **S28 the new MCP spec walkthrough - a peripheral feeder** supplying the
-instrument-the-seam practice)
+instrument-the-seam practice, and **S29 DoorDash's Agent Gateway - a peripheral feeder** supplying
+the in-protocol repair of a missing precondition and the platform-adoption principle)
 
 > **Count corrected 2026-08-21.** This line read "16 sources / 15 independent" while S27 already had a
 > full entry in `Sources feeding this topic` and three claims in the table below - the status line was
@@ -574,6 +575,53 @@ budgeted**, and nobody has costed it standalone. What the practice produced is i
 [`evals.md`](evals.md) as claim 230, because deciding *when the number is enough* is a different
 discipline from collecting it.
 
+### A failed precondition that is common is a state, not an error (S29)
+
+[S29](../../sources/260822_doordash-agent-gateway/LEARNING.md) contributes one design move to this
+note and one principle about platforms, and neither is really about MCP.
+
+The move concerns what an agent should do when it cannot proceed for a reason the user could fix.
+DoorDash's case is a missing OAuth grant on a user-scoped tool. **The gateway holds the tool call
+open, emits an in-protocol prompt carrying a connect URL, takes the provider callback, and then
+issues the original call with the user's token attached** (claim 235). The before-state is the one
+everybody has shipped: the call fails, the user is told to go elsewhere, connect, and ask again, and
+the turn is lost along with a fair proportion of the users.
+
+**The load-bearing detail is that it replays rather than asking the client to retry**, and it is easy
+to read past. A retry requires the agent to still be holding its intent, and an agent's intent
+between turns is precisely what decays - this note's own material on pause and resume (claim 15) is
+the same observation from the other side. Holding the request open converts a state that would have
+crossed a turn boundary into one that never does.
+
+The generalisation is worth extracting from OAuth entirely. **When a condition occurs on a large
+fraction of first uses, modelling it as an error is a category mistake**, and the fix is to give it a
+place inside the protocol rather than a better message. That reasoning applies to any precondition an
+agent can detect but not satisfy on its own.
+
+> **The honest limit.** The mechanism needs MCP elicitation, which is an optional capability, and
+> clients lacking it get a structured authorization-required payload they must render themselves. The
+> source reports no proportion of clients on either branch, so the headline improvement may reach a
+> minority. Read the fallback as a stated intention.
+
+### A governed path competes on convenience, not on policy
+
+The second contribution is about adoption, and it is the cleanest statement of it anywhere in this
+brain. **Governance that requires tickets does not scale, and the paved road has to be easier than
+copying a secret into an agent and connecting straight to a server** (claim 237). Registration, tool
+discovery, filtering and bundle management were all built self-serve for that reason.
+
+The reframe is what makes it durable. The competitor to a governance platform is not another
+platform. It is fifteen minutes and a hardcoded token, which means **an unusable governed path is net
+negative rather than partially successful** - you pay the platform's cost and still get the
+ungoverned traffic. This is claim 217 arriving in a different domain: GitHub found that three opt-in
+fixes reached nobody because everyone ran the defaults, and the general form is that the only lever
+reaching a whole population is the one that operates when nobody acts. Defaults and friction are the
+same lever seen from two sides.
+
+**What is not evidenced is whether it worked.** The claim rests entirely on a self-reported adoption
+block whose every figure counts the platform's reach rather than any outcome, so treat this as a
+design commitment that generalises well rather than as a demonstrated result.
+
 ## Key claims
 
 | Claim | Sources (cited) | Confidence |
@@ -625,6 +673,8 @@ discipline from collecting it.
 | **What decides where the human sits in an agent loop is reversibility, not autonomy** - ask inside the run when the effect cannot be recalled, review the batch diff afterwards when it can, suppress the check-in when the decision carries no information the rule does not already encode. The three positions are S2, S26 and S13, and sorting them by *when* the human is consulted hides the variable that explains all three. Claim 208. | **S2 `&t=687s` + S13 `n9` + S26 `n10`, `n13`** | **needs-check - this brain's synthesis across three sources.** None of the three states the variable; each states only its own position |
 | **Scope an agent's behaviour with a schema file in the thing being managed, discovered at run time, overriding the worker's generic instructions.** One worker then serves many targets it knows nothing about, and onboarding a target means creating a directory with a schema file - no registry, no redeploy. Claim 209. | S26 `n12` + `visuals/frame_980.jpg` | **needs-check - `single-leg`, figure-only.** Visible in a screenshot of a saved prompt, never spoken |
 | **Retirement is a measurement you cannot take retroactively, so the instrument goes in at migration time.** Running two eras behind one route, a predicate classifies each request, the old path is preserved byte-identically, and every authenticated request writes one non-blocking data point (lane, method, revision, client, user). Two details carry it: the new lane **rejects** legacy traffic so exactly one lane owns each era (a tolerant lane destroys the attribution), and the write is a no-op without its binding and never throws. **You cannot start a time series about the past**, so the cheap moment is while you are already in the code. Claim 229. | S28 `n11`, `n12` + `visuals/frame_150.jpg` | **corroborated** - PR text against narration, and the source generalises it past MCP itself. **The cost is unmeasured**: it rode along inside a 1,249-line migration and nobody has costed it standalone |
+| **A precondition that fails on a large fraction of first uses is a state, not an error, and the repair is to hold the call open rather than return a better message.** The gateway keeps the tool call open, prompts in-protocol with a connect URL, stores the resulting grant, then issues **the original call**. It replays rather than asking for a retry, because a retry needs the agent to still hold its intent and that is what decays between turns. | S29 (`n7`, `n9`), claim 235 | **corroborated** - figure sequence and prose agree. **The fallback for clients without elicitation is single-leg and unquantified**, and the generalisation beyond OAuth is this brain's |
+| **A governed path competes on convenience, not on policy, so an unusable one is net negative rather than partially successful.** The competitor is not another platform but fifteen minutes and a hardcoded token; losing that race buys both the platform's cost and the ungoverned traffic. **Claim 217 in the adoption domain rather than the configuration-default one.** | S29 (`n17`), generalising claim 217 / S27 | **corroborated as a design commitment** - the self-serve control plane is drawn as first-class. **That it worked rests entirely on a self-reported adoption block measuring reach, never outcome** |
 
 ## Key visuals
 
@@ -716,6 +766,13 @@ discipline from collecting it.
 
 ## Sources feeding this topic
 
+- **S29** - [How DoorDash Built a Centralized Gateway for AI Agent-Tool Access](../../sources/260822_doordash-agent-gateway/LEARNING.md)
+  (Siddarth Kodwani and Vasily Vlasov, DoorDash Engineering, 2026-07-30). **A peripheral feeder**, and
+  deliberately so: it is a platform post rather than an agent-design one, and most of it lands in
+  [`mcp.md`](mcp.md) and [`agent-security.md`](agent-security.md). What it gives this note is the
+  in-protocol repair of a common failed precondition (claim 235) and the sharpest statement here of why
+  a governed path must win on convenience (claim 237). **T4, first-party, unaudited**, with numbers that
+  count reach rather than outcome.
 - **S28** - [Here's how the new MCP spec works](../../sources/260821_new-mcp-spec/LEARNING.md)
   (Kent C. Dodds, 2026-08-20). **A peripheral feeder contributing exactly one claim, and it is not
   about agents or about MCP** - claim 229, that retirement is a measurement you cannot take

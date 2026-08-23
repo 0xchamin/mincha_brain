@@ -1,9 +1,10 @@
 # Topic: MCP (Model Context Protocol)
 
-**Status:** **established** (5 sources - S10 "Tool search", Microsoft, 2026-07-29; S12 Google Cloud's
+**Status:** **established** (6 sources - S10 "Tool search", Microsoft, 2026-07-29; S12 Google Cloud's
 multi-tenant agentic AI reference architecture, 2026-06-18; **S23 Google's MCP stateless-updates
 announcement, 2026-08-05**; **S27 GitHub's own MCP server at operator scale, ~April 2026**; **S28 Kent
-C. Dodds walking `2026-07-28` as somebody who migrated onto it, 2026-08-20**). S23 is
+C. Dodds walking `2026-07-28` as somebody who migrated onto it, 2026-08-20**; **S29 DoorDash's Agent
+Gateway, the first source here written from the *consumer* side of the protocol, 2026-07-30**). S23 is
 this note's first primary source - the first that is *about* MCP rather than teaching it on the way
 past something else - and the first anywhere in this brain to **pin a specification version**
 (2026-07-28, superseding 2025-11-25). S10 and S12 remain secondary under
@@ -386,6 +387,48 @@ field's gap rather than the document's.
 > present. Two sources have now independently arrived at the same missing piece from opposite
 > directions, which is the strongest signal in this note about what to research next.
 
+### The catalog is an interface somebody authors, and S29 is the second data point on composition
+
+This note has recorded that composition is the protocol's leverage point and that the brain held
+exactly one data point on it. [S29](../../sources/260822_doordash-agent-gateway/LEARNING.md) is the
+second, and it matters because it arrives for a different reason. S10's aggregator existed to replace
+a catalog with a search index, which is a context-budget motive. DoorDash's exists to govern servers
+it does not own, which is an access motive, and the two arriving at the same mechanic from unrelated
+pressures is what makes the mechanic look structural rather than clever.
+
+The construction has two halves that pull in opposite directions, and naming them separately is what
+makes the design reusable. **Bundles compose across servers** into one logical MCP endpoint, so a
+coding agent connects to `/v1/mcp/developer-tools` and never learns that GitHub, Jira, observability
+and code search are four servers behind it. **Filters subtract within servers**, deciding which of a
+server's tools are exposed for a given bundle, agent, user group, environment or audience. The
+catalog is then assembled per request by fanning `tools/list` out, applying authorization and
+filters, namespacing the survivors, and merging (S29 `n10`, claim 233).
+
+**The sharpest thing in the source is visible only in its figure, and it is a design instruction
+rather than a policy.** The prose says downstream servers publish "admin actions, destructive
+actions, billing APIs, and niche provider-specific features", which is a category list. The figure
+names the denied tools individually, and every one of them is a delete, a transfer, a reindex or a
+permission change: `repo__delete_branch`, `repo__transfer`, `org__manage_webhooks`,
+`jira__delete_issue`, `jira__change_permissions`, `obs__delete_alert`, `obs__manage_users`,
+`search__delete_index`, `docs__manage_spaces` (S29 `n11`). **The filter is drawn around
+irreversibility and around authority, not around relevance**, which is a far more actionable rule
+than "expose fewer tools" and is this brain's reading of the picture rather than the source's stated
+principle.
+
+> **What this does not do, and the temptation is real.** S29 asserts that smaller catalogs "reduce
+> model confusion" and "reduce irrelevant choices" and **measures nothing**. Claims 214 and 219 are
+> measured elsewhere and must not gain confidence from this source. What S29 supplies is a
+> practitioner acting on that finding at scale, which is adoption evidence and not a second
+> measurement.
+
+**It also answers half of this note's standing open question**, the one asking what an aggregating
+server owes the servers behind it. S12 supplied the requirement from the deployment side and S10 from
+the client side, and neither gave a mechanism. S29 gives one for **credential propagation
+specifically**: four custody modes at the aggregator, with the downstream seeing a correct principal
+and the agent holding nothing (claim 236, and see [`agent-security.md`](agent-security.md)). It still
+gives no token format, no exchange, and no audience restriction, so the question narrows rather than
+closes.
+
 ## Key claims
 
 | Claim | Spec version | Sources (cited) | Confidence |
@@ -407,6 +450,8 @@ field's gap rather than the document's.
 | **A tool's indexed surface is name, description, argument names and argument descriptions, three levels deep** - and a field can be indexed while staying invisible in MCP responses, so search vocabulary and model-facing schema are separable. | unstated | S10 §Two tools instead of a hundred + §Tuning the search space (`n8`, `n14`) | emerging (`n14` corroborated prose vs code) |
 | **An MCP server can be the mandatory data seam** - the agent holds no datastore credentials and every retrieval is a tool call, so the data boundary is a property of the topology rather than of the agent's behaviour. | unstated | S12 §Architecture (`n9`) + `visuals/fig1b_two-tenants.png` (claim 104) | emerging |
 | **Local vs shared server deployment is an isolation decision.** Local gets isolation from the perimeter it sits in and needs no identity mapping; shared needs private connectivity plus end-user identity propagated and enforced on every call. Recommended split: local for regulated data, shared for common corporate systems. | unstated | S12 §Design alternatives, MCP servers (`n10`, claim 105) | emerging - corroborated on local (it is what the figure draws); **single-leg on shared, which is drawn nowhere** |
+| **The tool catalog is an interface somebody authors, and the filter producing it is drawn around irreversibility and authority rather than relevance.** Bundles compose *across* servers into one logical endpoint; filters subtract *within* them; the catalog is assembled per request by fan-out, filter, namespace and merge. Every tool S29's figure denies is a delete, transfer, reindex or permission change, which is sharper than the prose's category list. | n/a (implementation, not spec) | S29 (`n10`, `n11`, `n13`), claim 233 | **corroborated** within S29; the filter-shape generalisation is this brain's reading of the figure. **Does not re-measure claims 214 or 219** - S29 asserts the catalog-size benefit and measures nothing |
+| **MCP standardised invocation and left governance homeless.** Six production questions sit outside the protocol - which agent, for whom, which credential, seeing which tools, revoked how, recorded where - and they compress into access, curation and operations. All three obvious homes fail: the agent (enforcement becomes a prompt), each server (N reimplementations, and third-party servers never comply), a shared library (reaches importers only, revokes nothing - claim 217). | n/a (the gap is version-independent) | S29 (`n1`, `n2`), claim 232 | **corroborated** within S29 - the drawn pipeline's five steps map onto the enumerated questions. **The three-homes elimination is this brain's reading**; S29 states its conclusion without walking alternatives |
 
 ## Key visuals
 
@@ -497,6 +542,20 @@ field's gap rather than the document's.
 
 ## Sources feeding this topic
 
+- **S29** - [How DoorDash Built a Centralized Gateway for AI Agent-Tool Access](../../sources/260822_doordash-agent-gateway/LEARNING.md)
+  (Siddarth Kodwani and Vasily Vlasov, DoorDash Engineering, 2026-07-30). **The first source here
+  written from the consumer side of the protocol** - an organisation governing roughly 200 servers it
+  mostly did not write, rather than an author shipping one. Supplies the second data point on
+  composition as MCP's leverage point, the bundles-and-filters construction and the catalog-as-interface
+  framing (claim 233), and the governance-shaped statement of what the protocol does not answer
+  (claim 232). **T4 - a vendor engineering-brand post on a careers site, first-party and unaudited.**
+  The architecture is described honestly and in useful detail; **every number in it counts the
+  platform's own reach and none measures an outcome**, so the adoption block is a claim rather than
+  evidence. **Its unusual strength is the visual leg**: three purpose-drawn figures, all kept, two of
+  them materially more specific than their own prose. The two best findings in the ingest come from
+  reading the figures *against* the text - a cached policy plane behind a promise of central
+  revocation, and agents appearing as downstream targets in a post that never mentions agent-to-agent
+  calls (claim 238). Both are figure-only and are recorded as inference, not as architecture.
 - **S28** - [Here's how the new MCP spec works](../../sources/260821_new-mcp-spec/LEARNING.md)
   (Kent C. Dodds, "Better with Kent", 2026-08-20). **The note's second independent read of
   `2026-07-28`, and the only source anywhere here that measured what happened after a spec shipped.**
