@@ -31,6 +31,7 @@ REPO = Path(__file__).resolve().parent.parent
 ASSETS = REPO / "tools" / "site_assets"
 VENDOR = ASSETS / "vendor"
 OUT = REPO / "site"
+TASKS = REPO / "tasks"
 
 GITHUB_BLOB = "https://github.com/0xchamin/mincha_brain/blob/main/"
 MERMAID_URL = "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"
@@ -449,6 +450,26 @@ def copy_media(rewriter: Rewriter) -> int:
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(abs_path, target)
     return len(rewriter.media)
+
+
+def copy_tasks() -> int:
+    """Copy tasks/<slug>/ into site/tasks/ verbatim - no render, no rewrite.
+
+    These are self-contained pages (a bundled app, an interactive activity) that have
+    already resolved their own assets. Every other file in site/ is generated from
+    markdown; these are the one exception, and touching their bytes would break them.
+    tasks/README.md documents the folder for a reader of the repo and is not published.
+    """
+    if not TASKS.is_dir():
+        return 0
+    n = 0
+    for page in sorted(d for d in TASKS.iterdir() if d.is_dir()):
+        for src in sorted(p for p in page.rglob("*") if p.is_file()):
+            target = OUT / "tasks" / src.relative_to(TASKS)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(src, target)
+            n += 1
+    return n
 
 
 # ------------------------------------------------ post-render html polishing ---
@@ -884,6 +905,7 @@ def build() -> None:
     (OUT / "search.json").write_text(json.dumps(search, separators=(",", ":")), encoding="utf-8")
 
     n_media = copy_media(rw)
+    n_tasks = copy_tasks()
     for name in ("style.css", "app.js"):
         shutil.copy2(ASSETS / name, OUT / "assets" / name)
     icon(192, OUT / "assets" / "icon-192.png")
@@ -915,6 +937,10 @@ def build() -> None:
         for p in OUT.rglob("*")
         if p.is_file() and p.suffix in {".html", ".css", ".js", ".json", ".webmanifest"}
         and p.name != "mermaid.min.js"
+        # tasks/ pages are bundled apps with embedded fonts, so one runs to megabytes.
+        # Precaching would bill every reader for a page they may never open - the same
+        # reason mermaid is excluded above. They still cache lazily on first view.
+        and "tasks" not in p.relative_to(OUT).parts[:1]
     )
     sw = read(ASSETS / "sw.js")
     revision = str(sum(p.stat().st_mtime_ns for p in OUT.rglob("*") if p.is_file()) % 10**12)
@@ -924,7 +950,8 @@ def build() -> None:
 
     print(
         f"site/ built: {len(pages) + 5} pages, {len(sources)} sources, {len(topics)} topics, "
-        f"{len(claims)} claims, {n_media} images, mermaid={'yes' if has_mermaid else 'no'}"
+        f"{len(claims)} claims, {n_media} images, {n_tasks} task files, "
+        f"mermaid={'yes' if has_mermaid else 'no'}"
     )
 
 
